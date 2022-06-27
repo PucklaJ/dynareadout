@@ -31,6 +31,22 @@ binout_file binout_open(const char *file_name);
 void binout_close(binout_file *bin_file);
 void binout_print_header(binout_file *bin_file);
 void binout_print_records(binout_file *bin_file);
+void *binout_read(binout_file *bin_file, binout_record_data_pointer *dp,
+                  const char *path, const char *variable, size_t type_size,
+                  size_t *data_size);
+#define DEFINE_BINOUT_READ_TYPE_PROTO(c_type)                                  \
+  c_type *binout_read_##c_type(binout_file *bin_file, const char *path,        \
+                               const char *variable, size_t *data_size);
+DEFINE_BINOUT_READ_TYPE_PROTO(int8_t)
+DEFINE_BINOUT_READ_TYPE_PROTO(int16_t)
+DEFINE_BINOUT_READ_TYPE_PROTO(int32_t)
+DEFINE_BINOUT_READ_TYPE_PROTO(int64_t)
+DEFINE_BINOUT_READ_TYPE_PROTO(uint8_t)
+DEFINE_BINOUT_READ_TYPE_PROTO(uint16_t)
+DEFINE_BINOUT_READ_TYPE_PROTO(uint32_t)
+DEFINE_BINOUT_READ_TYPE_PROTO(uint64_t)
+DEFINE_BINOUT_READ_TYPE_PROTO(float)
+DEFINE_BINOUT_READ_TYPE_PROTO(double)
 
 /* ----------------------------- */
 
@@ -39,6 +55,11 @@ void binout_print_records(binout_file *bin_file);
 const char *_binout_get_command_name(const uint64_t command);
 uint8_t _binout_get_type_size(const uint64_t type_id);
 const char *_binout_get_type_name(const uint64_t type_id);
+binout_record_data_pointer *_binout_get_data_pointer(binout_file *bin_file,
+                                                     const char *path,
+                                                     const char *variable);
+binout_record_data *_binout_get_data(binout_record_data_pointer *dp,
+                                     const char *path);
 char *_path_join(char *path, const char *element);
 int _path_is_abs(const char *path);
 char *_path_main(const char *path);

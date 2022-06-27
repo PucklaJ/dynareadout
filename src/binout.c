@@ -137,8 +137,14 @@ binout_file binout_open(const char *file_name) {
       const uint64_t data_length = record_data_length -
                                    bin_file.header.record_typeid_field_size -
                                    BINOUT_DATA_NAME_LENGTH - name_length;
-      uint8_t *data = malloc(data_length);
-      BIN_FILE_READ_FREE(data, data_length, 1, data);
+      const size_t file_pos = ftell(bin_file.file_handle);
+      if (fseek(bin_file.file_handle, data_length, SEEK_CUR) != 0) {
+        bin_file.error_string = strerror(errno);
+        free(name);
+        free(current_path);
+        binout_close(&bin_file);
+        return bin_file;
+      }
 
       binout_record_data_pointer *dp = NULL;
       {
@@ -168,7 +174,6 @@ binout_file binout_open(const char *file_name) {
               "The data_length of one record is different from another even "
               "though they are of the same variable";
           free(name);
-          free(data);
           free(current_path);
           binout_close(&bin_file);
           return bin_file;
@@ -203,7 +208,7 @@ binout_file binout_open(const char *file_name) {
       const size_t current_path_len = strlen(current_path);
       rd->path = malloc(current_path_len + 1);
       memcpy(rd->path, current_path, current_path_len + 1);
-      rd->file_pos = ftell(bin_file.file_handle);
+      rd->file_pos = file_pos;
 
     } else {
       if (fseek(bin_file.file_handle, record_data_length, SEEK_CUR) != 0) {
@@ -289,6 +294,65 @@ void binout_print_records(binout_file *bin_file) {
   printf("-----------------------------------\n");
 }
 
+void *binout_read(binout_file *bin_file, binout_record_data_pointer *dp,
+                  const char *path, const char *variable, size_t type_size,
+                  size_t *data_size) {
+  binout_record_data *record = _binout_get_data(dp, path);
+  if (!record) {
+    bin_file->error_string = "The given path has not been found";
+    return NULL;
+  }
+
+  if (fseek(bin_file->file_handle, record->file_pos, SEEK_SET) != 0) {
+    bin_file->error_string = strerror(errno);
+    return NULL;
+  }
+
+  void *data = malloc(dp->data_length);
+  if (fread(data, dp->data_length, 1, bin_file->file_handle) != 1) {
+    bin_file->error_string = strerror(errno);
+    free(data);
+    return NULL;
+  }
+
+  *data_size = dp->data_length / type_size;
+
+  return data;
+}
+
+#define DEFINE_BINOUT_READ_TYPE(c_type, binout_type)                           \
+  c_type *binout_read_##c_type(binout_file *bin_file, const char *path,        \
+                               const char *variable, size_t *data_size) {      \
+    binout_record_data_pointer *dp =                                           \
+        _binout_get_data_pointer(bin_file, path, variable);                    \
+    if (!dp) {                                                                 \
+      bin_file->error_string = "The given variable has not been found";        \
+      return NULL;                                                             \
+    }                                                                          \
+                                                                               \
+    if (dp->type_id != binout_type) {                                          \
+      bin_file->error_string =                                                 \
+          "The given variable is of the wrong type. Mind "                     \
+          "Single or Double Precision";                                        \
+      return NULL;                                                             \
+    }                                                                          \
+                                                                               \
+    const size_t type_size = _binout_get_type_size(dp->type_id);               \
+                                                                               \
+    return binout_read(bin_file, dp, path, variable, type_size, data_size);    \
+  }
+
+DEFINE_BINOUT_READ_TYPE(int8_t, BINOUT_TYPE_INT8)
+DEFINE_BINOUT_READ_TYPE(int16_t, BINOUT_TYPE_INT16)
+DEFINE_BINOUT_READ_TYPE(int32_t, BINOUT_TYPE_INT32)
+DEFINE_BINOUT_READ_TYPE(int64_t, BINOUT_TYPE_INT64)
+DEFINE_BINOUT_READ_TYPE(uint8_t, BINOUT_TYPE_UINT8)
+DEFINE_BINOUT_READ_TYPE(uint16_t, BINOUT_TYPE_UINT16)
+DEFINE_BINOUT_READ_TYPE(uint32_t, BINOUT_TYPE_UINT32)
+DEFINE_BINOUT_READ_TYPE(uint64_t, BINOUT_TYPE_UINT64)
+DEFINE_BINOUT_READ_TYPE(float, BINOUT_TYPE_FLOAT32)
+DEFINE_BINOUT_READ_TYPE(double, BINOUT_TYPE_FLOAT64)
+
 const char *_binout_get_command_name(const uint64_t command) {
   switch (command) {
   case BINOUT_COMMAND_NULL:
@@ -370,6 +434,47 @@ const char *_binout_get_type_name(const uint64_t type_id) {
   default:
     return "UNKNOWN";
   }
+}
+
+binout_record_data_pointer *_binout_get_data_pointer(binout_file *bin_file,
+                                                     const char *path,
+                                                     const char *variable) {
+  binout_record_data_pointer *dp = NULL;
+  uint64_t i = 0;
+  while (i < bin_file->data_pointers_size) {
+    binout_record_data_pointer *bin_dp = &bin_file->data_pointers[i];
+    char *bin_dp_main_path = _path_main(bin_dp->records[0].path);
+    char *dp_main_path = _path_main(path);
+
+    if (strcmp(bin_dp->name, variable) == 0 &&
+        strcmp(bin_dp_main_path, dp_main_path) == 0) {
+      dp = bin_dp;
+      free(bin_dp_main_path);
+      free(dp_main_path);
+      break;
+    }
+
+    free(bin_dp_main_path);
+    free(dp_main_path);
+    i++;
+  }
+
+  return dp;
+}
+
+binout_record_data *_binout_get_data(binout_record_data_pointer *dp,
+                                     const char *path) {
+  binout_record_data *data = NULL;
+  uint64_t i = 0;
+  while (i < dp->records_size) {
+    if (strcmp(dp->records[i].path, path) == 0) {
+      data = &dp->records[i];
+    }
+
+    i++;
+  }
+
+  return data;
 }
 
 char *_path_join(char *path, const char *element) {
