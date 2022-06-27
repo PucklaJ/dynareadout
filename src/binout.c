@@ -9,6 +9,7 @@
   read_count = fread(&dst, size, count, bin_file.file_handle);                 \
   if (read_count != count) {                                                   \
     bin_file.error_string = strerror(errno);                                   \
+    free(current_path);                                                        \
     binout_close(&bin_file);                                                   \
     return bin_file;                                                           \
   }
@@ -17,10 +18,13 @@
   read_count = fread(dst, size, count, bin_file.file_handle);                  \
   if (read_count != count) {                                                   \
     bin_file.error_string = strerror(errno);                                   \
+    free(current_path);                                                        \
     free(obj);                                                                 \
     binout_close(&bin_file);                                                   \
     return bin_file;                                                           \
   }
+
+#define PATH_SEP '/'
 
 binout_file binout_open(const char *file_name) {
   binout_file bin_file;
@@ -75,6 +79,13 @@ binout_file binout_open(const char *file_name) {
   /* Parse all records */
   bin_file.record_count = 0;
   bin_file.records = NULL;
+  bin_file.data_pointers_size = 0;
+  bin_file.data_pointers = NULL;
+
+  char *current_path = malloc(2);
+  current_path[0] = '.';
+  current_path[1] = '\0';
+
   while (ftell(bin_file.file_handle) < file_size) {
     uint64_t record_length = 0, record_command = 0;
 
@@ -101,90 +112,95 @@ binout_file binout_open(const char *file_name) {
         return bin_file;
       }
     } else if (record_command == BINOUT_COMMAND_CD) {
-      binout_record_cd rcd;
-      rcd.path = malloc(record_data_length + 1);
-      rcd.path[record_data_length] = '\0';
+      char *path = malloc(record_data_length + 1);
+      path[record_data_length] = '\0';
 
-      BIN_FILE_READ_FREE(rcd.path, 1, record_data_length, rcd.path);
+      BIN_FILE_READ_FREE(path, 1, record_data_length, path);
 
-      printf("CD Path: %s\n", rcd.path);
-      free(rcd.path);
+      if (_path_is_abs(path) || strcmp(current_path, ".") == 0) {
+        free(current_path);
+        current_path = path;
+      } else {
+        current_path = _path_join(current_path, path);
+        free(path);
+      }
+
+      printf("Changed Directory: %s\n", current_path);
     } else if (record_command == BINOUT_COMMAND_DATA) {
-      binout_record_data rd;
-      rd.type_id = 0;
+      uint64_t type_id = 0;
       uint8_t name_length;
 
-      BIN_FILE_READ(rd.type_id, bin_file.header.record_typeid_field_size, 1);
+      BIN_FILE_READ(type_id, bin_file.header.record_typeid_field_size, 1);
       BIN_FILE_READ(name_length, BINOUT_DATA_NAME_LENGTH, 1);
 
-      rd.name = malloc(name_length + 1);
-      rd.name[name_length] = '\0';
-      BIN_FILE_READ_FREE(rd.name, 1, name_length, rd.name);
+      char *name = malloc(name_length + 1);
+      name[name_length] = '\0';
+      BIN_FILE_READ_FREE(name, 1, name_length, name);
 
-      rd.data_length = record_data_length -
-                       bin_file.header.record_typeid_field_size -
-                       BINOUT_DATA_NAME_LENGTH - name_length;
-      rd.data = malloc(rd.data_length);
-      BIN_FILE_READ_FREE(rd.data, rd.data_length, 1, rd.data);
+      const uint64_t data_length = record_data_length -
+                                   bin_file.header.record_typeid_field_size -
+                                   BINOUT_DATA_NAME_LENGTH - name_length;
+      uint8_t *data = malloc(data_length);
+      BIN_FILE_READ_FREE(data, data_length, 1, data);
 
-      printf("Data Name: %s\n", rd.name);
-      printf("Data Type: %s\n", _binout_get_type_name(rd.type_id));
-      const uint8_t type_size = _binout_get_type_size(rd.type_id);
-      const uint64_t value_count = rd.data_length / (uint64_t)type_size;
+      printf("Data Name: %s\n", name);
+      printf("Data Type: %s\n", _binout_get_type_name(type_id));
+      const uint8_t type_size = _binout_get_type_size(type_id);
+      const uint64_t value_count = data_length / (uint64_t)type_size;
       printf("Data Values: %d\n", value_count);
       {
         uint64_t offset = 0;
         uint64_t i = 0;
         while (i < value_count) {
-          switch (rd.type_id) {
+          switch (type_id) {
           case BINOUT_TYPE_INT8:
             int8_t value;
-            memcpy(&value, &rd.data[offset], type_size);
+            memcpy(&value, &data[offset], type_size);
             printf("%c, ", value);
             break;
           case BINOUT_TYPE_INT16:
             int16_t value1;
-            memcpy(&value1, &rd.data[offset], type_size);
+            memcpy(&value1, &data[offset], type_size);
             printf("%d, ", value1);
             break;
           case BINOUT_TYPE_INT32:
             int32_t value2;
-            memcpy(&value2, &rd.data[offset], type_size);
+            memcpy(&value2, &data[offset], type_size);
             printf("%d, ", value2);
             break;
           case BINOUT_TYPE_INT64:
             int64_t value3;
-            memcpy(&value3, &rd.data[offset], type_size);
+            memcpy(&value3, &data[offset], type_size);
             printf("%d, ", value3);
             break;
           case BINOUT_TYPE_UINT8:
             uint8_t value4;
-            memcpy(&value4, &rd.data[offset], type_size);
+            memcpy(&value4, &data[offset], type_size);
             printf("%d, ", value4);
             break;
           case BINOUT_TYPE_UINT16:
             uint16_t value5;
-            memcpy(&value5, &rd.data[offset], type_size);
+            memcpy(&value5, &data[offset], type_size);
             printf("%d, ", value5);
             break;
           case BINOUT_TYPE_UINT32:
             uint32_t value6;
-            memcpy(&value6, &rd.data[offset], type_size);
+            memcpy(&value6, &data[offset], type_size);
             printf("%d, ", value6);
             break;
           case BINOUT_TYPE_UINT64:
             uint64_t value7;
-            memcpy(&value7, &rd.data[offset], type_size);
+            memcpy(&value7, &data[offset], type_size);
             printf("%d, ", value7);
             break;
           case BINOUT_TYPE_FLOAT32:
             float value8;
-            memcpy(&value8, &rd.data[offset], type_size);
+            memcpy(&value8, &data[offset], type_size);
             printf("%f, ", value8);
             break;
           case BINOUT_TYPE_FLOAT64:
             double value9;
-            memcpy(&value9, &rd.data[offset], type_size);
+            memcpy(&value9, &data[offset], type_size);
             printf("%f, ", value9);
             break;
           }
@@ -195,8 +211,8 @@ binout_file binout_open(const char *file_name) {
         printf("\n");
       }
 
-      free(rd.name);
-      free(rd.data);
+      free(name);
+      free(data);
     } else {
       bin_file.record_count++;
       if (!bin_file.records) {
@@ -222,6 +238,8 @@ binout_file binout_open(const char *file_name) {
       }
     }
   }
+
+  free(current_path);
 
   return bin_file;
 }
@@ -358,3 +376,25 @@ const char *_binout_get_type_name(const uint64_t type_id) {
     return "UNKNOWN";
   }
 }
+
+char *_path_join(char *path, const char *element) {
+  const size_t path_length = strlen(path);
+  size_t element_length = strlen(element);
+  /* path + PATH_SEP + element + '\0' */
+  const size_t new_size = path_length + 1 + element_length + 1;
+  path = realloc(path, new_size);
+  if (path[path_length - 1] != PATH_SEP) {
+    path[path_length] = PATH_SEP;
+  }
+  path[new_size] = '\0';
+
+  size_t element_offset = 0;
+  if (element[0] == PATH_SEP) {
+    element_offset = 1;
+    element_length--;
+  }
+  memcpy(&path[path_length + 1], &element[element_offset], element_length);
+  return path;
+}
+
+int _path_is_abs(const char *path) { return path[0] == PATH_SEP; }

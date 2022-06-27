@@ -1,5 +1,6 @@
 #ifndef BINOUT_H
 #define BINOUT_H
+#include "binout_records.h"
 #include <stdint.h>
 #include <stdio.h>
 
@@ -25,6 +26,8 @@ typedef struct {
   binout_record *records;
   uint64_t record_count;
   uint64_t symbol_table_offset;
+  binout_record_data_pointer *data_pointers;
+  uint64_t data_pointers_size;
 
   FILE *file_handle;
   const char *error_string;
@@ -44,6 +47,8 @@ void binout_print_records(binout_file *bin_file);
 const char *_binout_get_command_name(const uint64_t command);
 uint8_t _binout_get_type_size(const uint64_t type_id);
 const char *_binout_get_type_name(const uint64_t type_id);
+char *_path_join(char *path, const char *element);
+int _path_is_abs(const char *path);
 
 /* ----------------------------- */
 #endif
