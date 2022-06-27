@@ -1,6 +1,7 @@
 #include "binout.h"
 #include "binout_defines.h"
 #include "binout_records.h"
+#include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -9,7 +10,7 @@
   read_count = fread(&dst, size, count, bin_file.file_handle);                 \
   if (read_count != count) {                                                   \
     bin_file.error_string = strerror(errno);                                   \
-    free(current_path);                                                        \
+    /* free(current_path); */                                                  \
     binout_close(&bin_file);                                                   \
     return bin_file;                                                           \
   }
@@ -18,7 +19,7 @@
   read_count = fread(dst, size, count, bin_file.file_handle);                  \
   if (read_count != count) {                                                   \
     bin_file.error_string = strerror(errno);                                   \
-    free(current_path);                                                        \
+    /* free(current_path); */                                                  \
     free(obj);                                                                 \
     binout_close(&bin_file);                                                   \
     return bin_file;                                                           \
@@ -38,7 +39,7 @@ binout_file binout_open(const char *file_name) {
 
   /* Read header */
   size_t read_count =
-      fread(&bin_file.header, sizeof(bin_file.header), 1, bin_file.file_handle);
+      fread(&bin_file.header, sizeof(binout_header), 1, bin_file.file_handle);
   if (read_count == 0) {
     bin_file.error_string = strerror(errno);
     fclose(bin_file.file_handle);
@@ -124,8 +125,6 @@ binout_file binout_open(const char *file_name) {
         current_path = _path_join(current_path, path);
         free(path);
       }
-
-      printf("Changed Directory: %s\n", current_path);
     } else if (record_command == BINOUT_COMMAND_DATA) {
       uint64_t type_id = 0;
       uint8_t name_length;
@@ -143,76 +142,52 @@ binout_file binout_open(const char *file_name) {
       uint8_t *data = malloc(data_length);
       BIN_FILE_READ_FREE(data, data_length, 1, data);
 
-      printf("Data Name: %s\n", name);
-      printf("Data Type: %s\n", _binout_get_type_name(type_id));
-      const uint8_t type_size = _binout_get_type_size(type_id);
-      const uint64_t value_count = data_length / (uint64_t)type_size;
-      printf("Data Values: %d\n", value_count);
+      const size_t current_path_len = strlen(current_path);
+      char *data_path = malloc(current_path_len + 1);
+      memcpy(data_path, current_path, current_path_len + 1);
+      data_path = _path_join(data_path, name);
+      free(name);
+
+      binout_record_data_pointer *dp = NULL;
       {
-        uint64_t offset = 0;
         uint64_t i = 0;
-        while (i < value_count) {
-          switch (type_id) {
-          case BINOUT_TYPE_INT8:
-            int8_t value;
-            memcpy(&value, &data[offset], type_size);
-            printf("%c, ", value);
-            break;
-          case BINOUT_TYPE_INT16:
-            int16_t value1;
-            memcpy(&value1, &data[offset], type_size);
-            printf("%d, ", value1);
-            break;
-          case BINOUT_TYPE_INT32:
-            int32_t value2;
-            memcpy(&value2, &data[offset], type_size);
-            printf("%d, ", value2);
-            break;
-          case BINOUT_TYPE_INT64:
-            int64_t value3;
-            memcpy(&value3, &data[offset], type_size);
-            printf("%d, ", value3);
-            break;
-          case BINOUT_TYPE_UINT8:
-            uint8_t value4;
-            memcpy(&value4, &data[offset], type_size);
-            printf("%d, ", value4);
-            break;
-          case BINOUT_TYPE_UINT16:
-            uint16_t value5;
-            memcpy(&value5, &data[offset], type_size);
-            printf("%d, ", value5);
-            break;
-          case BINOUT_TYPE_UINT32:
-            uint32_t value6;
-            memcpy(&value6, &data[offset], type_size);
-            printf("%d, ", value6);
-            break;
-          case BINOUT_TYPE_UINT64:
-            uint64_t value7;
-            memcpy(&value7, &data[offset], type_size);
-            printf("%d, ", value7);
-            break;
-          case BINOUT_TYPE_FLOAT32:
-            float value8;
-            memcpy(&value8, &data[offset], type_size);
-            printf("%f, ", value8);
-            break;
-          case BINOUT_TYPE_FLOAT64:
-            double value9;
-            memcpy(&value9, &data[offset], type_size);
-            printf("%f, ", value9);
+        while (i < bin_file.data_pointers_size) {
+          binout_record_data_pointer *bin_dp = &bin_file.data_pointers[i];
+          if (strcmp(bin_dp->path, data_path) == 0) {
+            dp = bin_dp;
             break;
           }
-
-          offset += (uint64_t)type_size;
           i++;
         }
-        printf("\n");
       }
 
-      free(name);
-      free(data);
+      if (dp) {
+        assert(data_length == dp->data_length);
+      } else {
+        bin_file.data_pointers_size++;
+        if (bin_file.data_pointers_size == 1) {
+          bin_file.data_pointers = malloc(sizeof(binout_record_data_pointer));
+        } else {
+          bin_file.data_pointers = realloc(
+              bin_file.data_pointers,
+              bin_file.data_pointers_size * sizeof(binout_record_data_pointer));
+        }
+
+        dp = &bin_file.data_pointers[bin_file.data_pointers_size - 1];
+        dp->path = data_path;
+        dp->data_size = 0;
+        dp->data_length = data_length;
+        dp->type_id = type_id;
+        dp->data = NULL;
+      }
+
+      dp->data_size++;
+      if (dp->data_size == 1) {
+        dp->data = malloc(sizeof(uint8_t *));
+      } else {
+        dp->data = realloc(dp->data, dp->data_size * sizeof(uint8_t *));
+      }
+      dp->data[dp->data_size - 1] = data;
     } else {
       bin_file.record_count++;
       if (!bin_file.records) {
@@ -247,6 +222,21 @@ binout_file binout_open(const char *file_name) {
 void binout_close(binout_file *bin_file) {
   if (bin_file->records)
     free(bin_file->records);
+
+  if (bin_file->data_pointers) {
+    uint64_t i = 0;
+    while (i < bin_file->data_pointers_size) {
+      binout_record_data_pointer *dp = &bin_file->data_pointers[i];
+      uint64_t j = 0;
+      while (j < dp->data_size) {
+        free(dp->data[j]);
+        j++;
+      }
+      free(dp->path);
+      i++;
+    }
+    free(bin_file->data_pointers);
+  }
 
   if (fclose(bin_file->file_handle) != 0) {
     bin_file->error_string = strerror(errno);
@@ -292,6 +282,22 @@ void binout_print_records(binout_file *bin_file) {
   }
 
   printf("----------------------------\n");
+
+  printf("------ %d Data Pointers ------\n", bin_file->data_pointers_size);
+
+  i = 0;
+  while (i < bin_file->data_pointers_size) {
+    const binout_record_data_pointer *dp = &bin_file->data_pointers[i];
+    printf("---- %s ----\n", dp->path);
+    printf("- Data Size: %d --\n", dp->data_size);
+    printf("- Data Length: %d --\n", dp->data_length);
+    printf("- Type: %s -----\n", _binout_get_type_name(dp->type_id));
+    printf("---------------------\n");
+
+    i++;
+  }
+
+  printf("-----------------------------------\n");
 }
 
 const char *_binout_get_command_name(const uint64_t command) {
@@ -381,19 +387,26 @@ char *_path_join(char *path, const char *element) {
   const size_t path_length = strlen(path);
   size_t element_length = strlen(element);
   /* path + PATH_SEP + element + '\0' */
-  const size_t new_size = path_length + 1 + element_length + 1;
-  path = realloc(path, new_size);
+  size_t new_size = path_length + element_length + 1;
+  int needs_path_sep = 0;
   if (path[path_length - 1] != PATH_SEP) {
-    path[path_length] = PATH_SEP;
+    new_size += 1;
+    needs_path_sep = 1;
   }
-  path[new_size] = '\0';
+
+  path = realloc(path, new_size);
+
+  path[new_size - 1] = '\0';
+  if (needs_path_sep)
+    path[path_length] = PATH_SEP;
 
   size_t element_offset = 0;
   if (element[0] == PATH_SEP) {
     element_offset = 1;
     element_length--;
   }
-  memcpy(&path[path_length + 1], &element[element_offset], element_length);
+  memcpy(&path[path_length + needs_path_sep], &element[element_offset],
+         element_length);
   return path;
 }
 
