@@ -78,8 +78,6 @@ binout_file binout_open(const char *file_name) {
   }
 
   /* Parse all records */
-  bin_file.record_count = 0;
-  bin_file.records = NULL;
   bin_file.data_pointers_size = 0;
   bin_file.data_pointers = NULL;
 
@@ -189,24 +187,7 @@ binout_file binout_open(const char *file_name) {
       }
       dp->data[dp->data_size - 1] = data;
     } else {
-      bin_file.record_count++;
-      if (!bin_file.records) {
-        bin_file.records = malloc(sizeof(binout_record));
-      } else {
-        bin_file.records = realloc(bin_file.records, bin_file.record_count *
-                                                         sizeof(binout_record));
-      }
-
-      binout_record *last = &bin_file.records[bin_file.record_count - 1];
-      last->length = record_length;
-      last->command = record_command;
-      last->data_pos = 0;
-
-      last->length -= bin_file.header.record_length_field_size +
-                      bin_file.header.record_command_field_size;
-
-      last->data_pos = ftell(bin_file.file_handle);
-      if (fseek(bin_file.file_handle, last->length, SEEK_CUR) != 0) {
+      if (fseek(bin_file.file_handle, record_data_length, SEEK_CUR) != 0) {
         bin_file.error_string = strerror(errno);
         binout_close(&bin_file);
         return bin_file;
@@ -220,9 +201,6 @@ binout_file binout_open(const char *file_name) {
 }
 
 void binout_close(binout_file *bin_file) {
-  if (bin_file->records)
-    free(bin_file->records);
-
   if (bin_file->data_pointers) {
     uint64_t i = 0;
     while (i < bin_file->data_pointers_size) {
@@ -267,25 +245,9 @@ void binout_print_header(binout_file *bin_file) {
 }
 
 void binout_print_records(binout_file *bin_file) {
-  printf("------- %d Records ---------\n", bin_file->record_count);
-
-  uint64_t i = 0;
-
-  while (i < bin_file->record_count) {
-    const binout_record *cur = &bin_file->records[i];
-    printf("---- %s -----\n", _binout_get_command_name(cur->command));
-    printf("- Length: %d --\n", cur->length);
-    printf("- Data Pos: %d --\n", cur->data_pos);
-    printf("----------------------\n");
-
-    i++;
-  }
-
-  printf("----------------------------\n");
-
   printf("------ %d Data Pointers ------\n", bin_file->data_pointers_size);
 
-  i = 0;
+  uint64_t i = 0;
   while (i < bin_file->data_pointers_size) {
     const binout_record_data_pointer *dp = &bin_file->data_pointers[i];
     printf("---- %s ----\n", dp->path);
