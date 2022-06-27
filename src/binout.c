@@ -154,6 +154,8 @@ binout_file binout_open(const char *file_name) {
           char *bin_dp_main_path = _path_main(bin_dp->records[0].path);
           char *dp_main_path = _path_main(current_path);
 
+          /* TODO: Don't just check for main path; Probably the last element
+           * needs to be emitted */
           if (strcmp(bin_dp->name, name) == 0 &&
               strcmp(bin_dp_main_path, dp_main_path) == 0) {
             dp = bin_dp;
@@ -353,6 +355,34 @@ DEFINE_BINOUT_READ_TYPE(uint64_t, BINOUT_TYPE_UINT64)
 DEFINE_BINOUT_READ_TYPE(float, BINOUT_TYPE_FLOAT32)
 DEFINE_BINOUT_READ_TYPE(double, BINOUT_TYPE_FLOAT64)
 
+uint64_t binout_get_type_id(binout_file *bin_file, const char *path,
+                            const char *variable) {
+  binout_record_data_pointer *dp =
+      _binout_get_data_pointer(bin_file, path, variable);
+  if (!dp) {
+    bin_file->error_string = "The given variable has not been found";
+    return -1;
+  }
+
+  return dp->type_id;
+}
+
+int binout_variable_exists(binout_file *bin_file, const char *path,
+                           const char *variable) {
+  binout_record_data_pointer *dp =
+      _binout_get_data_pointer(bin_file, path, variable);
+  if (!dp) {
+    return 0;
+  }
+
+  binout_record_data *record = _binout_get_data(dp, path);
+  if (!record) {
+    return 0;
+  }
+
+  return 1;
+}
+
 const char *_binout_get_command_name(const uint64_t command) {
   switch (command) {
   case BINOUT_COMMAND_NULL:
@@ -478,6 +508,7 @@ binout_record_data *_binout_get_data(binout_record_data_pointer *dp,
 }
 
 char *_path_join(char *path, const char *element) {
+  /* TODO: Process '..' elements */
   const size_t path_length = strlen(path);
   size_t element_length = strlen(element);
   /* path + PATH_SEP + element + '\0' */
