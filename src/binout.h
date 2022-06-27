@@ -47,6 +47,10 @@ DEFINE_BINOUT_READ_TYPE_PROTO(uint32_t)
 DEFINE_BINOUT_READ_TYPE_PROTO(uint64_t)
 DEFINE_BINOUT_READ_TYPE_PROTO(float)
 DEFINE_BINOUT_READ_TYPE_PROTO(double)
+uint64_t binout_get_type_id(binout_file *bin_file, const char *path,
+                            const char *variable);
+int binout_variable_exists(binout_file *bin_file, const char *path,
+                           const char *variable);
 
 /* ----------------------------- */
 
