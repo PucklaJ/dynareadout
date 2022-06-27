@@ -1,8 +1,26 @@
 #include "binout.h"
 #include "binout_defines.h"
+#include "binout_records.h"
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define BIN_FILE_READ(dst, size, count)                                        \
+  read_count = fread(&dst, size, count, bin_file.file_handle);                 \
+  if (read_count != count) {                                                   \
+    bin_file.error_string = strerror(errno);                                   \
+    binout_close(&bin_file);                                                   \
+    return bin_file;                                                           \
+  }
+
+#define BIN_FILE_READ_FREE(dst, size, count, obj)                              \
+  read_count = fread(dst, size, count, bin_file.file_handle);                  \
+  if (read_count != count) {                                                   \
+    bin_file.error_string = strerror(errno);                                   \
+    free(obj);                                                                 \
+    binout_close(&bin_file);                                                   \
+    return bin_file;                                                           \
+  }
 
 binout_file binout_open(const char *file_name) {
   binout_file bin_file;
@@ -16,7 +34,7 @@ binout_file binout_open(const char *file_name) {
 
   /* Read header */
   size_t read_count =
-      fread(&bin_file.header, 1, sizeof(bin_file.header), bin_file.file_handle);
+      fread(&bin_file.header, sizeof(bin_file.header), 1, bin_file.file_handle);
   if (read_count == 0) {
     bin_file.error_string = strerror(errno);
     fclose(bin_file.file_handle);
@@ -54,49 +72,154 @@ binout_file binout_open(const char *file_name) {
     return bin_file;
   }
 
-  /* Parse positions of all records */
+  /* Parse all records */
   bin_file.record_count = 0;
   bin_file.records = NULL;
   while (ftell(bin_file.file_handle) < file_size) {
-    bin_file.record_count++;
-    if (!bin_file.records) {
-      bin_file.records = malloc(sizeof(binout_record));
+    uint64_t record_length = 0, record_command = 0;
+
+    BIN_FILE_READ(record_length, bin_file.header.record_length_field_size, 1);
+    BIN_FILE_READ(record_command, bin_file.header.record_command_field_size, 1);
+
+    const uint64_t record_data_length =
+        record_length - bin_file.header.record_length_field_size -
+        bin_file.header.record_command_field_size;
+
+    if (record_command == BINOUT_COMMAND_SYMBOLTABLEOFFSET) {
+      if (record_data_length > 8) {
+        bin_file.error_string =
+            "A symbol table offset length larger than 8 is not supported";
+        binout_close(&bin_file);
+        return bin_file;
+      }
+
+      BIN_FILE_READ(bin_file.symbol_table_offset, record_data_length, 1);
+    } else if (record_command == BINOUT_COMMAND_NULL) {
+      if (fseek(bin_file.file_handle, record_data_length, SEEK_CUR) != 0) {
+        bin_file.error_string = strerror(errno);
+        binout_close(&bin_file);
+        return bin_file;
+      }
+    } else if (record_command == BINOUT_COMMAND_CD) {
+      binout_record_cd rcd;
+      rcd.path = malloc(record_data_length + 1);
+      rcd.path[record_data_length] = '\0';
+
+      BIN_FILE_READ_FREE(rcd.path, 1, record_data_length, rcd.path);
+
+      printf("CD Path: %s\n", rcd.path);
+      free(rcd.path);
+    } else if (record_command == BINOUT_COMMAND_DATA) {
+      binout_record_data rd;
+      rd.type_id = 0;
+      uint8_t name_length;
+
+      BIN_FILE_READ(rd.type_id, bin_file.header.record_typeid_field_size, 1);
+      BIN_FILE_READ(name_length, BINOUT_DATA_NAME_LENGTH, 1);
+
+      rd.name = malloc(name_length + 1);
+      rd.name[name_length] = '\0';
+      BIN_FILE_READ_FREE(rd.name, 1, name_length, rd.name);
+
+      rd.data_length = record_data_length -
+                       bin_file.header.record_typeid_field_size -
+                       BINOUT_DATA_NAME_LENGTH - name_length;
+      rd.data = malloc(rd.data_length);
+      BIN_FILE_READ_FREE(rd.data, rd.data_length, 1, rd.data);
+
+      printf("Data Name: %s\n", rd.name);
+      printf("Data Type: %s\n", _binout_get_type_name(rd.type_id));
+      const uint8_t type_size = _binout_get_type_size(rd.type_id);
+      const uint64_t value_count = rd.data_length / (uint64_t)type_size;
+      printf("Data Values: %d\n", value_count);
+      {
+        uint64_t offset = 0;
+        uint64_t i = 0;
+        while (i < value_count) {
+          switch (rd.type_id) {
+          case BINOUT_TYPE_INT8:
+            int8_t value;
+            memcpy(&value, &rd.data[offset], type_size);
+            printf("%c, ", value);
+            break;
+          case BINOUT_TYPE_INT16:
+            int16_t value1;
+            memcpy(&value1, &rd.data[offset], type_size);
+            printf("%d, ", value1);
+            break;
+          case BINOUT_TYPE_INT32:
+            int32_t value2;
+            memcpy(&value2, &rd.data[offset], type_size);
+            printf("%d, ", value2);
+            break;
+          case BINOUT_TYPE_INT64:
+            int64_t value3;
+            memcpy(&value3, &rd.data[offset], type_size);
+            printf("%d, ", value3);
+            break;
+          case BINOUT_TYPE_UINT8:
+            uint8_t value4;
+            memcpy(&value4, &rd.data[offset], type_size);
+            printf("%d, ", value4);
+            break;
+          case BINOUT_TYPE_UINT16:
+            uint16_t value5;
+            memcpy(&value5, &rd.data[offset], type_size);
+            printf("%d, ", value5);
+            break;
+          case BINOUT_TYPE_UINT32:
+            uint32_t value6;
+            memcpy(&value6, &rd.data[offset], type_size);
+            printf("%d, ", value6);
+            break;
+          case BINOUT_TYPE_UINT64:
+            uint64_t value7;
+            memcpy(&value7, &rd.data[offset], type_size);
+            printf("%d, ", value7);
+            break;
+          case BINOUT_TYPE_FLOAT32:
+            float value8;
+            memcpy(&value8, &rd.data[offset], type_size);
+            printf("%f, ", value8);
+            break;
+          case BINOUT_TYPE_FLOAT64:
+            double value9;
+            memcpy(&value9, &rd.data[offset], type_size);
+            printf("%f, ", value9);
+            break;
+          }
+
+          offset += (uint64_t)type_size;
+          i++;
+        }
+        printf("\n");
+      }
+
+      free(rd.name);
+      free(rd.data);
     } else {
-      bin_file.records = realloc(bin_file.records,
-                                 bin_file.record_count * sizeof(binout_record));
-    }
+      bin_file.record_count++;
+      if (!bin_file.records) {
+        bin_file.records = malloc(sizeof(binout_record));
+      } else {
+        bin_file.records = realloc(bin_file.records, bin_file.record_count *
+                                                         sizeof(binout_record));
+      }
 
-    binout_record *last = &bin_file.records[bin_file.record_count - 1];
-    last->length = 0;
-    last->command = 0;
-    last->data_pos = 0;
+      binout_record *last = &bin_file.records[bin_file.record_count - 1];
+      last->length = record_length;
+      last->command = record_command;
+      last->data_pos = 0;
 
-    read_count =
-        fread(&last->length, 1, bin_file.header.record_length_field_size,
-              bin_file.file_handle);
-    if (read_count == 0) {
-      bin_file.error_string = strerror(errno);
-      binout_close(&bin_file);
-      return bin_file;
-    }
+      last->length -= bin_file.header.record_length_field_size +
+                      bin_file.header.record_command_field_size;
 
-    read_count =
-        fread(&last->command, 1, bin_file.header.record_command_field_size,
-              bin_file.file_handle);
-    if (read_count == 0) {
-      bin_file.error_string = strerror(errno);
-      binout_close(&bin_file);
-      return bin_file;
-    }
-
-    last->length -= bin_file.header.record_length_field_size +
-                    bin_file.header.record_command_field_size;
-
-    last->data_pos = ftell(bin_file.file_handle);
-    if (fseek(bin_file.file_handle, last->length, SEEK_CUR) != 0) {
-      bin_file.error_string = strerror(errno);
-      binout_close(&bin_file);
-      return bin_file;
+      last->data_pos = ftell(bin_file.file_handle);
+      if (fseek(bin_file.file_handle, last->length, SEEK_CUR) != 0) {
+        bin_file.error_string = strerror(errno);
+        binout_close(&bin_file);
+        return bin_file;
+      }
     }
   }
 
@@ -131,6 +254,8 @@ void binout_print_header(binout_file *bin_file) {
   printf("Floating Point Format: %s\n",
          bin_file->header.float_format == BINOUT_HEADER_FLOAT_IEEE ? "IEEE"
                                                                    : "Unknown");
+  printf("Symbol Table Offset: %d\n", bin_file->symbol_table_offset);
+  printf("\n\n");
 }
 
 void binout_print_records(binout_file *bin_file) {
@@ -177,5 +302,59 @@ const char *_binout_get_command_name(const uint64_t command) {
   default:
     return "UNKNOWN";
     break;
+  }
+}
+
+uint8_t _binout_get_type_size(const uint64_t type_id) {
+  switch (type_id) {
+  case BINOUT_TYPE_INT8:
+    return 1;
+  case BINOUT_TYPE_INT16:
+    return 2;
+  case BINOUT_TYPE_INT32:
+    return 4;
+  case BINOUT_TYPE_INT64:
+    return 8;
+  case BINOUT_TYPE_UINT8:
+    return 1;
+  case BINOUT_TYPE_UINT16:
+    return 2;
+  case BINOUT_TYPE_UINT32:
+    return 4;
+  case BINOUT_TYPE_UINT64:
+    return 8;
+  case BINOUT_TYPE_FLOAT32:
+    return 4;
+  case BINOUT_TYPE_FLOAT64:
+    return 8;
+  default:
+    return 255;
+  }
+}
+
+const char *_binout_get_type_name(const uint64_t type_id) {
+  switch (type_id) {
+  case BINOUT_TYPE_INT8:
+    return "INT8";
+  case BINOUT_TYPE_INT16:
+    return "INT16";
+  case BINOUT_TYPE_INT32:
+    return "INT32";
+  case BINOUT_TYPE_INT64:
+    return "INT64";
+  case BINOUT_TYPE_UINT8:
+    return "UINT8";
+  case BINOUT_TYPE_UINT16:
+    return "UINT16";
+  case BINOUT_TYPE_UINT32:
+    return "UINT32";
+  case BINOUT_TYPE_UINT64:
+    return "UINT64";
+  case BINOUT_TYPE_FLOAT32:
+    return "FLOAT32";
+  case BINOUT_TYPE_FLOAT64:
+    return "FLOAT64";
+  default:
+    return "UNKNOWN";
   }
 }
