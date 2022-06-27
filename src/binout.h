@@ -16,15 +16,7 @@ typedef struct {
 } binout_header;
 
 typedef struct {
-  uint64_t length;
-  uint64_t command;
-  long data_pos;
-} binout_record;
-
-typedef struct {
   binout_header header;
-  binout_record *records;
-  uint64_t record_count;
   uint64_t symbol_table_offset;
   binout_record_data_pointer *data_pointers;
   uint64_t data_pointers_size;
