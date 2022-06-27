@@ -24,6 +24,7 @@ typedef struct {
   binout_header header;
   binout_record *records;
   uint64_t record_count;
+  uint64_t symbol_table_offset;
 
   FILE *file_handle;
   const char *error_string;
@@ -41,6 +42,8 @@ void binout_print_records(binout_file *bin_file);
 /* ----- Private functions ----- */
 
 const char *_binout_get_command_name(const uint64_t command);
+uint8_t _binout_get_type_size(const uint64_t type_id);
+const char *_binout_get_type_name(const uint64_t type_id);
 
 /* ----------------------------- */
 #endif
