@@ -15,7 +15,15 @@ typedef struct {
 } binout_header;
 
 typedef struct {
+  uint64_t length;
+  uint64_t command;
+  long data_pos;
+} binout_record;
+
+typedef struct {
   binout_header header;
+  binout_record *records;
+  uint64_t record_count;
 
   FILE *file_handle;
   const char *error_string;
@@ -26,9 +34,13 @@ typedef struct {
 binout_file binout_open(const char *file_name);
 void binout_close(binout_file *bin_file);
 void binout_print_header(binout_file *bin_file);
+void binout_print_records(binout_file *bin_file);
 
 /* ----------------------------- */
 
 /* ----- Private functions ----- */
+
+const char *_binout_get_command_name(const uint64_t command);
+
 /* ----------------------------- */
 #endif
