@@ -1,13 +1,19 @@
 #ifndef BINOUT_RECORDS_H
 #define BINOUT_RECORDS_H
 #include <stdint.h>
+#include <stdlib.h>
+
+typedef struct {
+  char *path;
+  size_t file_pos;
+} binout_record_data;
 
 typedef struct {
   uint64_t type_id;
-  char *path;
+  char *name;
   uint64_t data_length;
-  uint8_t **data;
-  uint64_t data_size;
+  binout_record_data *records;
+  size_t records_size;
 } binout_record_data_pointer;
 
 #endif

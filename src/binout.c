@@ -140,27 +140,39 @@ binout_file binout_open(const char *file_name) {
       uint8_t *data = malloc(data_length);
       BIN_FILE_READ_FREE(data, data_length, 1, data);
 
-      const size_t current_path_len = strlen(current_path);
-      char *data_path = malloc(current_path_len + 1);
-      memcpy(data_path, current_path, current_path_len + 1);
-      data_path = _path_join(data_path, name);
-      free(name);
-
       binout_record_data_pointer *dp = NULL;
       {
         uint64_t i = 0;
         while (i < bin_file.data_pointers_size) {
           binout_record_data_pointer *bin_dp = &bin_file.data_pointers[i];
-          if (strcmp(bin_dp->path, data_path) == 0) {
+          char *bin_dp_main_path = _path_main(bin_dp->records[0].path);
+          char *dp_main_path = _path_main(current_path);
+
+          if (strcmp(bin_dp->name, name) == 0 &&
+              strcmp(bin_dp_main_path, dp_main_path) == 0) {
             dp = bin_dp;
+            free(bin_dp_main_path);
+            free(dp_main_path);
             break;
           }
+
+          free(bin_dp_main_path);
+          free(dp_main_path);
           i++;
         }
       }
 
       if (dp) {
-        assert(data_length == dp->data_length);
+        if (data_length != dp->data_length) {
+          bin_file.error_string =
+              "The data_length of one record is different from another even "
+              "though they are of the same variable";
+          free(name);
+          free(data);
+          free(current_path);
+          binout_close(&bin_file);
+          return bin_file;
+        }
       } else {
         bin_file.data_pointers_size++;
         if (bin_file.data_pointers_size == 1) {
@@ -172,20 +184,27 @@ binout_file binout_open(const char *file_name) {
         }
 
         dp = &bin_file.data_pointers[bin_file.data_pointers_size - 1];
-        dp->path = data_path;
-        dp->data_size = 0;
+        dp->name = name;
+        dp->records_size = 0;
         dp->data_length = data_length;
         dp->type_id = type_id;
-        dp->data = NULL;
+        dp->records = NULL;
       }
 
-      dp->data_size++;
-      if (dp->data_size == 1) {
-        dp->data = malloc(sizeof(uint8_t *));
+      dp->records_size++;
+      if (dp->records_size == 1) {
+        dp->records = malloc(sizeof(binout_record_data));
       } else {
-        dp->data = realloc(dp->data, dp->data_size * sizeof(uint8_t *));
+        dp->records =
+            realloc(dp->records, dp->records_size * sizeof(binout_record_data));
       }
-      dp->data[dp->data_size - 1] = data;
+
+      binout_record_data *rd = &dp->records[dp->records_size - 1];
+      const size_t current_path_len = strlen(current_path);
+      rd->path = malloc(current_path_len + 1);
+      memcpy(rd->path, current_path, current_path_len + 1);
+      rd->file_pos = ftell(bin_file.file_handle);
+
     } else {
       if (fseek(bin_file.file_handle, record_data_length, SEEK_CUR) != 0) {
         bin_file.error_string = strerror(errno);
@@ -206,11 +225,12 @@ void binout_close(binout_file *bin_file) {
     while (i < bin_file->data_pointers_size) {
       binout_record_data_pointer *dp = &bin_file->data_pointers[i];
       uint64_t j = 0;
-      while (j < dp->data_size) {
-        free(dp->data[j]);
+      while (j < dp->records_size) {
+        free(dp->records[j].path);
         j++;
       }
-      free(dp->path);
+      free(dp->records);
+      free(dp->name);
       i++;
     }
     free(bin_file->data_pointers);
@@ -250,11 +270,18 @@ void binout_print_records(binout_file *bin_file) {
   uint64_t i = 0;
   while (i < bin_file->data_pointers_size) {
     const binout_record_data_pointer *dp = &bin_file->data_pointers[i];
-    printf("---- %s ----\n", dp->path);
-    printf("- Data Size: %d --\n", dp->data_size);
+    printf("---- %s ----\n", dp->name);
     printf("- Data Length: %d --\n", dp->data_length);
     printf("- Type: %s -----\n", _binout_get_type_name(dp->type_id));
     printf("---------------------\n");
+    printf("- Records: %d --\n", dp->records_size);
+
+    uint64_t j = 0;
+    while (j < dp->records_size) {
+      printf("- Path: %s ---\n", dp->records[j].path);
+
+      j++;
+    }
 
     i++;
   }
@@ -373,3 +400,29 @@ char *_path_join(char *path, const char *element) {
 }
 
 int _path_is_abs(const char *path) { return path[0] == PATH_SEP; }
+
+char *_path_main(const char *path) {
+  const size_t path_len = strlen(path);
+  size_t sep_index = -1;
+  size_t i = 1;
+  while (i < path_len) {
+    if (path[i] == PATH_SEP) {
+      sep_index = i;
+      break;
+    }
+
+    i++;
+  }
+
+  if (sep_index == -1) {
+    char *main_path = malloc(path_len);
+    memcpy(main_path, &path[1], path_len);
+    return main_path;
+  }
+
+  char *main_path = malloc(sep_index);
+  memcpy(main_path, &path[1], sep_index - 1);
+  main_path[sep_index - 1] = '\0';
+
+  return main_path;
+}

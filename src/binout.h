@@ -41,6 +41,7 @@ uint8_t _binout_get_type_size(const uint64_t type_id);
 const char *_binout_get_type_name(const uint64_t type_id);
 char *_path_join(char *path, const char *element);
 int _path_is_abs(const char *path);
+char *_path_main(const char *path);
 
 /* ----------------------------- */
 #endif
