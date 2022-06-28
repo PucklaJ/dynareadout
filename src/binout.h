@@ -25,6 +25,10 @@ typedef struct {
   const char *error_string;
 } binout_file;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* ----- Public functions ------ */
 
 binout_file binout_open(const char *file_name);
@@ -66,4 +70,8 @@ binout_record_data *_binout_get_data(binout_record_data_pointer *dp,
                                      const char *path);
 
 /* ----------------------------- */
+#ifdef __cplusplus
+}
+#endif
+
 #endif
