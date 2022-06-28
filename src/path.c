@@ -3,7 +3,6 @@
 #include <string.h>
 
 char *path_join(char *path, const char *element) {
-  /* TODO: Process '..' elements */
   const size_t path_length = strlen(path);
   size_t element_length = strlen(element);
   /* path + PATH_SEP + element + '\0' */

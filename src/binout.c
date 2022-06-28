@@ -153,8 +153,6 @@ binout_file binout_open(const char *file_name) {
           char *bin_dp_main_path = path_main(bin_dp->records[0].path);
           char *dp_main_path = path_main(current_path);
 
-          /* TODO: Don't just check for main path; Probably the last element
-           * needs to be emitted */
           if (strcmp(bin_dp->name, name) == 0 &&
               strcmp(bin_dp_main_path, dp_main_path) == 0) {
             dp = bin_dp;
@@ -197,6 +195,7 @@ binout_file binout_open(const char *file_name) {
         dp->records = NULL;
       }
 
+      /* TODO: Check if record with same path already exists */
       dp->records_size++;
       if (dp->records_size == 1) {
         dp->records = malloc(sizeof(binout_record_data));
@@ -498,6 +497,7 @@ binout_record_data *_binout_get_data(binout_record_data_pointer *dp,
   while (i < dp->records_size) {
     if (strcmp(dp->records[i].path, path) == 0) {
       data = &dp->records[i];
+      break;
     }
 
     i++;
