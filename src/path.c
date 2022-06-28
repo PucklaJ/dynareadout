@@ -36,10 +36,13 @@ char *path_main(const char *path) {
   const size_t path_len = strlen(path);
   size_t sep_index = -1;
   size_t i = 1;
+  size_t sep_count = 0;
   while (i < path_len) {
     if (path[i] == PATH_SEP) {
+      sep_count++;
       sep_index = i;
-      break;
+      if (sep_count == 2)
+        break;
     }
 
     i++;
@@ -60,6 +63,10 @@ char *path_main(const char *path) {
 
 char *path_parse(char *path) {
   size_t path_len = strlen(path);
+  if (path_len < 4) {
+    return path;
+  }
+
   size_t i = 0;
   char buffer[4];
   while (i < path_len - 2) {
@@ -83,7 +90,7 @@ char *path_parse(char *path) {
       const size_t element_end = i + 2;
       path = delete_substr(path, element_start, element_end);
       path_len -= element_end - element_start + 1;
-      i = j;
+      i = j - 1;
     }
 
     i++;

@@ -159,4 +159,28 @@ TEST_CASE("path_parse") {
     printf("%s\n", new_path);
     CHECK(strcmp(new_path, "/nodout/d000002") == 0);
   }
+
+  {
+    const char *p1 = "/ncforc/slave_100000/../master_100000/metadata";
+    const size_t p1_len = strlen(p1);
+    char *_p1 = (char *)malloc(p1_len + 1);
+    memcpy(_p1, p1, p1_len + 1);
+
+    char *new_path = path_parse(_p1);
+
+    printf("%s\n", new_path);
+    CHECK(strcmp(new_path, "/ncforc/master_100000/metadata") == 0);
+  }
+
+  {
+    const char *p1 = "/ncforc/slave_100000/../../master_100000/metadata";
+    const size_t p1_len = strlen(p1);
+    char *_p1 = (char *)malloc(p1_len + 1);
+    memcpy(_p1, p1, p1_len + 1);
+
+    char *new_path = path_parse(_p1);
+
+    printf("%s\n", new_path);
+    CHECK(strcmp(new_path, "/master_100000/metadata") == 0);
+  }
 }
