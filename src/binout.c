@@ -195,18 +195,22 @@ binout_file binout_open(const char *file_name) {
         dp->records = NULL;
       }
 
-      /* TODO: Check if record with same path already exists */
-      dp->records_size++;
-      if (dp->records_size == 1) {
-        dp->records = malloc(sizeof(binout_record_data));
-      } else {
-        dp->records =
-            realloc(dp->records, dp->records_size * sizeof(binout_record_data));
+      /* Overwrite it if a record with the same name already exists */
+      binout_record_data *rd = _binout_get_data(dp, current_path);
+      if (!rd) {
+        dp->records_size++;
+        if (dp->records_size == 1) {
+          dp->records = malloc(sizeof(binout_record_data));
+        } else {
+          dp->records = realloc(dp->records,
+                                dp->records_size * sizeof(binout_record_data));
+        }
+        rd = &dp->records[dp->records_size - 1];
+        rd->path = NULL;
       }
 
-      binout_record_data *rd = &dp->records[dp->records_size - 1];
       const size_t current_path_len = strlen(current_path);
-      rd->path = malloc(current_path_len + 1);
+      rd->path = realloc(rd->path, current_path_len + 1);
       memcpy(rd->path, current_path, current_path_len + 1);
       rd->file_pos = file_pos;
 
@@ -284,6 +288,7 @@ void binout_print_records(binout_file *bin_file) {
     uint64_t j = 0;
     while (j < dp->records_size) {
       printf("- Path: %s ---\n", dp->records[j].path);
+      printf("- File Pos: 0x%x ---\n", dp->records[j].file_pos);
 
       j++;
     }
