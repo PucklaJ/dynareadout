@@ -1,18 +1,16 @@
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #include <binout.h>
 #include <binout_defines.h>
+#include <doctest/doctest.h>
+#include <path.h>
 
-int main(int args, char *argv[]) {
-  if (args < 2) {
-    fprintf(stderr, "Invalid Arguments\n");
-    return 1;
-  }
-
-  const char *binout_file_name = argv[1];
+TEST_CASE("binout0000") {
+  const char *binout_file_name = "test_data/binout0000";
 
   binout_file bin_file = binout_open(binout_file_name);
   if (bin_file.error_string) {
     fprintf(stderr, "Failed to open binout: %s\n", bin_file.error_string);
-    return 1;
+    return;
   }
 
   binout_print_header(&bin_file);
@@ -27,10 +25,10 @@ int main(int args, char *argv[]) {
     if (!legend) {
       fprintf(stderr, "Failed to read legend: %s\n", bin_file.error_string);
       binout_close(&bin_file);
-      return 1;
+      return;
     }
 
-    legend = realloc(legend, legend_size + 1);
+    legend = (int8_t *)realloc(legend, legend_size + 1);
     legend[legend_size] = '\0';
     printf("nodout legend: %s\n", legend);
     free(legend);
@@ -45,7 +43,7 @@ int main(int args, char *argv[]) {
     if (!node_ids) {
       fprintf(stderr, "Failed to read node ids: %s\n", bin_file.error_string);
       binout_close(&bin_file);
-      return 1;
+      return;
     }
 
     printf("---- Node IDs: %d -----\n", node_ids_size);
@@ -59,6 +57,18 @@ int main(int args, char *argv[]) {
   }
 
   binout_close(&bin_file);
+}
 
-  return 0;
+TEST_CASE("path_join") {
+  char *p = (char *)malloc(6);
+  p[0] = '/';
+  p[1] = 'a';
+  p[2] = 'b';
+  p[3] = 'c';
+  p[4] = 'd';
+  p[5] = '\0';
+  p = path_join(p, "nodout");
+  CHECK(strcmp(p, "/abcd/nodout") == 0);
+
+  free(p);
 }
