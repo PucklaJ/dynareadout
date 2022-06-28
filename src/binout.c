@@ -1,9 +1,8 @@
 #include "binout.h"
 #include "binout_defines.h"
 #include "binout_records.h"
-#include <assert.h>
+#include "path.h"
 #include <errno.h>
-#include <stdlib.h>
 #include <string.h>
 
 #define BIN_FILE_READ(dst, size, count)                                        \
@@ -24,8 +23,6 @@
     binout_close(&bin_file);                                                   \
     return bin_file;                                                           \
   }
-
-#define PATH_SEP '/'
 
 binout_file binout_open(const char *file_name) {
   binout_file bin_file;
@@ -116,11 +113,11 @@ binout_file binout_open(const char *file_name) {
 
       BIN_FILE_READ_FREE(path, 1, record_data_length, path);
 
-      if (_path_is_abs(path) || strcmp(current_path, ".") == 0) {
+      if (path_is_abs(path) || strcmp(current_path, ".") == 0) {
         free(current_path);
         current_path = path;
       } else {
-        current_path = _path_join(current_path, path);
+        current_path = path_join(current_path, path);
         free(path);
       }
     } else if (record_command == BINOUT_COMMAND_DATA) {
@@ -151,8 +148,8 @@ binout_file binout_open(const char *file_name) {
         uint64_t i = 0;
         while (i < bin_file.data_pointers_size) {
           binout_record_data_pointer *bin_dp = &bin_file.data_pointers[i];
-          char *bin_dp_main_path = _path_main(bin_dp->records[0].path);
-          char *dp_main_path = _path_main(current_path);
+          char *bin_dp_main_path = path_main(bin_dp->records[0].path);
+          char *dp_main_path = path_main(current_path);
 
           /* TODO: Don't just check for main path; Probably the last element
            * needs to be emitted */
@@ -473,8 +470,8 @@ binout_record_data_pointer *_binout_get_data_pointer(binout_file *bin_file,
   uint64_t i = 0;
   while (i < bin_file->data_pointers_size) {
     binout_record_data_pointer *bin_dp = &bin_file->data_pointers[i];
-    char *bin_dp_main_path = _path_main(bin_dp->records[0].path);
-    char *dp_main_path = _path_main(path);
+    char *bin_dp_main_path = path_main(bin_dp->records[0].path);
+    char *dp_main_path = path_main(path);
 
     if (strcmp(bin_dp->name, variable) == 0 &&
         strcmp(bin_dp_main_path, dp_main_path) == 0) {
@@ -505,60 +502,4 @@ binout_record_data *_binout_get_data(binout_record_data_pointer *dp,
   }
 
   return data;
-}
-
-char *_path_join(char *path, const char *element) {
-  /* TODO: Process '..' elements */
-  const size_t path_length = strlen(path);
-  size_t element_length = strlen(element);
-  /* path + PATH_SEP + element + '\0' */
-  size_t new_size = path_length + element_length + 1;
-  int needs_path_sep = 0;
-  if (path[path_length - 1] != PATH_SEP) {
-    new_size += 1;
-    needs_path_sep = 1;
-  }
-
-  path = realloc(path, new_size);
-
-  path[new_size - 1] = '\0';
-  if (needs_path_sep)
-    path[path_length] = PATH_SEP;
-
-  size_t element_offset = 0;
-  if (element[0] == PATH_SEP) {
-    element_offset = 1;
-    element_length--;
-  }
-  memcpy(&path[path_length + needs_path_sep], &element[element_offset],
-         element_length);
-  return path;
-}
-
-int _path_is_abs(const char *path) { return path[0] == PATH_SEP; }
-
-char *_path_main(const char *path) {
-  const size_t path_len = strlen(path);
-  size_t sep_index = -1;
-  size_t i = 1;
-  while (i < path_len) {
-    if (path[i] == PATH_SEP) {
-      sep_index = i;
-      break;
-    }
-
-    i++;
-  }
-
-  if (sep_index == -1) {
-    char *main_path = malloc(path_len);
-    memcpy(main_path, &path[1], path_len);
-    return main_path;
-  }
-
-  char *main_path = malloc(sep_index);
-  memcpy(main_path, &path[1], sep_index - 1);
-  main_path[sep_index - 1] = '\0';
-
-  return main_path;
 }

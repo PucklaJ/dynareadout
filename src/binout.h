@@ -64,9 +64,6 @@ binout_record_data_pointer *_binout_get_data_pointer(binout_file *bin_file,
                                                      const char *variable);
 binout_record_data *_binout_get_data(binout_record_data_pointer *dp,
                                      const char *path);
-char *_path_join(char *path, const char *element);
-int _path_is_abs(const char *path);
-char *_path_main(const char *path);
 
 /* ----------------------------- */
 #endif
