@@ -120,6 +120,8 @@ binout_file binout_open(const char *file_name) {
         current_path = path_join(current_path, path);
         free(path);
       }
+
+      current_path = path_parse(current_path);
     } else if (record_command == BINOUT_COMMAND_DATA) {
       uint64_t type_id = 0;
       uint8_t name_length;
