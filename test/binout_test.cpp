@@ -72,3 +72,91 @@ TEST_CASE("path_join") {
 
   free(p);
 }
+
+TEST_CASE("delete_substr") {
+  {
+    const char *p1 = "Hello World";
+    const size_t p1_len = strlen(p1);
+    char *_p1 = (char *)malloc(p1_len + 1);
+    memcpy(_p1, p1, p1_len + 1);
+
+    char *new_p1 = delete_substr(_p1, 2, 3);
+    printf("%s\n", new_p1);
+    CHECK(strcmp(new_p1, "Heo World") == 0);
+    free(new_p1);
+  }
+
+  {
+    const char *p2 = "Please use this as an test string";
+    const size_t p2_len = strlen(p2);
+    char *_p2 = (char *)malloc(p2_len + 1);
+    memcpy(_p2, p2, p2_len + 1);
+
+    char *new_p2 = delete_substr(_p2, 0, 6);
+    printf("%s\n", new_p2);
+    CHECK(strcmp(new_p2, "use this as an test string") == 0);
+    free(new_p2);
+  }
+
+  {
+    const char *p2 = "Please use this as an test string";
+    const size_t p2_len = strlen(p2);
+    char *_p2 = (char *)malloc(p2_len + 1);
+    memcpy(_p2, p2, p2_len + 1);
+
+    char *new_p2 = delete_substr(_p2, 26, 32);
+    printf("%s\n", new_p2);
+    CHECK(strcmp(new_p2, "Please use this as an test") == 0);
+    free(new_p2);
+  }
+}
+
+TEST_CASE("path_parse") {
+  {
+    const char *p1 = "/nodout/metadata/../d000001";
+    const size_t p1_len = strlen(p1);
+    char *_p1 = (char *)malloc(p1_len + 1);
+    memcpy(_p1, p1, p1_len + 1);
+
+    char *new_path = path_parse(_p1);
+
+    printf("%s\n", new_path);
+    CHECK(strcmp(new_path, "/nodout/d000001") == 0);
+  }
+
+  {
+    const char *p1 = "/nodout/../d000001";
+    const size_t p1_len = strlen(p1);
+    char *_p1 = (char *)malloc(p1_len + 1);
+    memcpy(_p1, p1, p1_len + 1);
+
+    char *new_path = path_parse(_p1);
+
+    printf("%s\n", new_path);
+    CHECK(strcmp(new_path, "/d000001") == 0);
+  }
+
+  {
+    const char *p1 = "/nodout/d000001/..";
+    const size_t p1_len = strlen(p1);
+    char *_p1 = (char *)malloc(p1_len + 1);
+    memcpy(_p1, p1, p1_len + 1);
+
+    char *new_path = path_parse(_p1);
+
+    printf("%s\n", new_path);
+    CHECK(strcmp(new_path, "/nodout") == 0);
+  }
+
+  {
+    const char *p1 = "/nodout/d000001/../metadata/../d000002";
+    const size_t p1_len = strlen(p1);
+    char *_p1 = (char *)malloc(p1_len + 1);
+    memcpy(_p1, p1, p1_len + 1);
+
+    char *new_path = path_parse(_p1);
+
+    printf("%s\n", new_path);
+    CHECK(strcmp(new_path, "/nodout/d000002") == 0);
+  }
+}
