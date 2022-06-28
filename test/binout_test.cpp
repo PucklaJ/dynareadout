@@ -54,6 +54,20 @@ TEST_CASE("binout0000") {
       i++;
     }
     printf("\n--------------------------\n");
+    free(node_ids);
+  }
+
+  if (binout_variable_exists(&bin_file, "/ncforc/master_100002/metadata",
+                             "title") &&
+      binout_get_type_id(&bin_file, "/ncforc/master_100002/metadata",
+                         "title") == BINOUT_TYPE_INT8) {
+    size_t title_size;
+    int8_t *title = binout_read_int8_t(
+        &bin_file, "/ncforc/master_100002/metadata", "title", &title_size);
+    title = (int8_t *)realloc(title, title_size + 1);
+    title[title_size] = '\0';
+    printf("Title: %s\n", title);
+    free(title);
   }
 
   binout_close(&bin_file);
