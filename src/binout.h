@@ -55,6 +55,9 @@ uint64_t binout_get_type_id(binout_file *bin_file, const char *path,
                             const char *variable);
 int binout_variable_exists(binout_file *bin_file, const char *path,
                            const char *variable);
+char **binout_get_children(binout_file *bin_file, const char *path,
+                           size_t *num_children);
+void binout_free_children(char **children, size_t num_children);
 
 /* ----------------------------- */
 

@@ -2,7 +2,10 @@
 #include <binout.h>
 #include <binout_defines.h>
 #include <doctest/doctest.h>
+#include <iomanip>
 #include <path.h>
+#include <sstream>
+#include <string>
 
 TEST_CASE("binout0000") {
   const char *binout_file_name = "test_data/binout0000";
@@ -15,6 +18,42 @@ TEST_CASE("binout0000") {
 
   binout_print_header(&bin_file);
   binout_print_records(&bin_file);
+
+  size_t num_binout_children;
+  char **binout_children =
+      binout_get_children(&bin_file, "/", &num_binout_children);
+  REQUIRE(num_binout_children == 2);
+  CHECK(strcmp(binout_children[0], "nodout") == 0);
+  CHECK(strcmp(binout_children[1], "rcforc") == 0);
+
+  binout_free_children(binout_children, num_binout_children);
+
+  binout_children =
+      binout_get_children(&bin_file, "/nodout", &num_binout_children);
+  REQUIRE(num_binout_children == 602);
+  CHECK(strcmp(binout_children[0], "metadata") == 0);
+  for (size_t i = 1; i <= 601; i++) {
+    std::stringstream stream;
+    stream << "d" << std::setfill('0') << std::right << std::setw(6) << i;
+    const std::string str(stream.str());
+
+    CHECK(strcmp(binout_children[i], str.c_str()) == 0);
+  }
+
+  binout_free_children(binout_children, num_binout_children);
+
+  binout_children =
+      binout_get_children(&bin_file, "/nodout/metadata/", &num_binout_children);
+  REQUIRE(num_binout_children == 7);
+  CHECK(strcmp(binout_children[0], "title") == 0);
+  CHECK(strcmp(binout_children[1], "version") == 0);
+  CHECK(strcmp(binout_children[2], "revision") == 0);
+  CHECK(strcmp(binout_children[3], "date") == 0);
+  CHECK(strcmp(binout_children[4], "legend") == 0);
+  CHECK(strcmp(binout_children[5], "legend_ids") == 0);
+  CHECK(strcmp(binout_children[6], "ids") == 0);
+
+  binout_free_children(binout_children, num_binout_children);
 
   if (binout_variable_exists(&bin_file, "/nodout/metadata", "legend") &&
       binout_get_type_id(&bin_file, "/nodout/metadata", "legend") ==
@@ -136,6 +175,7 @@ TEST_CASE("path_parse") {
 
     printf("%s\n", new_path);
     CHECK(strcmp(new_path, "/nodout/d000001") == 0);
+    free(new_path);
   }
 
   {
@@ -148,6 +188,7 @@ TEST_CASE("path_parse") {
 
     printf("%s\n", new_path);
     CHECK(strcmp(new_path, "/d000001") == 0);
+    free(new_path);
   }
 
   {
@@ -160,6 +201,7 @@ TEST_CASE("path_parse") {
 
     printf("%s\n", new_path);
     CHECK(strcmp(new_path, "/nodout") == 0);
+    free(new_path);
   }
 
   {
@@ -172,6 +214,7 @@ TEST_CASE("path_parse") {
 
     printf("%s\n", new_path);
     CHECK(strcmp(new_path, "/nodout/d000002") == 0);
+    free(new_path);
   }
 
   {
@@ -184,6 +227,7 @@ TEST_CASE("path_parse") {
 
     printf("%s\n", new_path);
     CHECK(strcmp(new_path, "/ncforc/master_100000/metadata") == 0);
+    free(new_path);
   }
 
   {
@@ -196,5 +240,45 @@ TEST_CASE("path_parse") {
 
     printf("%s\n", new_path);
     CHECK(strcmp(new_path, "/master_100000/metadata") == 0);
+    free(new_path);
+  }
+}
+
+TEST_CASE("path_elements") {
+  {
+    const char *p1 = "/ncforc/slave_100000/../../master_100000/metadata";
+
+    size_t num_elements;
+    char **p1_elements = path_elements(p1, &num_elements);
+    REQUIRE(num_elements == 7);
+    CHECK(strcmp(p1_elements[0], "/") == 0);
+    CHECK(strcmp(p1_elements[1], "ncforc") == 0);
+    CHECK(strcmp(p1_elements[2], "slave_100000") == 0);
+    CHECK(strcmp(p1_elements[3], "..") == 0);
+    CHECK(strcmp(p1_elements[4], "..") == 0);
+    CHECK(strcmp(p1_elements[5], "master_100000") == 0);
+    CHECK(strcmp(p1_elements[6], "metadata") == 0);
+    path_free_elements(p1_elements, num_elements);
+  }
+
+  {
+    const char *p1 = "/";
+
+    size_t num_elements;
+    char **p1_elements = path_elements(p1, &num_elements);
+    REQUIRE(num_elements == 1);
+    CHECK(strcmp(p1_elements[0], "/") == 0);
+    path_free_elements(p1_elements, num_elements);
+  }
+
+  {
+    const char *p1 = "/nodout";
+
+    size_t num_elements;
+    char **p1_elements = path_elements(p1, &num_elements);
+    REQUIRE(num_elements == 2);
+    CHECK(strcmp(p1_elements[0], "/") == 0);
+    CHECK(strcmp(p1_elements[1], "nodout") == 0);
+    path_free_elements(p1_elements, num_elements);
   }
 }

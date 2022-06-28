@@ -98,6 +98,63 @@ char *path_parse(char *path) {
   return path;
 }
 
+char **path_elements(const char *path, size_t *num_elements) {
+  const size_t path_len = strlen(path);
+  size_t i = 0;
+  *num_elements = 0;
+  char **elements = NULL;
+  size_t last_sep = 0;
+
+  while (i < path_len + 1) {
+    if (path[i] == PATH_SEP || (i == path_len && i - last_sep > 1)) {
+      (*num_elements)++;
+      elements = realloc(elements, *num_elements * sizeof(char *));
+      char **last_element = &elements[*num_elements - 1];
+      if (last_sep == i) {
+        *last_element = malloc(2);
+        (*last_element)[0] = path[i];
+        (*last_element)[1] = '\0';
+      } else {
+        const size_t element_length = i - last_sep - 1;
+        *last_element = malloc(element_length + 1);
+        memcpy(*last_element, &path[last_sep + 1], element_length);
+        (*last_element)[element_length] = '\0';
+      }
+
+      last_sep = i;
+    }
+
+    i++;
+  }
+
+  return elements;
+}
+
+int path_elements_contain(char **elements, size_t num_elements,
+                          const char *value) {
+  size_t i = 0;
+  while (i < num_elements) {
+    if (strcmp(elements[i], value) == 0) {
+      return 1;
+    }
+
+    i++;
+  }
+
+  return 0;
+}
+
+void path_free_elements(char **elements, size_t num_elements) {
+  size_t i = 0;
+  while (i < num_elements) {
+    free(elements[i]);
+
+    i++;
+  }
+  if (elements)
+    free(elements);
+}
+
 char *delete_substr(char *path, size_t start, size_t end) {
   const size_t path_len = strlen(path);
   const size_t delete_size = end - start + 1;

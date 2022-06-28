@@ -379,6 +379,89 @@ int binout_variable_exists(binout_file *bin_file, const char *path,
   return 1;
 }
 
+char **binout_get_children(binout_file *bin_file, const char *path,
+                           size_t *num_children) {
+  size_t _path_num_elements;
+  char **_path_elements = path_elements(path, &_path_num_elements);
+
+  *num_children = 0;
+  char **children = NULL;
+
+  size_t i = 0;
+  while (i < bin_file->data_pointers_size) {
+    binout_record_data_pointer *dp = &bin_file->data_pointers[i];
+    size_t j = 0;
+    while (j < dp->records_size) {
+      binout_record_data *data = &dp->records[j];
+      size_t num_data_elements;
+      char **data_elements = path_elements(data->path, &num_data_elements);
+      num_data_elements++;
+      data_elements =
+          realloc(data_elements, num_data_elements * sizeof(char *));
+      const size_t name_length = strlen(dp->name);
+      data_elements[num_data_elements - 1] = malloc(name_length + 1);
+      memcpy(data_elements[num_data_elements - 1], dp->name, name_length + 1);
+
+      size_t _path_index = _path_num_elements - 1;
+      size_t data_index = num_data_elements - 1;
+      while (data_index != -1) {
+        if (strcmp(_path_elements[_path_index], data_elements[data_index]) ==
+            0) {
+          break;
+        }
+
+        data_index--;
+      }
+
+      int path_fits = 1;
+
+      if (data_index != -1 && data_index + 1 < num_data_elements) {
+        data_index++;
+
+        if (data_index > 1) {
+          size_t cur_data_index = data_index - 1;
+          _path_index--;
+          while (_path_index != -1) {
+            cur_data_index--;
+
+            if (strcmp(_path_elements[_path_index],
+                       data_elements[cur_data_index]) != 0) {
+              path_fits = 0;
+              break;
+            }
+            _path_index--;
+          }
+        }
+
+        if (path_fits) {
+          char *child = data_elements[data_index];
+          if (!path_elements_contain(children, *num_children, child)) {
+            (*num_children)++;
+            children = realloc(children, *num_children * sizeof(char *));
+            const size_t child_len = strlen(child);
+            children[*num_children - 1] = malloc(child_len + 1);
+            memcpy(children[*num_children - 1], child, child_len + 1);
+          }
+        }
+      }
+
+      path_free_elements(data_elements, num_data_elements);
+
+      j++;
+    }
+
+    i++;
+  }
+
+  path_free_elements(_path_elements, _path_num_elements);
+
+  return children;
+}
+
+void binout_free_children(char **children, size_t num_children) {
+  path_free_elements(children, num_children);
+}
+
 const char *_binout_get_command_name(const uint64_t command) {
   switch (command) {
   case BINOUT_COMMAND_NULL:
