@@ -6,6 +6,9 @@
 #include <path.h>
 #include <sstream>
 #include <string>
+#ifdef BINOUT_CPP
+#include <cpp/binout.hpp>
+#endif
 
 TEST_CASE("binout0000") {
   const char *binout_file_name = "test_data/binout0000";
@@ -111,6 +114,16 @@ TEST_CASE("binout0000") {
 
   binout_close(&bin_file);
 }
+
+#ifdef BINOUT_CPP
+TEST_CASE("binout0000 C++") {
+  dro::Binout bin_file("test_data/binout0000");
+  const auto children = bin_file.get_children("/");
+  REQUIRE(children.size() == 2);
+  CHECK(children[0] == "nodout");
+  CHECK(children[1] == "rcforc");
+}
+#endif
 
 TEST_CASE("path_join") {
   char *p = (char *)malloc(6);
