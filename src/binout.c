@@ -179,13 +179,9 @@ binout_file binout_open(const char *file_name) {
         }
       } else {
         bin_file.data_pointers_size++;
-        if (bin_file.data_pointers_size == 1) {
-          bin_file.data_pointers = malloc(sizeof(binout_record_data_pointer));
-        } else {
-          bin_file.data_pointers = realloc(
-              bin_file.data_pointers,
-              bin_file.data_pointers_size * sizeof(binout_record_data_pointer));
-        }
+        bin_file.data_pointers = realloc(
+            bin_file.data_pointers,
+            bin_file.data_pointers_size * sizeof(binout_record_data_pointer));
 
         dp = &bin_file.data_pointers[bin_file.data_pointers_size - 1];
         dp->name = name;
@@ -199,12 +195,9 @@ binout_file binout_open(const char *file_name) {
       binout_record_data *rd = _binout_get_data(dp, current_path);
       if (!rd) {
         dp->records_size++;
-        if (dp->records_size == 1) {
-          dp->records = malloc(sizeof(binout_record_data));
-        } else {
-          dp->records = realloc(dp->records,
-                                dp->records_size * sizeof(binout_record_data));
-        }
+        dp->records =
+            realloc(dp->records, dp->records_size * sizeof(binout_record_data));
+
         rd = &dp->records[dp->records_size - 1];
         rd->path = NULL;
       }
