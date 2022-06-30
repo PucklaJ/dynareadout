@@ -108,10 +108,57 @@ TEST_CASE("binout0000") {
 #ifdef BINOUT_CPP
 TEST_CASE("binout0000 C++") {
   dro::Binout bin_file("test_data/binout0000");
-  const auto children = bin_file.get_children("/");
-  REQUIRE(children.size() == 2);
-  CHECK(children[0] == "nodout");
-  CHECK(children[1] == "rcforc");
+  {
+    const auto children = bin_file.get_children("/");
+    REQUIRE(children.size() == 2);
+    CHECK((children[0] == "nodout") == true);
+    CHECK((children[1] == "rcforc") == true);
+  }
+
+  {
+    const auto children = bin_file.get_children("/nodout/metadata/");
+    REQUIRE(children.size() == 7);
+    CHECK((children[0] == "title") == true);
+    CHECK((children[1] == "version") == true);
+    CHECK((children[2] == "revision") == true);
+    CHECK((children[3] == "date") == true);
+    CHECK((children[4] == "legend") == true);
+    CHECK((children[5] == "legend_ids") == true);
+    CHECK((children[6] == "ids") == true);
+  }
+
+  REQUIRE(bin_file.variable_exists("/nodout/metadata", "legend"));
+  REQUIRE(bin_file.get_type_id("/nodout/metadata", "legend") ==
+          dro::BinoutType::Int8);
+
+  {
+    const auto legend = bin_file.read<int8_t>("/nodout/metadata", "legend");
+    REQUIRE(legend.size() == 80);
+    CHECK((legend ==
+           "History_node_1                                                 "
+           "                 ") == true);
+  }
+
+  REQUIRE(bin_file.variable_exists("/nodout/metadata", "ids"));
+  REQUIRE(bin_file.get_type_id("/nodout/metadata", "ids") ==
+          dro::BinoutType::Int64);
+
+  {
+    const auto node_ids = bin_file.read<int64_t>("/nodout/metadata", "ids");
+    REQUIRE(node_ids.size() == 1);
+  }
+
+  REQUIRE(bin_file.variable_exists("/rcforc/metadata", "title"));
+  REQUIRE(bin_file.get_type_id("/rcforc/metadata", "title") ==
+          dro::BinoutType::Int8);
+
+  {
+    const auto title = bin_file.read<int8_t>("/rcforc/metadata", "title");
+    CHECK(title.size() == 80);
+    CHECK((title ==
+           "Pouch_macro_37Ah                                                 "
+           "               ") == true);
+  }
 }
 #endif
 
