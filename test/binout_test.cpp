@@ -160,6 +160,35 @@ TEST_CASE("binout0000 C++") {
            "               ") == true);
   }
 }
+
+TEST_CASE("Vector") {
+  SUBCASE("Iterator") {
+    int *data = (int *)malloc(5 * sizeof(int));
+    data[0] = 1;
+    data[1] = 2;
+    data[2] = 3;
+    data[3] = 4;
+    data[4] = 5;
+
+    dro::Vector<int> v1(data, 5);
+    int counter = 0;
+    for (const auto i : v1) {
+      CHECK(i == (counter + 1));
+      counter++;
+    }
+    CHECK(counter == 5);
+
+    counter = 0;
+    for (auto iter = v1.begin(); iter != v1.end(); iter++) {
+      CHECK(*iter == (counter + 1));
+      counter++;
+    }
+    CHECK(counter == 5);
+
+    CHECK(std::find(v1.begin(), v1.end(), 5) != v1.end());
+    CHECK(std::find(v1.begin(), v1.end(), 6) == v1.end());
+  }
+}
 #endif
 
 TEST_CASE("path_join") {
