@@ -1,10 +1,11 @@
 #ifndef BINOUT_RECORDS_H
 #define BINOUT_RECORDS_H
+#include "path.h"
 #include <stdint.h>
 #include <stdlib.h>
 
 typedef struct {
-  char *path;
+  path_t path;
   size_t file_pos;
 } binout_record_data;
 

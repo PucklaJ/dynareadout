@@ -1,6 +1,7 @@
 #ifndef BINOUT_H
 #define BINOUT_H
 #include "binout_records.h"
+#include "path.h"
 #include <stdint.h>
 #include <stdio.h>
 
@@ -64,10 +65,10 @@ const char *_binout_get_command_name(const uint64_t command);
 uint8_t _binout_get_type_size(const uint64_t type_id);
 const char *_binout_get_type_name(const uint64_t type_id);
 binout_record_data_pointer *_binout_get_data_pointer(binout_file *bin_file,
-                                                     const char *path,
+                                                     path_t *path,
                                                      const char *variable);
 binout_record_data *_binout_get_data(binout_record_data_pointer *dp,
-                                     const char *path);
+                                     path_t *path);
 
 /* ----------------------------- */
 #ifdef __cplusplus
