@@ -16,8 +16,6 @@ typedef struct {
 } binout_header;
 
 typedef struct {
-  binout_header header;
-  uint64_t symbol_table_offset;
   binout_record_data_pointer *data_pointers;
   uint64_t data_pointers_size;
 
@@ -33,7 +31,6 @@ extern "C" {
 
 binout_file binout_open(const char *file_name);
 void binout_close(binout_file *bin_file);
-void binout_print_header(binout_file *bin_file);
 void binout_print_records(binout_file *bin_file);
 void *binout_read(binout_file *bin_file, binout_record_data_pointer *dp,
                   const char *path, const char *variable, size_t type_size,

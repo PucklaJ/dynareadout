@@ -34,9 +34,11 @@ binout_file binout_open(const char *file_name) {
     return bin_file;
   }
 
+  binout_header header;
+
   /* Read header */
   size_t read_count =
-      fread(&bin_file.header, sizeof(binout_header), 1, bin_file.file_handle);
+      fread(&header, sizeof(binout_header), 1, bin_file.file_handle);
   if (read_count == 0) {
     bin_file.error_string = strerror(errno);
     fclose(bin_file.file_handle);
@@ -44,18 +46,28 @@ binout_file binout_open(const char *file_name) {
   }
 
   /* Only support Little Endian */
-  if (bin_file.header.endianess == BINOUT_HEADER_BIG_ENDIAN) {
+  if (header.endianess == BINOUT_HEADER_BIG_ENDIAN) {
     bin_file.error_string = "Big Endian is not supported";
     fclose(bin_file.file_handle);
     return bin_file;
   }
-  if (bin_file.header.record_length_field_size > 8) {
+  if (header.record_length_field_size > 8) {
     bin_file.error_string = "This length field size is not supported";
     fclose(bin_file.file_handle);
     return bin_file;
   }
-  if (bin_file.header.record_command_field_size > 8) {
+  if (header.record_command_field_size > 8) {
     bin_file.error_string = "This command field size is not supported";
+    fclose(bin_file.file_handle);
+    return bin_file;
+  }
+  if (header.record_typeid_field_size > 8) {
+    bin_file.error_string = "This type id field size is not supported";
+    fclose(bin_file.file_handle);
+    return bin_file;
+  }
+  if (header.float_format != BINOUT_HEADER_FLOAT_IEEE) {
+    bin_file.error_string = "This float format is not supported";
     fclose(bin_file.file_handle);
     return bin_file;
   }
@@ -85,29 +97,14 @@ binout_file binout_open(const char *file_name) {
   while (ftell(bin_file.file_handle) < file_size) {
     uint64_t record_length = 0, record_command = 0;
 
-    BIN_FILE_READ(record_length, bin_file.header.record_length_field_size, 1);
-    BIN_FILE_READ(record_command, bin_file.header.record_command_field_size, 1);
+    BIN_FILE_READ(record_length, header.record_length_field_size, 1);
+    BIN_FILE_READ(record_command, header.record_command_field_size, 1);
 
-    const uint64_t record_data_length =
-        record_length - bin_file.header.record_length_field_size -
-        bin_file.header.record_command_field_size;
+    const uint64_t record_data_length = record_length -
+                                        header.record_length_field_size -
+                                        header.record_command_field_size;
 
-    if (record_command == BINOUT_COMMAND_SYMBOLTABLEOFFSET) {
-      if (record_data_length > 8) {
-        bin_file.error_string =
-            "A symbol table offset length larger than 8 is not supported";
-        binout_close(&bin_file);
-        return bin_file;
-      }
-
-      BIN_FILE_READ(bin_file.symbol_table_offset, record_data_length, 1);
-    } else if (record_command == BINOUT_COMMAND_NULL) {
-      if (fseek(bin_file.file_handle, record_data_length, SEEK_CUR) != 0) {
-        bin_file.error_string = strerror(errno);
-        binout_close(&bin_file);
-        return bin_file;
-      }
-    } else if (record_command == BINOUT_COMMAND_CD) {
+    if (record_command == BINOUT_COMMAND_CD) {
       char *path = malloc(record_data_length + 1);
       path[record_data_length] = '\0';
 
@@ -126,7 +123,7 @@ binout_file binout_open(const char *file_name) {
       uint64_t type_id = 0;
       uint8_t name_length;
 
-      BIN_FILE_READ(type_id, bin_file.header.record_typeid_field_size, 1);
+      BIN_FILE_READ(type_id, header.record_typeid_field_size, 1);
       BIN_FILE_READ(name_length, BINOUT_DATA_NAME_LENGTH, 1);
 
       char *name = malloc(name_length + 1);
@@ -134,7 +131,7 @@ binout_file binout_open(const char *file_name) {
       BIN_FILE_READ_FREE(name, 1, name_length, name);
 
       const uint64_t data_length = record_data_length -
-                                   bin_file.header.record_typeid_field_size -
+                                   header.record_typeid_field_size -
                                    BINOUT_DATA_NAME_LENGTH - name_length;
       const size_t file_pos = ftell(bin_file.file_handle);
       if (fseek(bin_file.file_handle, data_length, SEEK_CUR) != 0) {
@@ -241,29 +238,6 @@ void binout_close(binout_file *bin_file) {
   if (fclose(bin_file->file_handle) != 0) {
     bin_file->error_string = strerror(errno);
   }
-}
-
-void binout_print_header(binout_file *bin_file) {
-  printf("Number of Bytes in header: %d\n", bin_file->header.header_size);
-  printf("Number of Bytes used in record LENGTH fields: %d\n",
-         bin_file->header.record_length_field_size);
-  printf("Number of Bytes used in record OFFSET fields: %d\n",
-         bin_file->header.record_offset_field_size);
-  printf("Number of Bytes used in record COMMAND fields: %d\n",
-         bin_file->header.record_command_field_size);
-  printf("Number of Bytes used in record TYPEID fields: %d\n",
-         bin_file->header.record_typeid_field_size);
-  printf("Endianess: %s\n",
-         bin_file->header.endianess == BINOUT_HEADER_BIG_ENDIAN
-             ? "Big Endian"
-             : (bin_file->header.endianess == BINOUT_HEADER_LITTLE_ENDIAN
-                    ? "Little Endian"
-                    : "Unknown"));
-  printf("Floating Point Format: %s\n",
-         bin_file->header.float_format == BINOUT_HEADER_FLOAT_IEEE ? "IEEE"
-                                                                   : "Unknown");
-  printf("Symbol Table Offset: %d\n", bin_file->symbol_table_offset);
-  printf("\n\n");
 }
 
 void binout_print_records(binout_file *bin_file) {
