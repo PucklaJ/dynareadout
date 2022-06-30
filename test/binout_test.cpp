@@ -15,7 +15,9 @@ TEST_CASE("binout0000") {
 
   binout_file bin_file = binout_open(binout_file_name);
   if (bin_file.error_string) {
-    fprintf(stderr, "Failed to open binout: %s\n", bin_file.error_string);
+    std::string str = "Failed to open binout: ";
+    str += bin_file.error_string;
+    FAIL(str);
     return;
   }
 
@@ -126,12 +128,12 @@ TEST_CASE("binout0000 C++") {
     CHECK((children[6] == "ids") == true);
   }
 
-  REQUIRE(bin_file.variable_exists("/nodout/metadata", "legend"));
-  REQUIRE(bin_file.get_type_id("/nodout/metadata", "legend") ==
+  REQUIRE(bin_file.variable_exists("/nodout/metadata/", "legend"));
+  REQUIRE(bin_file.get_type_id("/nodout/metadata/", "legend") ==
           dro::BinoutType::Int8);
 
   {
-    const auto legend = bin_file.read<int8_t>("/nodout/metadata", "legend");
+    const auto legend = bin_file.read<int8_t>("/nodout/metadata/", "legend");
     REQUIRE(legend.size() == 80);
     CHECK((legend ==
            "History_node_1                                                 "
@@ -191,17 +193,27 @@ TEST_CASE("Vector") {
 #endif
 
 TEST_CASE("path_join") {
-  char *p = (char *)malloc(6);
-  p[0] = '/';
-  p[1] = 'a';
-  p[2] = 'b';
-  p[3] = 'c';
-  p[4] = 'd';
-  p[5] = '\0';
-  p = path_join(p, "nodout");
-  CHECK(strcmp(p, "/abcd/nodout") == 0);
+  char *p0 = (char *)malloc(2);
+  p0[0] = '/';
+  p0[1] = '\0';
+  char *p = (char *)malloc(5);
+  p[0] = 'a';
+  p[1] = 'b';
+  p[2] = 'c';
+  p[3] = 'd';
+  p[4] = '\0';
+  path_t path;
+  path.num_elements = 2;
+  path.elements = (char **)malloc(path.num_elements * sizeof(char *));
+  path.elements[0] = p0;
+  path.elements[1] = p;
+  path_join(&path, "nodout");
+  REQUIRE(path.num_elements == 3);
+  CHECK(strcmp(path.elements[0], "/") == 0);
+  CHECK(strcmp(path.elements[1], "abcd") == 0);
+  CHECK(strcmp(path.elements[2], "nodout") == 0);
 
-  free(p);
+  path_free_elements(path.elements, path.num_elements);
 }
 
 TEST_CASE("delete_substr") {
@@ -242,74 +254,86 @@ TEST_CASE("delete_substr") {
 TEST_CASE("path_parse") {
   {
     const char *p1 = "/nodout/metadata/../d000001";
-    const size_t p1_len = strlen(p1);
-    char *_p1 = (char *)malloc(p1_len + 1);
-    memcpy(_p1, p1, p1_len + 1);
+    path_t path;
+    path.elements = path_elements(p1, &path.num_elements);
 
-    char *new_path = path_parse(_p1);
+    path_parse(&path);
 
-    CHECK(strcmp(new_path, "/nodout/d000001") == 0);
-    free(new_path);
+    REQUIRE(path.num_elements == 3);
+    CHECK(strcmp(path.elements[0], "/") == 0);
+    CHECK(strcmp(path.elements[1], "nodout") == 0);
+    printf("%s\n", path.elements[2]);
+    CHECK(strcmp(path.elements[2], "d000001") == 0);
+    path_free_elements(path.elements, path.num_elements);
   }
 
   {
     const char *p1 = "/nodout/../d000001";
-    const size_t p1_len = strlen(p1);
-    char *_p1 = (char *)malloc(p1_len + 1);
-    memcpy(_p1, p1, p1_len + 1);
+    path_t path;
+    path.elements = path_elements(p1, &path.num_elements);
 
-    char *new_path = path_parse(_p1);
+    path_parse(&path);
 
-    CHECK(strcmp(new_path, "/d000001") == 0);
-    free(new_path);
+    REQUIRE(path.num_elements == 2);
+    CHECK(strcmp(path.elements[0], "/") == 0);
+    CHECK(strcmp(path.elements[1], "d000001") == 0);
+    path_free_elements(path.elements, path.num_elements);
   }
 
   {
     const char *p1 = "/nodout/d000001/..";
-    const size_t p1_len = strlen(p1);
-    char *_p1 = (char *)malloc(p1_len + 1);
-    memcpy(_p1, p1, p1_len + 1);
+    path_t path;
+    path.elements = path_elements(p1, &path.num_elements);
 
-    char *new_path = path_parse(_p1);
+    path_parse(&path);
 
-    CHECK(strcmp(new_path, "/nodout") == 0);
-    free(new_path);
+    REQUIRE(path.num_elements == 2);
+    CHECK(strcmp(path.elements[0], "/") == 0);
+    CHECK(strcmp(path.elements[1], "nodout") == 0);
+    path_free_elements(path.elements, path.num_elements);
   }
 
   {
     const char *p1 = "/nodout/d000001/../metadata/../d000002";
-    const size_t p1_len = strlen(p1);
-    char *_p1 = (char *)malloc(p1_len + 1);
-    memcpy(_p1, p1, p1_len + 1);
+    path_t path;
+    path.elements = path_elements(p1, &path.num_elements);
 
-    char *new_path = path_parse(_p1);
+    path_parse(&path);
 
-    CHECK(strcmp(new_path, "/nodout/d000002") == 0);
-    free(new_path);
+    REQUIRE(path.num_elements == 3);
+    CHECK(strcmp(path.elements[0], "/") == 0);
+    CHECK(strcmp(path.elements[1], "nodout") == 0);
+    CHECK(strcmp(path.elements[2], "d000002") == 0);
+    path_free_elements(path.elements, path.num_elements);
   }
 
   {
     const char *p1 = "/ncforc/slave_100000/../master_100000/metadata";
-    const size_t p1_len = strlen(p1);
-    char *_p1 = (char *)malloc(p1_len + 1);
-    memcpy(_p1, p1, p1_len + 1);
+    path_t path;
+    path.elements = path_elements(p1, &path.num_elements);
 
-    char *new_path = path_parse(_p1);
+    path_parse(&path);
 
-    CHECK(strcmp(new_path, "/ncforc/master_100000/metadata") == 0);
-    free(new_path);
+    REQUIRE(path.num_elements == 4);
+    CHECK(strcmp(path.elements[0], "/") == 0);
+    CHECK(strcmp(path.elements[1], "ncforc") == 0);
+    CHECK(strcmp(path.elements[2], "master_100000") == 0);
+    CHECK(strcmp(path.elements[3], "metadata") == 0);
+    path_free_elements(path.elements, path.num_elements);
   }
 
   {
     const char *p1 = "/ncforc/slave_100000/../../master_100000/metadata";
-    const size_t p1_len = strlen(p1);
-    char *_p1 = (char *)malloc(p1_len + 1);
-    memcpy(_p1, p1, p1_len + 1);
+    path_t path;
+    path.elements = path_elements(p1, &path.num_elements);
 
-    char *new_path = path_parse(_p1);
+    path_parse(&path);
 
-    CHECK(strcmp(new_path, "/master_100000/metadata") == 0);
-    free(new_path);
+    REQUIRE(path.num_elements == 3);
+    CHECK(strcmp(path.elements[0], "/") == 0);
+    CHECK(strcmp(path.elements[1], "master_100000") == 0);
+    CHECK(strcmp(path.elements[2], "metadata") == 0);
+    path_free_elements(path.elements, path.num_elements);
   }
 }
 
