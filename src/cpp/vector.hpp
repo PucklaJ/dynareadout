@@ -9,6 +9,41 @@ namespace dro {
 
 template <typename T> class Vector {
 public:
+  class Iterator {
+  public:
+    using iterator_category = std::input_iterator_tag;
+    using difference_type = std::ptrdiff_t;
+    using value_type = T;
+    using pointer = T *;   // or also value_type*
+    using reference = T &; // or also value_type&
+
+    explicit Iterator(pointer data, difference_type index)
+        : m_data(data), m_index(index) {}
+    Iterator operator++() {
+      m_index++;
+      return *this;
+    }
+    Iterator operator++(int) {
+      auto rv = *this;
+      ++(*this);
+      return rv;
+    }
+    bool operator==(const Iterator &rhs) const {
+      return m_index == rhs.m_index;
+    }
+    bool operator!=(const Iterator &rhs) const {
+      return m_index != rhs.m_index;
+    }
+    reference operator*() { return m_data[m_index]; }
+    const reference operator*() const { return m_data[m_index]; }
+    pointer operator->() { return &m_data[m_index]; }
+    const pointer operator->() const { return &m_data[m_index]; }
+
+  private:
+    pointer m_data;
+    difference_type m_index;
+  };
+
   Vector(T *data, size_t size);
   Vector(Vector<T> &&rhs);
   ~Vector();
@@ -22,6 +57,9 @@ public:
   size_t size() const { return m_size; }
 
   std::string str() const;
+
+  Iterator begin() { return Iterator(m_data, 0); }
+  Iterator end() { return Iterator(m_data, m_size); }
 
 private:
   T *m_data;
