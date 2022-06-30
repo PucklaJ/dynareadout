@@ -19,7 +19,6 @@ TEST_CASE("binout0000") {
     return;
   }
 
-  binout_print_header(&bin_file);
   binout_print_records(&bin_file);
 
   size_t num_binout_children;
