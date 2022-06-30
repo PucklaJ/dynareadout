@@ -58,59 +58,49 @@ TEST_CASE("binout0000") {
 
   binout_free_children(binout_children, num_binout_children);
 
-  if (binout_variable_exists(&bin_file, "/nodout/metadata", "legend") &&
-      binout_get_type_id(&bin_file, "/nodout/metadata", "legend") ==
-          BINOUT_TYPE_INT8) {
-    size_t legend_size;
-    int8_t *legend = binout_read_int8_t(&bin_file, "/nodout/metadata", "legend",
-                                        &legend_size);
-    if (!legend) {
-      fprintf(stderr, "Failed to read legend: %s\n", bin_file.error_string);
-      binout_close(&bin_file);
-      return;
-    }
+  REQUIRE(binout_variable_exists(&bin_file, "/nodout/metadata", "legend"));
+  REQUIRE(binout_get_type_id(&bin_file, "/nodout/metadata", "legend") ==
+          BINOUT_TYPE_INT8);
 
-    legend = (int8_t *)realloc(legend, legend_size + 1);
-    legend[legend_size] = '\0';
-    printf("nodout legend: %s\n", legend);
-    free(legend);
-  }
+  size_t legend_size;
+  int8_t *legend =
+      binout_read_int8_t(&bin_file, "/nodout/metadata", "legend", &legend_size);
+  REQUIRE(legend);
+  CHECK(legend_size == 80);
+  legend = (int8_t *)realloc(legend, legend_size + 1);
+  legend[legend_size] = '\0';
+  CHECK(strcmp((const char *)legend,
+               "History_node_1                                                 "
+               "                 ") == 0);
+  free(legend);
 
-  if (binout_variable_exists(&bin_file, "/nodout/metadata", "ids") &&
-      binout_get_type_id(&bin_file, "/nodout/metadata", "ids") ==
-          BINOUT_TYPE_INT64) {
-    size_t node_ids_size;
-    int64_t *node_ids = binout_read_int64_t(&bin_file, "/nodout/metadata",
-                                            "ids", &node_ids_size);
-    if (!node_ids) {
-      fprintf(stderr, "Failed to read node ids: %s\n", bin_file.error_string);
-      binout_close(&bin_file);
-      return;
-    }
+  REQUIRE(binout_variable_exists(&bin_file, "/nodout/metadata", "ids"));
+  REQUIRE(binout_get_type_id(&bin_file, "/nodout/metadata", "ids") ==
+          BINOUT_TYPE_INT64);
 
-    printf("---- Node IDs: %d -----\n", node_ids_size);
-    uint64_t i = 0;
-    while (i < node_ids_size) {
-      printf("%d, ", node_ids[i]);
+  size_t node_ids_size;
+  int64_t *node_ids =
+      binout_read_int64_t(&bin_file, "/nodout/metadata", "ids", &node_ids_size);
+  REQUIRE(node_ids);
+  CHECK(node_ids_size == 1);
+  free(node_ids);
 
-      i++;
-    }
-    printf("\n--------------------------\n");
-    free(node_ids);
-  }
+  REQUIRE(binout_variable_exists(&bin_file, "/rcforc/metadata", "title"));
+  REQUIRE(binout_get_type_id(&bin_file, "/rcforc/metadata", "title") ==
+          BINOUT_TYPE_INT8);
 
-  if (binout_variable_exists(&bin_file, "/ncforc/master_100002/metadata",
-                             "title") &&
-      binout_get_type_id(&bin_file, "/ncforc/master_100002/metadata",
-                         "title") == BINOUT_TYPE_INT8) {
-    size_t title_size;
-    int8_t *title = binout_read_int8_t(
-        &bin_file, "/ncforc/master_100002/metadata", "title", &title_size);
-    title = (int8_t *)realloc(title, title_size + 1);
-    title[title_size] = '\0';
-    printf("Title: %s\n", title);
-    free(title);
-  }
+  size_t title_size;
+  int8_t *title =
+      binout_read_int8_t(&bin_file, "/rcforc/metadata", "title", &title_size);
+  REQUIRE(title);
+  CHECK(title_size == 80);
+  title = (int8_t *)realloc(title, title_size + 1);
+  title[title_size] = '\0';
+  CHECK(
+      strcmp((const char *)title,
+             "Pouch_macro_37Ah                                                 "
+             "               ") == 0);
+  free(title);
 
   binout_close(&bin_file);
 }
@@ -147,7 +137,6 @@ TEST_CASE("delete_substr") {
     memcpy(_p1, p1, p1_len + 1);
 
     char *new_p1 = delete_substr(_p1, 2, 3);
-    printf("%s\n", new_p1);
     CHECK(strcmp(new_p1, "Heo World") == 0);
     free(new_p1);
   }
@@ -159,7 +148,6 @@ TEST_CASE("delete_substr") {
     memcpy(_p2, p2, p2_len + 1);
 
     char *new_p2 = delete_substr(_p2, 0, 6);
-    printf("%s\n", new_p2);
     CHECK(strcmp(new_p2, "use this as an test string") == 0);
     free(new_p2);
   }
@@ -171,7 +159,6 @@ TEST_CASE("delete_substr") {
     memcpy(_p2, p2, p2_len + 1);
 
     char *new_p2 = delete_substr(_p2, 26, 32);
-    printf("%s\n", new_p2);
     CHECK(strcmp(new_p2, "Please use this as an test") == 0);
     free(new_p2);
   }
@@ -186,7 +173,6 @@ TEST_CASE("path_parse") {
 
     char *new_path = path_parse(_p1);
 
-    printf("%s\n", new_path);
     CHECK(strcmp(new_path, "/nodout/d000001") == 0);
     free(new_path);
   }
@@ -199,7 +185,6 @@ TEST_CASE("path_parse") {
 
     char *new_path = path_parse(_p1);
 
-    printf("%s\n", new_path);
     CHECK(strcmp(new_path, "/d000001") == 0);
     free(new_path);
   }
@@ -212,7 +197,6 @@ TEST_CASE("path_parse") {
 
     char *new_path = path_parse(_p1);
 
-    printf("%s\n", new_path);
     CHECK(strcmp(new_path, "/nodout") == 0);
     free(new_path);
   }
@@ -225,7 +209,6 @@ TEST_CASE("path_parse") {
 
     char *new_path = path_parse(_p1);
 
-    printf("%s\n", new_path);
     CHECK(strcmp(new_path, "/nodout/d000002") == 0);
     free(new_path);
   }
@@ -238,7 +221,6 @@ TEST_CASE("path_parse") {
 
     char *new_path = path_parse(_p1);
 
-    printf("%s\n", new_path);
     CHECK(strcmp(new_path, "/ncforc/master_100000/metadata") == 0);
     free(new_path);
   }
@@ -251,7 +233,6 @@ TEST_CASE("path_parse") {
 
     char *new_path = path_parse(_p1);
 
-    printf("%s\n", new_path);
     CHECK(strcmp(new_path, "/master_100000/metadata") == 0);
     free(new_path);
   }
