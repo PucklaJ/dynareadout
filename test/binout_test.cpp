@@ -463,9 +463,9 @@ TEST_CASE("glob") {
   size_t num_files;
   char **globed_files = binout_glob("src/*.c", &num_files);
 
-  REQUIRE(num_files == 3);
-  CHECK(globed_files[0] == "src/binout.c");
-  CHECK(globed_files[1] == "src/binout_glob.c");
-  CHECK(globed_files[2] == "src/path.c");
+  CHECK(num_files == 3);
+  CHECK(path_elements_contain(globed_files, num_files, "src/binout.c"));
+  CHECK(path_elements_contain(globed_files, num_files, "src/binout_glob.c"));
+  CHECK(path_elements_contain(globed_files, num_files, "src/path.c"));
   binout_free_glob(globed_files, num_files);
 }

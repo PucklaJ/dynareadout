@@ -95,8 +95,8 @@ char **path_elements(const char *path, size_t *num_elements) {
   char **elements = NULL;
 
   /* Holds the index of the last found path seperator
-   * Is ULONG_MAX as long as there has not been found a seperator */
-  size_t last_sep = ULONG_MAX;
+   * Is SIZE_MAX as long as there has not been found a seperator */
+  size_t last_sep = SIZE_MAX;
 
   /* Loop over the entire string and also include the terminating character
    * '\0'*/
@@ -109,8 +109,8 @@ char **path_elements(const char *path, size_t *num_elements) {
 
       /* Calculate the length of the element that should be added.
        * If no seperator has been found the entire string up until here should
-       * be used. This is the case because i - ULONG_MAX == i+1 therefore
-       * i - ULONG_MAX - 1 == 1*/
+       * be used. This is the case because i - SIZE_MAX == i+1 therefore
+       * i - SIZE_MAX - 1 == 1*/
       const size_t element_length = i - last_sep - 1;
 
       /* Only add an element if element_length is greater than 0 which means
@@ -132,7 +132,7 @@ char **path_elements(const char *path, size_t *num_elements) {
         } else {
           *last_element = malloc(element_length + 1);
           /* Copy the part of path into the element
-           * If no seperator has been found last_sep will be ULONG_MAX
+           * If no seperator has been found last_sep will be SIZE_MAX
            * Which means that because of overflow the expression will result in
            * 0. Therefore the characters starting at index 0 will be copied*/
           memcpy(*last_element, &path[last_sep + 1], element_length);
