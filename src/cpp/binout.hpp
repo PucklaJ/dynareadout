@@ -16,7 +16,8 @@ enum BinoutType {
   Uint32 = BINOUT_TYPE_UINT32,
   Uint64 = BINOUT_TYPE_UINT64,
   Float32 = BINOUT_TYPE_FLOAT32,
-  Float64 = BINOUT_TYPE_FLOAT64
+  Float64 = BINOUT_TYPE_FLOAT64,
+  Invalid = BINOUT_TYPE_INVALID
 };
 
 class Binout {

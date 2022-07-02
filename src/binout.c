@@ -340,7 +340,7 @@ uint64_t binout_get_type_id(binout_file *bin_file, const char *path,
   path_free_elements(_path.elements, _path.num_elements);
   if (!dp) {
     bin_file->error_string = "The given variable has not been found";
-    return -1;
+    return BINOUT_TYPE_INVALID;
   }
 
   return dp->type_id;
@@ -389,7 +389,7 @@ char **binout_get_children(binout_file *bin_file, const char *path,
 
       size_t _path_index = _path.num_elements - 1;
       size_t data_index = num_data_elements - 1;
-      while (data_index != -1) {
+      while (data_index != ULONG_MAX) {
         if (strcmp(_path.elements[_path_index], data_elements[data_index]) ==
             0) {
           break;
@@ -400,13 +400,13 @@ char **binout_get_children(binout_file *bin_file, const char *path,
 
       int path_fits = 1;
 
-      if (data_index != -1 && data_index + 1 < num_data_elements) {
+      if (data_index != ULONG_MAX && data_index + 1 < num_data_elements) {
         data_index++;
 
         if (data_index > 1) {
           size_t cur_data_index = data_index - 1;
           _path_index--;
-          while (_path_index != -1) {
+          while (_path_index != ULONG_MAX) {
             cur_data_index--;
 
             if (strcmp(_path.elements[_path_index],
