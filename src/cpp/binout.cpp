@@ -4,7 +4,7 @@
 namespace dro {
 
 Binout::Binout(const std::filesystem::path &file_name) {
-  m_handle = binout_open(file_name.c_str());
+  m_handle = binout_open(file_name.string().c_str());
   if (m_handle.error_string) {
     throw std::runtime_error(m_handle.error_string);
   }
