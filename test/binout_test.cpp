@@ -222,7 +222,7 @@ TEST_CASE("path_join") {
   CHECK(path.elements[1] == "abcd");
   CHECK(path.elements[2] == "nodout");
 
-  path_free_elements(path.elements, path.num_elements);
+  path_free(&path);
 }
 
 TEST_CASE("path_parse") {
@@ -237,7 +237,7 @@ TEST_CASE("path_parse") {
     CHECK(path.elements[0] == "/");
     CHECK(path.elements[1] == "nodout");
     CHECK(path.elements[2] == "d000001");
-    path_free_elements(path.elements, path.num_elements);
+    path_free(&path);
   }
 
   {
@@ -250,7 +250,7 @@ TEST_CASE("path_parse") {
     REQUIRE(path.num_elements == 2);
     CHECK(path.elements[0] == "/");
     CHECK(path.elements[1] == "d000001");
-    path_free_elements(path.elements, path.num_elements);
+    path_free(&path);
   }
 
   {
@@ -263,7 +263,7 @@ TEST_CASE("path_parse") {
     REQUIRE(path.num_elements == 2);
     CHECK(path.elements[0] == "/");
     CHECK(path.elements[1] == "nodout");
-    path_free_elements(path.elements, path.num_elements);
+    path_free(&path);
   }
 
   {
@@ -277,7 +277,7 @@ TEST_CASE("path_parse") {
     CHECK(path.elements[0] == "/");
     CHECK(path.elements[1] == "nodout");
     CHECK(path.elements[2] == "d000002");
-    path_free_elements(path.elements, path.num_elements);
+    path_free(&path);
   }
 
   {
@@ -292,7 +292,7 @@ TEST_CASE("path_parse") {
     CHECK(path.elements[1] == "ncforc");
     CHECK(path.elements[2] == "master_100000");
     CHECK(path.elements[3] == "metadata");
-    path_free_elements(path.elements, path.num_elements);
+    path_free(&path);
   }
 
   {
@@ -306,7 +306,21 @@ TEST_CASE("path_parse") {
     CHECK(path.elements[0] == "/");
     CHECK(path.elements[1] == "master_100000");
     CHECK(path.elements[2] == "metadata");
-    path_free_elements(path.elements, path.num_elements);
+    path_free(&path);
+  }
+
+  {
+    const char *p1 = "../hello/world/../man/";
+    path_t path;
+    path.elements = path_elements(p1, &path.num_elements);
+
+    path_parse(&path);
+
+    REQUIRE(path.num_elements == 3);
+    CHECK(path.elements[0] == "..");
+    CHECK(path.elements[1] == "hello");
+    CHECK(path.elements[2] == "man");
+    path_free(&path);
   }
 }
 
@@ -394,5 +408,52 @@ TEST_CASE("path_main_equals") {
     p2t.elements = path_elements(p2, &p2t.num_elements);
 
     CHECK(path_main_equals(&p1t, &p2t));
+  }
+}
+
+TEST_CASE("path_str") {
+  {
+    const char *p1 = "/nodout/master_10000/metadata/ids";
+    path_t p1t;
+    p1t.elements = path_elements(p1, &p1t.num_elements);
+    char *p1_str = path_str(&p1t);
+    CHECK(p1_str == p1);
+    free(p1_str);
+  }
+
+  {
+    const char *p1 = "/nodout";
+    path_t p1t;
+    p1t.elements = path_elements(p1, &p1t.num_elements);
+    char *p1_str = path_str(&p1t);
+    CHECK(p1_str == p1);
+    free(p1_str);
+  }
+
+  {
+    const char *p1 = "/nodout/master_10000////////metadata/ids";
+    path_t p1t;
+    p1t.elements = path_elements(p1, &p1t.num_elements);
+    char *p1_str = path_str(&p1t);
+    CHECK(p1_str == "/nodout/master_10000/metadata/ids");
+    free(p1_str);
+  }
+
+  {
+    const char *p1 = "/";
+    path_t p1t;
+    p1t.elements = path_elements(p1, &p1t.num_elements);
+    char *p1_str = path_str(&p1t);
+    CHECK(p1_str == p1);
+    free(p1_str);
+  }
+
+  {
+    const char *p1 = "../hello/world/../my/dudes";
+    path_t p1t;
+    p1t.elements = path_elements(p1, &p1t.num_elements);
+    char *p1_str = path_str(&p1t);
+    CHECK(p1_str == p1);
+    free(p1_str);
   }
 }
