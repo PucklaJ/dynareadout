@@ -1,5 +1,6 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #define DOCTEST_CONFIG_TREAT_CHAR_STAR_AS_STRING
+#include "binout_glob.h"
 #include <binout.h>
 #include <binout_defines.h>
 #include <doctest/doctest.h>
@@ -456,4 +457,15 @@ TEST_CASE("path_str") {
     CHECK(p1_str == p1);
     free(p1_str);
   }
+}
+
+TEST_CASE("glob") {
+  size_t num_files;
+  char **globed_files = binout_glob("src/*.c", &num_files);
+
+  REQUIRE(num_files == 3);
+  CHECK(globed_files[0] == "src/binout.c");
+  CHECK(globed_files[1] == "src/binout_glob.c");
+  CHECK(globed_files[2] == "src/path.c");
+  binout_free_glob(globed_files, num_files);
 }
