@@ -4,9 +4,11 @@
 #include <string.h>
 
 void path_join(path_t *path, const char *element) {
+  /* First get the elements of element, since it could be a path*/
   size_t num_elements;
   char **elements = path_elements(element, &num_elements);
 
+  /* Add all found elements to path*/
   size_t i = 0;
   while (i < num_elements) {
     path->num_elements++;
@@ -17,6 +19,8 @@ void path_join(path_t *path, const char *element) {
     i++;
   }
 
+  /* We don't need to call path_free_elements, since we use the elements
+   * directly in path*/
   free(elements);
 }
 
@@ -31,6 +35,8 @@ int path_main_equals(path_t *path1, path_t *path2) {
 
   size_t i = 0;
   while (i < path1_main_size) {
+    /* We need to do 'i+1' because the first element of an absolute path is
+     * always PATH_SEP*/
     if (strcmp(path1->elements[i + 1], path2->elements[i + 1]) != 0) {
       return 0;
     }
@@ -42,21 +48,28 @@ int path_main_equals(path_t *path1, path_t *path2) {
 }
 
 void path_parse(path_t *path) {
-  size_t i = 0;
+  /* We start at 1, since we don't care about the first element of absolute
+   * paths and if the first element is ".."*/
+  size_t i = 1;
   while (i < path->num_elements) {
-    if (i != 0 && strcmp(path->elements[i], "..") == 0) {
+    if (strcmp(path->elements[i], "..") == 0) {
+      /* Loop over all elements after the current one and move them up by two,
+       * since we want to delete the current and the previous element*/
       size_t j = i + 1;
       while (j < path->num_elements) {
+        /* Swap them*/
         char *temp = path->elements[j - 2];
         path->elements[j - 2] = path->elements[j];
         path->elements[j] = temp;
         j++;
       }
+      /* Free the last two elements and realloc the memory*/
       free(path->elements[path->num_elements - 1]);
       free(path->elements[path->num_elements - 2]);
       path->num_elements -= 2;
       path->elements =
           realloc(path->elements, path->num_elements * sizeof(char *));
+      /* Go back by 2 since everything got moved up*/
       i -= 2;
     }
 
@@ -200,24 +213,24 @@ void path_copy(path_t *dst, path_t *src) {
 char *path_str(path_t *path) {
   char *str = NULL;
   size_t str_size = 0;
+
   size_t i = 0;
   while (i < path->num_elements) {
     const size_t element_len = strlen(path->elements[i]);
     const size_t old_size = str_size;
-    str_size += element_len;
+
+    /* Calculate how much additional memory is necessary. Add 1 character if we
+     * are at the end ('\0') or if the element does not end with PATH_SEP to add
+     * a PATH_SEP*/
+    str_size += element_len + (i == path->num_elements - 1 ||
+                               path->elements[i][element_len - 1] != PATH_SEP);
     str = realloc(str, str_size);
     memcpy(&str[old_size], path->elements[i], element_len);
-    if (i != path->num_elements - 1 && strcmp(path->elements[i], "/") != 0) {
-      str_size++;
-      str = realloc(str, str_size);
-      str[str_size - 1] = PATH_SEP;
-    }
+    /* Insert a PATH_SEP or '\0' if we are at the end*/
+    str[str_size - 1] = PATH_SEP * (i != path->num_elements - 1);
 
     i++;
   }
-
-  str = realloc(str, str_size + 1);
-  str[str_size] = '\0';
 
   return str;
 }
