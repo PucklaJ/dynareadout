@@ -3,6 +3,7 @@
 #include <cstring>
 #include <iostream>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 
 namespace dro {
@@ -112,12 +113,7 @@ template <typename T> std::string Vector<T>::str() const {
   return str;
 }
 
-typedef Vector<char> String;
-
-} // namespace dro
-
-template <typename T>
-bool operator==(const dro::Vector<T> &str1, const char *str2) {
+template <typename T> bool operator==(const Vector<T> &str1, const char *str2) {
   static_assert(std::is_same_v<T, char> || std::is_same_v<T, int8_t> ||
                 std::is_same_v<T, uint8_t>);
   if (str1.data()[str1.size() - 1] == '\0') {
@@ -138,13 +134,22 @@ bool operator==(const dro::Vector<T> &str1, const char *str2) {
 }
 
 template <typename T>
-inline bool operator==(const char *str2, const dro::Vector<T> &str1) {
+inline bool operator==(const char *str2, const Vector<T> &str1) {
   return str1 == str2;
 }
 
 template <typename T>
-inline std::ostream &operator<<(std::ostream &stream,
-                                const dro::Vector<T> &str) {
+inline bool operator==(const std::string &str2, const Vector<T> &str1) {
+  return str1 == str2.c_str();
+}
+
+template <typename T>
+inline bool operator==(const Vector<T> &str1, const std::string &str2) {
+  return str1 == str2.c_str();
+}
+
+template <typename T>
+inline std::ostream &operator<<(std::ostream &stream, const Vector<T> &str) {
   static_assert(std::is_same_v<T, char> || std::is_same_v<T, int8_t> ||
                 std::is_same_v<T, uint8_t>);
 
@@ -153,3 +158,7 @@ inline std::ostream &operator<<(std::ostream &stream,
   }
   return stream;
 }
+
+typedef Vector<char> String;
+
+} // namespace dro
