@@ -12,6 +12,16 @@
 #include <cpp/binout.hpp>
 #endif
 
+namespace dro {
+template <typename T> doctest::String toString(const Vector<T> &str) {
+  static_assert(std::is_same_v<T, char> || std::is_same_v<T, int8_t> ||
+                std::is_same_v<T, uint8_t>);
+
+  return doctest::String(reinterpret_cast<const char *>(str.data()),
+                         str.size());
+}
+} // namespace dro
+
 TEST_CASE("binout0000") {
   const char *binout_file_name = "test_data/binout0000";
 
@@ -111,20 +121,20 @@ TEST_CASE("binout0000 C++") {
   {
     const auto children = bin_file.get_children("/");
     REQUIRE(children.size() == 2);
-    CHECK((children[0] == "nodout") == true);
-    CHECK((children[1] == "rcforc") == true);
+    CHECK(children[0] == "nodout");
+    CHECK(children[1] == "rcforc");
   }
 
   {
     const auto children = bin_file.get_children("/nodout/metadata/");
     REQUIRE(children.size() == 7);
-    CHECK((children[0] == "title") == true);
-    CHECK((children[1] == "version") == true);
-    CHECK((children[2] == "revision") == true);
-    CHECK((children[3] == "date") == true);
-    CHECK((children[4] == "legend") == true);
-    CHECK((children[5] == "legend_ids") == true);
-    CHECK((children[6] == "ids") == true);
+    CHECK(children[0] == "title");
+    CHECK(children[1] == "version");
+    CHECK(children[2] == "revision");
+    CHECK(children[3] == "date");
+    CHECK(children[4] == "legend");
+    CHECK(children[5] == "legend_ids");
+    CHECK(children[6] == "ids");
   }
 
   REQUIRE(bin_file.variable_exists("/nodout/metadata/", "legend"));
@@ -134,9 +144,9 @@ TEST_CASE("binout0000 C++") {
   {
     const auto legend = bin_file.read<int8_t>("/nodout/metadata/", "legend");
     REQUIRE(legend.size() == 80);
-    CHECK((legend ==
-           "History_node_1                                                 "
-           "                 ") == true);
+    CHECK(legend ==
+          "History_node_1                                                 "
+          "                 ");
   }
 
   REQUIRE(bin_file.variable_exists("/nodout/metadata", "ids"));
@@ -155,9 +165,9 @@ TEST_CASE("binout0000 C++") {
   {
     const auto title = bin_file.read<int8_t>("/rcforc/metadata", "title");
     CHECK(title.size() == 80);
-    CHECK((title ==
-           "Pouch_macro_37Ah                                                 "
-           "               ") == true);
+    CHECK(title ==
+          "Pouch_macro_37Ah                                                 "
+          "               ");
   }
 }
 
