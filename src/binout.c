@@ -9,7 +9,7 @@
   read_count = fread(&dst, size, count, bin_file.file_handle);                 \
   if (read_count != count) {                                                   \
     bin_file.error_string = strerror(errno);                                   \
-    /* free(current_path); */                                                  \
+    path_free(&current_path);                                                  \
     binout_close(&bin_file);                                                   \
     return bin_file;                                                           \
   }
@@ -18,7 +18,7 @@
   read_count = fread(dst, size, count, bin_file.file_handle);                  \
   if (read_count != count) {                                                   \
     bin_file.error_string = strerror(errno);                                   \
-    /* free(current_path); */                                                  \
+    path_free(&current_path);                                                  \
     free(obj);                                                                 \
     binout_close(&bin_file);                                                   \
     return bin_file;                                                           \
