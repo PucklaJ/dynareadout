@@ -1,8 +1,10 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#define DOCTEST_CONFIG_TREAT_CHAR_STAR_AS_STRING
 #include <binout.h>
 #include <binout_defines.h>
 #include <doctest/doctest.h>
 #include <iomanip>
+#include <iostream>
 #include <path.h>
 #include <sstream>
 #include <string>
@@ -21,27 +23,25 @@ TEST_CASE("binout0000") {
     return;
   }
 
-  binout_print_records(&bin_file);
-
   size_t num_binout_children;
   char **binout_children =
       binout_get_children(&bin_file, "/", &num_binout_children);
   REQUIRE(num_binout_children == 2);
-  CHECK(strcmp(binout_children[0], "nodout") == 0);
-  CHECK(strcmp(binout_children[1], "rcforc") == 0);
+  CHECK(binout_children[0] == "nodout");
+  CHECK(binout_children[1] == "rcforc");
 
   binout_free_children(binout_children, num_binout_children);
 
   binout_children =
       binout_get_children(&bin_file, "/nodout", &num_binout_children);
   REQUIRE(num_binout_children == 602);
-  CHECK(strcmp(binout_children[0], "metadata") == 0);
+  CHECK(binout_children[0] == "metadata");
   for (size_t i = 1; i <= 601; i++) {
     std::stringstream stream;
     stream << "d" << std::setfill('0') << std::right << std::setw(6) << i;
     const std::string str(stream.str());
 
-    CHECK(strcmp(binout_children[i], str.c_str()) == 0);
+    CHECK(binout_children[i] == str.c_str());
   }
 
   binout_free_children(binout_children, num_binout_children);
@@ -49,13 +49,13 @@ TEST_CASE("binout0000") {
   binout_children =
       binout_get_children(&bin_file, "/nodout/metadata/", &num_binout_children);
   REQUIRE(num_binout_children == 7);
-  CHECK(strcmp(binout_children[0], "title") == 0);
-  CHECK(strcmp(binout_children[1], "version") == 0);
-  CHECK(strcmp(binout_children[2], "revision") == 0);
-  CHECK(strcmp(binout_children[3], "date") == 0);
-  CHECK(strcmp(binout_children[4], "legend") == 0);
-  CHECK(strcmp(binout_children[5], "legend_ids") == 0);
-  CHECK(strcmp(binout_children[6], "ids") == 0);
+  CHECK(binout_children[0] == "title");
+  CHECK(binout_children[1] == "version");
+  CHECK(binout_children[2] == "revision");
+  CHECK(binout_children[3] == "date");
+  CHECK(binout_children[4] == "legend");
+  CHECK(binout_children[5] == "legend_ids");
+  CHECK(binout_children[6] == "ids");
 
   binout_free_children(binout_children, num_binout_children);
 
@@ -70,9 +70,9 @@ TEST_CASE("binout0000") {
   CHECK(legend_size == 80);
   legend = (int8_t *)realloc(legend, legend_size + 1);
   legend[legend_size] = '\0';
-  CHECK(strcmp((const char *)legend,
-               "History_node_1                                                 "
-               "                 ") == 0);
+  CHECK((const char *)legend ==
+        "History_node_1                                                 "
+        "                 ");
   free(legend);
 
   REQUIRE(binout_variable_exists(&bin_file, "/nodout/metadata", "ids"));
@@ -97,10 +97,9 @@ TEST_CASE("binout0000") {
   CHECK(title_size == 80);
   title = (int8_t *)realloc(title, title_size + 1);
   title[title_size] = '\0';
-  CHECK(
-      strcmp((const char *)title,
-             "Pouch_macro_37Ah                                                 "
-             "               ") == 0);
+  CHECK((const char *)title ==
+        "Pouch_macro_37Ah                                                 "
+        "               ");
   free(title);
 
   binout_close(&bin_file);
@@ -209,9 +208,10 @@ TEST_CASE("path_join") {
   path.elements[1] = p;
   path_join(&path, "nodout");
   REQUIRE(path.num_elements == 3);
-  CHECK(strcmp(path.elements[0], "/") == 0);
-  CHECK(strcmp(path.elements[1], "abcd") == 0);
-  CHECK(strcmp(path.elements[2], "nodout") == 0);
+  CHECK(path.elements[0] == "/");
+  CHECK(path.elements[1] == "abcd");
+  CHECK(path.elements[2] == "nodout");
+  printf("%s\n", path.elements[2]);
 
   path_free_elements(path.elements, path.num_elements);
 }
@@ -224,7 +224,7 @@ TEST_CASE("delete_substr") {
     memcpy(_p1, p1, p1_len + 1);
 
     char *new_p1 = delete_substr(_p1, 2, 3);
-    CHECK(strcmp(new_p1, "Heo World") == 0);
+    CHECK(new_p1 == "Heo World");
     free(new_p1);
   }
 
@@ -235,7 +235,7 @@ TEST_CASE("delete_substr") {
     memcpy(_p2, p2, p2_len + 1);
 
     char *new_p2 = delete_substr(_p2, 0, 6);
-    CHECK(strcmp(new_p2, "use this as an test string") == 0);
+    CHECK(new_p2 == "use this as an test string");
     free(new_p2);
   }
 
@@ -246,7 +246,7 @@ TEST_CASE("delete_substr") {
     memcpy(_p2, p2, p2_len + 1);
 
     char *new_p2 = delete_substr(_p2, 26, 32);
-    CHECK(strcmp(new_p2, "Please use this as an test") == 0);
+    CHECK(new_p2 == "Please use this as an test");
     free(new_p2);
   }
 }
@@ -260,10 +260,9 @@ TEST_CASE("path_parse") {
     path_parse(&path);
 
     REQUIRE(path.num_elements == 3);
-    CHECK(strcmp(path.elements[0], "/") == 0);
-    CHECK(strcmp(path.elements[1], "nodout") == 0);
-    printf("%s\n", path.elements[2]);
-    CHECK(strcmp(path.elements[2], "d000001") == 0);
+    CHECK(path.elements[0] == "/");
+    CHECK(path.elements[1] == "nodout");
+    CHECK(path.elements[2] == "d000001");
     path_free_elements(path.elements, path.num_elements);
   }
 
@@ -275,8 +274,8 @@ TEST_CASE("path_parse") {
     path_parse(&path);
 
     REQUIRE(path.num_elements == 2);
-    CHECK(strcmp(path.elements[0], "/") == 0);
-    CHECK(strcmp(path.elements[1], "d000001") == 0);
+    CHECK(path.elements[0] == "/");
+    CHECK(path.elements[1] == "d000001");
     path_free_elements(path.elements, path.num_elements);
   }
 
@@ -288,8 +287,8 @@ TEST_CASE("path_parse") {
     path_parse(&path);
 
     REQUIRE(path.num_elements == 2);
-    CHECK(strcmp(path.elements[0], "/") == 0);
-    CHECK(strcmp(path.elements[1], "nodout") == 0);
+    CHECK(path.elements[0] == "/");
+    CHECK(path.elements[1] == "nodout");
     path_free_elements(path.elements, path.num_elements);
   }
 
@@ -301,9 +300,9 @@ TEST_CASE("path_parse") {
     path_parse(&path);
 
     REQUIRE(path.num_elements == 3);
-    CHECK(strcmp(path.elements[0], "/") == 0);
-    CHECK(strcmp(path.elements[1], "nodout") == 0);
-    CHECK(strcmp(path.elements[2], "d000002") == 0);
+    CHECK(path.elements[0] == "/");
+    CHECK(path.elements[1] == "nodout");
+    CHECK(path.elements[2] == "d000002");
     path_free_elements(path.elements, path.num_elements);
   }
 
@@ -315,10 +314,10 @@ TEST_CASE("path_parse") {
     path_parse(&path);
 
     REQUIRE(path.num_elements == 4);
-    CHECK(strcmp(path.elements[0], "/") == 0);
-    CHECK(strcmp(path.elements[1], "ncforc") == 0);
-    CHECK(strcmp(path.elements[2], "master_100000") == 0);
-    CHECK(strcmp(path.elements[3], "metadata") == 0);
+    CHECK(path.elements[0] == "/");
+    CHECK(path.elements[1] == "ncforc");
+    CHECK(path.elements[2] == "master_100000");
+    CHECK(path.elements[3] == "metadata");
     path_free_elements(path.elements, path.num_elements);
   }
 
@@ -330,9 +329,9 @@ TEST_CASE("path_parse") {
     path_parse(&path);
 
     REQUIRE(path.num_elements == 3);
-    CHECK(strcmp(path.elements[0], "/") == 0);
-    CHECK(strcmp(path.elements[1], "master_100000") == 0);
-    CHECK(strcmp(path.elements[2], "metadata") == 0);
+    CHECK(path.elements[0] == "/");
+    CHECK(path.elements[1] == "master_100000");
+    CHECK(path.elements[2] == "metadata");
     path_free_elements(path.elements, path.num_elements);
   }
 }
@@ -344,13 +343,13 @@ TEST_CASE("path_elements") {
     size_t num_elements;
     char **p1_elements = path_elements(p1, &num_elements);
     REQUIRE(num_elements == 7);
-    CHECK(strcmp(p1_elements[0], "/") == 0);
-    CHECK(strcmp(p1_elements[1], "ncforc") == 0);
-    CHECK(strcmp(p1_elements[2], "slave_100000") == 0);
-    CHECK(strcmp(p1_elements[3], "..") == 0);
-    CHECK(strcmp(p1_elements[4], "..") == 0);
-    CHECK(strcmp(p1_elements[5], "master_100000") == 0);
-    CHECK(strcmp(p1_elements[6], "metadata") == 0);
+    CHECK(p1_elements[0] == "/");
+    CHECK(p1_elements[1] == "ncforc");
+    CHECK(p1_elements[2] == "slave_100000");
+    CHECK(p1_elements[3] == "..");
+    CHECK(p1_elements[4] == "..");
+    CHECK(p1_elements[5] == "master_100000");
+    CHECK(p1_elements[6] == "metadata");
     path_free_elements(p1_elements, num_elements);
   }
 
@@ -360,7 +359,7 @@ TEST_CASE("path_elements") {
     size_t num_elements;
     char **p1_elements = path_elements(p1, &num_elements);
     REQUIRE(num_elements == 1);
-    CHECK(strcmp(p1_elements[0], "/") == 0);
+    CHECK(p1_elements[0] == "/");
     path_free_elements(p1_elements, num_elements);
   }
 
@@ -370,8 +369,18 @@ TEST_CASE("path_elements") {
     size_t num_elements;
     char **p1_elements = path_elements(p1, &num_elements);
     REQUIRE(num_elements == 2);
-    CHECK(strcmp(p1_elements[0], "/") == 0);
-    CHECK(strcmp(p1_elements[1], "nodout") == 0);
+    CHECK(p1_elements[0] == "/");
+    CHECK(p1_elements[1] == "nodout");
+    path_free_elements(p1_elements, num_elements);
+  }
+
+  {
+    const char *p1 = "nodout";
+
+    size_t num_elements;
+    char **p1_elements = path_elements(p1, &num_elements);
+    REQUIRE(num_elements == 1);
+    CHECK(p1_elements[0] == "nodout");
     path_free_elements(p1_elements, num_elements);
   }
 }
