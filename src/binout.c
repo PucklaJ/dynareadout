@@ -28,7 +28,7 @@ binout_file binout_open(const char *file_name) {
   binout_file bin_file;
   bin_file.error_string = NULL;
 
-  bin_file.file_handle = fopen(file_name, "r");
+  bin_file.file_handle = fopen(file_name, "rb");
   if (!bin_file.file_handle) {
     bin_file.error_string = strerror(errno);
     return bin_file;
@@ -98,7 +98,13 @@ binout_file binout_open(const char *file_name) {
   current_path.num_elements = 0;
 
   /* We cannot use EOF, so we use this*/
-  while (ftell(bin_file.file_handle) < file_size) {
+  while (1) {
+    /* Check if we are already at the end or if an error occurred in ftell*/
+    const long current_file_pos = ftell(bin_file.file_handle);
+    if (current_file_pos == -1 || current_file_pos == file_size) {
+      break;
+    }
+
     uint64_t record_length = 0, record_command = 0;
 
     BIN_FILE_READ(record_length, header.record_length_field_size, 1);
@@ -403,8 +409,8 @@ char **binout_get_children(binout_file *bin_file, const char *path,
       size_t _path_index = _path.num_elements - 1;
       size_t data_index = num_data_elements - 2;
       /* First find the last element that is equal to the last element of path
-       * We use ULONG_MAX since 0 - 1 == ULONG_MAX*/
-      while (data_index != ULONG_MAX) {
+       * We use SIZE_MAX since 0 - 1 == SIZE_MAX*/
+      while (data_index != SIZE_MAX) {
         if (strcmp(_path.elements[_path_index], data_elements[data_index]) ==
             0) {
           break;
@@ -416,7 +422,9 @@ char **binout_get_children(binout_file *bin_file, const char *path,
       int path_fits = 1;
 
       /* Wether the record is actually a child of path*/
-      if (data_index != ULONG_MAX) {
+      if (data_index != SIZE_MAX) {
+        char *data_str = path_str(&data->path);
+        free(data_str);
         /* Advance to the next to point to the actual child element */
         data_index++;
 
@@ -427,7 +435,7 @@ char **binout_get_children(binout_file *bin_file, const char *path,
            * data_index - 1 matches*/
           size_t cur_data_index = data_index - 2;
           _path_index--;
-          while (_path_index != ULONG_MAX) {
+          while (_path_index != SIZE_MAX) {
             if (strcmp(_path.elements[_path_index],
                        data_elements[cur_data_index]) != 0) {
               path_fits = 0;

@@ -27,10 +27,10 @@ char **binout_glob(const char *pattern, size_t *num_files) {
 
   /* Add the parent folder to the results*/
   const size_t pattern_len = strlen(pattern);
-  size_t parent_len = ULONG_MAX;
+  size_t parent_len = SIZE_MAX;
 
   size_t i = pattern_len - 2;
-  while (i != ULONG_MAX) {
+  while (i != SIZE_MAX) {
     if (pattern[i] == '\\' || pattern[i] == '/') {
       parent_len = i + 1;
       break;
@@ -40,7 +40,7 @@ char **binout_glob(const char *pattern, size_t *num_files) {
   }
 
   /* If it has no parent path just return*/
-  if (parent_len == ULONG_MAX) {
+  if (parent_len == SIZE_MAX) {
     return globed_files;
   }
 
