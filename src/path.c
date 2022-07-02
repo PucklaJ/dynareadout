@@ -161,6 +161,12 @@ void path_free_elements(char **elements, size_t num_elements) {
     free(elements);
 }
 
+void path_free(path_t *path) {
+  path_free_elements(path->elements, path->num_elements);
+  path->elements = NULL;
+  path->num_elements = 0;
+}
+
 char *delete_substr(char *path, size_t start, size_t end) {
   const size_t path_len = strlen(path);
   const size_t delete_size = end - start + 1;
