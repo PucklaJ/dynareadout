@@ -45,11 +45,11 @@ void binout_close(binout_file *bin_file);
 void binout_print_records(binout_file *bin_file);
 /* Don't use this use one of the typed functions*/
 void *binout_read(binout_file *bin_file, binout_record_data_pointer *dp,
-                  const char *path, const char *variable, size_t type_size,
+                  path_t *path_to_variable, size_t type_size,
                   size_t *data_size);
 #define DEFINE_BINOUT_READ_TYPE_PROTO(c_type)                                  \
-  c_type *binout_read_##c_type(binout_file *bin_file, const char *path,        \
-                               const char *variable, size_t *data_size);
+  c_type *binout_read_##c_type(                                                \
+      binout_file *bin_file, const char *path_to_variable, size_t *data_size);
 /* Read data from the file as int8_t. The type id of the data has to match*/
 DEFINE_BINOUT_READ_TYPE_PROTO(int8_t)
 /* Read data from the file as int16_t. The type id of the data has to match*/
@@ -72,11 +72,10 @@ DEFINE_BINOUT_READ_TYPE_PROTO(float)
 DEFINE_BINOUT_READ_TYPE_PROTO(double)
 /* Returns the type id of the given variable. The type ids can be found in
  * binout_defines.h*/
-uint64_t binout_get_type_id(binout_file *bin_file, const char *path,
-                            const char *variable);
+uint64_t binout_get_type_id(binout_file *bin_file,
+                            const char *path_to_variable);
 /* Returns whether a record with the given path and variable name exists*/
-int binout_variable_exists(binout_file *bin_file, const char *path,
-                           const char *variable);
+int binout_variable_exists(binout_file *bin_file, const char *path_to_variable);
 /* Returns the entries under a given path. The returns value needs to be
  * deallocated by binout_free_children*/
 char **binout_get_children(binout_file *bin_file, const char *path,
@@ -96,8 +95,10 @@ uint8_t _binout_get_type_size(const uint64_t type_id);
 const char *_binout_get_type_name(const uint64_t type_id);
 /* Returns the data pointer of a given path and variable name*/
 binout_record_data_pointer *_binout_get_data_pointer(binout_file *bin_file,
-                                                     path_t *path,
-                                                     const char *variable);
+                                                     path_t *path_to_variable);
+binout_record_data_pointer *_binout_get_data_pointer2(binout_file *bin_file,
+                                                      path_t *path,
+                                                      const char *variable);
 /* Returns the data record of a given path*/
 binout_record_data *_binout_get_data(binout_record_data_pointer *dp,
                                      path_t *path);
