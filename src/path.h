@@ -18,6 +18,8 @@ void path_join(path_t *path, const char *element);
 int path_is_abs(const char *path);
 int path_main_equals(path_t *path1, path_t *path2);
 void path_parse(path_t *path);
+/* Return multiple strings containing all elements of path
+ * The return value must be deallocated using path_free_elements*/
 char **path_elements(const char *path, size_t *num_elements);
 int path_elements_contain(char **elements, size_t num_elements,
                           const char *value);

@@ -1,4 +1,5 @@
 #include "path.h"
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -65,27 +66,62 @@ void path_parse(path_t *path) {
 
 char **path_elements(const char *path, size_t *num_elements) {
   const size_t path_len = strlen(path);
-  size_t i = 0;
+
+  /* Handle the case for when there's only one character in the path. Real
+   * example: "/"*/
+  if (path_len == 1) {
+    *num_elements = 1;
+    char **elements = malloc(sizeof(char *));
+    elements[0] = malloc(2);
+    elements[0][0] = path[0];
+    elements[0][1] = '\0';
+    return elements;
+  }
+
   *num_elements = 0;
   char **elements = NULL;
-  size_t last_sep = -1;
 
+  /* Holds the index of the last found path seperator
+   * Is ULONG_MAX as long as there has not been found a seperator */
+  size_t last_sep = ULONG_MAX;
+
+  /* Loop over the entire string and also include the terminating character
+   * '\0'*/
+  size_t i = 0;
   while (i < path_len + 1) {
-    if (path[i] == PATH_SEP || (i == path_len && i - last_sep > 1)) {
+    /* Check if it's a seperator and also check if we are at the end*/
+    if (path[i] == PATH_SEP || i == path_len) {
+      /* This sets last_sep to 0 if the first character of path is PATH_SEP*/
       last_sep *= i != 0;
 
-      const size_t element_length =
-          path_len * (last_sep == -1) + (i - last_sep - 1) * (last_sep != -1);
+      /* Calculate the length of the element that should be added.
+       * If no seperator has been found the entire string up until here should
+       * be used. This is the case because i - ULONG_MAX == i+1 therefore
+       * i - ULONG_MAX - 1 == 1*/
+      const size_t element_length = i - last_sep - 1;
+
+      /* Only add an element if element_length is greater than 0 which means
+       * that there is something between the current seperator and the last
+       * seperator.
+       * Or also add an element if the last_sep == i which is the case on the
+       * first character of a path starting with PATH_SEP*/
       if (last_sep == i || element_length > 0) {
+        /* Add a new element*/
         (*num_elements)++;
         elements = realloc(elements, *num_elements * sizeof(char *));
         char **last_element = &elements[*num_elements - 1];
+
+        /* If we are at the first character of a path starting with PATH_SEP*/
         if (last_sep == i) {
           *last_element = malloc(2);
-          (*last_element)[0] = path[i];
+          (*last_element)[0] = PATH_SEP;
           (*last_element)[1] = '\0';
         } else {
           *last_element = malloc(element_length + 1);
+          /* Copy the part of path into the element
+           * If no seperator has been found last_sep will be ULONG_MAX
+           * Which means that because of overflow the expression will result in
+           * 0. Therefore the characters starting at index 0 will be copied*/
           memcpy(*last_element, &path[last_sep + 1], element_length);
           (*last_element)[element_length] = '\0';
         }
