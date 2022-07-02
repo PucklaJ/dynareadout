@@ -68,11 +68,14 @@ char **path_elements(const char *path, size_t *num_elements) {
   size_t i = 0;
   *num_elements = 0;
   char **elements = NULL;
-  size_t last_sep = 0;
+  size_t last_sep = -1;
 
   while (i < path_len + 1) {
     if (path[i] == PATH_SEP || (i == path_len && i - last_sep > 1)) {
-      const size_t element_length = i - last_sep - 1;
+      last_sep *= i != 0;
+
+      const size_t element_length =
+          path_len * (last_sep == -1) + (i - last_sep - 1) * (last_sep != -1);
       if (last_sep == i || element_length > 0) {
         (*num_elements)++;
         elements = realloc(elements, *num_elements * sizeof(char *));

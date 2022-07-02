@@ -221,7 +221,6 @@ TEST_CASE("path_join") {
   CHECK(path.elements[0] == "/");
   CHECK(path.elements[1] == "abcd");
   CHECK(path.elements[2] == "nodout");
-  printf("%s\n", path.elements[2]);
 
   path_free_elements(path.elements, path.num_elements);
 }
