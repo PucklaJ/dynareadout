@@ -392,4 +392,30 @@ TEST_CASE("path_elements") {
     CHECK(p1_elements[0] == "nodout");
     path_free_elements(p1_elements, num_elements);
   }
+
+  {
+    const char *p1 = "nodout/apple/two";
+
+    size_t num_elements;
+    char **p1_elements = path_elements(p1, &num_elements);
+    REQUIRE(num_elements == 3);
+    CHECK(p1_elements[0] == "nodout");
+    CHECK(p1_elements[1] == "apple");
+    CHECK(p1_elements[2] == "two");
+    path_free_elements(p1_elements, num_elements);
+  }
+
+  {
+    const char *p1 = "/nodout///////////////apple///two//three///";
+
+    size_t num_elements;
+    char **p1_elements = path_elements(p1, &num_elements);
+    REQUIRE(num_elements == 5);
+    CHECK(p1_elements[0] == "/");
+    CHECK(p1_elements[1] == "nodout");
+    CHECK(p1_elements[2] == "apple");
+    CHECK(p1_elements[3] == "two");
+    CHECK(p1_elements[4] == "three");
+    path_free_elements(p1_elements, num_elements);
+  }
 }
