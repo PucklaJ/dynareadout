@@ -25,12 +25,9 @@ public:
   Binout(const std::filesystem::path &file_name);
   ~Binout();
 
-  template <typename T>
-  Vector<T> read(const std::string &path, const std::string &variable);
-  BinoutType get_type_id(const std::string &path,
-                         const std::string &variable) const;
-  bool variable_exists(const std::string &path,
-                       const std::string &variable) const;
+  template <typename T> Vector<T> read(const std::string &path_to_variable);
+  BinoutType get_type_id(const std::string &path_to_variable) const;
+  bool variable_exists(const std::string &path_to_variable) const;
   std::vector<String> get_children(const std::string &path) const;
 
   binout_file &get_handle() { return m_handle; }

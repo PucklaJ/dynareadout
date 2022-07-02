@@ -69,13 +69,13 @@ TEST_CASE("binout0000") {
 
   binout_free_children(binout_children, num_binout_children);
 
-  REQUIRE(binout_variable_exists(&bin_file, "/nodout/metadata", "legend"));
-  REQUIRE(binout_get_type_id(&bin_file, "/nodout/metadata", "legend") ==
+  REQUIRE(binout_variable_exists(&bin_file, "/nodout/metadata/legend"));
+  REQUIRE(binout_get_type_id(&bin_file, "/nodout/metadata/legend") ==
           BINOUT_TYPE_INT8);
 
   size_t legend_size;
   int8_t *legend =
-      binout_read_int8_t(&bin_file, "/nodout/metadata", "legend", &legend_size);
+      binout_read_int8_t(&bin_file, "/nodout/metadata/legend", &legend_size);
   REQUIRE(legend);
   CHECK(legend_size == 80);
   legend = (int8_t *)realloc(legend, legend_size + 1);
@@ -85,24 +85,24 @@ TEST_CASE("binout0000") {
         "                 ");
   free(legend);
 
-  REQUIRE(binout_variable_exists(&bin_file, "/nodout/metadata", "ids"));
-  REQUIRE(binout_get_type_id(&bin_file, "/nodout/metadata", "ids") ==
+  REQUIRE(binout_variable_exists(&bin_file, "/nodout/metadata/ids"));
+  REQUIRE(binout_get_type_id(&bin_file, "/nodout/metadata/ids") ==
           BINOUT_TYPE_INT64);
 
   size_t node_ids_size;
   int64_t *node_ids =
-      binout_read_int64_t(&bin_file, "/nodout/metadata", "ids", &node_ids_size);
+      binout_read_int64_t(&bin_file, "/nodout/metadata/ids", &node_ids_size);
   REQUIRE(node_ids);
   CHECK(node_ids_size == 1);
   free(node_ids);
 
-  REQUIRE(binout_variable_exists(&bin_file, "/rcforc/metadata", "title"));
-  REQUIRE(binout_get_type_id(&bin_file, "/rcforc/metadata", "title") ==
+  REQUIRE(binout_variable_exists(&bin_file, "/rcforc/metadata/title"));
+  REQUIRE(binout_get_type_id(&bin_file, "/rcforc/metadata/title") ==
           BINOUT_TYPE_INT8);
 
   size_t title_size;
   int8_t *title =
-      binout_read_int8_t(&bin_file, "/rcforc/metadata", "title", &title_size);
+      binout_read_int8_t(&bin_file, "/rcforc/metadata/title", &title_size);
   REQUIRE(title);
   CHECK(title_size == 80);
   title = (int8_t *)realloc(title, title_size + 1);
@@ -137,33 +137,33 @@ TEST_CASE("binout0000 C++") {
     CHECK(children[6] == "ids");
   }
 
-  REQUIRE(bin_file.variable_exists("/nodout/metadata/", "legend"));
-  REQUIRE(bin_file.get_type_id("/nodout/metadata/", "legend") ==
+  REQUIRE(bin_file.variable_exists("/nodout/metadata//legend"));
+  REQUIRE(bin_file.get_type_id("/nodout/metadata//legend") ==
           dro::BinoutType::Int8);
 
   {
-    const auto legend = bin_file.read<int8_t>("/nodout/metadata/", "legend");
+    const auto legend = bin_file.read<int8_t>("/nodout/metadata//legend");
     REQUIRE(legend.size() == 80);
     CHECK(legend ==
           "History_node_1                                                 "
           "                 ");
   }
 
-  REQUIRE(bin_file.variable_exists("/nodout/metadata", "ids"));
-  REQUIRE(bin_file.get_type_id("/nodout/metadata", "ids") ==
+  REQUIRE(bin_file.variable_exists("/nodout/metadata/ids"));
+  REQUIRE(bin_file.get_type_id("/nodout/metadata/ids") ==
           dro::BinoutType::Int64);
 
   {
-    const auto node_ids = bin_file.read<int64_t>("/nodout/metadata", "ids");
+    const auto node_ids = bin_file.read<int64_t>("/nodout/metadata/ids");
     REQUIRE(node_ids.size() == 1);
   }
 
-  REQUIRE(bin_file.variable_exists("/rcforc/metadata", "title"));
-  REQUIRE(bin_file.get_type_id("/rcforc/metadata", "title") ==
+  REQUIRE(bin_file.variable_exists("/rcforc/metadata/title"));
+  REQUIRE(bin_file.get_type_id("/rcforc/metadata/title") ==
           dro::BinoutType::Int8);
 
   {
-    const auto title = bin_file.read<int8_t>("/rcforc/metadata", "title");
+    const auto title = bin_file.read<int8_t>("/rcforc/metadata/title");
     CHECK(title.size() == 80);
     CHECK(title ==
           "Pouch_macro_37Ah                                                 "

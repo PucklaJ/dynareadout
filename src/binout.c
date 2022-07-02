@@ -156,7 +156,7 @@ binout_file binout_open(const char *file_name) {
       /* Get the according data pointer if there already is one or create a new
        * one*/
       binout_record_data_pointer *dp =
-          _binout_get_data_pointer(&bin_file, &current_path, variable_name);
+          _binout_get_data_pointer2(&bin_file, &current_path, variable_name);
 
       if (dp) {
         /* Just an assertion to make sure that the data_length stays
@@ -267,13 +267,12 @@ void binout_print_records(binout_file *bin_file) {
 }
 
 void *binout_read(binout_file *bin_file, binout_record_data_pointer *dp,
-                  const char *path, const char *variable, size_t type_size,
+                  path_t *path_to_variable, size_t type_size,
                   size_t *data_size) {
-  path_t _path;
-  _path.elements = path_elements(path, &_path.num_elements);
-
-  binout_record_data *record = _binout_get_data(dp, &_path);
-  path_free(&_path);
+  path_to_variable->num_elements--;
+  binout_record_data *record = _binout_get_data(dp, path_to_variable);
+  path_to_variable->num_elements++;
+  path_free(path_to_variable);
   if (!record) {
     bin_file->error_string = "The given path has not been found";
     return NULL;
@@ -297,16 +296,17 @@ void *binout_read(binout_file *bin_file, binout_record_data_pointer *dp,
 }
 
 #define DEFINE_BINOUT_READ_TYPE(c_type, binout_type)                           \
-  c_type *binout_read_##c_type(binout_file *bin_file, const char *path,        \
-                               const char *variable, size_t *data_size) {      \
-    path_t _path;                                                              \
-    _path.elements = path_elements(path, &_path.num_elements);                 \
-                                                                               \
+  c_type *binout_read_##c_type(binout_file *bin_file,                          \
+                               const char *path_to_variable,                   \
+                               size_t *data_size) {                            \
+    path_t _path_to_variable;                                                  \
+    _path_to_variable.elements =                                               \
+        path_elements(path_to_variable, &_path_to_variable.num_elements);      \
     binout_record_data_pointer *dp =                                           \
-        _binout_get_data_pointer(bin_file, &_path, variable);                  \
-    path_free(&_path);                                                         \
+        _binout_get_data_pointer(bin_file, &_path_to_variable);                \
     if (!dp) {                                                                 \
       bin_file->error_string = "The given variable has not been found";        \
+      path_free(&_path_to_variable);                                           \
       return NULL;                                                             \
     }                                                                          \
                                                                                \
@@ -314,12 +314,14 @@ void *binout_read(binout_file *bin_file, binout_record_data_pointer *dp,
       bin_file->error_string =                                                 \
           "The given variable is of the wrong type. Mind "                     \
           "Single or Double Precision";                                        \
+      path_free(&_path_to_variable);                                           \
       return NULL;                                                             \
     }                                                                          \
                                                                                \
     const size_t type_size = _binout_get_type_size(dp->type_id);               \
                                                                                \
-    return binout_read(bin_file, dp, path, variable, type_size, data_size);    \
+    return binout_read(bin_file, dp, &_path_to_variable, type_size,            \
+                       data_size);                                             \
   }
 
 DEFINE_BINOUT_READ_TYPE(int8_t, BINOUT_TYPE_INT8)
@@ -333,13 +335,12 @@ DEFINE_BINOUT_READ_TYPE(uint64_t, BINOUT_TYPE_UINT64)
 DEFINE_BINOUT_READ_TYPE(float, BINOUT_TYPE_FLOAT32)
 DEFINE_BINOUT_READ_TYPE(double, BINOUT_TYPE_FLOAT64)
 
-uint64_t binout_get_type_id(binout_file *bin_file, const char *path,
-                            const char *variable) {
+uint64_t binout_get_type_id(binout_file *bin_file,
+                            const char *path_to_variable) {
   path_t _path;
-  _path.elements = path_elements(path, &_path.num_elements);
+  _path.elements = path_elements(path_to_variable, &_path.num_elements);
 
-  binout_record_data_pointer *dp =
-      _binout_get_data_pointer(bin_file, &_path, variable);
+  binout_record_data_pointer *dp = _binout_get_data_pointer(bin_file, &_path);
   path_free(&_path);
   if (!dp) {
     bin_file->error_string = "The given variable has not been found";
@@ -349,19 +350,20 @@ uint64_t binout_get_type_id(binout_file *bin_file, const char *path,
   return dp->type_id;
 }
 
-int binout_variable_exists(binout_file *bin_file, const char *path,
-                           const char *variable) {
+int binout_variable_exists(binout_file *bin_file,
+                           const char *path_to_variable) {
   path_t _path;
-  _path.elements = path_elements(path, &_path.num_elements);
+  _path.elements = path_elements(path_to_variable, &_path.num_elements);
 
-  binout_record_data_pointer *dp =
-      _binout_get_data_pointer(bin_file, &_path, variable);
+  binout_record_data_pointer *dp = _binout_get_data_pointer(bin_file, &_path);
   if (!dp) {
     path_free(&_path);
     return 0;
   }
 
+  _path.num_elements--;
   binout_record_data *record = _binout_get_data(dp, &_path);
+  _path.num_elements++;
   path_free(&_path);
   if (!record) {
     return 0;
@@ -552,8 +554,30 @@ const char *_binout_get_type_name(const uint64_t type_id) {
 }
 
 binout_record_data_pointer *_binout_get_data_pointer(binout_file *bin_file,
-                                                     path_t *path,
-                                                     const char *variable) {
+                                                     path_t *path_to_variable) {
+  binout_record_data_pointer *dp = NULL;
+  uint64_t i = 0;
+  while (i < bin_file->data_pointers_size) {
+    binout_record_data_pointer *bin_dp = &bin_file->data_pointers[i];
+
+    if (strcmp(
+            bin_dp->name,
+            path_to_variable->elements[path_to_variable->num_elements - 1]) ==
+            0 &&
+        path_main_equals(&bin_dp->records[0].path, path_to_variable)) {
+      dp = bin_dp;
+      break;
+    }
+
+    i++;
+  }
+
+  return dp;
+}
+
+binout_record_data_pointer *_binout_get_data_pointer2(binout_file *bin_file,
+                                                      path_t *path,
+                                                      const char *variable) {
   binout_record_data_pointer *dp = NULL;
   uint64_t i = 0;
   while (i < bin_file->data_pointers_size) {
