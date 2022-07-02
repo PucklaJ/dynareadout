@@ -225,41 +225,6 @@ TEST_CASE("path_join") {
   path_free_elements(path.elements, path.num_elements);
 }
 
-TEST_CASE("delete_substr") {
-  {
-    const char *p1 = "Hello World";
-    const size_t p1_len = strlen(p1);
-    char *_p1 = (char *)malloc(p1_len + 1);
-    memcpy(_p1, p1, p1_len + 1);
-
-    char *new_p1 = delete_substr(_p1, 2, 3);
-    CHECK(new_p1 == "Heo World");
-    free(new_p1);
-  }
-
-  {
-    const char *p2 = "Please use this as an test string";
-    const size_t p2_len = strlen(p2);
-    char *_p2 = (char *)malloc(p2_len + 1);
-    memcpy(_p2, p2, p2_len + 1);
-
-    char *new_p2 = delete_substr(_p2, 0, 6);
-    CHECK(new_p2 == "use this as an test string");
-    free(new_p2);
-  }
-
-  {
-    const char *p2 = "Please use this as an test string";
-    const size_t p2_len = strlen(p2);
-    char *_p2 = (char *)malloc(p2_len + 1);
-    memcpy(_p2, p2, p2_len + 1);
-
-    char *new_p2 = delete_substr(_p2, 26, 32);
-    CHECK(new_p2 == "Please use this as an test");
-    free(new_p2);
-  }
-}
-
 TEST_CASE("path_parse") {
   {
     const char *p1 = "/nodout/metadata/../d000001";
@@ -417,5 +382,17 @@ TEST_CASE("path_elements") {
     CHECK(p1_elements[3] == "two");
     CHECK(p1_elements[4] == "three");
     path_free_elements(p1_elements, num_elements);
+  }
+}
+
+TEST_CASE("path_main_equals") {
+  {
+    const char *p1 = "/nodout/metadata";
+    const char *p2 = "/nodout/metadata";
+    path_t p1t, p2t;
+    p1t.elements = path_elements(p1, &p1t.num_elements);
+    p2t.elements = path_elements(p2, &p2t.num_elements);
+
+    CHECK(path_main_equals(&p1t, &p2t));
   }
 }
