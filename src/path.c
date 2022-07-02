@@ -23,15 +23,15 @@ void path_join(path_t *path, const char *element) {
 int path_is_abs(const char *path) { return path[0] == PATH_SEP; }
 
 int path_main_equals(path_t *path1, path_t *path2) {
-  const size_t path1_main_size = path1->num_elements > 1 ? 2 : 1;
-  const size_t path2_main_size = path2->num_elements > 1 ? 2 : 1;
+  const size_t path1_main_size = path1->num_elements > 2 ? 2 : 1;
+  const size_t path2_main_size = path2->num_elements > 2 ? 2 : 1;
   if (path1_main_size != path2_main_size) {
     return 0;
   }
 
   size_t i = 0;
   while (i < path1_main_size) {
-    if (strcmp(path1->elements[i], path2->elements[i]) != 0) {
+    if (strcmp(path1->elements[i + 1], path2->elements[i + 1]) != 0) {
       return 0;
     }
 
@@ -165,20 +165,6 @@ void path_free(path_t *path) {
   path_free_elements(path->elements, path->num_elements);
   path->elements = NULL;
   path->num_elements = 0;
-}
-
-char *delete_substr(char *path, size_t start, size_t end) {
-  const size_t path_len = strlen(path);
-  const size_t delete_size = end - start + 1;
-  const size_t new_size = path_len - delete_size + 1;
-
-  char *new_path = malloc(new_size);
-  memcpy(new_path, path, start);
-  memcpy(&new_path[start], &path[end + 1], path_len - 1 - end);
-  new_path[new_size - 1] = '\0';
-  free(path);
-
-  return new_path;
 }
 
 int path_equals(path_t *path1, path_t *path2) {
