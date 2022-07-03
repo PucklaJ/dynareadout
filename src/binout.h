@@ -26,6 +26,9 @@ typedef struct {
 
   FILE **file_handles;
   size_t num_file_handles;
+
+  char **file_errors;
+  size_t num_file_errors;
 } binout_file;
 
 #ifdef __cplusplus
@@ -80,6 +83,11 @@ char **binout_get_children(binout_file *bin_file, const char *path,
                            size_t *num_children);
 /* Free the allocated memory*/
 void binout_free_children(char **children, size_t num_children);
+/* Returns all file errors as one string. This gives information about files
+ * that failed in binout_open. These errors are not fatal. If the return value
+ * is NULL, no error occurred. The return value needs to be deallocated by
+ * free.*/
+char *binout_open_error(binout_file *bin_file);
 
 /* ----------------------------- */
 
@@ -102,6 +110,10 @@ binout_record_data_pointer *_binout_get_data_pointer2(binout_file *bin_file,
 /* Returns the data record of a given path*/
 binout_record_data *_binout_get_data(binout_record_data_pointer *dp,
                                      path_t *path);
+/* Add to the file_errors array:
+ * Example: "test_data/binout0000: Failed to open file"*/
+void _binout_add_file_error(binout_file *bin_file, const char *file_name,
+                            const char *message);
 
 /* ----------------------------- */
 #ifdef __cplusplus

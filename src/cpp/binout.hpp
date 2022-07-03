@@ -2,6 +2,7 @@
 #include "vector.hpp"
 #include <binout.h>
 #include <binout_defines.h>
+#include <exception>
 #include <filesystem>
 #include <vector>
 
@@ -22,6 +23,16 @@ enum BinoutType {
 
 class Binout {
 public:
+  class Exception : public std::exception {
+  public:
+    Exception(String error_str);
+
+    const char *what() const noexcept override;
+
+  private:
+    String m_error_str;
+  };
+
   Binout(const std::filesystem::path &file_name);
   ~Binout();
 

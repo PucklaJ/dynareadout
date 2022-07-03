@@ -6,23 +6,26 @@
 #include <errno.h>
 #include <string.h>
 
-#define FILE_FAILED()                                                          \
+#define FILE_FAILED(message)                                                   \
   fclose(file_handle);                                                         \
   bin_file.file_handles[cur_file_index] = NULL;                                \
+  _binout_add_file_error(&bin_file, file_names[cur_file_index], message);      \
   cur_file_index++;                                                            \
   continue
 
-#define BIN_FILE_READ(dst, size, count)                                        \
+#define BIN_FILE_READ(dst, size, count, message)                               \
   read_count = fread(&dst, size, count, file_handle);                          \
   if (read_count != count) {                                                   \
     cur_file_failed = 1;                                                       \
+    _binout_add_file_error(&bin_file, file_names[cur_file_index], message);    \
     break;                                                                     \
   }
 
-#define BIN_FILE_READ_FREE(dst, size, count, obj)                              \
+#define BIN_FILE_READ_FREE(dst, size, count, obj, message)                     \
   read_count = fread(dst, size, count, file_handle);                           \
   if (read_count != count) {                                                   \
     free(obj);                                                                 \
+    _binout_add_file_error(&bin_file, file_names[cur_file_index], message);    \
     cur_file_failed = 1;                                                       \
     break;                                                                     \
   }
@@ -32,10 +35,13 @@ binout_file binout_open(const char *file_name) {
   bin_file.data_pointers = NULL;
   bin_file.data_pointers_sizes = NULL;
   bin_file.file_handles = NULL;
+  bin_file.file_errors = NULL;
   bin_file.num_file_handles = 0;
+  bin_file.num_file_errors = 0;
 
   char **file_names = binout_glob(file_name, &bin_file.num_file_handles);
   if (bin_file.num_file_handles == 0) {
+    _binout_add_file_error(&bin_file, file_name, "No files have been found");
     return bin_file;
   }
 
@@ -49,10 +55,13 @@ binout_file binout_open(const char *file_name) {
   while (cur_file_index < bin_file.num_file_handles) {
     bin_file.file_handles[cur_file_index] =
         fopen(file_names[cur_file_index], "rb");
+    if (!bin_file.file_handles[cur_file_index]) {
+      _binout_add_file_error(&bin_file, file_names[cur_file_index],
+                             strerror(errno));
+    }
 
     cur_file_index++;
   }
-  binout_free_glob(file_names, bin_file.num_file_handles);
 
   cur_file_index = 0;
   while (cur_file_index < bin_file.num_file_handles) {
@@ -68,36 +77,36 @@ binout_file binout_open(const char *file_name) {
     /* Read header */
     size_t read_count = fread(&header, sizeof(binout_header), 1, file_handle);
     if (read_count == 0) {
-      FILE_FAILED();
+      FILE_FAILED("Failed to read header");
     }
 
     /* Check if the binout file is actually supported (Might also be an
      * indicator that the given file is not a binout) */
-    if (header.endianess == BINOUT_HEADER_BIG_ENDIAN) {
-      FILE_FAILED();
+    if (header.endianess != BINOUT_HEADER_LITTLE_ENDIAN) {
+      FILE_FAILED("Unsupported Endianess");
     }
     if (header.record_length_field_size > 8) {
-      FILE_FAILED();
+      FILE_FAILED("The record length field size is unsupported");
     }
     if (header.record_command_field_size > 8) {
-      FILE_FAILED();
+      FILE_FAILED("The command length field size is unsupported");
     }
     if (header.record_typeid_field_size > 8) {
-      FILE_FAILED();
+      FILE_FAILED("The typeid field size is unsupported");
     }
     if (header.float_format != BINOUT_HEADER_FLOAT_IEEE) {
-      FILE_FAILED();
+      FILE_FAILED("The float format is unsupported");
     }
 
     /* Get the file size*/
     const long cur_pos = ftell(file_handle);
     if (fseek(file_handle, 0, SEEK_END) != 0) {
-      FILE_FAILED();
+      FILE_FAILED("Failed to get the file size");
     }
 
     const long file_size = ftell(file_handle);
     if (fseek(file_handle, cur_pos, SEEK_SET) != 0) {
-      FILE_FAILED();
+      FILE_FAILED("Failed to get the file size");
     }
 
     /* Parse all records */
@@ -125,8 +134,10 @@ binout_file binout_open(const char *file_name) {
 
       uint64_t record_length = 0, record_command = 0;
 
-      BIN_FILE_READ(record_length, header.record_length_field_size, 1);
-      BIN_FILE_READ(record_command, header.record_command_field_size, 1);
+      BIN_FILE_READ(record_length, header.record_length_field_size, 1,
+                    "Failed to read record length");
+      BIN_FILE_READ(record_command, header.record_command_field_size, 1,
+                    "Failed to read command");
 
       const uint64_t record_data_length = record_length -
                                           header.record_length_field_size -
@@ -138,7 +149,8 @@ binout_file binout_open(const char *file_name) {
         char *path = malloc(record_data_length + 1);
         path[record_data_length] = '\0';
 
-        BIN_FILE_READ_FREE(path, 1, record_data_length, path);
+        BIN_FILE_READ_FREE(path, 1, record_data_length, path,
+                           "Failed to read PATH of CD record");
 
         if (path_is_abs(path) || !current_path.elements) {
           if (current_path.elements) {
@@ -156,13 +168,15 @@ binout_file binout_open(const char *file_name) {
         uint64_t type_id = 0;
         uint8_t variable_name_length;
 
-        BIN_FILE_READ(type_id, header.record_typeid_field_size, 1);
-        BIN_FILE_READ(variable_name_length, BINOUT_DATA_NAME_LENGTH, 1);
+        BIN_FILE_READ(type_id, header.record_typeid_field_size, 1,
+                      "Failed to read TYPEID of DATA record");
+        BIN_FILE_READ(variable_name_length, BINOUT_DATA_NAME_LENGTH, 1,
+                      "Failed to read Name length of DATA record");
 
         char *variable_name = malloc(variable_name_length + 1);
         variable_name[variable_name_length] = '\0';
         BIN_FILE_READ_FREE(variable_name, 1, variable_name_length,
-                           variable_name);
+                           variable_name, "Failed to read Name of DATA record");
 
         /* How large the data segment of the data record is*/
         const uint64_t data_length =
@@ -174,6 +188,8 @@ binout_file binout_open(const char *file_name) {
         if (fseek(file_handle, data_length, SEEK_CUR) != 0) {
           free(variable_name);
           cur_file_failed = 1;
+          _binout_add_file_error(&bin_file, file_names[cur_file_index],
+                                 "Failed to skip Data of DATA record");
           break;
         }
 
@@ -188,6 +204,10 @@ binout_file binout_open(const char *file_name) {
           if (data_length != dp->data_length) {
             free(variable_name);
             cur_file_failed = 1;
+            _binout_add_file_error(
+                &bin_file, file_names[cur_file_index],
+                "The data length of one record is different from another even "
+                "though they should be the same");
             break;
           }
         } else {
@@ -223,6 +243,8 @@ binout_file binout_open(const char *file_name) {
         /* Just skip the record and ignore its data*/
         if (fseek(file_handle, record_data_length, SEEK_CUR) != 0) {
           cur_file_failed = 1;
+          _binout_add_file_error(&bin_file, file_names[cur_file_index],
+                                 "Failed to skip data of a record");
           break;
         }
       }
@@ -231,11 +253,14 @@ binout_file binout_open(const char *file_name) {
     path_free(&current_path);
 
     if (cur_file_failed) {
-      FILE_FAILED();
+      fclose(file_handle);
+      bin_file.file_handles[cur_file_index] = NULL;
     }
 
     cur_file_index++;
   }
+
+  binout_free_glob(file_names, bin_file.num_file_handles);
 
   /* Clean up failed files*/
   cur_file_index = 0;
@@ -316,16 +341,27 @@ void binout_close(binout_file *bin_file) {
     cur_file_index++;
   }
 
+  /* Free all file errors*/
+  size_t i = 0;
+  while (i < bin_file->num_file_errors) {
+    free(bin_file->file_errors[i]);
+
+    i++;
+  }
+
   free(bin_file->data_pointers);
   free(bin_file->data_pointers_sizes);
   free(bin_file->file_handles);
+  free(bin_file->file_errors);
 
   /* Set everything to 0 so that no error happens if function get called after
    * binout_close*/
   bin_file->data_pointers = NULL;
   bin_file->data_pointers_sizes = NULL;
   bin_file->file_handles = NULL;
+  bin_file->file_errors = NULL;
   bin_file->num_file_handles = 0;
+  bin_file->num_file_errors = 0;
 }
 
 void binout_print_records(binout_file *bin_file) {
@@ -598,6 +634,26 @@ void binout_free_children(char **children, size_t num_children) {
   path_free_elements(children, num_children);
 }
 
+char *binout_open_error(binout_file *bin_file) {
+  char *file_error = NULL;
+  size_t file_error_size = 0;
+
+  size_t i = 0;
+  while (i < bin_file->num_file_errors) {
+    const size_t file_error_length = strlen(bin_file->file_errors[i]);
+    file_error_size += file_error_length + 1;
+    file_error = realloc(file_error, file_error_size);
+    memcpy(file_error, bin_file->file_errors[bin_file->num_file_errors - 1],
+           file_error_length);
+    file_error[file_error_size - 1] =
+        '\n' * (i != bin_file->num_file_errors - 1);
+
+    i++;
+  }
+
+  return file_error;
+}
+
 const char *_binout_get_command_name(const uint64_t command) {
   switch (command) {
   case BINOUT_COMMAND_NULL:
@@ -744,4 +800,30 @@ binout_record_data *_binout_get_data(binout_record_data_pointer *dp,
   }
 
   return data;
+}
+
+void _binout_add_file_error(binout_file *bin_file, const char *file_name,
+                            const char *message) {
+  const char *middle = ": ";
+  const size_t file_name_length = strlen(file_name);
+  const size_t message_length = strlen(message);
+  const size_t middle_length = 2;
+
+  bin_file->num_file_errors++;
+  bin_file->file_errors = realloc(bin_file->file_errors,
+                                  bin_file->num_file_errors * sizeof(char *));
+
+  bin_file->file_errors[bin_file->num_file_errors - 1] =
+      malloc(file_name_length + middle_length + message_length + 1);
+  memcpy(bin_file->file_errors[bin_file->num_file_errors - 1], file_name,
+         file_name_length);
+  memcpy(
+      &bin_file->file_errors[bin_file->num_file_errors - 1][file_name_length],
+      middle, middle_length);
+  memcpy(&bin_file->file_errors[bin_file->num_file_errors - 1]
+                               [file_name_length + middle_length],
+         message, message_length);
+  bin_file->file_errors[bin_file->num_file_errors - 1]
+                       [file_name_length + middle_length + message_length] =
+      '\0';
 }
