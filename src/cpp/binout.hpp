@@ -25,7 +25,7 @@ class Binout {
 public:
   class Exception : public std::exception {
   public:
-    Exception(String error_str);
+    Exception(String error_str) noexcept;
 
     const char *what() const noexcept override;
 
@@ -34,15 +34,15 @@ public:
   };
 
   Binout(const std::filesystem::path &file_name);
-  ~Binout();
+  ~Binout() noexcept;
 
   template <typename T> Vector<T> read(const std::string &path_to_variable);
   BinoutType get_type_id(const std::string &path_to_variable) const;
-  bool variable_exists(const std::string &path_to_variable) const;
-  std::vector<String> get_children(const std::string &path) const;
+  bool variable_exists(const std::string &path_to_variable) const noexcept;
+  std::vector<String> get_children(const std::string &path) const noexcept;
 
-  binout_file &get_handle() { return m_handle; }
-  const binout_file &get_handle() const { return m_handle; }
+  binout_file &get_handle() noexcept { return m_handle; }
+  const binout_file &get_handle() const noexcept { return m_handle; }
 
 private:
   binout_file m_handle;
