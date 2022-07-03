@@ -21,13 +21,11 @@ typedef struct {
 typedef struct {
   /* Holds one element for every variable
    * Holds file positions for every data record of a binout file*/
-  binout_record_data_pointer *data_pointers;
-  uint64_t data_pointers_size;
+  binout_record_data_pointer **data_pointers;
+  size_t *data_pointers_sizes;
 
-  FILE *file_handle;
-  /* This string is non NULL if an error occurred
-   * It does NOT need to be deallocated*/
-  const char *error_string;
+  FILE **file_handles;
+  size_t num_file_handles;
 } binout_file;
 
 #ifdef __cplusplus
@@ -44,9 +42,9 @@ void binout_close(binout_file *bin_file);
 /* A helper functions which prints all data records and where to find them*/
 void binout_print_records(binout_file *bin_file);
 /* Don't use this use one of the typed functions*/
-void *binout_read(binout_file *bin_file, binout_record_data_pointer *dp,
-                  path_t *path_to_variable, size_t type_size,
-                  size_t *data_size);
+void *binout_read(binout_file *bin_file, FILE *file_handle,
+                  binout_record_data_pointer *dp, path_t *path_to_variable,
+                  size_t type_size, size_t *data_size);
 #define DEFINE_BINOUT_READ_TYPE_PROTO(c_type)                                  \
   c_type *binout_read_##c_type(                                                \
       binout_file *bin_file, const char *path_to_variable, size_t *data_size);
@@ -95,8 +93,10 @@ uint8_t _binout_get_type_size(const uint64_t type_id);
 const char *_binout_get_type_name(const uint64_t type_id);
 /* Returns the data pointer of a given path and variable name*/
 binout_record_data_pointer *_binout_get_data_pointer(binout_file *bin_file,
+                                                     size_t file_index,
                                                      path_t *path_to_variable);
 binout_record_data_pointer *_binout_get_data_pointer2(binout_file *bin_file,
+                                                      size_t file_index,
                                                       path_t *path,
                                                       const char *variable);
 /* Returns the data record of a given path*/

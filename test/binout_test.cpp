@@ -24,15 +24,9 @@ template <typename T> doctest::String toString(const Vector<T> &str) {
 } // namespace dro
 
 TEST_CASE("binout0000") {
-  const char *binout_file_name = "test_data/binout0000";
+  const char *binout_file_name = "test_data/binout*";
 
   binout_file bin_file = binout_open(binout_file_name);
-  if (bin_file.error_string) {
-    std::string str = "Failed to open binout: ";
-    str += bin_file.error_string;
-    FAIL(str);
-    return;
-  }
 
   size_t num_binout_children;
   char **binout_children =
