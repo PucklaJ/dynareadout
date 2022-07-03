@@ -30,12 +30,24 @@
     break;                                                                     \
   }
 
+#define NEW_ERROR_STRING(message)                                              \
+  if (bin_file->error_string)                                                  \
+    free(bin_file->error_string);                                              \
+  const size_t message_length = strlen(message);                               \
+  bin_file->error_string = malloc(message_length + 1);                         \
+  memcpy(bin_file->error_string, message, message_length + 1);
+
+#define CLEAR_ERROR_STRING()                                                   \
+  free(bin_file->error_string);                                                \
+  bin_file->error_string = NULL;
+
 binout_file binout_open(const char *file_name) {
   binout_file bin_file;
   bin_file.data_pointers = NULL;
   bin_file.data_pointers_sizes = NULL;
   bin_file.file_handles = NULL;
   bin_file.file_errors = NULL;
+  bin_file.error_string = NULL;
   bin_file.num_file_handles = 0;
   bin_file.num_file_errors = 0;
 
@@ -353,6 +365,7 @@ void binout_close(binout_file *bin_file) {
   free(bin_file->data_pointers_sizes);
   free(bin_file->file_handles);
   free(bin_file->file_errors);
+  free(bin_file->error_string);
 
   /* Set everything to 0 so that no error happens if function get called after
    * binout_close*/
@@ -360,6 +373,7 @@ void binout_close(binout_file *bin_file) {
   bin_file->data_pointers_sizes = NULL;
   bin_file->file_handles = NULL;
   bin_file->file_errors = NULL;
+  bin_file->error_string = NULL;
   bin_file->num_file_handles = 0;
   bin_file->num_file_errors = 0;
 }
@@ -411,16 +425,19 @@ void *binout_read(binout_file *bin_file, FILE *file_handle,
   path_to_variable->num_elements++;
   path_free(path_to_variable);
   if (!record) {
+    NEW_ERROR_STRING("The given path has not been found");
     return NULL;
   }
 
   if (fseek(file_handle, record->file_pos, SEEK_SET) != 0) {
+    NEW_ERROR_STRING("Failed to seek to the position of the data");
     return NULL;
   }
 
   void *data = malloc(dp->data_length);
   if (fread(data, dp->data_length, 1, file_handle) != 1) {
     free(data);
+    NEW_ERROR_STRING("Failed to read the data");
     return NULL;
   }
 
@@ -433,6 +450,8 @@ void *binout_read(binout_file *bin_file, FILE *file_handle,
   c_type *binout_read_##c_type(binout_file *bin_file,                          \
                                const char *path_to_variable,                   \
                                size_t *data_size) {                            \
+    CLEAR_ERROR_STRING();                                                      \
+                                                                               \
     path_t _path_to_variable;                                                  \
     _path_to_variable.elements =                                               \
         path_elements(path_to_variable, &_path_to_variable.num_elements);      \
@@ -448,6 +467,11 @@ void *binout_read(binout_file *bin_file, FILE *file_handle,
                                                                                \
       if (dp->type_id != binout_type) {                                        \
         path_free(&_path_to_variable);                                         \
+        char buffer[50];                                                       \
+        sprintf(buffer, "The data is of type %s instead of %s",                \
+                _binout_get_type_name(dp->type_id),                            \
+                _binout_get_type_name(binout_type));                           \
+        NEW_ERROR_STRING(buffer);                                              \
         return NULL;                                                           \
       }                                                                        \
                                                                                \
@@ -474,6 +498,8 @@ DEFINE_BINOUT_READ_TYPE(double, BINOUT_TYPE_FLOAT64)
 
 uint64_t binout_get_type_id(binout_file *bin_file,
                             const char *path_to_variable) {
+  CLEAR_ERROR_STRING();
+
   path_t _path;
   _path.elements = path_elements(path_to_variable, &_path.num_elements);
 
@@ -492,6 +518,7 @@ uint64_t binout_get_type_id(binout_file *bin_file,
 
   path_free(&_path);
 
+  NEW_ERROR_STRING("The given variable has not been found");
   return BINOUT_TYPE_INVALID;
 }
 

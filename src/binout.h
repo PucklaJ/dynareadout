@@ -29,6 +29,10 @@ typedef struct {
 
   char **file_errors;
   size_t num_file_errors;
+
+  /* Holds errors from read and other functions that are not open. If NULL no
+   * error occurred*/
+  char *error_string;
 } binout_file;
 
 #ifdef __cplusplus
