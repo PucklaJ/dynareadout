@@ -171,8 +171,7 @@ void path_free_elements(char **elements, size_t num_elements) {
 
     i++;
   }
-  if (elements)
-    free(elements);
+  free(elements);
 }
 
 void path_free(path_t *path) {
