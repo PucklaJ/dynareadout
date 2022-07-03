@@ -24,9 +24,28 @@ template <typename T> doctest::String toString(const Vector<T> &str) {
 } // namespace dro
 
 TEST_CASE("binout0000") {
+  {
+    binout_file bin_file = binout_open("test_data/i_dont_exist");
+    char *open_error = binout_open_error(&bin_file);
+    if (open_error) {
+      CHECK(open_error == "test_data/i_dont_exist: No files have been found");
+      free(open_error);
+    } else {
+      FAIL("No error occurred");
+    }
+    binout_close(&bin_file);
+  }
+
   const char *binout_file_name = "test_data/binout*";
 
   binout_file bin_file = binout_open(binout_file_name);
+  char *open_error = binout_open_error(&bin_file);
+  if (open_error) {
+    FAIL(open_error);
+    free(open_error);
+    binout_close(&bin_file);
+    return;
+  }
 
   size_t num_binout_children;
   char **binout_children =
@@ -112,7 +131,16 @@ TEST_CASE("binout0000") {
 
 #ifdef BINOUT_CPP
 TEST_CASE("binout0000 C++") {
-  dro::Binout bin_file("test_data/binout0000");
+  {
+    try {
+      dro::Binout bin_file("test_data/i_dont_exist");
+      FAIL("No exception occurred");
+    } catch (const dro::Binout::Exception &e) {
+      CHECK(e.what() == "test_data/i_dont_exist: No files have been found");
+    }
+  }
+
+  dro::Binout bin_file("test_data/binout*");
   {
     const auto children = bin_file.get_children("/");
     REQUIRE(children.size() == 2);

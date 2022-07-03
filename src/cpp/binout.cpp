@@ -3,8 +3,19 @@
 
 namespace dro {
 
+Binout::Exception::Exception(String error_str)
+    : m_error_str(std::move(error_str)) {}
+
+const char *Binout::Exception::what() const noexcept {
+  return m_error_str.data();
+}
+
 Binout::Binout(const std::filesystem::path &file_name) {
   m_handle = binout_open(file_name.string().c_str());
+  char *open_error = binout_open_error(&m_handle);
+  if (open_error) {
+    throw Exception(String(open_error, strlen(open_error) + 1));
+  }
 }
 
 Binout::~Binout() { binout_close(&m_handle); }
