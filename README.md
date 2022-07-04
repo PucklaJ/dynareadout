@@ -22,6 +22,23 @@ You just need any C compiler and [xmake](https://xmake.io) as the build system. 
 | Python   | -               |    ❌    |
 | Go       | -               |    ❌    |
 
+## xmake repo
+
+This library has been added to the [xmake repo](https://github.com/xmake-io/xmake-repo). Therefore it can be installed using `xrepo install dynareadout`. To use it inside an xmake project use the following code inside your xmake.lua.
+
+```lua
+add_requires("dynareadout")
+-- enable or disable C++ bindings
+-- add_requires("dynareadout", {configs = {cpp = false}})
+-- shared build instead of static
+-- add_requires("dynareadout", {shared = true})
+
+target("example")
+  set_kind("binary")
+  add_packages("dynareadout")
+  add_files("src/example.c")
+```
+
 ## Example
 
 ### C
