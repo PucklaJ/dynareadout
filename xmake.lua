@@ -11,20 +11,26 @@ option_end()
 
 add_rules("mode.debug", "mode.release")
 target("binout")
-    set_kind("static")
+    set_kind("$(kind)")
     set_languages("ansi")
     add_files("src/*.c")
     add_headerfiles("src/*.h")
+    if is_kind("shared") then
+        add_rules("utils.symbols.export_all")
+    end
 target_end()
 
 if get_config("build_cpp") then
     target("binout_cpp")
-        set_kind("static")
+        set_kind("$(kind)")
         set_languages("cxx17")
         add_deps("binout")
         add_includedirs("src")
         add_files("src/cpp/*.cpp")
         add_headerfiles("src/cpp/*.hpp")
+        if is_kind("shared") then
+            add_rules("utils.symbols.export_all", {export_classes = true})
+        end
     target_end()
 end
 
