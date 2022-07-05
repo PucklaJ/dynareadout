@@ -32,11 +32,12 @@ typedef struct {
   struct {
     char *title;
     d3_word run_time, source_version, release_version, version, ndim, numnp,
-        icode, nglbv, it, iu, iv, ia, nel8, nummat8, numds, numst, nv3d, nel2,
+        icode, nglbv, it, iu, iv, ia, nummat8, numds, numst, nv3d, nel2,
         nummat2, nv1d, nel4, nummat4, nv2d, neiph, neips, maxint, edlopt, nmsph,
         ngpsph, narbs, nelt, nummatt, nv3dt, ioshl[4], ialemat, ncfdv1, ncfdv2,
         nadapt, nmmat, numfluid, inn, npefg, nel48, idtdt, extra, words[6],
         nel20, nt3d;
+    int64_t nel8;
     int mattyp, istrn, plastic_strain_tensor_written,
         thermal_strain_tensor_written, element_connectivity_packed;
   } control_data;

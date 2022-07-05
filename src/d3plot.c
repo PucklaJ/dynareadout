@@ -304,9 +304,172 @@ int _d3plot_read_geometry_data(d3plot_file *plot_file) {
       d3_buffer_read_words(&plot_file->buffer, vec64, 3);
     }
 
-    printf("Node %d: (%f, %f, %f)\n", i, vec64[0], vec64[1], vec64[2]);
+    printf("NODE %d: (%f, %f, %f)\n", i, vec64[0], vec64[1], vec64[2]);
 
     i++;
+  }
+
+  if (CDATAP.nel8 > 0) {
+    uint8_t *ix8 = malloc(9 * CDATAP.nel8 * plot_file->buffer.word_size);
+    d3_buffer_read_words(&plot_file->buffer, ix8, 9 * CDATAP.nel8);
+
+    d3_word value[9];
+    uint32_t value32[9];
+
+    size_t offset = 0;
+    size_t i = 0;
+    while (i < CDATAP.nel8) {
+      if (plot_file->buffer.word_size == 4) {
+        memcpy(value32, &ix8[offset], plot_file->buffer.word_size * 9);
+        size_t j = 0;
+        while (j < 9) {
+          value[j + 0] = value32[j + 0];
+          value[j + 1] = value32[j + 1];
+          value[j + 2] = value32[j + 2];
+
+          j += 3;
+        }
+      } else {
+        memcpy(value, &ix8[offset], plot_file->buffer.word_size * 9);
+      }
+      offset += plot_file->buffer.word_size * 9;
+
+      printf("8NEL %d: (%d, %d, %d, %d, %d, %d, %d, %d, %d)\n", i, value[0],
+             value[1], value[2], value[3], value[4], value[5], value[6],
+             value[7], value[8]);
+
+      i++;
+    }
+
+    free(ix8);
+  } else if (CDATAP.nel8 < 0) {
+    const int64_t nel8 = CDATAP.nel8 * -1;
+
+    uint8_t *ix10 = malloc(9 * nel8 * plot_file->buffer.word_size);
+    d3_buffer_read_words(&plot_file->buffer, ix10, 2 * nel8);
+
+    d3_word value[2];
+    uint32_t value32[2];
+
+    size_t offset = 0;
+    size_t i = 0;
+    while (i < nel8) {
+      if (plot_file->buffer.word_size == 4) {
+        memcpy(value32, &ix10[offset], plot_file->buffer.word_size * 2);
+        value[0] = value32[0];
+        value[1] = value32[1];
+      } else {
+        memcpy(value, &ix10[offset], plot_file->buffer.word_size * 2);
+      }
+      offset += plot_file->buffer.word_size * 2;
+
+      printf("10NEL %d: (%d, %d)\n", i, value[0], value[1]);
+
+      i++;
+    }
+
+    free(ix10);
+  }
+
+  if (CDATAP.nelt > 0) {
+    uint8_t *ixt = malloc(9 * CDATAP.nelt * plot_file->buffer.word_size);
+    d3_buffer_read_words(&plot_file->buffer, ixt, 9 * CDATAP.nelt);
+
+    d3_word value[9];
+    uint32_t value32[9];
+
+    size_t offset = 0;
+    size_t i = 0;
+    while (i < CDATAP.nelt) {
+      if (plot_file->buffer.word_size == 4) {
+        memcpy(value32, &ixt[offset], plot_file->buffer.word_size * 9);
+        size_t j = 0;
+        while (j < 9) {
+          value[j + 0] = value32[j + 0];
+          value[j + 1] = value32[j + 1];
+          value[j + 2] = value32[j + 2];
+
+          j += 3;
+        }
+      } else {
+        memcpy(value, &ixt[offset], plot_file->buffer.word_size * 9);
+      }
+      offset += plot_file->buffer.word_size * 9;
+
+      printf("NELT %d: (%d, %d, %d, %d, %d, %d, %d, %d, %d)\n", i, value[0],
+             value[1], value[2], value[3], value[4], value[5], value[6],
+             value[7], value[8]);
+
+      i++;
+    }
+
+    free(ixt);
+  }
+
+  if (CDATAP.nel2 > 0) {
+    uint8_t *ix2 = malloc(6 * CDATAP.nel2 * plot_file->buffer.word_size);
+    d3_buffer_read_words(&plot_file->buffer, ix2, 6 * CDATAP.nel2);
+
+    d3_word value[6];
+    uint32_t value32[6];
+
+    size_t offset = 0;
+    size_t i = 0;
+    while (i < CDATAP.nel2) {
+      if (plot_file->buffer.word_size == 4) {
+        memcpy(value32, &ix2[offset], plot_file->buffer.word_size * 6);
+        size_t j = 0;
+        while (j < 6) {
+          value[j + 0] = value32[j + 0];
+          value[j + 1] = value32[j + 1];
+          value[j + 2] = value32[j + 2];
+
+          j += 3;
+        }
+      } else {
+        memcpy(value, &ix2[offset], plot_file->buffer.word_size * 6);
+      }
+      offset += plot_file->buffer.word_size * 6;
+
+      printf("NEL2 %d: (%d, %d, %d, %d, %d, %d)\n", i, value[0], value[1],
+             value[2], value[3], value[4], value[5]);
+
+      i++;
+    }
+
+    free(ix2);
+  }
+
+  if (CDATAP.nel4 > 0) {
+    uint8_t *ix4 = malloc(5 * CDATAP.nel4 * plot_file->buffer.word_size);
+    d3_buffer_read_words(&plot_file->buffer, ix4, 5 * CDATAP.nel4);
+
+    d3_word value[5];
+    uint32_t value32[5];
+
+    size_t offset = 0;
+    size_t i = 0;
+    while (i < CDATAP.nel4) {
+      if (plot_file->buffer.word_size == 4) {
+        memcpy(value32, &ix4[offset], plot_file->buffer.word_size * 5);
+        size_t j = 0;
+        while (j < 5) {
+          value[j + 0] = value32[j + 0];
+
+          j++;
+        }
+      } else {
+        memcpy(value, &ix4[offset], plot_file->buffer.word_size * 5);
+      }
+      offset += plot_file->buffer.word_size * 5;
+
+      printf("NEL4 %d: (0x%x, 0x%x, 0x%x, 0x%x, 0x%x)\n", i, value[0], value[1],
+             value[2], value[3], value[4]);
+
+      i++;
+    }
+
+    free(ix4);
   }
 
   return 1;
