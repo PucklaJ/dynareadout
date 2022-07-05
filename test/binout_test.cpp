@@ -35,7 +35,7 @@
 #include <sstream>
 #include <string>
 #ifdef BINOUT_CPP
-#include <cpp/binout.hpp>
+#include <binout.hpp>
 #endif
 
 namespace dro {

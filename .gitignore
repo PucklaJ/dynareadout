@@ -8,3 +8,6 @@ build/
 
 # MacOS Cache
 .DS_Store
+
+# Test Data
+test_data/d3plot*

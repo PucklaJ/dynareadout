@@ -13,8 +13,17 @@ add_rules("mode.debug", "mode.release")
 target("binout")
     set_kind("$(kind)")
     set_languages("ansi")
-    add_files("src/*.c")
-    add_headerfiles("src/*.h")
+    add_files("src/binout*.c", "src/path.c")
+    add_headerfiles("src/binout*.h", "src/path.h")
+    if is_kind("shared") then
+        add_rules("utils.symbols.export_all")
+    end
+
+target("d3plot")
+    set_kind("$(kind)")
+    set_languages("ansi")
+    add_files("src/d3*.c")
+    add_headerfiles("src/d3*.h")
     if is_kind("shared") then
         add_rules("utils.symbols.export_all")
     end
@@ -26,8 +35,8 @@ if get_config("build_cpp") then
         set_languages("cxx17")
         add_deps("binout")
         add_includedirs("src")
-        add_files("src/cpp/*.cpp")
-        add_headerfiles("src/cpp/*.hpp")
+        add_files("src/cpp/binout*.cpp")
+        add_headerfiles("src/cpp/binout*.hpp", "src/cpp/vector.hpp")
         if is_kind("shared") then
             add_rules("utils.symbols.export_all", {export_classes = true})
         end
@@ -43,9 +52,18 @@ if get_config("build_test") then
         if get_config("build_cpp") then
             add_deps("binout_cpp")
             add_defines("BINOUT_CPP")
+            add_includedirs("src/cpp")
         end
         add_packages("doctest")
         add_includedirs("src")
         add_files("test/binout_test.cpp")
+
+    target("d3plot_test")
+        set_kind("binary")
+        set_languages("cxx17")
+        add_deps("d3plot")
+        add_packages("doctest")
+        add_includedirs("src")
+        add_files("test/d3plot_test.cpp")
     target_end()
 end
