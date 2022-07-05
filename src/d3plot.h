@@ -63,6 +63,7 @@ int _d3plot_read_geometry_data(d3plot_file *plot_file);
 int _d3plot_read_extra_node_connectivity(d3plot_file *plot_file);
 int _d3plot_read_adapted_element_parent_list(d3plot_file *plot_file);
 int _d3plot_read_header(d3plot_file *plot_file);
+int _d3plot_read_user_identification_numbers(d3plot_file *plot_file);
 /***************************/
 
 const char *_d3plot_get_file_type_name(d3_word file_type);

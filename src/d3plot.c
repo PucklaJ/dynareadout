@@ -266,12 +266,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
     return plot_file;
   }
 
-  if (CDATA.narbs != 0) {
-    printf("NARBS: %d\n", CDATA.narbs);
-    plot_file.error_string = malloc(83);
-    sprintf(plot_file.error_string,
-            "USER MATERIAL, NODE, AND ELEMENT IDENTIFICATION NUMBERS section "
-            "is not implemented");
+  if (!_d3plot_read_user_identification_numbers(&plot_file)) {
     return plot_file;
   }
 
@@ -674,6 +669,95 @@ int _d3plot_read_header(d3plot_file *plot_file) {
          plot_file->header.head);
 
   return 0;
+}
+
+int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
+  if (CDATAP.narbs == 0) {
+    return 1;
+  }
+
+  printf("Read NARBS data at %d\n", plot_file->buffer.cur_word);
+
+  int64_t nsort;
+  d3_word nsrh = 0, nsrb = 0, nsrs = 0, nsrt = 0, nsortd = 0, nsrhd = 0,
+          nsrbd = 0, nsrsd = 0, nsrtd = 0,
+          nmmat = plot_file->control_data.nmmat;
+  if (plot_file->buffer.word_size == 4) {
+    int32_t nsort32;
+    d3_buffer_read_words(&plot_file->buffer, &nsort32, 1);
+    nsort = nsort32;
+  } else {
+    d3_buffer_read_words(&plot_file->buffer, &nsort, 1);
+  }
+  d3_buffer_read_words(&plot_file->buffer, &nsrh, 1);
+  d3_buffer_read_words(&plot_file->buffer, &nsrb, 1);
+  d3_buffer_read_words(&plot_file->buffer, &nsrs, 1);
+  d3_buffer_read_words(&plot_file->buffer, &nsrt, 1);
+  d3_buffer_read_words(&plot_file->buffer, &nsortd, 1);
+  d3_buffer_read_words(&plot_file->buffer, &nsrhd, 1);
+  d3_buffer_read_words(&plot_file->buffer, &nsrbd, 1);
+  d3_buffer_read_words(&plot_file->buffer, &nsrsd, 1);
+  d3_buffer_read_words(&plot_file->buffer, &nsrtd, 1);
+
+  if (nsort < 0) {
+    d3_word nsrma = 0, nsrmu = 0, nsrmp = 0, nsrtm = 0, numrbs = 0;
+
+    d3_buffer_read_words(&plot_file->buffer, &nsrma, 1);
+    d3_buffer_read_words(&plot_file->buffer, &nsrmu, 1);
+    d3_buffer_read_words(&plot_file->buffer, &nsrmp, 1);
+    d3_buffer_read_words(&plot_file->buffer, &nsrtm, 1);
+    d3_buffer_read_words(&plot_file->buffer, &numrbs, 1);
+    d3_buffer_read_words(&plot_file->buffer, &nmmat, 1);
+  } else {
+    plot_file->error_string = malloc(39 + 20);
+    sprintf(plot_file->error_string, "Non negative nsort (%d) is not supported",
+            nsort);
+    return 0;
+  }
+
+  uint8_t *nusern, *nuserh, *nuserb, *nusers, *nusert, *norder, *nsrmu_a,
+      *nsrmp_a;
+
+  nusern = malloc(nsortd * plot_file->buffer.word_size);
+  nuserh = malloc(nsrhd * plot_file->buffer.word_size);
+  nuserb = malloc(nsrbd * plot_file->buffer.word_size);
+  nusers = malloc(nsrsd * plot_file->buffer.word_size);
+  nusert = malloc(nsrtd * plot_file->buffer.word_size);
+  norder = malloc(nmmat * plot_file->buffer.word_size);
+  nsrmu_a = malloc(nmmat * plot_file->buffer.word_size);
+  nsrmp_a = malloc(nmmat * plot_file->buffer.word_size);
+
+  d3_buffer_read_words(&plot_file->buffer, nusern, nsortd);
+  d3_buffer_read_words(&plot_file->buffer, nuserh, nsrhd);
+  d3_buffer_read_words(&plot_file->buffer, nuserb, nsrbd);
+  d3_buffer_read_words(&plot_file->buffer, nusers, nsrsd);
+  d3_buffer_read_words(&plot_file->buffer, nusert, nsrtd);
+  d3_buffer_read_words(&plot_file->buffer, norder, nmmat);
+  d3_buffer_read_words(&plot_file->buffer, nsrmu_a, nmmat);
+  d3_buffer_read_words(&plot_file->buffer, nsrmp_a, nmmat);
+
+  size_t i = 0;
+  size_t offset = 0;
+  while (i < nsortd) {
+    d3_word nid = 0;
+    memcpy(&nid, &nusern[offset], plot_file->buffer.word_size);
+    offset += plot_file->buffer.word_size;
+
+    printf("Node ID %d: %d\n", i, nid);
+
+    i++;
+  }
+
+  free(nusern);
+  free(nuserh);
+  free(nuserb);
+  free(nusers);
+  free(nusert);
+  free(norder);
+  free(nsrmu_a);
+  free(nsrmp_a);
+
+  return 1;
 }
 
 const char *_d3plot_get_file_type_name(d3_word file_type) {
