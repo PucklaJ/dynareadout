@@ -39,6 +39,7 @@ d3_buffer d3_buffer_open(const char *root_file_name) {
   d3_buffer buffer;
   buffer.num_file_handles = 0;
   buffer.cur_file_handle = 0;
+  buffer.cur_word = 0;
   buffer.file_handles = NULL;
   buffer.file_sizes = NULL;
   buffer.error_string = NULL;
@@ -129,6 +130,7 @@ d3_buffer d3_buffer_open(const char *root_file_name) {
   if (fseek(buffer.file_handles[0], 0, SEEK_SET) != 0) {
     /*TODO: Error*/
   }
+  buffer.cur_word = 0;
 
   return buffer;
 }
@@ -149,6 +151,7 @@ void d3_buffer_close(d3_buffer *buffer) {
   buffer->file_sizes = NULL;
   buffer->error_string = NULL;
   buffer->num_file_handles = 0;
+  buffer->cur_word = 0;
 }
 
 void d3_buffer_read_words(d3_buffer *buffer, void *words, size_t num_words) {
@@ -162,6 +165,7 @@ void d3_buffer_read_words(d3_buffer *buffer, void *words, size_t num_words) {
               buffer->file_handles[buffer->cur_file_handle]) < num_words) {
       /* TODO: Error*/
     }
+    buffer->cur_word += num_words;
     return;
   } else {
     size_t words_read = 0;
@@ -178,6 +182,7 @@ void d3_buffer_read_words(d3_buffer *buffer, void *words, size_t num_words) {
           /* TODO: Error*/
         }
 
+        buffer->cur_word += num_words - words_read;
         words_read = num_words;
       } else {
         if (fread(&words_ptr[words_read * buffer->word_size], buffer->word_size,
@@ -187,6 +192,7 @@ void d3_buffer_read_words(d3_buffer *buffer, void *words, size_t num_words) {
           /* TODO: Error*/
         }
 
+        buffer->cur_word += words_from_cur_file;
         words_read += words_from_cur_file;
         buffer->cur_file_handle++;
         /* TODO: Check if out of bounds*/
@@ -203,6 +209,7 @@ void d3_buffer_read_words(d3_buffer *buffer, void *words, size_t num_words) {
 void d3_buffer_read_words_at(d3_buffer *buffer, void *words, size_t num_words,
                              size_t word_pos) {
   if (word_pos == 0) {
+    buffer->cur_word = 0;
     buffer->cur_file_handle = 0;
     if (fseek(buffer->file_handles[0], 0, SEEK_SET) != 0) {
       /* TODO: Error*/
@@ -238,5 +245,6 @@ void d3_buffer_read_words_at(d3_buffer *buffer, void *words, size_t num_words,
     }
   }
 
+  buffer->cur_word = word_pos;
   d3_buffer_read_words(buffer, words, num_words);
 }
