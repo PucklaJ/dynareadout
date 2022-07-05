@@ -38,7 +38,7 @@ typedef struct {
         nadapt, nmmat, numfluid, inn, npefg, nel48, idtdt, extra, words[6],
         nel20, nt3d;
     int mattyp, istrn, plastic_strain_tensor_written,
-        thermal_strain_tensor_written;
+        thermal_strain_tensor_written, element_connectivity_packed;
   } control_data;
 
   d3_buffer buffer;
@@ -51,6 +51,10 @@ extern "C" {
 
 d3plot_file d3plot_open(const char *root_file_name);
 void d3plot_close(d3plot_file *plot_file);
+
+/***** Data sections *******/
+int _d3plot_read_geometry_data(d3plot_file *plot_file);
+/***************************/
 
 const char *_d3plot_get_file_type_name(d3_word file_type);
 int _get_nth_digit(d3_word value, int n);

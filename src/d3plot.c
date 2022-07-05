@@ -34,6 +34,7 @@
   d3_word value = 0;                                                           \
   d3_buffer_read_words(&plot_file.buffer, &value, 1)
 #define CDATA plot_file.control_data
+#define CDATAP plot_file->control_data
 
 d3plot_file d3plot_open(const char *root_file_name) {
   d3plot_file plot_file;
@@ -131,16 +132,19 @@ d3plot_file d3plot_open(const char *root_file_name) {
     CDATA.nt3d = 0;
   }
 
-  if (CDATA.ndim == 4) {
-    CDATA.ndim = 3;
-    /* TODO: element connectivies are unpacked in the DYNA3D
-database*/
-  }
   if (CDATA.ndim == 5 || CDATA.ndim == 7) {
     CDATA.mattyp = 1;
     CDATA.ndim = 3;
   } else {
     CDATA.mattyp = 0;
+    if (CDATA.ndim == 3) {
+      CDATA.element_connectivity_packed = 1;
+    } else {
+      CDATA.element_connectivity_packed = 0;
+      if (CDATA.ndim == 4) {
+        CDATA.ndim = 3;
+      }
+    }
   }
 
   size_t i = 0;
@@ -227,6 +231,36 @@ database*/
     }
   }
 
+  /* We are done with CONTROL DATA now comes the real data*/
+
+  if (CDATA.mattyp) {
+    plot_file.error_string = malloc(38);
+    sprintf(plot_file.error_string, "MATERIAL TYPE DATA is not implemented");
+    return plot_file;
+  }
+  if (CDATA.ialemat) {
+    plot_file.error_string = malloc(42);
+    sprintf(plot_file.error_string,
+            "FLUID MATERIAL ID DATA is not implemented");
+    return plot_file;
+  }
+  if (CDATA.nmsph) {
+    plot_file.error_string = malloc(68);
+    sprintf(
+        plot_file.error_string,
+        "SMOOTH PARTICLE HYDRODYNAMICS ELEMENT DATA FLAGS is not implemented");
+    return plot_file;
+  }
+  if (CDATA.npefg) {
+    plot_file.error_string = malloc(33);
+    sprintf(plot_file.error_string, "PARTICLE DATA is not implemented");
+    return plot_file;
+  }
+
+  if (!_d3plot_read_geometry_data(&plot_file)) {
+    return plot_file;
+  }
+
   return plot_file;
 }
 
@@ -237,6 +271,45 @@ void d3plot_close(d3plot_file *plot_file) {
   free(plot_file->error_string);
 
   plot_file->control_data.title = NULL;
+}
+
+int _d3plot_read_geometry_data(d3plot_file *plot_file) {
+  if (CDATAP.element_connectivity_packed) {
+    plot_file->error_string = malloc(45);
+    sprintf(plot_file->error_string,
+            "Packed Element Connectivity is not supported");
+    return 0;
+  }
+
+  if (CDATAP.icode != D3_CODE_OLD_DYNA3D &&
+      CDATAP.icode != D3_CODE_NIKE3D_LS_DYNA3D_LS_NIKE3D) {
+    plot_file->error_string = malloc(49);
+    sprintf(plot_file->error_string,
+            "The given order of the elements is not supported");
+    return 0;
+  }
+
+  /* Print X*/
+  double vec64[3];
+  float vec32[3];
+
+  size_t i = 0;
+  while (i < CDATAP.numnp) {
+    if (plot_file->buffer.word_size == 4) {
+      d3_buffer_read_words(&plot_file->buffer, vec32, 3);
+      vec64[0] = (double)vec32[0];
+      vec64[1] = (double)vec32[1];
+      vec64[2] = (double)vec32[2];
+    } else {
+      d3_buffer_read_words(&plot_file->buffer, vec64, 3);
+    }
+
+    printf("Node %d: (%f, %f, %f)\n", i, vec64[0], vec64[1], vec64[2]);
+
+    i++;
+  }
+
+  return 1;
 }
 
 const char *_d3plot_get_file_type_name(d3_word file_type) {
