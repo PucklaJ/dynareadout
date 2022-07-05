@@ -25,7 +25,7 @@
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #define DOCTEST_CONFIG_TREAT_CHAR_STAR_AS_STRING
-#include <d3_buffer.h>
+#include <d3plot.h>
 #include <doctest/doctest.h>
 
 TEST_CASE("d3_buffer") {
@@ -64,4 +64,32 @@ TEST_CASE("d3_buffer") {
   delete[] probe;
 
   d3_buffer_close(&buffer);
+}
+
+TEST_CASE("d3plot") {
+  d3plot_file plot_file = d3plot_open("test_data/d3plot");
+  if (plot_file.error_string) {
+    FAIL(plot_file.error_string);
+    d3plot_close(&plot_file);
+    return;
+  }
+
+  d3plot_close(&plot_file);
+}
+
+TEST_CASE("_get_nth_digit") {
+  const d3_word value = 123456;
+  CHECK(_get_nth_digit(value, 0) == 6);
+  CHECK(_get_nth_digit(value, 1) == 5);
+  CHECK(_get_nth_digit(value, 2) == 4);
+  CHECK(_get_nth_digit(value, 3) == 3);
+  CHECK(_get_nth_digit(value, 4) == 2);
+  CHECK(_get_nth_digit(value, 5) == 1);
+
+  const d3_word value1 = 10;
+  CHECK(_get_nth_digit(value1, 0) == 0);
+  CHECK(_get_nth_digit(value1, 1) == 1);
+  CHECK(_get_nth_digit(value1, 2) == 0);
+  CHECK(_get_nth_digit(value1, 3) == 0);
+  CHECK(_get_nth_digit(value1, 4) == 0);
 }
