@@ -34,6 +34,7 @@ typedef struct {
   size_t *file_sizes;
   size_t num_file_handles;
   size_t cur_file_handle;
+  size_t cur_word;
 
   uint8_t word_size; /* 4 byte for single precision and 8 byte for double
                         precision*/

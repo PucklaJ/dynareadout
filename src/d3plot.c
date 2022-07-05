@@ -54,7 +54,11 @@ d3plot_file d3plot_open(const char *root_file_name) {
   d3_buffer_read_words(&plot_file.buffer, CDATA.title, 10);
   CDATA.title[10 * plot_file.buffer.word_size] = '\0';
 
+  printf("Title: %s\n", CDATA.title);
+
   READ_CONTROL_DATA_PLOT_FILE_WORD(run_time);
+
+  printf("Runtime: %d\n", CDATA.run_time);
 
   READ_CONTROL_DATA_WORD(file_type);
   if (file_type > 1000) {
@@ -94,7 +98,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
   READ_CONTROL_DATA_PLOT_FILE_WORD(neiph);
   READ_CONTROL_DATA_PLOT_FILE_WORD(neips);
   READ_CONTROL_DATA_PLOT_FILE_WORD(maxint);
-  READ_CONTROL_DATA_PLOT_FILE_WORD(edlopt);
+  /*READ_CONTROL_DATA_PLOT_FILE_WORD(edlopt); Not used in LS-Dyna?*/
   READ_CONTROL_DATA_PLOT_FILE_WORD(nmsph);
   READ_CONTROL_DATA_PLOT_FILE_WORD(ngpsph);
   READ_CONTROL_DATA_PLOT_FILE_WORD(narbs);
@@ -115,7 +119,6 @@ d3plot_file d3plot_open(const char *root_file_name) {
   READ_CONTROL_DATA_PLOT_FILE_WORD(npefg);
   READ_CONTROL_DATA_PLOT_FILE_WORD(nel48);
   READ_CONTROL_DATA_PLOT_FILE_WORD(idtdt);
-  READ_CONTROL_DATA_PLOT_FILE_WORD(idtdt);
   READ_CONTROL_DATA_PLOT_FILE_WORD(extra);
   READ_CONTROL_DATA_PLOT_FILE_WORD(words[0]);
   READ_CONTROL_DATA_PLOT_FILE_WORD(words[1]);
@@ -123,6 +126,8 @@ d3plot_file d3plot_open(const char *root_file_name) {
   READ_CONTROL_DATA_PLOT_FILE_WORD(words[3]);
   READ_CONTROL_DATA_PLOT_FILE_WORD(words[4]);
   READ_CONTROL_DATA_PLOT_FILE_WORD(words[5]);
+
+  printf("Done with header at %d\n", plot_file.buffer.cur_word);
 
   if (CDATA.extra > 0) {
     READ_CONTROL_DATA_PLOT_FILE_WORD(nel20);
@@ -262,6 +267,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
   }
 
   if (CDATA.narbs != 0) {
+    printf("NARBS: %d\n", CDATA.narbs);
     plot_file.error_string = malloc(83);
     sprintf(plot_file.error_string,
             "USER MATERIAL, NODE, AND ELEMENT IDENTIFICATION NUMBERS section "
@@ -273,6 +279,35 @@ d3plot_file d3plot_open(const char *root_file_name) {
     return plot_file;
   }
 
+  if (!_d3plot_read_adapted_element_parent_list(&plot_file)) {
+    return plot_file;
+  }
+
+  if (CDATA.nmsph > 0) {
+    plot_file.error_string = malloc(72);
+    sprintf(plot_file.error_string, "SMOOTH PARTICLE HYDRODYNAMICS NODE AND "
+                                    "MATERIAL LIST is not implemented");
+    return plot_file;
+  }
+
+  if (CDATA.npefg > 0) {
+    plot_file.error_string = malloc(42);
+    sprintf(plot_file.error_string,
+            "PARTICLE GEOMETRY DATA is not implemented");
+    return plot_file;
+  }
+
+  if (CDATA.ndim > 5) {
+    plot_file.error_string = malloc(43);
+    sprintf(plot_file.error_string,
+            "RIGID ROAD SURFACE DATA is not implemented");
+    return plot_file;
+  }
+
+  if (!_d3plot_read_header(&plot_file)) {
+    return plot_file;
+  }
+
   return plot_file;
 }
 
@@ -280,9 +315,11 @@ void d3plot_close(d3plot_file *plot_file) {
   d3_buffer_close(&plot_file->buffer);
 
   free(plot_file->control_data.title);
+  free(plot_file->header.head);
   free(plot_file->error_string);
 
   plot_file->control_data.title = NULL;
+  plot_file->header.head = NULL;
 }
 
 int _d3plot_read_geometry_data(d3plot_file *plot_file) {
@@ -300,6 +337,8 @@ int _d3plot_read_geometry_data(d3plot_file *plot_file) {
             "The given order of the elements is not supported");
     return 0;
   }
+
+  printf("Node positions at: %d\n", plot_file->buffer.cur_word);
 
   /* Print X*/
   double vec64[3];
@@ -584,6 +623,57 @@ int _d3plot_read_extra_node_connectivity(d3plot_file *plot_file) {
   }
 
   return 1;
+}
+
+int _d3plot_read_adapted_element_parent_list(d3plot_file *plot_file) {
+  /*if (CDATAP.nadapt == 0) {
+    return 1;
+  }
+
+  uint8_t *aepl = malloc(2 * CDATAP.nadapt * plot_file->buffer.word_size);
+  d3_buffer_read_words(&plot_file->buffer, aepl, 2 * CDATAP.nadapt);
+
+  d3_word value[2];
+  uint32_t value32[2];
+
+  size_t offset = 0;
+  size_t i = 0;
+  while (i < CDATAP.nadapt) {
+    if (plot_file->buffer.word_size == 4) {
+      memcpy(value32, &aepl[offset], 2 * plot_file->buffer.word_size);
+      value[0] = value32[0];
+      value[1] = value32[1];
+    } else {
+      memcpy(value, &aepl[offset], 2 * plot_file->buffer.word_size);
+    }
+    offset += 2 * plot_file->buffer.word_size;
+
+    printf("ADAPT %d: (%d, %d)\n", i, value[0], value[1]);
+
+    i++;
+  }
+
+  free(aepl);
+
+  This is not implemented?
+
+  */
+
+  return 1;
+}
+
+int _d3plot_read_header(d3plot_file *plot_file) {
+  plot_file->header.ntype = 0;
+  d3_buffer_read_words(&plot_file->buffer, &plot_file->header.ntype, 1);
+
+  plot_file->header.head = malloc(plot_file->buffer.word_size * 18 + 1);
+  d3_buffer_read_words(&plot_file->buffer, plot_file->header.head, 18);
+  plot_file->header.head[plot_file->buffer.word_size * 18] = '\0';
+
+  printf("NTYPE: %d\nHEAD: %s\n", plot_file->header.ntype,
+         plot_file->header.head);
+
+  return 0;
 }
 
 const char *_d3plot_get_file_type_name(d3_word file_type) {
