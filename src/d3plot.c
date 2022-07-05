@@ -299,6 +299,22 @@ d3plot_file d3plot_open(const char *root_file_name) {
     return plot_file;
   }
 
+  /* Read EOF marker (-999999.0)*/
+  double eof_marker;
+  if (plot_file.buffer.word_size == 4) {
+    float eof_marker32;
+    d3_buffer_read_words(&plot_file.buffer, &eof_marker32, 1);
+    eof_marker = eof_marker32;
+  } else {
+    d3_buffer_read_words(&plot_file.buffer, &eof_marker, 1);
+  }
+
+  if (eof_marker != -999999.0) {
+    plot_file.error_string = malloc(30);
+    sprintf(plot_file.error_string, "Here should be the EOF marker");
+    return plot_file;
+  }
+
   if (!_d3plot_read_header(&plot_file)) {
     return plot_file;
   }
@@ -621,7 +637,7 @@ int _d3plot_read_extra_node_connectivity(d3plot_file *plot_file) {
 }
 
 int _d3plot_read_adapted_element_parent_list(d3plot_file *plot_file) {
-  /*if (CDATAP.nadapt == 0) {
+  if (CDATAP.nadapt == 0) {
     return 1;
   }
 
@@ -650,25 +666,38 @@ int _d3plot_read_adapted_element_parent_list(d3plot_file *plot_file) {
 
   free(aepl);
 
-  This is not implemented?
-
-  */
-
   return 1;
 }
 
 int _d3plot_read_header(d3plot_file *plot_file) {
-  plot_file->header.ntype = 0;
-  d3_buffer_read_words(&plot_file->buffer, &plot_file->header.ntype, 1);
+  printf("Read header at: %d\n", plot_file->buffer.cur_word);
+  /* TODO: Read different header types*/
 
-  plot_file->header.head = malloc(plot_file->buffer.word_size * 18 + 1);
-  d3_buffer_read_words(&plot_file->buffer, plot_file->header.head, 18);
-  plot_file->header.head[plot_file->buffer.word_size * 18] = '\0';
+  d3_word ntype = 0;
+  d3_buffer_read_words(&plot_file->buffer, &ntype, 1);
 
-  printf("NTYPE: %d\nHEAD: %s\n", plot_file->header.ntype,
-         plot_file->header.head);
+  printf("NTYPE: %d\n", ntype);
 
-  return 0;
+  if (ntype == 90001) {
+    d3_word numprop = 0;
+    d3_buffer_read_words(&plot_file->buffer, &numprop, 1);
+    size_t i = 0;
+    while (i < numprop) {
+      d3_word idp = 0;
+      d3_buffer_read_words(&plot_file->buffer, &idp, 1);
+      char *ptitle = malloc(18 * plot_file->buffer.word_size + 1);
+      d3_buffer_read_words(&plot_file->buffer, ptitle, 18);
+      ptitle[18 * plot_file->buffer.word_size] = '\0';
+
+      printf("PART %d: %s\n", idp, ptitle);
+
+      free(ptitle);
+
+      i++;
+    }
+  }
+
+  return 1;
 }
 
 int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
@@ -744,6 +773,22 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
     offset += plot_file->buffer.word_size;
 
     printf("Node ID %d: %d\n", i, nid);
+
+    i++;
+  }
+
+  i = 0;
+  while (i < nmmat) {
+    d3_word value[3];
+    memcpy(&value[0], &norder[i * plot_file->buffer.word_size],
+           plot_file->buffer.word_size);
+    memcpy(&value[1], &nsrmu_a[i * plot_file->buffer.word_size],
+           plot_file->buffer.word_size);
+    memcpy(&value[2], &nsrmp_a[i * plot_file->buffer.word_size],
+           plot_file->buffer.word_size);
+
+    printf("Order %d: %d\nNSRMU %d: %d\nNSRMP %d: %d\n", i, value[0], i,
+           value[1], i, value[2]);
 
     i++;
   }
