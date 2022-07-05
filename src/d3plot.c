@@ -261,6 +261,18 @@ d3plot_file d3plot_open(const char *root_file_name) {
     return plot_file;
   }
 
+  if (CDATA.narbs != 0) {
+    plot_file.error_string = malloc(83);
+    sprintf(plot_file.error_string,
+            "USER MATERIAL, NODE, AND ELEMENT IDENTIFICATION NUMBERS section "
+            "is not implemented");
+    return plot_file;
+  }
+
+  if (!_d3plot_read_extra_node_connectivity(&plot_file)) {
+    return plot_file;
+  }
+
   return plot_file;
 }
 
@@ -345,7 +357,7 @@ int _d3plot_read_geometry_data(d3plot_file *plot_file) {
   } else if (CDATAP.nel8 < 0) {
     const int64_t nel8 = CDATAP.nel8 * -1;
 
-    uint8_t *ix10 = malloc(9 * nel8 * plot_file->buffer.word_size);
+    uint8_t *ix10 = malloc(2 * nel8 * plot_file->buffer.word_size);
     d3_buffer_read_words(&plot_file->buffer, ix10, 2 * nel8);
 
     d3_word value[2];
@@ -470,6 +482,105 @@ int _d3plot_read_geometry_data(d3plot_file *plot_file) {
     }
 
     free(ix4);
+  }
+
+  return 1;
+}
+
+int _d3plot_read_extra_node_connectivity(d3plot_file *plot_file) {
+  if (CDATAP.nel8 < 0) {
+    const int64_t nel8 = CDATAP.nel8 * -1;
+
+    uint8_t *ix10 = malloc(2 * nel8 * plot_file->buffer.word_size);
+    d3_buffer_read_words(&plot_file->buffer, ix10, 2 * nel8);
+
+    d3_word value[2];
+    uint32_t value32[2];
+
+    size_t offset = 0;
+    size_t i = 0;
+    while (i < nel8) {
+      if (plot_file->buffer.word_size == 4) {
+        memcpy(value32, &ix10[offset], plot_file->buffer.word_size * 2);
+        value[0] = value32[0];
+        value[1] = value32[1];
+      } else {
+        memcpy(value, &ix10[offset], plot_file->buffer.word_size * 2);
+      }
+      offset += plot_file->buffer.word_size * 2;
+
+      printf("EXTRA2 %d: (%d, %d)\n", i, value[0], value[1]);
+
+      i++;
+    }
+
+    free(ix10);
+  }
+
+  if (CDATAP.nel48 > 0) {
+    uint8_t *ix48 = malloc(5 * CDATAP.nel48 * plot_file->buffer.word_size);
+    d3_buffer_read_words(&plot_file->buffer, ix48, 5 * CDATAP.nel48);
+
+    d3_word value[5];
+    uint32_t value32[5];
+
+    size_t offset = 0;
+    size_t i = 0;
+    while (i < CDATAP.nel48) {
+      if (plot_file->buffer.word_size == 4) {
+        memcpy(value32, &ix48[offset], plot_file->buffer.word_size * 5);
+        value[0] = value32[0];
+        value[1] = value32[1];
+        value[2] = value32[2];
+        value[3] = value32[3];
+        value[4] = value32[4];
+      } else {
+        memcpy(value, &ix48[offset], plot_file->buffer.word_size * 5);
+      }
+      offset += plot_file->buffer.word_size * 5;
+
+      printf("EXTRA4 %d: (%d, %d, %d, %d, %d)\n", i, value[0], value[1],
+             value[2], value[3], value[4]);
+
+      i++;
+    }
+
+    free(ix48);
+  }
+
+  if (CDATAP.extra > 0 && CDATAP.nel20 > 0) {
+    uint8_t *ix20 = malloc(13 * CDATAP.nel20 * plot_file->buffer.word_size);
+    d3_buffer_read_words(&plot_file->buffer, ix20, 13 * CDATAP.nel20);
+
+    d3_word value[13];
+    uint32_t value32[13];
+
+    size_t offset = 0;
+    size_t i = 0;
+    while (i < CDATAP.nel20) {
+      if (plot_file->buffer.word_size == 4) {
+        memcpy(value32, &ix20[offset], plot_file->buffer.word_size * 13);
+        size_t j = 0;
+        while (j < 13) {
+          value[j] = value32[j];
+
+          j++;
+        }
+      } else {
+        memcpy(value, &ix20[offset], plot_file->buffer.word_size * 13);
+      }
+      offset += plot_file->buffer.word_size * 13;
+
+      printf(
+          "EXTRA12 %d: (%d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d, %d)\n",
+          i, value[0], value[1], value[2], value[3], value[4], value[5],
+          value[6], value[7], value[8], value[9], value[10], value[11],
+          value[12]);
+
+      i++;
+    }
+
+    free(ix20);
   }
 
   return 1;
