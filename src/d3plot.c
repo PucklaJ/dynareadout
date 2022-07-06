@@ -345,20 +345,24 @@ d3plot_file d3plot_open(const char *root_file_name) {
     return plot_file;
   }
 
-  d3_buffer_next_file(&plot_file.buffer);
+  if (!d3_buffer_next_file(&plot_file.buffer)) {
+    plot_file.error_string = malloc(14);
+    sprintf(plot_file.error_string, "Too few files");
+    return plot_file;
+  }
 
   /* Here comes the STATE DATA*/
 
   /* Limit to 50 iterations to stop it from infinitely looping and creating a
    * lot of data*/
-  size_t state_count = 0;
   int result = 1;
-  while (state_count < 10 && result) {
+  while (result) {
     result = _d3plot_read_state_data(&plot_file);
     if (result == 2) {
-      d3_buffer_next_file(&plot_file.buffer);
+      if (!d3_buffer_next_file(&plot_file.buffer)) {
+        break;
+      }
     }
-    state_count++;
   }
 
   return plot_file;
