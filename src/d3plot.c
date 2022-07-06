@@ -354,7 +354,12 @@ d3plot_file d3plot_open(const char *root_file_name) {
   /* Limit to 50 iterations to stop it from infinitely looping and creating a
    * lot of data*/
   size_t state_count = 0;
-  while (state_count < 3 && _d3plot_read_state_data(&plot_file)) {
+  int result = 1;
+  while (state_count < 10 && result) {
+    result = _d3plot_read_state_data(&plot_file);
+    if (result == 2) {
+      d3_buffer_next_file(&plot_file.buffer);
+    }
     state_count++;
   }
 
@@ -865,6 +870,12 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
 
   double time;
   d3_buffer_read_double_word(&plot_file->buffer, &time);
+
+  if (time == D3_EOF) {
+    printf("EOF read at %d\n", plot_file->buffer.cur_word);
+    return 2;
+  }
+
   printf("TIME: %f\n", time);
 
   /* GLOBAL*/
