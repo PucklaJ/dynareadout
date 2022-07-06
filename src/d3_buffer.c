@@ -259,6 +259,18 @@ void d3_buffer_read_double_word(d3_buffer *buffer, double *word) {
   }
 }
 
+void d3_buffer_read_vec3(d3_buffer *buffer, double *words) {
+  if (buffer->word_size == 4) {
+    float words32[3];
+    d3_buffer_read_words(buffer, words32, 3);
+    words[0] = words32[0];
+    words[1] = words32[1];
+    words[2] = words32[2];
+  } else {
+    d3_buffer_read_words(buffer, words, 3);
+  }
+}
+
 void d3_buffer_skip_words(d3_buffer *buffer, size_t num_words) {
   size_t cur_file_pos = ftell(buffer->file_handles[buffer->cur_file_handle]);
   if (cur_file_pos + num_words * buffer->word_size <
