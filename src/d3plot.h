@@ -52,11 +52,6 @@ typedef struct {
     uint8_t mdlopt;
   } control_data;
 
-  struct {
-    d3_word ntype;
-    char *head;
-  } header;
-
   size_t *data_pointers;
   size_t num_states;
 
