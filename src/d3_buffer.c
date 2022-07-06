@@ -248,3 +248,23 @@ void d3_buffer_read_words_at(d3_buffer *buffer, void *words, size_t num_words,
   buffer->cur_word = word_pos;
   d3_buffer_read_words(buffer, words, num_words);
 }
+
+void d3_buffer_read_double_word(d3_buffer *buffer, double *word) {
+  if (buffer->word_size == 4) {
+    float word32;
+    d3_buffer_read_words(buffer, &word32, 1);
+    *word = word32;
+  } else {
+    d3_buffer_read_words(buffer, word, 1);
+  }
+}
+
+void d3_buffer_next_file(d3_buffer *buffer) {
+  buffer->cur_word =
+      buffer->file_sizes[buffer->cur_file_handle] / buffer->word_size;
+  buffer->cur_file_handle++;
+  /* TODO: Bounds check*/
+  if (fseek(buffer->file_handles[buffer->cur_file_handle], 0, SEEK_SET) != 0) {
+    /* TODO: Error*/
+  }
+}
