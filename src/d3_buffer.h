@@ -58,6 +58,8 @@ void d3_buffer_read_words(d3_buffer *buffer, void *words, size_t num_words);
 void d3_buffer_read_words_at(d3_buffer *buffer, void *words, size_t num_words,
                              size_t word_pos);
 void d3_buffer_read_double_word(d3_buffer *buffer, double *word);
+/* Skip an arbitrary amount of words. Also handles skips across multiple files*/
+void d3_buffer_skip_words(d3_buffer *buffer, size_t num_words);
 /* Skip to the next file. Especially needed a the end of the first file when
  * done with all the headers*/
 void d3_buffer_next_file(d3_buffer *buffer);

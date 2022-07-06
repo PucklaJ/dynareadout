@@ -1256,10 +1256,7 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   }
 
   if (skip_words > 0) {
-    /* TODO: Implement skip function*/
-    d3_word _unused;
-    d3_buffer_read_words_at(&plot_file->buffer, &_unused, 1,
-                            plot_file->buffer.cur_word + skip_words - 1);
+    d3_buffer_skip_words(&plot_file->buffer, skip_words);
   }
 
   fflush(stdout);

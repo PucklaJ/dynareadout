@@ -259,6 +259,30 @@ void d3_buffer_read_double_word(d3_buffer *buffer, double *word) {
   }
 }
 
+void d3_buffer_skip_words(d3_buffer *buffer, size_t num_words) {
+  size_t cur_file_pos = ftell(buffer->file_handles[buffer->cur_file_handle]);
+  if (cur_file_pos + num_words * buffer->word_size <
+      buffer->file_sizes[buffer->cur_file_handle]) {
+    if (fseek(buffer->file_handles[buffer->cur_file_handle],
+              num_words * buffer->word_size, SEEK_CUR) != 0) {
+      /* TODO: Error*/
+    }
+    buffer->cur_word += num_words;
+  } else {
+    const size_t words_skipped =
+        (buffer->file_sizes[buffer->cur_file_handle] - cur_file_pos) /
+        buffer->word_size;
+    buffer->cur_file_handle++;
+    if (fseek(buffer->file_handles[buffer->cur_file_handle], 0, SEEK_SET) !=
+        0) {
+      /* TODO: Error*/
+    }
+    buffer->cur_word += words_skipped;
+
+    d3_buffer_skip_words(buffer, num_words - words_skipped);
+  }
+}
+
 void d3_buffer_next_file(d3_buffer *buffer) {
   buffer->cur_word =
       buffer->file_sizes[buffer->cur_file_handle] / buffer->word_size;
