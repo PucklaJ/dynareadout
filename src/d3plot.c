@@ -299,7 +299,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
     return plot_file;
   }
 
-  /* Read EOF marker (-999999.0)*/
+  /* Read EOF marker (D3_EOF)*/
   double eof_marker;
   if (plot_file.buffer.word_size == 4) {
     float eof_marker32;
@@ -309,7 +309,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
     d3_buffer_read_words(&plot_file.buffer, &eof_marker, 1);
   }
 
-  if (eof_marker != -999999.0) {
+  if (eof_marker != D3_EOF) {
     plot_file.error_string = malloc(30);
     sprintf(plot_file.error_string, "Here should be the EOF marker");
     return plot_file;
@@ -670,30 +670,91 @@ int _d3plot_read_adapted_element_parent_list(d3plot_file *plot_file) {
 }
 
 int _d3plot_read_header(d3plot_file *plot_file) {
-  printf("Read header at: %d\n", plot_file->buffer.cur_word);
-  /* TODO: Read different header types*/
 
-  d3_word ntype = 0;
-  d3_buffer_read_words(&plot_file->buffer, &ntype, 1);
+  while (1) {
+    printf("Read header at: %d\n", plot_file->buffer.cur_word);
+    d3_word ntype = 0;
+    d3_buffer_read_words(&plot_file->buffer, &ntype, 1);
 
-  printf("NTYPE: %d\n", ntype);
+    printf("NTYPE: %d\n", ntype);
 
-  if (ntype == 90001) {
-    d3_word numprop = 0;
-    d3_buffer_read_words(&plot_file->buffer, &numprop, 1);
-    size_t i = 0;
-    while (i < numprop) {
-      d3_word idp = 0;
-      d3_buffer_read_words(&plot_file->buffer, &idp, 1);
-      char *ptitle = malloc(18 * plot_file->buffer.word_size + 1);
-      d3_buffer_read_words(&plot_file->buffer, ptitle, 18);
-      ptitle[18 * plot_file->buffer.word_size] = '\0';
+    if (ntype == 90001) {
+      d3_word numprop = 0;
+      d3_buffer_read_words(&plot_file->buffer, &numprop, 1);
+      size_t i = 0;
+      while (i < numprop) {
+        d3_word idp = 0;
+        d3_buffer_read_words(&plot_file->buffer, &idp, 1);
+        char *ptitle = malloc(18 * plot_file->buffer.word_size + 1);
+        d3_buffer_read_words(&plot_file->buffer, ptitle, 18);
+        ptitle[18 * plot_file->buffer.word_size] = '\0';
 
-      printf("PART %d: %s\n", idp, ptitle);
+        printf("PART %d: %s\n", idp, ptitle);
 
-      free(ptitle);
+        free(ptitle);
 
-      i++;
+        i++;
+      }
+    } else if (ntype == 90000) {
+      plot_file->header.head = malloc(18 * plot_file->buffer.word_size + 1);
+      d3_buffer_read_words(&plot_file->buffer, plot_file->header.head, 18);
+      plot_file->header.head[18 * plot_file->buffer.word_size] = '\0';
+
+      printf("HEAD: %s\n", plot_file->header.head);
+    } else if (ntype == 90002) {
+      d3_word numcon = 0;
+      d3_buffer_read_words(&plot_file->buffer, &numcon, 1);
+
+      size_t i = 0;
+      while (i < numcon) {
+        d3_word idc = 0;
+        d3_buffer_read_words(&plot_file->buffer, &idc, 1);
+
+        char *ctitle = malloc(18 * plot_file->buffer.word_size);
+        d3_buffer_read_words(&plot_file->buffer, ctitle, 18);
+        ctitle[18 * plot_file->buffer.word_size] = '\0';
+
+        printf("IDC: %d\nCTITLE: %s\n", idc, ctitle);
+
+        free(ctitle);
+
+        i++;
+      }
+    } else if (ntype == 900100) {
+      d3_word nline = 0;
+      d3_buffer_read_words(&plot_file->buffer, &nline, 1);
+
+      size_t i = 0;
+      while (i < nline) {
+        char *keyword = malloc(20 * plot_file->buffer.word_size + 1);
+        d3_buffer_read_words(&plot_file->buffer, keyword, 20);
+        keyword[20 * plot_file->buffer.word_size] = '\0';
+
+        printf("KEYWORD %d: %s\n", i, keyword);
+
+        free(keyword);
+
+        i++;
+      }
+    } else {
+      double eof_marker;
+      if (plot_file->buffer.word_size == 4) {
+        float eof_marker32;
+        memcpy(&eof_marker32, &ntype, plot_file->buffer.word_size);
+        eof_marker = eof_marker32;
+      } else {
+        memcpy(&eof_marker, &ntype, plot_file->buffer.word_size);
+      }
+
+      if (eof_marker != D3_EOF) {
+        plot_file->error_string = malloc(70);
+        sprintf(plot_file->error_string,
+                "Here (%d) should be the EOF marker (%f != %f)\n",
+                plot_file->buffer.cur_word - 1, eof_marker, D3_EOF);
+        return 0;
+      }
+
+      break;
     }
   }
 
