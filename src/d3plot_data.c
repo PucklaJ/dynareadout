@@ -50,160 +50,30 @@ int _d3plot_read_geometry_data(d3plot_file *plot_file) {
   /* Here are the node coordinates*/
   DT_PTR_SET(D3PLT_PTR_NODE_COORDS);
 
-  double vec[3];
-
-  size_t i = 0;
-  while (i < CDP.numnp) {
-    d3_buffer_read_vec3(&plot_file->buffer, vec);
-
-    i++;
-  }
+  d3_buffer_skip_words(&plot_file->buffer, CDP.numnp * CDP.ndim);
 
   if (CDP.nel8 > 0) {
-    uint8_t *ix8 = malloc(9 * CDP.nel8 * plot_file->buffer.word_size);
-    d3_buffer_read_words(&plot_file->buffer, ix8, 9 * CDP.nel8);
-
-    d3_word value[9];
-    uint32_t value32[9];
-
-    size_t offset = 0;
-    size_t i = 0;
-    while (i < CDP.nel8) {
-      if (plot_file->buffer.word_size == 4) {
-        memcpy(value32, &ix8[offset], plot_file->buffer.word_size * 9);
-        size_t j = 0;
-        while (j < 9) {
-          value[j + 0] = value32[j + 0];
-          value[j + 1] = value32[j + 1];
-          value[j + 2] = value32[j + 2];
-
-          j += 3;
-        }
-      } else {
-        memcpy(value, &ix8[offset], plot_file->buffer.word_size * 9);
-      }
-      offset += plot_file->buffer.word_size * 9;
-
-      i++;
-    }
-
-    free(ix8);
+    /* TODO: read function for nel8 data*/
+    d3_buffer_skip_words(&plot_file->buffer, 9 * CDP.nel8);
   } else if (CDP.nel8 < 0) {
     const int64_t nel8 = CDP.nel8 * -1;
-
-    uint8_t *ix10 = malloc(2 * nel8 * plot_file->buffer.word_size);
-    d3_buffer_read_words(&plot_file->buffer, ix10, 2 * nel8);
-
-    d3_word value[2];
-    uint32_t value32[2];
-
-    size_t offset = 0;
-    size_t i = 0;
-    while (i < nel8) {
-      if (plot_file->buffer.word_size == 4) {
-        memcpy(value32, &ix10[offset], plot_file->buffer.word_size * 2);
-        value[0] = value32[0];
-        value[1] = value32[1];
-      } else {
-        memcpy(value, &ix10[offset], plot_file->buffer.word_size * 2);
-      }
-      offset += plot_file->buffer.word_size * 2;
-
-      i++;
-    }
-
-    free(ix10);
+    d3_buffer_skip_words(&plot_file->buffer, 2 * nel8);
+    /* TODO: read function for -nel8 data*/
   }
 
   if (CDP.nelt > 0) {
-    uint8_t *ixt = malloc(9 * CDP.nelt * plot_file->buffer.word_size);
-    d3_buffer_read_words(&plot_file->buffer, ixt, 9 * CDP.nelt);
-
-    d3_word value[9];
-    uint32_t value32[9];
-
-    size_t offset = 0;
-    size_t i = 0;
-    while (i < CDP.nelt) {
-      if (plot_file->buffer.word_size == 4) {
-        memcpy(value32, &ixt[offset], plot_file->buffer.word_size * 9);
-        size_t j = 0;
-        while (j < 9) {
-          value[j + 0] = value32[j + 0];
-          value[j + 1] = value32[j + 1];
-          value[j + 2] = value32[j + 2];
-
-          j += 3;
-        }
-      } else {
-        memcpy(value, &ixt[offset], plot_file->buffer.word_size * 9);
-      }
-      offset += plot_file->buffer.word_size * 9;
-
-      i++;
-    }
-
-    free(ixt);
+    d3_buffer_skip_words(&plot_file->buffer, 9 * CDP.nelt);
+    /* TODO: read function for nelt data*/
   }
 
   if (CDP.nel2 > 0) {
-    uint8_t *ix2 = malloc(6 * CDP.nel2 * plot_file->buffer.word_size);
-    d3_buffer_read_words(&plot_file->buffer, ix2, 6 * CDP.nel2);
-
-    d3_word value[6];
-    uint32_t value32[6];
-
-    size_t offset = 0;
-    size_t i = 0;
-    while (i < CDP.nel2) {
-      if (plot_file->buffer.word_size == 4) {
-        memcpy(value32, &ix2[offset], plot_file->buffer.word_size * 6);
-        size_t j = 0;
-        while (j < 6) {
-          value[j + 0] = value32[j + 0];
-          value[j + 1] = value32[j + 1];
-          value[j + 2] = value32[j + 2];
-
-          j += 3;
-        }
-      } else {
-        memcpy(value, &ix2[offset], plot_file->buffer.word_size * 6);
-      }
-      offset += plot_file->buffer.word_size * 6;
-
-      i++;
-    }
-
-    free(ix2);
+    d3_buffer_skip_words(&plot_file->buffer, 6 * CDP.nel2);
+    /* TODO: read function for nel2 data*/
   }
 
   if (CDP.nel4 > 0) {
-    uint8_t *ix4 = malloc(5 * CDP.nel4 * plot_file->buffer.word_size);
-    d3_buffer_read_words(&plot_file->buffer, ix4, 5 * CDP.nel4);
-
-    d3_word value[5];
-    uint32_t value32[5];
-
-    size_t offset = 0;
-    size_t i = 0;
-    while (i < CDP.nel4) {
-      if (plot_file->buffer.word_size == 4) {
-        memcpy(value32, &ix4[offset], plot_file->buffer.word_size * 5);
-        size_t j = 0;
-        while (j < 5) {
-          value[j + 0] = value32[j + 0];
-
-          j++;
-        }
-      } else {
-        memcpy(value, &ix4[offset], plot_file->buffer.word_size * 5);
-      }
-      offset += plot_file->buffer.word_size * 5;
-
-      i++;
-    }
-
-    free(ix4);
+    d3_buffer_skip_words(&plot_file->buffer, 5 * CDP.nel4);
+    /* TODO: read function for nel4 data*/
   }
 
   return 1;
@@ -212,86 +82,18 @@ int _d3plot_read_geometry_data(d3plot_file *plot_file) {
 int _d3plot_read_extra_node_connectivity(d3plot_file *plot_file) {
   if (CDP.nel8 < 0) {
     const int64_t nel8 = CDP.nel8 * -1;
-
-    uint8_t *ix10 = malloc(2 * nel8 * plot_file->buffer.word_size);
-    d3_buffer_read_words(&plot_file->buffer, ix10, 2 * nel8);
-
-    d3_word value[2];
-    uint32_t value32[2];
-
-    size_t offset = 0;
-    size_t i = 0;
-    while (i < nel8) {
-      if (plot_file->buffer.word_size == 4) {
-        memcpy(value32, &ix10[offset], plot_file->buffer.word_size * 2);
-        value[0] = value32[0];
-        value[1] = value32[1];
-      } else {
-        memcpy(value, &ix10[offset], plot_file->buffer.word_size * 2);
-      }
-      offset += plot_file->buffer.word_size * 2;
-
-      i++;
-    }
-
-    free(ix10);
+    d3_buffer_skip_words(&plot_file->buffer, 2 * nel8);
+    /* TODO: read function for -nel8 data*/
   }
 
   if (CDP.nel48 > 0) {
-    uint8_t *ix48 = malloc(5 * CDP.nel48 * plot_file->buffer.word_size);
-    d3_buffer_read_words(&plot_file->buffer, ix48, 5 * CDP.nel48);
-
-    d3_word value[5];
-    uint32_t value32[5];
-
-    size_t offset = 0;
-    size_t i = 0;
-    while (i < CDP.nel48) {
-      if (plot_file->buffer.word_size == 4) {
-        memcpy(value32, &ix48[offset], plot_file->buffer.word_size * 5);
-        value[0] = value32[0];
-        value[1] = value32[1];
-        value[2] = value32[2];
-        value[3] = value32[3];
-        value[4] = value32[4];
-      } else {
-        memcpy(value, &ix48[offset], plot_file->buffer.word_size * 5);
-      }
-      offset += plot_file->buffer.word_size * 5;
-
-      i++;
-    }
-
-    free(ix48);
+    d3_buffer_skip_words(&plot_file->buffer, 5 * CDP.nel48);
+    /* TODO: read function for nel48 data*/
   }
 
   if (CDP.extra > 0 && CDP.nel20 > 0) {
-    uint8_t *ix20 = malloc(13 * CDP.nel20 * plot_file->buffer.word_size);
-    d3_buffer_read_words(&plot_file->buffer, ix20, 13 * CDP.nel20);
-
-    d3_word value[13];
-    uint32_t value32[13];
-
-    size_t offset = 0;
-    size_t i = 0;
-    while (i < CDP.nel20) {
-      if (plot_file->buffer.word_size == 4) {
-        memcpy(value32, &ix20[offset], plot_file->buffer.word_size * 13);
-        size_t j = 0;
-        while (j < 13) {
-          value[j] = value32[j];
-
-          j++;
-        }
-      } else {
-        memcpy(value, &ix20[offset], plot_file->buffer.word_size * 13);
-      }
-      offset += plot_file->buffer.word_size * 13;
-
-      i++;
-    }
-
-    free(ix20);
+    d3_buffer_skip_words(&plot_file->buffer, 13 * CDP.nel20);
+    /* TODO: read function for nel20 data*/
   }
 
   return 1;
@@ -302,89 +104,39 @@ int _d3plot_read_adapted_element_parent_list(d3plot_file *plot_file) {
     return 1;
   }
 
-  uint8_t *aepl = malloc(2 * CDP.nadapt * plot_file->buffer.word_size);
-  d3_buffer_read_words(&plot_file->buffer, aepl, 2 * CDP.nadapt);
-
-  d3_word value[2];
-  uint32_t value32[2];
-
-  size_t offset = 0;
-  size_t i = 0;
-  while (i < CDP.nadapt) {
-    if (plot_file->buffer.word_size == 4) {
-      memcpy(value32, &aepl[offset], 2 * plot_file->buffer.word_size);
-      value[0] = value32[0];
-      value[1] = value32[1];
-    } else {
-      memcpy(value, &aepl[offset], 2 * plot_file->buffer.word_size);
-    }
-    offset += 2 * plot_file->buffer.word_size;
-
-    i++;
-  }
-
-  free(aepl);
+  d3_buffer_skip_words(&plot_file->buffer, 2 * CDP.nadapt);
+  /* TODO: read function for aepl*/
 
   return 1;
 }
 
 int _d3plot_read_header(d3plot_file *plot_file) {
-
   while (1) {
     d3_word ntype = 0;
     d3_buffer_read_words(&plot_file->buffer, &ntype, 1);
 
-    if (ntype == 90001) {
+    if (ntype == 90000) {
+      d3_buffer_skip_words(&plot_file->buffer, 18);
+      /* TODO: read function for head*/
+
+    } else if (ntype == 90001) {
       d3_word numprop = 0;
       d3_buffer_read_words(&plot_file->buffer, &numprop, 1);
-      size_t i = 0;
-      while (i < numprop) {
-        d3_word idp = 0;
-        d3_buffer_read_words(&plot_file->buffer, &idp, 1);
-        char *ptitle = malloc(18 * plot_file->buffer.word_size + 1);
-        d3_buffer_read_words(&plot_file->buffer, ptitle, 18);
-        ptitle[18 * plot_file->buffer.word_size] = '\0';
-
-        free(ptitle);
-
-        i++;
-      }
-    } else if (ntype == 90000) {
-      plot_file->header.head = malloc(18 * plot_file->buffer.word_size + 1);
-      d3_buffer_read_words(&plot_file->buffer, plot_file->header.head, 18);
-      plot_file->header.head[18 * plot_file->buffer.word_size] = '\0';
+      d3_buffer_skip_words(&plot_file->buffer, (1 + 18) * numprop);
+      /* TODO: read function for part titles*/
 
     } else if (ntype == 90002) {
       d3_word numcon = 0;
       d3_buffer_read_words(&plot_file->buffer, &numcon, 1);
+      d3_buffer_skip_words(&plot_file->buffer, (1 + 18) * numcon);
+      /* TODO: read function for contact titles*/
 
-      size_t i = 0;
-      while (i < numcon) {
-        d3_word idc = 0;
-        d3_buffer_read_words(&plot_file->buffer, &idc, 1);
-
-        char *ctitle = malloc(18 * plot_file->buffer.word_size);
-        d3_buffer_read_words(&plot_file->buffer, ctitle, 18);
-        ctitle[18 * plot_file->buffer.word_size] = '\0';
-
-        free(ctitle);
-
-        i++;
-      }
     } else if (ntype == 900100) {
       d3_word nline = 0;
       d3_buffer_read_words(&plot_file->buffer, &nline, 1);
+      d3_buffer_skip_words(&plot_file->buffer, 20 * nline);
+      /* TODO: read function for extra keyword lines?*/
 
-      size_t i = 0;
-      while (i < nline) {
-        char *keyword = malloc(20 * plot_file->buffer.word_size + 1);
-        d3_buffer_read_words(&plot_file->buffer, keyword, 20);
-        keyword[20 * plot_file->buffer.word_size] = '\0';
-
-        free(keyword);
-
-        i++;
-      }
     } else {
       double eof_marker;
       if (plot_file->buffer.word_size == 4) {
@@ -418,8 +170,7 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
   }
 
   int64_t nsort;
-  d3_word nsrh = 0, nsrb = 0, nsrs = 0, nsrt = 0, nsortd = 0, nsrhd = 0,
-          nsrbd = 0, nsrsd = 0, nsrtd = 0,
+  d3_word nsortd = 0, nsrhd = 0, nsrbd = 0, nsrsd = 0, nsrtd = 0,
           nmmat = plot_file->control_data.nmmat;
   if (plot_file->buffer.word_size == 4) {
     int32_t nsort32;
@@ -428,10 +179,8 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
   } else {
     d3_buffer_read_words(&plot_file->buffer, &nsort, 1);
   }
-  d3_buffer_read_words(&plot_file->buffer, &nsrh, 1);
-  d3_buffer_read_words(&plot_file->buffer, &nsrb, 1);
-  d3_buffer_read_words(&plot_file->buffer, &nsrs, 1);
-  d3_buffer_read_words(&plot_file->buffer, &nsrt, 1);
+  d3_buffer_skip_words(&plot_file->buffer, 4);
+  /* TODO: Find out what NSRH, NSRB, NSRS and NSRT is for*/
   d3_buffer_read_words(&plot_file->buffer, &nsortd, 1);
   d3_buffer_read_words(&plot_file->buffer, &nsrhd, 1);
   d3_buffer_read_words(&plot_file->buffer, &nsrbd, 1);
@@ -441,12 +190,9 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
   CDP.numrbs = 0;
 
   if (nsort < 0) {
-    d3_word nsrma = 0, nsrmu = 0, nsrmp = 0, nsrtm = 0;
+    d3_buffer_skip_words(&plot_file->buffer, 4);
+    /* TODO: Find out what NSRMA, NSRMU, NSRMP and NSRTM is for*/
 
-    d3_buffer_read_words(&plot_file->buffer, &nsrma, 1);
-    d3_buffer_read_words(&plot_file->buffer, &nsrmu, 1);
-    d3_buffer_read_words(&plot_file->buffer, &nsrmp, 1);
-    d3_buffer_read_words(&plot_file->buffer, &nsrtm, 1);
     d3_buffer_read_words(&plot_file->buffer, &CDP.numrbs, 1);
     d3_buffer_read_words(&plot_file->buffer, &nmmat, 1);
   } else {
@@ -456,37 +202,15 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
     return 0;
   }
 
-  uint8_t *nusern, *nuserh, *nuserb, *nusers, *nusert, *norder, *nsrmu_a,
-      *nsrmp_a;
-
-  nusern = malloc(nsortd * plot_file->buffer.word_size);
-  nuserh = malloc(nsrhd * plot_file->buffer.word_size);
-  nuserb = malloc(nsrbd * plot_file->buffer.word_size);
-  nusers = malloc(nsrsd * plot_file->buffer.word_size);
-  nusert = malloc(nsrtd * plot_file->buffer.word_size);
-  norder = malloc(nmmat * plot_file->buffer.word_size);
-  nsrmu_a = malloc(nmmat * plot_file->buffer.word_size);
-  nsrmp_a = malloc(nmmat * plot_file->buffer.word_size);
-
   DT_PTR_SET(D3PLT_PTR_NODE_IDS);
 
-  d3_buffer_read_words(&plot_file->buffer, nusern, nsortd);
-  d3_buffer_read_words(&plot_file->buffer, nuserh, nsrhd);
-  d3_buffer_read_words(&plot_file->buffer, nuserb, nsrbd);
-  d3_buffer_read_words(&plot_file->buffer, nusers, nsrsd);
-  d3_buffer_read_words(&plot_file->buffer, nusert, nsrtd);
-  d3_buffer_read_words(&plot_file->buffer, norder, nmmat);
-  d3_buffer_read_words(&plot_file->buffer, nsrmu_a, nmmat);
-  d3_buffer_read_words(&plot_file->buffer, nsrmp_a, nmmat);
-
-  free(nusern);
-  free(nuserh);
-  free(nuserb);
-  free(nusers);
-  free(nusert);
-  free(norder);
-  free(nsrmu_a);
-  free(nsrmp_a);
+  d3_buffer_skip_words(&plot_file->buffer, nsortd); /* nusern*/
+  d3_buffer_skip_words(&plot_file->buffer, nsrhd);  /* nuserh*/
+  d3_buffer_skip_words(&plot_file->buffer, nsrbd);  /* nuserb*/
+  d3_buffer_skip_words(&plot_file->buffer, nsrsd);  /* nusers*/
+  d3_buffer_skip_words(&plot_file->buffer, nsrtd);  /* nusert*/
+  d3_buffer_skip_words(&plot_file->buffer,
+                       nmmat * 3); /* norder + nsrmu_a + nsrmp_a*/
 
   return 1;
 }

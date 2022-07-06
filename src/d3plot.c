@@ -352,8 +352,6 @@ d3plot_file d3plot_open(const char *root_file_name) {
 
   /* Here comes the STATE DATA*/
 
-  /* Limit to 50 iterations to stop it from infinitely looping and creating a
-   * lot of data*/
   int result = 1;
   while (result) {
     result = _d3plot_read_state_data(&plot_file);

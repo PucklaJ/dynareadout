@@ -26,13 +26,6 @@
 #include "d3plot.h"
 #include <stdlib.h>
 
-#define READ_MAT_VALUE(num, name, variable, variable_name)                     \
-  i = 0;                                                                       \
-  while (i < CDP.num) {                                                        \
-    d3_buffer_read_double_word(&plot_file->buffer, &variable);                 \
-                                                                               \
-    i++;                                                                       \
-  }
 #define CDP plot_file->control_data
 
 int _d3plot_read_state_data(d3plot_file *plot_file) {
@@ -56,60 +49,85 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   const size_t global_start = plot_file->buffer.cur_word;
 
   double ke, ie, te, x, y, z, mass, force;
-  d3_buffer_read_double_word(&plot_file->buffer, &ke);
-  d3_buffer_read_double_word(&plot_file->buffer, &ie);
-  d3_buffer_read_double_word(&plot_file->buffer, &te);
-  d3_buffer_read_double_word(&plot_file->buffer, &x);
-  d3_buffer_read_double_word(&plot_file->buffer, &y);
-  d3_buffer_read_double_word(&plot_file->buffer, &z);
+  d3_buffer_skip_words(&plot_file->buffer, 6);
+  /* TODO: read functions for KE, IE, TE, X, Y and Z*/
 
-  size_t i = 0;
-  while (i < CDP.nummat8) {
-    d3_buffer_read_double_word(&plot_file->buffer, &ie);
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummat8);
+  /* TODO: read function for MAT8 IE*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummat2);
+  /* TODO: read function for MAT2 IE*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummat4);
+  /* TODO: read function for MAT4 IE*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummatt);
+  /* TODO: read function for MATT IE*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.numrbs);
+  /* TODO: read function for RBS IE*/
 
-    i++;
-  }
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummat8);
+  /* TODO: read function for MAT8 KE*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummat2);
+  /* TODO: read function for MAT2 KE*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummat4);
+  /* TODO: read function for MAT4 KE*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummatt);
+  /* TODO: read function for MATT KE*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.numrbs);
+  /* TODO: read function for RBS KE*/
 
-  READ_MAT_VALUE(nummat2, "MAT2", ie, "IE");
-  READ_MAT_VALUE(nummat4, "MAT4", ie, "IE");
-  READ_MAT_VALUE(nummatt, "MATT", ie, "IE");
-  READ_MAT_VALUE(numrbs, "RBS", ie, "IE");
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummat8);
+  /* TODO: read function for MAT8 X*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummat2);
+  /* TODO: read function for MAT2 X*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummat4);
+  /* TODO: read function for MAT4 X*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummatt);
+  /* TODO: read function for MATT X*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.numrbs);
+  /* TODO: read function for RBS X*/
 
-  READ_MAT_VALUE(nummat8, "MAT8", ke, "KE");
-  READ_MAT_VALUE(nummat2, "MAT2", ke, "KE");
-  READ_MAT_VALUE(nummat4, "MAT4", ke, "KE");
-  READ_MAT_VALUE(nummatt, "MATT", ke, "KE");
-  READ_MAT_VALUE(numrbs, "RBS", ke, "KE");
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummat8);
+  /* TODO: read function for MAT8 Y*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummat2);
+  /* TODO: read function for MAT2 Y*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummat4);
+  /* TODO: read function for MAT4 Y*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummatt);
+  /* TODO: read function for MATT Y*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.numrbs);
+  /* TODO: read function for RBS Y*/
 
-  READ_MAT_VALUE(nummat8, "MAT8", x, "X");
-  READ_MAT_VALUE(nummat2, "MAT2", x, "X");
-  READ_MAT_VALUE(nummat4, "MAT4", x, "X");
-  READ_MAT_VALUE(nummatt, "MATT", x, "X");
-  READ_MAT_VALUE(numrbs, "RBS", x, "X");
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummat8);
+  /* TODO: read function for MAT8 Z*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummat2);
+  /* TODO: read function for MAT2 Z*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummat4);
+  /* TODO: read function for MAT4 Z*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummatt);
+  /* TODO: read function for MATT Z*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.numrbs);
+  /* TODO: read function for RBS Z*/
 
-  READ_MAT_VALUE(nummat8, "MAT8", y, "Y");
-  READ_MAT_VALUE(nummat2, "MAT2", y, "Y");
-  READ_MAT_VALUE(nummat4, "MAT4", y, "Y");
-  READ_MAT_VALUE(nummatt, "MATT", y, "Y");
-  READ_MAT_VALUE(numrbs, "RBS", y, "Y");
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummat8);
+  /* TODO: read function for MAT8 MASS*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummat2);
+  /* TODO: read function for MAT2 MASS*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummat4);
+  /* TODO: read function for MAT4 MASS*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummatt);
+  /* TODO: read function for MATT MASS*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.numrbs);
+  /* TODO: read function for RBS MASS*/
 
-  READ_MAT_VALUE(nummat8, "MAT8", z, "Z");
-  READ_MAT_VALUE(nummat2, "MAT2", z, "Z");
-  READ_MAT_VALUE(nummat4, "MAT4", z, "Z");
-  READ_MAT_VALUE(nummatt, "MATT", z, "Z");
-  READ_MAT_VALUE(numrbs, "RBS", z, "Z");
-
-  READ_MAT_VALUE(nummat8, "MAT8", mass, "MASS");
-  READ_MAT_VALUE(nummat2, "MAT2", mass, "MASS");
-  READ_MAT_VALUE(nummat4, "MAT4", mass, "MASS");
-  READ_MAT_VALUE(nummatt, "MATT", mass, "MASS");
-  READ_MAT_VALUE(numrbs, "RBS", mass, "MASS");
-
-  READ_MAT_VALUE(nummat8, "MAT8", force, "FORCE");
-  READ_MAT_VALUE(nummat2, "MAT2", force, "FORCE");
-  READ_MAT_VALUE(nummat4, "MAT4", force, "FORCE");
-  READ_MAT_VALUE(nummatt, "MATT", force, "FORCE");
-  READ_MAT_VALUE(numrbs, "RBS", force, "FORCE");
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummat8);
+  /* TODO: read function for MAT8 FORCE*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummat2);
+  /* TODO: read function for MAT2 FORCE*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummat4);
+  /* TODO: read function for MAT4 FORCE*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nummatt);
+  /* TODO: read function for MATT FORCE*/
+  d3_buffer_skip_words(&plot_file->buffer, CDP.numrbs);
+  /* TODO: read function for RBS FORCE*/
 
   /* Assume that N is one*/
   const size_t RWN = 1;
@@ -121,23 +139,12 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
             RWN;
   }
 
-  i = 0;
-  while (i < numrw) {
-    d3_buffer_read_double_word(&plot_file->buffer, &force);
-
-    i++;
-  }
+  d3_buffer_skip_words(&plot_file->buffer, numrw);
+  /* TODO: read function for RW_FORCE*/
 
   if (RWN == 4) {
-    i = 0;
-    double pos[3];
-    while (i < numrw) {
-      d3_buffer_read_double_word(&plot_file->buffer, &pos[0]);
-      d3_buffer_read_double_word(&plot_file->buffer, &pos[1]);
-      d3_buffer_read_double_word(&plot_file->buffer, &pos[2]);
-
-      i++;
-    }
+    d3_buffer_skip_words(&plot_file->buffer, numrw * 3);
+    /* TODO: read function for RW_POS*/
   }
 
   const size_t global_end = plot_file->buffer.cur_word;
@@ -172,39 +179,18 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
 
   size_t n = 0;
   if (it > 0) {
-    while (n < CDP.numnp) {
-      size_t j = 0;
-      while (j < it) {
-        d3_buffer_read_double_word(&plot_file->buffer, &temp[j]);
-
-        j++;
-      }
-
-      n++;
-    }
+    d3_buffer_skip_words(&plot_file->buffer, it * CDP.numnp);
+    /* TODO: read function for IT data*/
   }
 
   if (N > 0) {
-    n = 0;
-    while (n < CDP.numnp) {
-      size_t j = 0;
-      while (j < N) {
-        d3_buffer_read_double_word(&plot_file->buffer, &node_flux[j]);
-
-        j++;
-      }
-
-      n++;
-    }
+    d3_buffer_skip_words(&plot_file->buffer, N * CDP.numnp);
+    /* TODO: read function for NODE FLUX data*/
   }
 
   if (mass_N) {
-    n = 0;
-    while (n < CDP.numnp) {
-      d3_buffer_read_double_word(&plot_file->buffer, &mass_scaling);
-
-      n++;
-    }
+    d3_buffer_skip_words(&plot_file->buffer, CDP.numnp);
+    /* TODO: read function for MASS SCALING*/
   }
 
   if (CDP.iu) {
@@ -212,12 +198,7 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
       plot_file->data_pointers[D3PLT_PTR_STATE_NODE_COORDS] =
           plot_file->buffer.cur_word - state_start;
 
-    n = 0;
-    while (n < CDP.numnp) {
-      d3_buffer_read_vec3(&plot_file->buffer, u);
-
-      n++;
-    }
+    d3_buffer_skip_words(&plot_file->buffer, 3 * CDP.numnp);
   }
 
   if (CDP.iv) {
@@ -225,12 +206,7 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
       plot_file->data_pointers[D3PLT_PTR_STATE_NODE_VEL] =
           plot_file->buffer.cur_word - state_start;
 
-    n = 0;
-    while (n < CDP.numnp) {
-      d3_buffer_read_vec3(&plot_file->buffer, v);
-
-      n++;
-    }
+    d3_buffer_skip_words(&plot_file->buffer, 3 * CDP.numnp);
   }
 
   if (CDP.ia) {
@@ -238,12 +214,7 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
       plot_file->data_pointers[D3PLT_PTR_STATE_NODE_ACC] =
           plot_file->buffer.cur_word - state_start;
 
-    n = 0;
-    while (n < CDP.numnp) {
-      d3_buffer_read_vec3(&plot_file->buffer, a);
-
-      n++;
-    }
+    d3_buffer_skip_words(&plot_file->buffer, 3 * CDP.numnp);
   }
 
   const size_t node_data_end = plot_file->buffer.cur_word;
@@ -256,19 +227,8 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   }
 
   /* THERMDATA*/
-  double nt3d;
-
-  n = 0;
-  while (n < CDP.nt3d) {
-    size_t e = 0;
-    while (e < CDP.nel8) {
-      d3_buffer_read_double_word(&plot_file->buffer, &nt3d);
-
-      e++;
-    }
-
-    n++;
-  }
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nt3d * CDP.nel8);
+  /* TODO: read function for nt3d data*/
 
   /* CFDDATA is no longer output*/
 
@@ -276,102 +236,22 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   const size_t ENN =
       CDP.nel8 * CDP.nv3d + CDP.nelt * CDP.nv3dt + CDP.nel2 * CDP.nv1d +
       CDP.nel4 * CDP.nv2d +
-      CDP.nmsph * 0; /* We don't support SMOOTH PATICLE HYDRODYNAMICS*/
+      CDP.nmsph * 0; /* We don't support SMOOTH PARTICLE HYDRODYNAMICS*/
   const size_t elem_data_start = plot_file->buffer.cur_word;
 
-  size_t e = 0;
-  while (e < CDP.nel8) {
-    double *e_data = malloc(CDP.nv3d * sizeof(double));
-    if (plot_file->buffer.word_size == 4) {
-      float *e_data32 = malloc(CDP.nv3d * sizeof(float));
-      d3_buffer_read_words(&plot_file->buffer, e_data32, CDP.nv3d);
-      size_t j = 0;
-      while (j < CDP.nv3d) {
-        e_data[j] = e_data32[j];
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nv3d * CDP.nel8);
+  /* TODO: read function for nel8 data*/
 
-        j++;
-      }
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nv1d * CDP.nel2);
+  /* TODO: read function for nel2 data*/
 
-      free(e_data32);
-    } else {
-      d3_buffer_read_words(&plot_file->buffer, e_data, CDP.nv3d);
-    }
-
-    free(e_data);
-
-    e++;
-  }
-
-  e = 0;
-  while (e < CDP.nel2) {
-    double *e_data = malloc(CDP.nv1d * sizeof(double));
-    if (plot_file->buffer.word_size == 4) {
-      float *e_data32 = malloc(CDP.nv1d * sizeof(float));
-      d3_buffer_read_words(&plot_file->buffer, e_data32, CDP.nv1d);
-      size_t j = 0;
-      while (j < CDP.nv1d) {
-        e_data[j] = e_data32[j];
-
-        j++;
-      }
-
-      free(e_data32);
-    } else {
-      d3_buffer_read_words(&plot_file->buffer, e_data, CDP.nv1d);
-    }
-
-    free(e_data);
-
-    e++;
-  }
-
-  e = 0;
-  while (e < CDP.nel4) {
-    double *e_data = malloc(CDP.nv2d * sizeof(double));
-    if (plot_file->buffer.word_size == 4) {
-      float *e_data32 = malloc(CDP.nv2d * sizeof(float));
-      d3_buffer_read_words(&plot_file->buffer, e_data32, CDP.nv2d);
-      size_t j = 0;
-      while (j < CDP.nv2d) {
-        e_data[j] = e_data32[j];
-
-        j++;
-      }
-
-      free(e_data32);
-    } else {
-      d3_buffer_read_words(&plot_file->buffer, e_data, CDP.nv2d);
-    }
-
-    free(e_data);
-
-    e++;
-  }
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nv2d * CDP.nel4);
+  /* TODO: read function for nel4 data*/
 
   /* Then follows who knows what -_(′_′)_-*/
   /* But because we don't support NMSPH, we can assume that NELT follows*/
-  e = 0;
-  while (e < CDP.nelt) {
-    double *e_data = malloc(CDP.nv3dt * sizeof(double));
-    if (plot_file->buffer.word_size == 4) {
-      float *e_data32 = malloc(CDP.nv3dt * sizeof(float));
-      d3_buffer_read_words(&plot_file->buffer, e_data32, CDP.nv3dt);
-      size_t j = 0;
-      while (j < CDP.nv3dt) {
-        e_data[j] = e_data32[j];
-
-        j++;
-      }
-
-      free(e_data32);
-    } else {
-      d3_buffer_read_words(&plot_file->buffer, e_data, CDP.nv3dt);
-    }
-
-    free(e_data);
-
-    e++;
-  }
+  d3_buffer_skip_words(&plot_file->buffer, CDP.nv3dt * CDP.nelt);
+  /* TODO: read function for nelt data*/
 
   const size_t elem_data_end = plot_file->buffer.cur_word;
   const size_t elem_data_size = elem_data_end - elem_data_start;
