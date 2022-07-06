@@ -377,32 +377,83 @@ void d3plot_close(d3plot_file *plot_file) {
 }
 
 d3_word *d3plot_read_node_ids(d3plot_file *plot_file, size_t *num_ids) {
-  *num_ids = plot_file->control_data.numnp;
-  d3_word *node_ids = malloc(*num_ids * sizeof(d3_word));
-  if (plot_file->buffer.word_size == 4) {
-    uint32_t *node_ids32 = malloc(*num_ids * plot_file->buffer.word_size);
-    d3_buffer_read_words_at(&plot_file->buffer, node_ids32, *num_ids,
-                            plot_file->data_pointers[D3PLT_PTR_NODE_IDS]);
-    size_t i = 0;
-    while (i < *num_ids) {
-      node_ids[i + 0] = node_ids32[i + 0];
-      if (i < *num_ids - 1)
-        node_ids[i + 1] = node_ids32[i + 1];
-      if (i < *num_ids - 2)
-        node_ids[i + 2] = node_ids32[i + 2];
-      if (i < *num_ids - 3)
-        node_ids[i + 3] = node_ids32[i + 3];
+  return _d3plot_read_ids(plot_file, num_ids, D3PLT_PTR_NODE_IDS,
+                          plot_file->control_data.numnp);
+}
 
-      i += 4;
-    }
+d3_word *d3plot_read_solid_element_ids(d3plot_file *plot_file,
+                                       size_t *num_ids) {
+  return _d3plot_read_ids(plot_file, num_ids, D3PLT_PTR_EL8_IDS,
+                          plot_file->control_data.nel8);
+}
 
-    free(node_ids32);
-  } else {
-    d3_buffer_read_words_at(&plot_file->buffer, node_ids, *num_ids,
-                            plot_file->data_pointers[D3PLT_PTR_NODE_IDS]);
+d3_word *d3plot_read_beam_element_ids(d3plot_file *plot_file, size_t *num_ids) {
+  return _d3plot_read_ids(plot_file, num_ids, D3PLT_PTR_EL2_IDS,
+                          plot_file->control_data.nel2);
+}
+
+d3_word *d3plot_read_shell_element_ids(d3plot_file *plot_file,
+                                       size_t *num_ids) {
+  return _d3plot_read_ids(plot_file, num_ids, D3PLT_PTR_EL4_IDS,
+                          plot_file->control_data.nel4);
+}
+
+d3_word *d3plot_read_solid_shell_element_ids(d3plot_file *plot_file,
+                                             size_t *num_ids) {
+  return _d3plot_read_ids(plot_file, num_ids, D3PLT_PTR_EL48_IDS,
+                          plot_file->control_data.nel48);
+}
+
+d3_word *d3plot_read_all_element_ids(d3plot_file *plot_file, size_t *num_ids,
+                                     int sort) {
+  d3_word *all_ids = NULL;
+  *num_ids = 0;
+  size_t offset = 0;
+
+  size_t num_ids_buffer;
+  d3_word *ids_buffer =
+      d3plot_read_solid_element_ids(plot_file, &num_ids_buffer);
+  if (num_ids_buffer > 0) {
+    *num_ids += num_ids_buffer;
+    all_ids = realloc(all_ids, *num_ids * sizeof(d3_word));
+    memcpy(&all_ids[offset], ids_buffer, num_ids_buffer * sizeof(d3_word));
+    offset += num_ids_buffer;
+    free(ids_buffer);
   }
 
-  return node_ids;
+  ids_buffer = d3plot_read_beam_element_ids(plot_file, &num_ids_buffer);
+  if (num_ids_buffer > 0) {
+    *num_ids += num_ids_buffer;
+    all_ids = realloc(all_ids, *num_ids * sizeof(d3_word));
+    memcpy(&all_ids[offset], ids_buffer, num_ids_buffer * sizeof(d3_word));
+    offset += num_ids_buffer;
+    free(ids_buffer);
+  }
+
+  ids_buffer = d3plot_read_shell_element_ids(plot_file, &num_ids_buffer);
+  if (num_ids_buffer > 0) {
+    *num_ids += num_ids_buffer;
+    all_ids = realloc(all_ids, *num_ids * sizeof(d3_word));
+    memcpy(&all_ids[offset], ids_buffer, num_ids_buffer * sizeof(d3_word));
+    offset += num_ids_buffer;
+    free(ids_buffer);
+  }
+
+  ids_buffer = d3plot_read_solid_shell_element_ids(plot_file, &num_ids_buffer);
+  if (num_ids_buffer > 0) {
+    *num_ids += num_ids_buffer;
+    all_ids = realloc(all_ids, *num_ids * sizeof(d3_word));
+    memcpy(&all_ids[offset], ids_buffer, num_ids_buffer * sizeof(d3_word));
+    offset += num_ids_buffer;
+    free(ids_buffer);
+  }
+
+  /* TODO: We can take advantage of the fact that the ids are already sorted and
+   * so achieve much higher performance */
+  if (sort)
+    _quick_sort(all_ids, 0, *num_ids - 1);
+
+  return all_ids;
 }
 
 double *d3plot_read_node_coordinates(d3plot_file *plot_file, size_t state,
@@ -534,4 +585,68 @@ double *_d3plot_read_node_data(d3plot_file *plot_file, size_t state,
   }
 
   return coords;
+}
+
+d3_word *_d3plot_read_ids(d3plot_file *plot_file, size_t *num_ids,
+                          size_t data_type, size_t num_ids_value) {
+  *num_ids = num_ids_value;
+  if (num_ids_value == 0) {
+    return NULL;
+  }
+
+  d3_word *ids = malloc(*num_ids * sizeof(d3_word));
+  if (plot_file->buffer.word_size == 4) {
+    uint32_t *ids32 = malloc(*num_ids * plot_file->buffer.word_size);
+    d3_buffer_read_words_at(&plot_file->buffer, ids32, *num_ids,
+                            plot_file->data_pointers[data_type]);
+    size_t i = 0;
+    while (i < *num_ids) {
+      ids[i + 0] = ids32[i + 0];
+      if (i < *num_ids - 1)
+        ids[i + 1] = ids32[i + 1];
+      if (i < *num_ids - 2)
+        ids[i + 2] = ids32[i + 2];
+      if (i < *num_ids - 3)
+        ids[i + 3] = ids32[i + 3];
+
+      i += 4;
+    }
+
+    free(ids32);
+  } else {
+    d3_buffer_read_words_at(&plot_file->buffer, ids, *num_ids,
+                            plot_file->data_pointers[data_type]);
+  }
+
+  return ids;
+}
+
+#define SWAP(lhs, rhs)                                                         \
+  d3_word temp = lhs;                                                          \
+  lhs = rhs;                                                                   \
+  rhs = temp
+
+int _partition(d3_word *arr, int64_t low, int64_t high) {
+  const d3_word pivot = arr[high];
+  int64_t i = low - 1;
+
+  int64_t j = low;
+  while (j <= high - 1) {
+    if (arr[j] < pivot) {
+      i++;
+      SWAP(arr[i], arr[j]);
+    }
+    j++;
+  }
+  SWAP(arr[i + 1], arr[high]);
+  return (i + 1);
+}
+
+void _quick_sort(d3_word *arr, int64_t low, int64_t high) {
+  if (low < high) {
+    const int pi = _partition(arr, low, high);
+
+    _quick_sort(arr, low, pi - 1);
+    _quick_sort(arr, pi + 1, high);
+  }
 }

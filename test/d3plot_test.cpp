@@ -89,6 +89,19 @@ TEST_CASE("d3plot") {
 
   free(node_ids);
 
+  size_t num_elements;
+  d3_word *element_ids =
+      d3plot_read_all_element_ids(&plot_file, &num_elements, 1);
+
+  REQUIRE(num_elements == 133456);
+  CHECK(element_ids[0] == 1);
+  CHECK(element_ids[1] == 2);
+  CHECK(element_ids[2] == 3);
+  CHECK(element_ids[3] == 4);
+  CHECK(element_ids[133318] == 72044862);
+
+  free(element_ids);
+
   CHECK_APPROX(d3plot_read_time(&plot_file, 0), 0.0);
   CHECK_APPROX(d3plot_read_time(&plot_file, 1), 0.0999492854);
   CHECK_APPROX(d3plot_read_time(&plot_file, 2), 0.1998985708);

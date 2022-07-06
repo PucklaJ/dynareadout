@@ -203,12 +203,15 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
   }
 
   DT_PTR_SET(D3PLT_PTR_NODE_IDS);
-
   d3_buffer_skip_words(&plot_file->buffer, nsortd); /* nusern*/
-  d3_buffer_skip_words(&plot_file->buffer, nsrhd);  /* nuserh*/
-  d3_buffer_skip_words(&plot_file->buffer, nsrbd);  /* nuserb*/
-  d3_buffer_skip_words(&plot_file->buffer, nsrsd);  /* nusers*/
-  d3_buffer_skip_words(&plot_file->buffer, nsrtd);  /* nusert*/
+  DT_PTR_SET(D3PLT_PTR_EL8_IDS);
+  d3_buffer_skip_words(&plot_file->buffer, nsrhd); /* nuserh*/
+  DT_PTR_SET(D3PLT_PTR_EL2_IDS);
+  d3_buffer_skip_words(&plot_file->buffer, nsrbd); /* nuserb*/
+  DT_PTR_SET(D3PLT_PTR_EL4_IDS);
+  d3_buffer_skip_words(&plot_file->buffer, nsrsd); /* nusers*/
+  DT_PTR_SET(D3PLT_PTR_EL48_IDS);
+  d3_buffer_skip_words(&plot_file->buffer, nsrtd); /* nusert*/
   d3_buffer_skip_words(&plot_file->buffer,
                        nmmat * 3); /* norder + nsrmu_a + nsrmp_a*/
 

@@ -30,11 +30,15 @@
 
 #define D3PLT_PTR_NODE_COORDS 0
 #define D3PLT_PTR_NODE_IDS 1
-#define D3PLT_PTR_STATE_TIME 2
-#define D3PLT_PTR_STATE_NODE_COORDS 3
-#define D3PLT_PTR_STATE_NODE_VEL 4
-#define D3PLT_PTR_STATE_NODE_ACC 5
-#define D3PLT_PTR_STATES 6
+#define D3PLT_PTR_EL8_IDS 2
+#define D3PLT_PTR_EL2_IDS 3
+#define D3PLT_PTR_EL4_IDS 4
+#define D3PLT_PTR_EL48_IDS 5
+#define D3PLT_PTR_STATE_TIME 6
+#define D3PLT_PTR_STATE_NODE_COORDS 7
+#define D3PLT_PTR_STATE_NODE_VEL 8
+#define D3PLT_PTR_STATE_NODE_ACC 9
+#define D3PLT_PTR_STATES 10
 #define D3PLT_PTR_COUNT D3PLT_PTR_STATES
 
 typedef struct {
@@ -66,6 +70,14 @@ extern "C" {
 d3plot_file d3plot_open(const char *root_file_name);
 void d3plot_close(d3plot_file *plot_file);
 d3_word *d3plot_read_node_ids(d3plot_file *plot_file, size_t *num_ids);
+d3_word *d3plot_read_solid_element_ids(d3plot_file *plot_file, size_t *num_ids);
+d3_word *d3plot_read_beam_element_ids(d3plot_file *plot_file, size_t *num_ids);
+d3_word *d3plot_read_shell_element_ids(d3plot_file *plot_file, size_t *num_ids);
+d3_word *d3plot_read_solid_shell_element_ids(d3plot_file *plot_file,
+                                             size_t *num_ids);
+/* sort .... wether to sort the resulting ids in ascending order*/
+d3_word *d3plot_read_all_element_ids(d3plot_file *plot_file, size_t *num_ids,
+                                     int sort);
 /* Returns an array containing all axes of all nodes at a given state. See:
  * XYZXYZXYZXYZ...*/
 double *d3plot_read_node_coordinates(d3plot_file *plot_file, size_t state,
@@ -89,6 +101,10 @@ const char *_d3plot_get_file_type_name(d3_word file_type);
 int _get_nth_digit(d3_word value, int n);
 double *_d3plot_read_node_data(d3plot_file *plot_file, size_t state,
                                size_t *num_nodes, size_t data_type);
+d3_word *_d3plot_read_ids(d3plot_file *plot_file, size_t *num_ids,
+                          size_t data_type, size_t num_ids_value);
+int _partition(d3_word *arr, int64_t low, int64_t high);
+void _quick_sort(d3_word *arr, int64_t low, int64_t high);
 
 #ifdef __cplusplus
 }
