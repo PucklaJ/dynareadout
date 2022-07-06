@@ -57,6 +57,10 @@ void d3_buffer_read_words(d3_buffer *buffer, void *words, size_t num_words);
  * to be allocated with at least num_words*word_size bytes*/
 void d3_buffer_read_words_at(d3_buffer *buffer, void *words, size_t num_words,
                              size_t word_pos);
+void d3_buffer_read_double_word(d3_buffer *buffer, double *word);
+/* Skip to the next file. Especially needed a the end of the first file when
+ * done with all the headers*/
+void d3_buffer_next_file(d3_buffer *buffer);
 
 #ifdef __cplusplus
 }
