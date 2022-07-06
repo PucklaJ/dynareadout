@@ -296,8 +296,11 @@ void d3_buffer_skip_words(d3_buffer *buffer, size_t num_words) {
 }
 
 int d3_buffer_next_file(d3_buffer *buffer) {
-  buffer->cur_word =
-      buffer->file_sizes[buffer->cur_file_handle] / buffer->word_size;
+  const size_t cur_file_pos =
+      ftell(buffer->file_handles[buffer->cur_file_handle]);
+  buffer->cur_word +=
+      (buffer->file_sizes[buffer->cur_file_handle] - cur_file_pos) /
+      buffer->word_size;
   buffer->cur_file_handle++;
 
   if (buffer->cur_file_handle == buffer->num_file_handles) {
