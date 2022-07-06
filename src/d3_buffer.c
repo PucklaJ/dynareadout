@@ -295,12 +295,18 @@ void d3_buffer_skip_words(d3_buffer *buffer, size_t num_words) {
   }
 }
 
-void d3_buffer_next_file(d3_buffer *buffer) {
+int d3_buffer_next_file(d3_buffer *buffer) {
   buffer->cur_word =
       buffer->file_sizes[buffer->cur_file_handle] / buffer->word_size;
   buffer->cur_file_handle++;
-  /* TODO: Bounds check*/
+
+  if (buffer->cur_file_handle == buffer->num_file_handles) {
+    return 0;
+  }
+
   if (fseek(buffer->file_handles[buffer->cur_file_handle], 0, SEEK_SET) != 0) {
     /* TODO: Error*/
   }
+
+  return 1;
 }

@@ -63,7 +63,7 @@ void d3_buffer_read_vec3(d3_buffer *buffer, double *words);
 void d3_buffer_skip_words(d3_buffer *buffer, size_t num_words);
 /* Skip to the next file. Especially needed a the end of the first file when
  * done with all the headers*/
-void d3_buffer_next_file(d3_buffer *buffer);
+int d3_buffer_next_file(d3_buffer *buffer);
 
 #ifdef __cplusplus
 }
