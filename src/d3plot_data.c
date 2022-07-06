@@ -28,6 +28,8 @@
 #include <string.h>
 
 #define CDP plot_file->control_data
+#define DT_PTR_SET(index)                                                      \
+  plot_file->data_pointers[index] = plot_file->buffer.cur_word
 
 int _d3plot_read_geometry_data(d3plot_file *plot_file) {
   if (CDP.element_connectivity_packed) {
@@ -45,15 +47,14 @@ int _d3plot_read_geometry_data(d3plot_file *plot_file) {
     return 0;
   }
 
-  /* Print X*/
+  /* Here are the node coordinates*/
+  DT_PTR_SET(D3PLT_PTR_NODE_COORDS);
+
   double vec[3];
 
   size_t i = 0;
   while (i < CDP.numnp) {
     d3_buffer_read_vec3(&plot_file->buffer, vec);
-
-    if (i < 5)
-      printf("NODE COORDS %d: (%f, %f, %f)\n", i, vec[0], vec[1], vec[2]);
 
     i++;
   }
@@ -437,6 +438,8 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
   d3_buffer_read_words(&plot_file->buffer, &nsrsd, 1);
   d3_buffer_read_words(&plot_file->buffer, &nsrtd, 1);
 
+  CDP.numrbs = 0;
+
   if (nsort < 0) {
     d3_word nsrma = 0, nsrmu = 0, nsrmp = 0, nsrtm = 0;
 
@@ -447,8 +450,6 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
     d3_buffer_read_words(&plot_file->buffer, &CDP.numrbs, 1);
     d3_buffer_read_words(&plot_file->buffer, &nmmat, 1);
   } else {
-    CDP.numrbs = 0;
-
     plot_file->error_string = malloc(39 + 20);
     sprintf(plot_file->error_string, "Non negative nsort (%d) is not supported",
             nsort);
@@ -467,6 +468,8 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
   nsrmu_a = malloc(nmmat * plot_file->buffer.word_size);
   nsrmp_a = malloc(nmmat * plot_file->buffer.word_size);
 
+  DT_PTR_SET(D3PLT_PTR_NODE_IDS);
+
   d3_buffer_read_words(&plot_file->buffer, nusern, nsortd);
   d3_buffer_read_words(&plot_file->buffer, nuserh, nsrhd);
   d3_buffer_read_words(&plot_file->buffer, nuserb, nsrbd);
@@ -475,18 +478,6 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
   d3_buffer_read_words(&plot_file->buffer, norder, nmmat);
   d3_buffer_read_words(&plot_file->buffer, nsrmu_a, nmmat);
   d3_buffer_read_words(&plot_file->buffer, nsrmp_a, nmmat);
-
-  size_t i = 0;
-  size_t offset = 0;
-  while (i < 5) {
-    d3_word nid = 0;
-    memcpy(&nid, &nusern[offset], plot_file->buffer.word_size);
-    offset += plot_file->buffer.word_size;
-
-    printf("NODE ID %d: %d\n", i, nid);
-
-    i++;
-  }
 
   free(nusern);
   free(nuserh);

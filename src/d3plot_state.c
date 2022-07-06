@@ -42,11 +42,15 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   d3_buffer_read_double_word(&plot_file->buffer, &time);
 
   if (time == D3_EOF) {
-    printf("EOF read at %d\n", plot_file->buffer.cur_word);
     return 2;
   }
 
-  printf("TIME: %f\n", time);
+  plot_file->num_states++;
+  plot_file->data_pointers =
+      realloc(plot_file->data_pointers,
+              (D3PLT_PTR_COUNT + plot_file->num_states) * sizeof(size_t));
+  plot_file->data_pointers[D3PLT_PTR_STATES + plot_file->num_states - 1] =
+      state_start;
 
   /* GLOBAL*/
   const size_t global_start = plot_file->buffer.cur_word;
@@ -143,7 +147,6 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
     plot_file->error_string = malloc(70);
     sprintf(plot_file->error_string, "Size of GLOBAL is %d instead of %d",
             global_size, CDP.nglbv);
-    fflush(stdout);
     return 0;
   }
 
@@ -151,9 +154,6 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   /**** Order of Node Data ******
    * IT, U, Mass Scaling, V, A
    ******************************/
-
-  printf("Read node data at 0x%x\n",
-         plot_file->buffer.cur_word * plot_file->buffer.word_size);
 
   const size_t node_data_start = plot_file->buffer.cur_word;
 
@@ -208,33 +208,39 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   }
 
   if (CDP.iu) {
+    if (plot_file->num_states == 1)
+      plot_file->data_pointers[D3PLT_PTR_STATE_NODE_COORDS] =
+          plot_file->buffer.cur_word - state_start;
+
     n = 0;
     while (n < CDP.numnp) {
       d3_buffer_read_vec3(&plot_file->buffer, u);
-      if (n < 5)
-        printf("NODE %d DISPLACEMENT: (%f, %f, %f)\n", n, u[0], u[1], u[2]);
 
       n++;
     }
   }
 
   if (CDP.iv) {
+    if (plot_file->num_states == 1)
+      plot_file->data_pointers[D3PLT_PTR_STATE_NODE_VEL] =
+          plot_file->buffer.cur_word - state_start;
+
     n = 0;
     while (n < CDP.numnp) {
       d3_buffer_read_vec3(&plot_file->buffer, v);
-      if (n < 5)
-        printf("NODE %d VELOCITY: (%f, %f, %f)\n", n, v[0], v[1], v[2]);
 
       n++;
     }
   }
 
   if (CDP.ia) {
+    if (plot_file->num_states == 1)
+      plot_file->data_pointers[D3PLT_PTR_STATE_NODE_ACC] =
+          plot_file->buffer.cur_word - state_start;
+
     n = 0;
     while (n < CDP.numnp) {
       d3_buffer_read_vec3(&plot_file->buffer, a);
-      if (n < 5)
-        printf("NODE %d ACCELERATION: (%f, %f, %f)\n", n, a[0], a[1], a[2]);
 
       n++;
     }
@@ -246,7 +252,6 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
     plot_file->error_string = malloc(70);
     sprintf(plot_file->error_string, "NODEDATA should be %d instead of %d", NND,
             node_data_size);
-    fflush(stdout);
     return 0;
   }
 
@@ -374,7 +379,6 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
     plot_file->error_string = malloc(70);
     sprintf(plot_file->error_string, "ELEMDATA should be %d instead of %d", ENN,
             elem_data_size);
-    fflush(stdout);
     return 0;
   }
 
@@ -400,8 +404,6 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   const size_t state_end = plot_file->buffer.cur_word;
   const size_t state_size =
       (state_end - state_start) * plot_file->buffer.word_size;
-
-  fflush(stdout);
 
   return 1;
 }

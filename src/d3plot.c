@@ -39,6 +39,8 @@ d3plot_file d3plot_open(const char *root_file_name) {
   d3plot_file plot_file;
   CDA.title = NULL;
   plot_file.error_string = NULL;
+  plot_file.data_pointers = NULL;
+  plot_file.num_states = 0;
 
   plot_file.buffer = d3_buffer_open(root_file_name);
   if (plot_file.buffer.error_string) {
@@ -52,8 +54,6 @@ d3plot_file d3plot_open(const char *root_file_name) {
   CDA.title = malloc(10 * plot_file.buffer.word_size + 1);
   d3_buffer_read_words(&plot_file.buffer, CDA.title, 10);
   CDA.title[10 * plot_file.buffer.word_size] = '\0';
-
-  printf("Title: %s\n", CDA.title);
 
   READ_CONTROL_DATA_PLOT_FILE_WORD(run_time);
 
@@ -131,8 +131,6 @@ d3plot_file d3plot_open(const char *root_file_name) {
   READ_CONTROL_DATA_PLOT_FILE_WORD(words[3]);
   READ_CONTROL_DATA_PLOT_FILE_WORD(words[4]);
   READ_CONTROL_DATA_PLOT_FILE_WORD(words[5]);
-
-  printf("Done with CONTROL DATA at %d\n", plot_file.buffer.cur_word);
 
   if (CDA.extra > 0) {
     READ_CONTROL_DATA_PLOT_FILE_WORD(nel20);
@@ -254,10 +252,14 @@ d3plot_file d3plot_open(const char *root_file_name) {
     }
   }
 
-  char release_version_str[5];
-  memcpy(release_version_str, &CDA.release_version, 4);
-  release_version_str[4] = '\0';
-  printf("Release number: %s\n", release_version_str);
+  /* Allocate the first data pointers*/
+  plot_file.data_pointers = malloc(D3PLT_PTR_COUNT * sizeof(size_t));
+  i = 0;
+  while (i < D3PLT_PTR_COUNT) {
+    plot_file.data_pointers[i] = 0;
+
+    i++;
+  }
 
   /* We are done with CONTROL DATA now comes the real data*/
 
@@ -370,10 +372,82 @@ void d3plot_close(d3plot_file *plot_file) {
 
   free(plot_file->control_data.title);
   free(plot_file->header.head);
+  free(plot_file->data_pointers);
   free(plot_file->error_string);
 
   plot_file->control_data.title = NULL;
   plot_file->header.head = NULL;
+  plot_file->num_states = 0;
+}
+
+d3_word *d3plot_read_node_ids(d3plot_file *plot_file, size_t *num_ids) {
+  *num_ids = plot_file->control_data.numnp;
+  d3_word *node_ids = malloc(*num_ids * sizeof(d3_word));
+  if (plot_file->buffer.word_size == 4) {
+    uint32_t *node_ids32 = malloc(*num_ids * plot_file->buffer.word_size);
+    d3_buffer_read_words_at(&plot_file->buffer, node_ids32, *num_ids,
+                            plot_file->data_pointers[D3PLT_PTR_NODE_IDS]);
+    size_t i = 0;
+    while (i < *num_ids) {
+      node_ids[i + 0] = node_ids32[i + 0];
+      if (i < *num_ids - 1)
+        node_ids[i + 1] = node_ids32[i + 1];
+      if (i < *num_ids - 2)
+        node_ids[i + 2] = node_ids32[i + 2];
+      if (i < *num_ids - 3)
+        node_ids[i + 3] = node_ids32[i + 3];
+
+      i += 4;
+    }
+
+    free(node_ids32);
+  } else {
+    d3_buffer_read_words_at(&plot_file->buffer, node_ids, *num_ids,
+                            plot_file->data_pointers[D3PLT_PTR_NODE_IDS]);
+  }
+
+  return node_ids;
+}
+
+double *d3plot_read_node_coordinates(d3plot_file *plot_file, size_t state,
+                                     size_t *num_nodes) {
+  return _d3plot_read_node_data(plot_file, state, num_nodes,
+                                D3PLT_PTR_STATE_NODE_COORDS);
+}
+
+double *d3plot_read_node_velocity(d3plot_file *plot_file, size_t state,
+                                  size_t *num_nodes) {
+  return _d3plot_read_node_data(plot_file, state, num_nodes,
+                                D3PLT_PTR_STATE_NODE_VEL);
+}
+
+double *d3plot_read_node_acceleration(d3plot_file *plot_file, size_t state,
+                                      size_t *num_nodes) {
+  return _d3plot_read_node_data(plot_file, state, num_nodes,
+                                D3PLT_PTR_STATE_NODE_ACC);
+}
+
+double d3plot_read_time(d3plot_file *plot_file, size_t state) {
+  if (state >= plot_file->num_states) {
+    plot_file->error_string = malloc(70);
+    sprintf(plot_file->error_string, "%d is out of bounds for the states");
+    return -1.0;
+  }
+
+  double time;
+  if (plot_file->buffer.word_size == 4) {
+    float time32;
+    d3_buffer_read_words_at(&plot_file->buffer, &time32, 1,
+                            plot_file->data_pointers[D3PLT_PTR_STATES + state] +
+                                plot_file->data_pointers[D3PLT_PTR_STATE_TIME]);
+    time = time32;
+  } else {
+    d3_buffer_read_words_at(&plot_file->buffer, &time, 1,
+                            plot_file->data_pointers[D3PLT_PTR_STATES + state] +
+                                plot_file->data_pointers[D3PLT_PTR_STATE_TIME]);
+  }
+
+  return time;
 }
 
 const char *_d3plot_get_file_type_name(d3_word file_type) {
@@ -429,4 +503,39 @@ int _get_nth_digit(d3_word value, int n) {
 
     i++;
   }
+}
+
+double *_d3plot_read_node_data(d3plot_file *plot_file, size_t state,
+                               size_t *num_nodes, size_t data_type) {
+  if (state >= plot_file->num_states) {
+    plot_file->error_string = malloc(70);
+    sprintf(plot_file->error_string, "%d is out of bounds for the states");
+    return NULL;
+  }
+
+  *num_nodes = plot_file->control_data.numnp;
+  double *coords = malloc(*num_nodes * 3 * sizeof(double));
+
+  if (plot_file->buffer.word_size == 4) {
+    float *coords32 = malloc(*num_nodes * 3 * sizeof(float));
+    d3_buffer_read_words_at(&plot_file->buffer, coords32, *num_nodes * 3,
+                            plot_file->data_pointers[D3PLT_PTR_STATES + state] +
+                                plot_file->data_pointers[data_type]);
+    size_t i = 0;
+    while (i < *num_nodes) {
+      coords[i * 3 + 0] = coords32[i * 3 + 0];
+      coords[i * 3 + 1] = coords32[i * 3 + 1];
+      coords[i * 3 + 2] = coords32[i * 3 + 2];
+
+      i++;
+    }
+
+    free(coords32);
+  } else {
+    d3_buffer_read_words_at(&plot_file->buffer, coords, *num_nodes * 3,
+                            plot_file->data_pointers[D3PLT_PTR_STATES + state] +
+                                plot_file->data_pointers[data_type]);
+  }
+
+  return coords;
 }
