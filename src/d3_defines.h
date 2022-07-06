@@ -50,4 +50,6 @@ typedef uint64_t d3_word;
 #define D3_CODE_OLD_DYNA3D 2
 #define D3_CODE_NIKE3D_LS_DYNA3D_LS_NIKE3D 6
 
+#define D3_EOF -999999.0
+
 #endif
