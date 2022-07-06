@@ -40,6 +40,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
   CDA.title = NULL;
   plot_file.error_string = NULL;
   plot_file.data_pointers = NULL;
+  plot_file.header.head = NULL;
   plot_file.num_states = 0;
 
   plot_file.buffer = d3_buffer_open(root_file_name);
