@@ -389,19 +389,11 @@ int _d3plot_read_geometry_data(d3plot_file *plot_file) {
   }
 
   /* Print X*/
-  double vec64[3];
-  float vec32[3];
+  double vec[3];
 
   size_t i = 0;
   while (i < CDATAP.numnp) {
-    if (plot_file->buffer.word_size == 4) {
-      d3_buffer_read_words(&plot_file->buffer, vec32, 3);
-      vec64[0] = (double)vec32[0];
-      vec64[1] = (double)vec32[1];
-      vec64[2] = (double)vec32[2];
-    } else {
-      d3_buffer_read_words(&plot_file->buffer, vec64, 3);
-    }
+    d3_buffer_read_vec3(&plot_file->buffer, vec);
 
     i++;
   }
@@ -976,6 +968,7 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
     plot_file->error_string = malloc(70);
     sprintf(plot_file->error_string, "Size of GLOBAL is %d instead of %d",
             global_size, CDATAP.nglbv);
+    fflush(stdout);
     return 0;
   }
 
@@ -1004,65 +997,80 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   double temp[3], node_flux[3], mass_scaling, u[3], v[3], a[3];
 
   size_t n = 0;
-  while (n < CDATAP.numnp) {
-    printf("NODE %d\n", n);
+  if (it > 0) {
+    while (n < CDATAP.numnp) {
+      size_t j = 0;
+      while (j < it) {
+        d3_buffer_read_double_word(&plot_file->buffer, &temp[j]);
 
-    size_t j = 0;
-    while (j < it) {
-      d3_buffer_read_double_word(&plot_file->buffer, &temp[j]);
+        j++;
+      }
 
-      j++;
+      if (it == 1) {
+        printf("TEMP: %f\n", temp[0]);
+      } else if (it == 3) {
+        printf("TEMP: (%f, %f, %f)\n", temp[0], temp[1], temp[2]);
+      }
+
+      n++;
     }
+  }
 
-    j = 0;
-    while (j < N) {
-      d3_buffer_read_double_word(&plot_file->buffer, &node_flux[j]);
-    }
+  if (N > 0) {
+    n = 0;
+    while (n < CDATAP.numnp) {
+      size_t j = 0;
+      while (j < N) {
+        d3_buffer_read_double_word(&plot_file->buffer, &node_flux[j]);
 
-    if (mass_N == 1) {
-      d3_buffer_read_double_word(&plot_file->buffer, &mass_scaling);
-    }
+        j++;
+      }
 
-    if (it == 1) {
-      printf("TEMP: %f\n", temp[0]);
-    } else if (it == 3) {
-      printf("TEMP: (%f, %f, %f)\n", temp[0], temp[1], temp[2]);
-    }
-
-    if (N == 3) {
       printf("FLUX: (%f, %f, %f)\n", node_flux[0], node_flux[1], node_flux[2]);
-    }
 
-    if (mass_N == 1) {
+      n++;
+    }
+  }
+
+  if (mass_N) {
+    n = 0;
+    while (n < CDATAP.numnp) {
+      d3_buffer_read_double_word(&plot_file->buffer, &mass_scaling);
+
       printf("MASS SCALING: %f\n", mass_scaling);
-    }
 
-    j = 0;
-    while (j < CDATAP.ndim) {
-      if (CDATAP.iu) {
-        d3_buffer_read_double_word(&plot_file->buffer, &u[j]);
-      }
-      if (CDATAP.iv) {
-        d3_buffer_read_double_word(&plot_file->buffer, &v[j]);
-      }
-      if (CDATAP.ia) {
-        d3_buffer_read_double_word(&plot_file->buffer, &a[j]);
-      }
+      n++;
+    }
+  }
 
-      j++;
-    }
+  if (CDATAP.iu) {
+    n = 0;
+    while (n < CDATAP.numnp) {
+      d3_buffer_read_vec3(&plot_file->buffer, u);
+      printf("NODE %d DISPLACEMENT: (%f, %f, %f)\n", n, u[0], u[1], u[2]);
 
-    if (CDATAP.iu) {
-      printf("DISPLACEMENT: (%f, %f, %f)\n", u[0], u[1], u[2]);
+      n++;
     }
-    if (CDATAP.iv) {
-      printf("VELOCITY: (%f, %f, %f)\n", v[0], v[1], v[2]);
-    }
-    if (CDATAP.ia) {
-      printf("ACCELERATION: (%f, %f, %f)\n", a[0], a[1], a[2]);
-    }
+  }
 
-    n++;
+  if (CDATAP.iv) {
+    n = 0;
+    while (n < CDATAP.numnp) {
+      d3_buffer_read_vec3(&plot_file->buffer, v);
+      printf("NODE %d VELOCITY: (%f, %f, %f)\n", n, v[0], v[1], v[2]);
+
+      n++;
+    }
+  }
+
+  if (CDATAP.ia) {
+    n = 0;
+    while (n < CDATAP.numnp) {
+      d3_buffer_read_vec3(&plot_file->buffer, a);
+      printf("NODE %d ACCELERATION: (%f, %f, %f)\n", n, a[0], a[1], a[2]);
+
+      n++;
+    }
   }
 
   const size_t node_data_end = plot_file->buffer.cur_word;
@@ -1259,12 +1267,12 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
     d3_buffer_skip_words(&plot_file->buffer, skip_words);
   }
 
-  fflush(stdout);
-
   const size_t state_end = plot_file->buffer.cur_word;
   const size_t state_size =
       (state_end - state_start) * plot_file->buffer.word_size;
   printf("STATE SIZE: %d\n", state_size);
+
+  fflush(stdout);
 
   return 1;
 }
