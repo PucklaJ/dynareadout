@@ -33,12 +33,11 @@
 #define READ_CONTROL_DATA_WORD(value)                                          \
   d3_word value = 0;                                                           \
   d3_buffer_read_words(&plot_file.buffer, &value, 1)
-#define CDATA plot_file.control_data
-#define CDATAP plot_file->control_data
+#define CDA plot_file.control_data
 
 d3plot_file d3plot_open(const char *root_file_name) {
   d3plot_file plot_file;
-  CDATA.title = NULL;
+  CDA.title = NULL;
   plot_file.error_string = NULL;
 
   plot_file.buffer = d3_buffer_open(root_file_name);
@@ -50,11 +49,11 @@ d3plot_file d3plot_open(const char *root_file_name) {
   }
 
   /* Read Title*/
-  CDATA.title = malloc(10 * plot_file.buffer.word_size + 1);
-  d3_buffer_read_words(&plot_file.buffer, CDATA.title, 10);
-  CDATA.title[10 * plot_file.buffer.word_size] = '\0';
+  CDA.title = malloc(10 * plot_file.buffer.word_size + 1);
+  d3_buffer_read_words(&plot_file.buffer, CDA.title, 10);
+  CDA.title[10 * plot_file.buffer.word_size] = '\0';
 
-  printf("Title: %s\n", CDATA.title);
+  printf("Title: %s\n", CDA.title);
 
   READ_CONTROL_DATA_PLOT_FILE_WORD(run_time);
 
@@ -99,9 +98,9 @@ d3plot_file d3plot_open(const char *root_file_name) {
   if (plot_file.buffer.word_size == 4) {
     int32_t maxint32;
     d3_buffer_read_words(&plot_file.buffer, &maxint32, 1);
-    CDATA.maxint = maxint32;
+    CDA.maxint = maxint32;
   } else {
-    d3_buffer_read_words(&plot_file.buffer, &CDATA.maxint, 1);
+    d3_buffer_read_words(&plot_file.buffer, &CDA.maxint, 1);
   }
 
   /*READ_CONTROL_DATA_PLOT_FILE_WORD(edlopt); Not used in LS-Dyna?*/
@@ -135,43 +134,43 @@ d3plot_file d3plot_open(const char *root_file_name) {
 
   printf("Done with CONTROL DATA at %d\n", plot_file.buffer.cur_word);
 
-  if (CDATA.extra > 0) {
+  if (CDA.extra > 0) {
     READ_CONTROL_DATA_PLOT_FILE_WORD(nel20);
     READ_CONTROL_DATA_PLOT_FILE_WORD(nt3d);
   } else {
-    CDATA.nel20 = 0;
-    CDATA.nt3d = 0;
+    CDA.nel20 = 0;
+    CDA.nt3d = 0;
   }
 
-  if (CDATA.ndim == 5 || CDATA.ndim == 7) {
-    CDATA.mattyp = 1;
-    CDATA.ndim = 3;
+  if (CDA.ndim == 5 || CDA.ndim == 7) {
+    CDA.mattyp = 1;
+    CDA.ndim = 3;
   } else {
-    CDATA.mattyp = 0;
-    if (CDATA.ndim == 3) {
-      CDATA.element_connectivity_packed = 1;
+    CDA.mattyp = 0;
+    if (CDA.ndim == 3) {
+      CDA.element_connectivity_packed = 1;
     } else {
-      CDATA.element_connectivity_packed = 0;
-      if (CDATA.ndim == 4) {
-        CDATA.ndim = 3;
+      CDA.element_connectivity_packed = 0;
+      if (CDA.ndim == 4) {
+        CDA.ndim = 3;
       }
     }
   }
 
   size_t i = 0;
   while (i < 4) {
-    CDATA.ioshl[i] -= 999 * (CDATA.ioshl[i] == 1000);
+    CDA.ioshl[i] -= 999 * (CDA.ioshl[i] == 1000);
 
     i++;
   }
 
-  if (_get_nth_digit(CDATA.idtdt, 0) == 1) {
+  if (_get_nth_digit(CDA.idtdt, 0) == 1) {
     /* TODO: An array of dT/dt values of
              length NUMNP. Array is
              written after node temperature
              arrays.*/
   }
-  if (_get_nth_digit(CDATA.idtdt, 1) == 1) {
+  if (_get_nth_digit(CDA.idtdt, 1) == 1) {
     /* TODO: An array of residual forces of
              length 3*NUMNP followed by
              residual moments of length
@@ -179,7 +178,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
              after node temperatures or
              dT/dt values if there are output.*/
   }
-  if (_get_nth_digit(CDATA.idtdt, 2) == 1) {
+  if (_get_nth_digit(CDA.idtdt, 2) == 1) {
     /* TODO: Plastic strain tensor is written
              for each solid and shell after
              standard element data. For
@@ -187,42 +186,40 @@ d3plot_file d3plot_open(const char *root_file_name) {
              (6 x 3 = 18 values), at the
              lower, middle and upper
              integration location.*/
-    CDATA.plastic_strain_tensor_written = 1;
+    CDA.plastic_strain_tensor_written = 1;
   } else {
-    CDATA.plastic_strain_tensor_written = 0;
+    CDA.plastic_strain_tensor_written = 0;
   }
-  if (_get_nth_digit(CDATA.idtdt, 3) == 1) {
+  if (_get_nth_digit(CDA.idtdt, 3) == 1) {
     /* TODO: Thermal strain tensor is written
              after standard element data. For
              solid (6 values) and shell (6
              values) and after the plastic
              strain tensor if output.*/
-    CDATA.thermal_strain_tensor_written = 1;
+    CDA.thermal_strain_tensor_written = 1;
   } else {
-    CDATA.thermal_strain_tensor_written = 0;
+    CDA.thermal_strain_tensor_written = 0;
   }
 
-  if (CDATA.plastic_strain_tensor_written ||
-      CDATA.thermal_strain_tensor_written) {
-    CDATA.istrn = _get_nth_digit(CDATA.idtdt, 4);
+  if (CDA.plastic_strain_tensor_written || CDA.thermal_strain_tensor_written) {
+    CDA.istrn = _get_nth_digit(CDA.idtdt, 4);
   }
 
-  if (CDATA.maxint >= 0) {
-    CDATA.mdlopt = 0;
-  } else if (CDATA.maxint < -10000) {
-    CDATA.mdlopt = 2;
-    CDATA.maxint = CDATA.maxint * -1 - 10000;
-  } else if (CDATA.maxint < 0) {
-    CDATA.mdlopt = 1;
-    CDATA.maxint *= -1;
+  if (CDA.maxint >= 0) {
+    CDA.mdlopt = 0;
+  } else if (CDA.maxint < -10000) {
+    CDA.mdlopt = 2;
+    CDA.maxint = CDA.maxint * -1 - 10000;
+  } else if (CDA.maxint < 0) {
+    CDA.mdlopt = 1;
+    CDA.maxint *= -1;
   } else {
     plot_file.error_string = malloc(40);
-    sprintf(plot_file.error_string, "Invalid value for MAXINT: %d",
-            CDATA.maxint);
+    sprintf(plot_file.error_string, "Invalid value for MAXINT: %d", CDA.maxint);
     return plot_file;
   }
 
-  if (CDATA.idtdt < 100) {
+  if (CDA.idtdt < 100) {
     /* We need to compute istrn*/
     /*ISTRN can only be computed as follows and if NV2D > 0.
       If NV2D-MAXINT*(6*IOSHL(1)+IOSHL(2)+NEIPS)+8*IOSHL(3)+4*IOSHL(4) > 1
@@ -235,54 +232,54 @@ d3plot_file d3plot_open(const char *root_file_name) {
       If NV3DT-MAXINT*(6*IOSHL(1)+IOSHL(2)+NEIPS) > 1
       Then ISTRN = 1, else ISTRN = 0*/
     const d3_word rhs =
-        CDATA.maxint * (6 * CDATA.ioshl[0] + CDATA.ioshl[1] + CDATA.neips) +
-        8 * CDATA.ioshl[2] + 4 * CDATA.ioshl[3];
-    if (CDATA.nv2d > rhs + 1) {
-      CDATA.istrn = 1;
+        CDA.maxint * (6 * CDA.ioshl[0] + CDA.ioshl[1] + CDA.neips) +
+        8 * CDA.ioshl[2] + 4 * CDA.ioshl[3];
+    if (CDA.nv2d > rhs + 1) {
+      CDA.istrn = 1;
     } else {
-      CDATA.istrn = 0;
+      CDA.istrn = 0;
     }
 
-    if (CDATA.istrn == 1 && CDATA.neiph >= 6) {
+    if (CDA.istrn == 1 && CDA.neiph >= 6) {
       /* TODO: last the 6 additional values are the six strain*/
     }
 
-    if (CDATA.nelt > 0) {
-      if ((CDATA.nv3dt - CDATA.maxint * (6 * CDATA.ioshl[0] + CDATA.ioshl[1] +
-                                         CDATA.neips)) > 1) {
-        CDATA.istrn = 1;
+    if (CDA.nelt > 0) {
+      if ((CDA.nv3dt -
+           CDA.maxint * (6 * CDA.ioshl[0] + CDA.ioshl[1] + CDA.neips)) > 1) {
+        CDA.istrn = 1;
       } else {
-        CDATA.istrn = 0;
+        CDA.istrn = 0;
       }
     }
   }
 
   char release_version_str[5];
-  memcpy(release_version_str, &CDATA.release_version, 4);
+  memcpy(release_version_str, &CDA.release_version, 4);
   release_version_str[4] = '\0';
   printf("Release number: %s\n", release_version_str);
 
   /* We are done with CONTROL DATA now comes the real data*/
 
-  if (CDATA.mattyp) {
+  if (CDA.mattyp) {
     plot_file.error_string = malloc(38);
     sprintf(plot_file.error_string, "MATERIAL TYPE DATA is not implemented");
     return plot_file;
   }
-  if (CDATA.ialemat) {
+  if (CDA.ialemat) {
     plot_file.error_string = malloc(42);
     sprintf(plot_file.error_string,
             "FLUID MATERIAL ID DATA is not implemented");
     return plot_file;
   }
-  if (CDATA.nmsph) {
+  if (CDA.nmsph) {
     plot_file.error_string = malloc(68);
     sprintf(
         plot_file.error_string,
         "SMOOTH PARTICLE HYDRODYNAMICS ELEMENT DATA FLAGS is not implemented");
     return plot_file;
   }
-  if (CDATA.npefg) {
+  if (CDA.npefg) {
     plot_file.error_string = malloc(33);
     sprintf(plot_file.error_string, "PARTICLE DATA is not implemented");
     return plot_file;
@@ -304,21 +301,21 @@ d3plot_file d3plot_open(const char *root_file_name) {
     return plot_file;
   }
 
-  if (CDATA.nmsph > 0) {
+  if (CDA.nmsph > 0) {
     plot_file.error_string = malloc(72);
     sprintf(plot_file.error_string, "SMOOTH PARTICLE HYDRODYNAMICS NODE AND "
                                     "MATERIAL LIST is not implemented");
     return plot_file;
   }
 
-  if (CDATA.npefg > 0) {
+  if (CDA.npefg > 0) {
     plot_file.error_string = malloc(42);
     sprintf(plot_file.error_string,
             "PARTICLE GEOMETRY DATA is not implemented");
     return plot_file;
   }
 
-  if (CDATA.ndim > 5) {
+  if (CDA.ndim > 5) {
     plot_file.error_string = malloc(43);
     sprintf(plot_file.error_string,
             "RIGID ROAD SURFACE DATA is not implemented");
@@ -339,7 +336,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
     return plot_file;
   }
 
-  if (CDATA.ncfdv1 == 67108864) {
+  if (CDA.ncfdv1 == 67108864) {
     plot_file.error_string = malloc(36);
     sprintf(plot_file.error_string, "EXTRA DATA TYPES is not implemented");
     return plot_file;
@@ -377,857 +374,6 @@ void d3plot_close(d3plot_file *plot_file) {
 
   plot_file->control_data.title = NULL;
   plot_file->header.head = NULL;
-}
-
-int _d3plot_read_geometry_data(d3plot_file *plot_file) {
-  if (CDATAP.element_connectivity_packed) {
-    plot_file->error_string = malloc(45);
-    sprintf(plot_file->error_string,
-            "Packed Element Connectivity is not supported");
-    return 0;
-  }
-
-  if (CDATAP.icode != D3_CODE_OLD_DYNA3D &&
-      CDATAP.icode != D3_CODE_NIKE3D_LS_DYNA3D_LS_NIKE3D) {
-    plot_file->error_string = malloc(49);
-    sprintf(plot_file->error_string,
-            "The given order of the elements is not supported");
-    return 0;
-  }
-
-  /* Print X*/
-  double vec[3];
-
-  size_t i = 0;
-  while (i < CDATAP.numnp) {
-    d3_buffer_read_vec3(&plot_file->buffer, vec);
-
-    if (i < 5)
-      printf("NODE COORDS %d: (%f, %f, %f)\n", i, vec[0], vec[1], vec[2]);
-
-    i++;
-  }
-
-  if (CDATAP.nel8 > 0) {
-    uint8_t *ix8 = malloc(9 * CDATAP.nel8 * plot_file->buffer.word_size);
-    d3_buffer_read_words(&plot_file->buffer, ix8, 9 * CDATAP.nel8);
-
-    d3_word value[9];
-    uint32_t value32[9];
-
-    size_t offset = 0;
-    size_t i = 0;
-    while (i < CDATAP.nel8) {
-      if (plot_file->buffer.word_size == 4) {
-        memcpy(value32, &ix8[offset], plot_file->buffer.word_size * 9);
-        size_t j = 0;
-        while (j < 9) {
-          value[j + 0] = value32[j + 0];
-          value[j + 1] = value32[j + 1];
-          value[j + 2] = value32[j + 2];
-
-          j += 3;
-        }
-      } else {
-        memcpy(value, &ix8[offset], plot_file->buffer.word_size * 9);
-      }
-      offset += plot_file->buffer.word_size * 9;
-
-      i++;
-    }
-
-    free(ix8);
-  } else if (CDATAP.nel8 < 0) {
-    const int64_t nel8 = CDATAP.nel8 * -1;
-
-    uint8_t *ix10 = malloc(2 * nel8 * plot_file->buffer.word_size);
-    d3_buffer_read_words(&plot_file->buffer, ix10, 2 * nel8);
-
-    d3_word value[2];
-    uint32_t value32[2];
-
-    size_t offset = 0;
-    size_t i = 0;
-    while (i < nel8) {
-      if (plot_file->buffer.word_size == 4) {
-        memcpy(value32, &ix10[offset], plot_file->buffer.word_size * 2);
-        value[0] = value32[0];
-        value[1] = value32[1];
-      } else {
-        memcpy(value, &ix10[offset], plot_file->buffer.word_size * 2);
-      }
-      offset += plot_file->buffer.word_size * 2;
-
-      i++;
-    }
-
-    free(ix10);
-  }
-
-  if (CDATAP.nelt > 0) {
-    uint8_t *ixt = malloc(9 * CDATAP.nelt * plot_file->buffer.word_size);
-    d3_buffer_read_words(&plot_file->buffer, ixt, 9 * CDATAP.nelt);
-
-    d3_word value[9];
-    uint32_t value32[9];
-
-    size_t offset = 0;
-    size_t i = 0;
-    while (i < CDATAP.nelt) {
-      if (plot_file->buffer.word_size == 4) {
-        memcpy(value32, &ixt[offset], plot_file->buffer.word_size * 9);
-        size_t j = 0;
-        while (j < 9) {
-          value[j + 0] = value32[j + 0];
-          value[j + 1] = value32[j + 1];
-          value[j + 2] = value32[j + 2];
-
-          j += 3;
-        }
-      } else {
-        memcpy(value, &ixt[offset], plot_file->buffer.word_size * 9);
-      }
-      offset += plot_file->buffer.word_size * 9;
-
-      i++;
-    }
-
-    free(ixt);
-  }
-
-  if (CDATAP.nel2 > 0) {
-    uint8_t *ix2 = malloc(6 * CDATAP.nel2 * plot_file->buffer.word_size);
-    d3_buffer_read_words(&plot_file->buffer, ix2, 6 * CDATAP.nel2);
-
-    d3_word value[6];
-    uint32_t value32[6];
-
-    size_t offset = 0;
-    size_t i = 0;
-    while (i < CDATAP.nel2) {
-      if (plot_file->buffer.word_size == 4) {
-        memcpy(value32, &ix2[offset], plot_file->buffer.word_size * 6);
-        size_t j = 0;
-        while (j < 6) {
-          value[j + 0] = value32[j + 0];
-          value[j + 1] = value32[j + 1];
-          value[j + 2] = value32[j + 2];
-
-          j += 3;
-        }
-      } else {
-        memcpy(value, &ix2[offset], plot_file->buffer.word_size * 6);
-      }
-      offset += plot_file->buffer.word_size * 6;
-
-      i++;
-    }
-
-    free(ix2);
-  }
-
-  if (CDATAP.nel4 > 0) {
-    uint8_t *ix4 = malloc(5 * CDATAP.nel4 * plot_file->buffer.word_size);
-    d3_buffer_read_words(&plot_file->buffer, ix4, 5 * CDATAP.nel4);
-
-    d3_word value[5];
-    uint32_t value32[5];
-
-    size_t offset = 0;
-    size_t i = 0;
-    while (i < CDATAP.nel4) {
-      if (plot_file->buffer.word_size == 4) {
-        memcpy(value32, &ix4[offset], plot_file->buffer.word_size * 5);
-        size_t j = 0;
-        while (j < 5) {
-          value[j + 0] = value32[j + 0];
-
-          j++;
-        }
-      } else {
-        memcpy(value, &ix4[offset], plot_file->buffer.word_size * 5);
-      }
-      offset += plot_file->buffer.word_size * 5;
-
-      i++;
-    }
-
-    free(ix4);
-  }
-
-  return 1;
-}
-
-int _d3plot_read_extra_node_connectivity(d3plot_file *plot_file) {
-  if (CDATAP.nel8 < 0) {
-    const int64_t nel8 = CDATAP.nel8 * -1;
-
-    uint8_t *ix10 = malloc(2 * nel8 * plot_file->buffer.word_size);
-    d3_buffer_read_words(&plot_file->buffer, ix10, 2 * nel8);
-
-    d3_word value[2];
-    uint32_t value32[2];
-
-    size_t offset = 0;
-    size_t i = 0;
-    while (i < nel8) {
-      if (plot_file->buffer.word_size == 4) {
-        memcpy(value32, &ix10[offset], plot_file->buffer.word_size * 2);
-        value[0] = value32[0];
-        value[1] = value32[1];
-      } else {
-        memcpy(value, &ix10[offset], plot_file->buffer.word_size * 2);
-      }
-      offset += plot_file->buffer.word_size * 2;
-
-      i++;
-    }
-
-    free(ix10);
-  }
-
-  if (CDATAP.nel48 > 0) {
-    uint8_t *ix48 = malloc(5 * CDATAP.nel48 * plot_file->buffer.word_size);
-    d3_buffer_read_words(&plot_file->buffer, ix48, 5 * CDATAP.nel48);
-
-    d3_word value[5];
-    uint32_t value32[5];
-
-    size_t offset = 0;
-    size_t i = 0;
-    while (i < CDATAP.nel48) {
-      if (plot_file->buffer.word_size == 4) {
-        memcpy(value32, &ix48[offset], plot_file->buffer.word_size * 5);
-        value[0] = value32[0];
-        value[1] = value32[1];
-        value[2] = value32[2];
-        value[3] = value32[3];
-        value[4] = value32[4];
-      } else {
-        memcpy(value, &ix48[offset], plot_file->buffer.word_size * 5);
-      }
-      offset += plot_file->buffer.word_size * 5;
-
-      i++;
-    }
-
-    free(ix48);
-  }
-
-  if (CDATAP.extra > 0 && CDATAP.nel20 > 0) {
-    uint8_t *ix20 = malloc(13 * CDATAP.nel20 * plot_file->buffer.word_size);
-    d3_buffer_read_words(&plot_file->buffer, ix20, 13 * CDATAP.nel20);
-
-    d3_word value[13];
-    uint32_t value32[13];
-
-    size_t offset = 0;
-    size_t i = 0;
-    while (i < CDATAP.nel20) {
-      if (plot_file->buffer.word_size == 4) {
-        memcpy(value32, &ix20[offset], plot_file->buffer.word_size * 13);
-        size_t j = 0;
-        while (j < 13) {
-          value[j] = value32[j];
-
-          j++;
-        }
-      } else {
-        memcpy(value, &ix20[offset], plot_file->buffer.word_size * 13);
-      }
-      offset += plot_file->buffer.word_size * 13;
-
-      i++;
-    }
-
-    free(ix20);
-  }
-
-  return 1;
-}
-
-int _d3plot_read_adapted_element_parent_list(d3plot_file *plot_file) {
-  if (CDATAP.nadapt == 0) {
-    return 1;
-  }
-
-  uint8_t *aepl = malloc(2 * CDATAP.nadapt * plot_file->buffer.word_size);
-  d3_buffer_read_words(&plot_file->buffer, aepl, 2 * CDATAP.nadapt);
-
-  d3_word value[2];
-  uint32_t value32[2];
-
-  size_t offset = 0;
-  size_t i = 0;
-  while (i < CDATAP.nadapt) {
-    if (plot_file->buffer.word_size == 4) {
-      memcpy(value32, &aepl[offset], 2 * plot_file->buffer.word_size);
-      value[0] = value32[0];
-      value[1] = value32[1];
-    } else {
-      memcpy(value, &aepl[offset], 2 * plot_file->buffer.word_size);
-    }
-    offset += 2 * plot_file->buffer.word_size;
-
-    i++;
-  }
-
-  free(aepl);
-
-  return 1;
-}
-
-int _d3plot_read_header(d3plot_file *plot_file) {
-
-  while (1) {
-    d3_word ntype = 0;
-    d3_buffer_read_words(&plot_file->buffer, &ntype, 1);
-
-    if (ntype == 90001) {
-      d3_word numprop = 0;
-      d3_buffer_read_words(&plot_file->buffer, &numprop, 1);
-      size_t i = 0;
-      while (i < numprop) {
-        d3_word idp = 0;
-        d3_buffer_read_words(&plot_file->buffer, &idp, 1);
-        char *ptitle = malloc(18 * plot_file->buffer.word_size + 1);
-        d3_buffer_read_words(&plot_file->buffer, ptitle, 18);
-        ptitle[18 * plot_file->buffer.word_size] = '\0';
-
-        free(ptitle);
-
-        i++;
-      }
-    } else if (ntype == 90000) {
-      plot_file->header.head = malloc(18 * plot_file->buffer.word_size + 1);
-      d3_buffer_read_words(&plot_file->buffer, plot_file->header.head, 18);
-      plot_file->header.head[18 * plot_file->buffer.word_size] = '\0';
-
-    } else if (ntype == 90002) {
-      d3_word numcon = 0;
-      d3_buffer_read_words(&plot_file->buffer, &numcon, 1);
-
-      size_t i = 0;
-      while (i < numcon) {
-        d3_word idc = 0;
-        d3_buffer_read_words(&plot_file->buffer, &idc, 1);
-
-        char *ctitle = malloc(18 * plot_file->buffer.word_size);
-        d3_buffer_read_words(&plot_file->buffer, ctitle, 18);
-        ctitle[18 * plot_file->buffer.word_size] = '\0';
-
-        free(ctitle);
-
-        i++;
-      }
-    } else if (ntype == 900100) {
-      d3_word nline = 0;
-      d3_buffer_read_words(&plot_file->buffer, &nline, 1);
-
-      size_t i = 0;
-      while (i < nline) {
-        char *keyword = malloc(20 * plot_file->buffer.word_size + 1);
-        d3_buffer_read_words(&plot_file->buffer, keyword, 20);
-        keyword[20 * plot_file->buffer.word_size] = '\0';
-
-        free(keyword);
-
-        i++;
-      }
-    } else {
-      double eof_marker;
-      if (plot_file->buffer.word_size == 4) {
-        float eof_marker32;
-        memcpy(&eof_marker32, &ntype, plot_file->buffer.word_size);
-        eof_marker = eof_marker32;
-      } else {
-        memcpy(&eof_marker, &ntype, plot_file->buffer.word_size);
-      }
-
-      if (eof_marker != D3_EOF) {
-        plot_file->error_string = malloc(70);
-        sprintf(plot_file->error_string,
-                "Here (%d) should be the EOF marker (%f != %f)\n",
-                plot_file->buffer.cur_word - 1, eof_marker, D3_EOF);
-        return 0;
-      }
-
-      break;
-    }
-  }
-
-  return 1;
-}
-
-int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
-  if (CDATAP.narbs == 0) {
-    CDATAP.numrbs = 0;
-
-    return 1;
-  }
-
-  int64_t nsort;
-  d3_word nsrh = 0, nsrb = 0, nsrs = 0, nsrt = 0, nsortd = 0, nsrhd = 0,
-          nsrbd = 0, nsrsd = 0, nsrtd = 0,
-          nmmat = plot_file->control_data.nmmat;
-  if (plot_file->buffer.word_size == 4) {
-    int32_t nsort32;
-    d3_buffer_read_words(&plot_file->buffer, &nsort32, 1);
-    nsort = nsort32;
-  } else {
-    d3_buffer_read_words(&plot_file->buffer, &nsort, 1);
-  }
-  d3_buffer_read_words(&plot_file->buffer, &nsrh, 1);
-  d3_buffer_read_words(&plot_file->buffer, &nsrb, 1);
-  d3_buffer_read_words(&plot_file->buffer, &nsrs, 1);
-  d3_buffer_read_words(&plot_file->buffer, &nsrt, 1);
-  d3_buffer_read_words(&plot_file->buffer, &nsortd, 1);
-  d3_buffer_read_words(&plot_file->buffer, &nsrhd, 1);
-  d3_buffer_read_words(&plot_file->buffer, &nsrbd, 1);
-  d3_buffer_read_words(&plot_file->buffer, &nsrsd, 1);
-  d3_buffer_read_words(&plot_file->buffer, &nsrtd, 1);
-
-  if (nsort < 0) {
-    d3_word nsrma = 0, nsrmu = 0, nsrmp = 0, nsrtm = 0;
-
-    d3_buffer_read_words(&plot_file->buffer, &nsrma, 1);
-    d3_buffer_read_words(&plot_file->buffer, &nsrmu, 1);
-    d3_buffer_read_words(&plot_file->buffer, &nsrmp, 1);
-    d3_buffer_read_words(&plot_file->buffer, &nsrtm, 1);
-    d3_buffer_read_words(&plot_file->buffer, &CDATAP.numrbs, 1);
-    d3_buffer_read_words(&plot_file->buffer, &nmmat, 1);
-  } else {
-    CDATAP.numrbs = 0;
-
-    plot_file->error_string = malloc(39 + 20);
-    sprintf(plot_file->error_string, "Non negative nsort (%d) is not supported",
-            nsort);
-    return 0;
-  }
-
-  uint8_t *nusern, *nuserh, *nuserb, *nusers, *nusert, *norder, *nsrmu_a,
-      *nsrmp_a;
-
-  nusern = malloc(nsortd * plot_file->buffer.word_size);
-  nuserh = malloc(nsrhd * plot_file->buffer.word_size);
-  nuserb = malloc(nsrbd * plot_file->buffer.word_size);
-  nusers = malloc(nsrsd * plot_file->buffer.word_size);
-  nusert = malloc(nsrtd * plot_file->buffer.word_size);
-  norder = malloc(nmmat * plot_file->buffer.word_size);
-  nsrmu_a = malloc(nmmat * plot_file->buffer.word_size);
-  nsrmp_a = malloc(nmmat * plot_file->buffer.word_size);
-
-  d3_buffer_read_words(&plot_file->buffer, nusern, nsortd);
-  d3_buffer_read_words(&plot_file->buffer, nuserh, nsrhd);
-  d3_buffer_read_words(&plot_file->buffer, nuserb, nsrbd);
-  d3_buffer_read_words(&plot_file->buffer, nusers, nsrsd);
-  d3_buffer_read_words(&plot_file->buffer, nusert, nsrtd);
-  d3_buffer_read_words(&plot_file->buffer, norder, nmmat);
-  d3_buffer_read_words(&plot_file->buffer, nsrmu_a, nmmat);
-  d3_buffer_read_words(&plot_file->buffer, nsrmp_a, nmmat);
-
-  size_t i = 0;
-  size_t offset = 0;
-  while (i < 5) {
-    d3_word nid = 0;
-    memcpy(&nid, &nusern[offset], plot_file->buffer.word_size);
-    offset += plot_file->buffer.word_size;
-
-    printf("NODE ID %d: %d\n", i, nid);
-
-    i++;
-  }
-
-  free(nusern);
-  free(nuserh);
-  free(nuserb);
-  free(nusers);
-  free(nusert);
-  free(norder);
-  free(nsrmu_a);
-  free(nsrmp_a);
-
-  return 1;
-}
-
-#define READ_MAT_VALUE(num, name, variable, variable_name)                     \
-  i = 0;                                                                       \
-  while (i < CDATAP.num) {                                                     \
-    d3_buffer_read_double_word(&plot_file->buffer, &variable);                 \
-                                                                               \
-    i++;                                                                       \
-  }
-
-int _d3plot_read_state_data(d3plot_file *plot_file) {
-  const size_t state_start = plot_file->buffer.cur_word;
-
-  double time;
-  d3_buffer_read_double_word(&plot_file->buffer, &time);
-
-  if (time == D3_EOF) {
-    printf("EOF read at %d\n", plot_file->buffer.cur_word);
-    return 2;
-  }
-
-  printf("TIME: %f\n", time);
-
-  /* GLOBAL*/
-  const size_t global_start = plot_file->buffer.cur_word;
-
-  double ke, ie, te, x, y, z, mass, force;
-  d3_buffer_read_double_word(&plot_file->buffer, &ke);
-  d3_buffer_read_double_word(&plot_file->buffer, &ie);
-  d3_buffer_read_double_word(&plot_file->buffer, &te);
-  d3_buffer_read_double_word(&plot_file->buffer, &x);
-  d3_buffer_read_double_word(&plot_file->buffer, &y);
-  d3_buffer_read_double_word(&plot_file->buffer, &z);
-
-  size_t i = 0;
-  while (i < CDATAP.nummat8) {
-    d3_buffer_read_double_word(&plot_file->buffer, &ie);
-
-    i++;
-  }
-
-  READ_MAT_VALUE(nummat2, "MAT2", ie, "IE");
-  READ_MAT_VALUE(nummat4, "MAT4", ie, "IE");
-  READ_MAT_VALUE(nummatt, "MATT", ie, "IE");
-  READ_MAT_VALUE(numrbs, "RBS", ie, "IE");
-
-  READ_MAT_VALUE(nummat8, "MAT8", ke, "KE");
-  READ_MAT_VALUE(nummat2, "MAT2", ke, "KE");
-  READ_MAT_VALUE(nummat4, "MAT4", ke, "KE");
-  READ_MAT_VALUE(nummatt, "MATT", ke, "KE");
-  READ_MAT_VALUE(numrbs, "RBS", ke, "KE");
-
-  READ_MAT_VALUE(nummat8, "MAT8", x, "X");
-  READ_MAT_VALUE(nummat2, "MAT2", x, "X");
-  READ_MAT_VALUE(nummat4, "MAT4", x, "X");
-  READ_MAT_VALUE(nummatt, "MATT", x, "X");
-  READ_MAT_VALUE(numrbs, "RBS", x, "X");
-
-  READ_MAT_VALUE(nummat8, "MAT8", y, "Y");
-  READ_MAT_VALUE(nummat2, "MAT2", y, "Y");
-  READ_MAT_VALUE(nummat4, "MAT4", y, "Y");
-  READ_MAT_VALUE(nummatt, "MATT", y, "Y");
-  READ_MAT_VALUE(numrbs, "RBS", y, "Y");
-
-  READ_MAT_VALUE(nummat8, "MAT8", z, "Z");
-  READ_MAT_VALUE(nummat2, "MAT2", z, "Z");
-  READ_MAT_VALUE(nummat4, "MAT4", z, "Z");
-  READ_MAT_VALUE(nummatt, "MATT", z, "Z");
-  READ_MAT_VALUE(numrbs, "RBS", z, "Z");
-
-  READ_MAT_VALUE(nummat8, "MAT8", mass, "MASS");
-  READ_MAT_VALUE(nummat2, "MAT2", mass, "MASS");
-  READ_MAT_VALUE(nummat4, "MAT4", mass, "MASS");
-  READ_MAT_VALUE(nummatt, "MATT", mass, "MASS");
-  READ_MAT_VALUE(numrbs, "RBS", mass, "MASS");
-
-  READ_MAT_VALUE(nummat8, "MAT8", force, "FORCE");
-  READ_MAT_VALUE(nummat2, "MAT2", force, "FORCE");
-  READ_MAT_VALUE(nummat4, "MAT4", force, "FORCE");
-  READ_MAT_VALUE(nummatt, "MATT", force, "FORCE");
-  READ_MAT_VALUE(numrbs, "RBS", force, "FORCE");
-
-  /* Assume that N is one*/
-  const size_t RWN = 1;
-  size_t numrw;
-  {
-    numrw = (CDATAP.nglbv - 6 -
-             7 * (CDATAP.nummat8 + CDATAP.nummat2 + CDATAP.nummat4 +
-                  CDATAP.nummatt + CDATAP.numrbs)) /
-            RWN;
-  }
-
-  i = 0;
-  while (i < numrw) {
-    d3_buffer_read_double_word(&plot_file->buffer, &force);
-
-    i++;
-  }
-
-  if (RWN == 4) {
-    i = 0;
-    double pos[3];
-    while (i < numrw) {
-      d3_buffer_read_double_word(&plot_file->buffer, &pos[0]);
-      d3_buffer_read_double_word(&plot_file->buffer, &pos[1]);
-      d3_buffer_read_double_word(&plot_file->buffer, &pos[2]);
-
-      i++;
-    }
-  }
-
-  const size_t global_end = plot_file->buffer.cur_word;
-  const size_t global_size = global_end - global_start;
-
-  if (global_size != CDATAP.nglbv) {
-    plot_file->error_string = malloc(70);
-    sprintf(plot_file->error_string, "Size of GLOBAL is %d instead of %d",
-            global_size, CDATAP.nglbv);
-    fflush(stdout);
-    return 0;
-  }
-
-  /* NODEDATA*/
-  /**** Order of Node Data ******
-   * IT, U, Mass Scaling, V, A
-   ******************************/
-
-  printf("Read node data at 0x%x\n",
-         plot_file->buffer.cur_word * plot_file->buffer.word_size);
-
-  const size_t node_data_start = plot_file->buffer.cur_word;
-
-  size_t it = _get_nth_digit(CDATAP.it, 0);
-  size_t N = it * (it > 1);
-  if (N == 2) {
-    it = 1;
-    N = 3;
-  }
-  const size_t mass_N = _get_nth_digit(CDATAP.it, 1) == 1;
-
-  const size_t NND =
-      ((it + N + mass_N) + CDATAP.ndim * (CDATAP.iu + CDATAP.iv + CDATAP.ia)) *
-      CDATAP.numnp;
-
-  double temp[3], node_flux[3], mass_scaling, u[3], v[3], a[3];
-
-  size_t n = 0;
-  if (it > 0) {
-    while (n < CDATAP.numnp) {
-      size_t j = 0;
-      while (j < it) {
-        d3_buffer_read_double_word(&plot_file->buffer, &temp[j]);
-
-        j++;
-      }
-
-      n++;
-    }
-  }
-
-  if (N > 0) {
-    n = 0;
-    while (n < CDATAP.numnp) {
-      size_t j = 0;
-      while (j < N) {
-        d3_buffer_read_double_word(&plot_file->buffer, &node_flux[j]);
-
-        j++;
-      }
-
-      n++;
-    }
-  }
-
-  if (mass_N) {
-    n = 0;
-    while (n < CDATAP.numnp) {
-      d3_buffer_read_double_word(&plot_file->buffer, &mass_scaling);
-
-      n++;
-    }
-  }
-
-  if (CDATAP.iu) {
-    n = 0;
-    while (n < CDATAP.numnp) {
-      d3_buffer_read_vec3(&plot_file->buffer, u);
-      if (n < 5)
-        printf("NODE %d DISPLACEMENT: (%f, %f, %f)\n", n, u[0], u[1], u[2]);
-
-      n++;
-    }
-  }
-
-  if (CDATAP.iv) {
-    n = 0;
-    while (n < CDATAP.numnp) {
-      d3_buffer_read_vec3(&plot_file->buffer, v);
-      if (n < 5)
-        printf("NODE %d VELOCITY: (%f, %f, %f)\n", n, v[0], v[1], v[2]);
-
-      n++;
-    }
-  }
-
-  if (CDATAP.ia) {
-    n = 0;
-    while (n < CDATAP.numnp) {
-      d3_buffer_read_vec3(&plot_file->buffer, a);
-      if (n < 5)
-        printf("NODE %d ACCELERATION: (%f, %f, %f)\n", n, a[0], a[1], a[2]);
-
-      n++;
-    }
-  }
-
-  const size_t node_data_end = plot_file->buffer.cur_word;
-  const size_t node_data_size = node_data_end - node_data_start;
-  if (node_data_size != NND) {
-    plot_file->error_string = malloc(70);
-    sprintf(plot_file->error_string, "NODEDATA should be %d instead of %d", NND,
-            node_data_size);
-    fflush(stdout);
-    return 0;
-  }
-
-  /* THERMDATA*/
-  double nt3d;
-
-  n = 0;
-  while (n < CDATAP.nt3d) {
-    size_t e = 0;
-    while (e < CDATAP.nel8) {
-      d3_buffer_read_double_word(&plot_file->buffer, &nt3d);
-
-      e++;
-    }
-
-    n++;
-  }
-
-  /* CFDDATA is no longer output*/
-
-  /* ELEMDATA*/
-  const size_t ENN =
-      CDATAP.nel8 * CDATAP.nv3d + CDATAP.nelt * CDATAP.nv3dt +
-      CDATAP.nel2 * CDATAP.nv1d + CDATAP.nel4 * CDATAP.nv2d +
-      CDATAP.nmsph * 0; /* We don't support SMOOTH PATICLE HYDRODYNAMICS*/
-  const size_t elem_data_start = plot_file->buffer.cur_word;
-
-  size_t e = 0;
-  while (e < CDATAP.nel8) {
-    double *e_data = malloc(CDATAP.nv3d * sizeof(double));
-    if (plot_file->buffer.word_size == 4) {
-      float *e_data32 = malloc(CDATAP.nv3d * sizeof(float));
-      d3_buffer_read_words(&plot_file->buffer, e_data32, CDATAP.nv3d);
-      size_t j = 0;
-      while (j < CDATAP.nv3d) {
-        e_data[j] = e_data32[j];
-
-        j++;
-      }
-
-      free(e_data32);
-    } else {
-      d3_buffer_read_words(&plot_file->buffer, e_data, CDATAP.nv3d);
-    }
-
-    free(e_data);
-
-    e++;
-  }
-
-  e = 0;
-  while (e < CDATAP.nel2) {
-    double *e_data = malloc(CDATAP.nv1d * sizeof(double));
-    if (plot_file->buffer.word_size == 4) {
-      float *e_data32 = malloc(CDATAP.nv1d * sizeof(float));
-      d3_buffer_read_words(&plot_file->buffer, e_data32, CDATAP.nv1d);
-      size_t j = 0;
-      while (j < CDATAP.nv1d) {
-        e_data[j] = e_data32[j];
-
-        j++;
-      }
-
-      free(e_data32);
-    } else {
-      d3_buffer_read_words(&plot_file->buffer, e_data, CDATAP.nv1d);
-    }
-
-    free(e_data);
-
-    e++;
-  }
-
-  e = 0;
-  while (e < CDATAP.nel4) {
-    double *e_data = malloc(CDATAP.nv2d * sizeof(double));
-    if (plot_file->buffer.word_size == 4) {
-      float *e_data32 = malloc(CDATAP.nv2d * sizeof(float));
-      d3_buffer_read_words(&plot_file->buffer, e_data32, CDATAP.nv2d);
-      size_t j = 0;
-      while (j < CDATAP.nv2d) {
-        e_data[j] = e_data32[j];
-
-        j++;
-      }
-
-      free(e_data32);
-    } else {
-      d3_buffer_read_words(&plot_file->buffer, e_data, CDATAP.nv2d);
-    }
-
-    free(e_data);
-
-    e++;
-  }
-
-  /* Then follows who knows what -_(′_′)_-*/
-  /* But because we don't support NMSPH, we can assume that NELT follows*/
-  e = 0;
-  while (e < CDATAP.nelt) {
-    double *e_data = malloc(CDATAP.nv3dt * sizeof(double));
-    if (plot_file->buffer.word_size == 4) {
-      float *e_data32 = malloc(CDATAP.nv3dt * sizeof(float));
-      d3_buffer_read_words(&plot_file->buffer, e_data32, CDATAP.nv3dt);
-      size_t j = 0;
-      while (j < CDATAP.nv3dt) {
-        e_data[j] = e_data32[j];
-
-        j++;
-      }
-
-      free(e_data32);
-    } else {
-      d3_buffer_read_words(&plot_file->buffer, e_data, CDATAP.nv3dt);
-    }
-
-    free(e_data);
-
-    e++;
-  }
-
-  const size_t elem_data_end = plot_file->buffer.cur_word;
-  const size_t elem_data_size = elem_data_end - elem_data_start;
-  if (elem_data_size < ENN) {
-    plot_file->error_string = malloc(70);
-    sprintf(plot_file->error_string, "ELEMDATA should be %d instead of %d", ENN,
-            elem_data_size);
-    fflush(stdout);
-    return 0;
-  }
-
-  /* Element Deletion Option*/
-  size_t skip_words;
-  if (CDATAP.mdlopt == 0) {
-    skip_words = 0;
-  } else if (CDATAP.mdlopt == 1) {
-    skip_words = CDATAP.numnp;
-  } else if (CDATAP.mdlopt == 2) {
-    skip_words = CDATAP.nel8 + CDATAP.nelt + CDATAP.nel4 + CDATAP.nel2;
-  } else {
-    plot_file->error_string = malloc(50);
-    sprintf(plot_file->error_string, "The value of MDLOPT is invalid: %d",
-            CDATAP.mdlopt);
-    return 0;
-  }
-
-  if (skip_words > 0) {
-    d3_buffer_skip_words(&plot_file->buffer, skip_words);
-  }
-
-  const size_t state_end = plot_file->buffer.cur_word;
-  const size_t state_size =
-      (state_end - state_start) * plot_file->buffer.word_size;
-
-  fflush(stdout);
-
-  return 1;
 }
 
 const char *_d3plot_get_file_type_name(d3_word file_type) {
