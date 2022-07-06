@@ -58,8 +58,6 @@ d3plot_file d3plot_open(const char *root_file_name) {
 
   READ_CONTROL_DATA_PLOT_FILE_WORD(run_time);
 
-  printf("Runtime: %d\n", CDATA.run_time);
-
   READ_CONTROL_DATA_WORD(file_type);
   if (file_type > 1000) {
     file_type -= 1000;
@@ -399,6 +397,9 @@ int _d3plot_read_geometry_data(d3plot_file *plot_file) {
   size_t i = 0;
   while (i < CDATAP.numnp) {
     d3_buffer_read_vec3(&plot_file->buffer, vec);
+
+    if (i < 5)
+      printf("NODE COORDS %d: (%f, %f, %f)\n", i, vec[0], vec[1], vec[2]);
 
     i++;
   }
@@ -823,23 +824,12 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
 
   size_t i = 0;
   size_t offset = 0;
-  while (i < nsortd) {
+  while (i < 5) {
     d3_word nid = 0;
     memcpy(&nid, &nusern[offset], plot_file->buffer.word_size);
     offset += plot_file->buffer.word_size;
 
-    i++;
-  }
-
-  i = 0;
-  while (i < nmmat) {
-    d3_word value[3];
-    memcpy(&value[0], &norder[i * plot_file->buffer.word_size],
-           plot_file->buffer.word_size);
-    memcpy(&value[1], &nsrmu_a[i * plot_file->buffer.word_size],
-           plot_file->buffer.word_size);
-    memcpy(&value[2], &nsrmp_a[i * plot_file->buffer.word_size],
-           plot_file->buffer.word_size);
+    printf("NODE ID %d: %d\n", i, nid);
 
     i++;
   }
@@ -860,7 +850,6 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
   i = 0;                                                                       \
   while (i < CDATAP.num) {                                                     \
     d3_buffer_read_double_word(&plot_file->buffer, &variable);                 \
-    printf(name " %d " variable_name ": %f\n", i, variable);                   \
                                                                                \
     i++;                                                                       \
   }
@@ -888,12 +877,10 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   d3_buffer_read_double_word(&plot_file->buffer, &x);
   d3_buffer_read_double_word(&plot_file->buffer, &y);
   d3_buffer_read_double_word(&plot_file->buffer, &z);
-  printf("KE: %f\nIE: %f\nTE: %f\nX: %f\nY: %f\nZ: %f\n", ke, ie, te, x, y, z);
 
   size_t i = 0;
   while (i < CDATAP.nummat8) {
     d3_buffer_read_double_word(&plot_file->buffer, &ie);
-    printf("MAT8 %d IE: %f\n", i, ie);
 
     i++;
   }
@@ -948,12 +935,10 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
                   CDATAP.nummatt + CDATAP.numrbs)) /
             RWN;
   }
-  printf("NUMRW: %d\n", numrw);
 
   i = 0;
   while (i < numrw) {
     d3_buffer_read_double_word(&plot_file->buffer, &force);
-    printf("RW_FORCE %d: %f\n", i, force);
 
     i++;
   }
@@ -965,8 +950,6 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
       d3_buffer_read_double_word(&plot_file->buffer, &pos[0]);
       d3_buffer_read_double_word(&plot_file->buffer, &pos[1]);
       d3_buffer_read_double_word(&plot_file->buffer, &pos[2]);
-
-      printf("RW_POS %d: (%f, %f, %f)\n", i, pos[0], pos[1], pos[2]);
 
       i++;
     }
@@ -1017,12 +1000,6 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
         j++;
       }
 
-      if (it == 1) {
-        printf("TEMP: %f\n", temp[0]);
-      } else if (it == 3) {
-        printf("TEMP: (%f, %f, %f)\n", temp[0], temp[1], temp[2]);
-      }
-
       n++;
     }
   }
@@ -1037,8 +1014,6 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
         j++;
       }
 
-      printf("FLUX: (%f, %f, %f)\n", node_flux[0], node_flux[1], node_flux[2]);
-
       n++;
     }
   }
@@ -1048,8 +1023,6 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
     while (n < CDATAP.numnp) {
       d3_buffer_read_double_word(&plot_file->buffer, &mass_scaling);
 
-      printf("MASS SCALING: %f\n", mass_scaling);
-
       n++;
     }
   }
@@ -1058,7 +1031,8 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
     n = 0;
     while (n < CDATAP.numnp) {
       d3_buffer_read_vec3(&plot_file->buffer, u);
-      printf("NODE %d DISPLACEMENT: (%f, %f, %f)\n", n, u[0], u[1], u[2]);
+      if (n < 5)
+        printf("NODE %d DISPLACEMENT: (%f, %f, %f)\n", n, u[0], u[1], u[2]);
 
       n++;
     }
@@ -1068,7 +1042,8 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
     n = 0;
     while (n < CDATAP.numnp) {
       d3_buffer_read_vec3(&plot_file->buffer, v);
-      printf("NODE %d VELOCITY: (%f, %f, %f)\n", n, v[0], v[1], v[2]);
+      if (n < 5)
+        printf("NODE %d VELOCITY: (%f, %f, %f)\n", n, v[0], v[1], v[2]);
 
       n++;
     }
@@ -1078,7 +1053,8 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
     n = 0;
     while (n < CDATAP.numnp) {
       d3_buffer_read_vec3(&plot_file->buffer, a);
-      printf("NODE %d ACCELERATION: (%f, %f, %f)\n", n, a[0], a[1], a[2]);
+      if (n < 5)
+        printf("NODE %d ACCELERATION: (%f, %f, %f)\n", n, a[0], a[1], a[2]);
 
       n++;
     }
@@ -1102,7 +1078,6 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
     size_t e = 0;
     while (e < CDATAP.nel8) {
       d3_buffer_read_double_word(&plot_file->buffer, &nt3d);
-      printf("NT3D %d: EL8 %d: %f\n", n, e, nt3d);
 
       e++;
     }
@@ -1137,15 +1112,6 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
       d3_buffer_read_words(&plot_file->buffer, e_data, CDATAP.nv3d);
     }
 
-    printf("EL8 %d: (", e);
-    size_t j = 0;
-    while (j < CDATAP.nv3d) {
-      printf("%f, ", e_data[j]);
-
-      j++;
-    }
-    printf(")\n");
-
     free(e_data);
 
     e++;
@@ -1169,15 +1135,6 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
       d3_buffer_read_words(&plot_file->buffer, e_data, CDATAP.nv1d);
     }
 
-    printf("EL2 %d: (", e);
-    size_t j = 0;
-    while (j < CDATAP.nv1d) {
-      printf("%f, ", e_data[j]);
-
-      j++;
-    }
-    printf(")\n");
-
     free(e_data);
 
     e++;
@@ -1200,15 +1157,6 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
     } else {
       d3_buffer_read_words(&plot_file->buffer, e_data, CDATAP.nv2d);
     }
-
-    printf("EL4 %d: (", e);
-    size_t j = 0;
-    while (j < CDATAP.nv2d) {
-      printf("%f, ", e_data[j]);
-
-      j++;
-    }
-    printf(")\n");
 
     free(e_data);
 
@@ -1234,15 +1182,6 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
     } else {
       d3_buffer_read_words(&plot_file->buffer, e_data, CDATAP.nv3dt);
     }
-
-    printf("ELT %d: (", e);
-    size_t j = 0;
-    while (j < CDATAP.nv3dt) {
-      printf("%f, ", e_data[j]);
-
-      j++;
-    }
-    printf(")\n");
 
     free(e_data);
 
@@ -1281,7 +1220,6 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   const size_t state_end = plot_file->buffer.cur_word;
   const size_t state_size =
       (state_end - state_start) * plot_file->buffer.word_size;
-  printf("STATE SIZE: %d\n", state_size);
 
   fflush(stdout);
 
