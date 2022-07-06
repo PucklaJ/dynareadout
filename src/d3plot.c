@@ -40,7 +40,6 @@ d3plot_file d3plot_open(const char *root_file_name) {
   CDA.title = NULL;
   plot_file.error_string = NULL;
   plot_file.data_pointers = NULL;
-  plot_file.header.head = NULL;
   plot_file.num_states = 0;
 
   plot_file.buffer = d3_buffer_open(root_file_name);
@@ -370,12 +369,10 @@ void d3plot_close(d3plot_file *plot_file) {
   d3_buffer_close(&plot_file->buffer);
 
   free(plot_file->control_data.title);
-  free(plot_file->header.head);
   free(plot_file->data_pointers);
   free(plot_file->error_string);
 
   plot_file->control_data.title = NULL;
-  plot_file->header.head = NULL;
   plot_file->num_states = 0;
 }
 
