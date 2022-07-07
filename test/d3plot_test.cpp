@@ -90,8 +90,7 @@ TEST_CASE("d3plot") {
   free(node_ids);
 
   size_t num_elements;
-  d3_word *element_ids =
-      d3plot_read_all_element_ids(&plot_file, &num_elements, 1);
+  d3_word *element_ids = d3plot_read_all_element_ids(&plot_file, &num_elements);
 
   REQUIRE(num_elements == 133456);
   CHECK(element_ids[0] == 1);
@@ -165,4 +164,52 @@ TEST_CASE("_get_nth_digit") {
   CHECK(_get_nth_digit(value1, 2) == 0);
   CHECK(_get_nth_digit(value1, 3) == 0);
   CHECK(_get_nth_digit(value1, 4) == 0);
+}
+
+TEST_CASE("_insert_sorted") {
+  {
+    const d3_word dst[7] = {1, 2, 3, 10, 11, 12, 13};
+    const d3_word src[6] = {4, 5, 6, 7, 8, 9};
+    d3_word *_dst = (d3_word *)malloc(7 * sizeof(d3_word));
+    memcpy(_dst, dst, sizeof(dst));
+
+    _dst = _insert_sorted(_dst, 7, src, 6);
+    size_t i = 1;
+    while (i <= 13) {
+      CHECK(_dst[i - 1] == i);
+      i++;
+    }
+
+    free(_dst);
+  }
+  {
+    const d3_word dst[4] = {10, 11, 12, 13};
+    const d3_word src[6] = {4, 5, 6, 7, 8, 9};
+    d3_word *_dst = (d3_word *)malloc(4 * sizeof(d3_word));
+    memcpy(_dst, dst, sizeof(dst));
+
+    _dst = _insert_sorted(_dst, 4, src, 6);
+    size_t i = 4;
+    while (i <= 13) {
+      CHECK(_dst[i - 4] == i);
+      i++;
+    }
+
+    free(_dst);
+  }
+  {
+    const d3_word dst[6] = {4, 5, 6, 7, 8, 9};
+    const d3_word src[4] = {10, 11, 12, 13};
+    d3_word *_dst = (d3_word *)malloc(6 * sizeof(d3_word));
+    memcpy(_dst, dst, sizeof(dst));
+
+    _dst = _insert_sorted(_dst, 6, src, 4);
+    size_t i = 4;
+    while (i <= 13) {
+      CHECK(_dst[i - 4] == i);
+      i++;
+    }
+
+    free(_dst);
+  }
 }
