@@ -404,54 +404,39 @@ d3_word *d3plot_read_solid_shell_element_ids(d3plot_file *plot_file,
                           plot_file->control_data.nel48);
 }
 
-d3_word *d3plot_read_all_element_ids(d3plot_file *plot_file, size_t *num_ids,
-                                     int sort) {
+d3_word *d3plot_read_all_element_ids(d3plot_file *plot_file, size_t *num_ids) {
   d3_word *all_ids = NULL;
   *num_ids = 0;
-  size_t offset = 0;
 
   size_t num_ids_buffer;
   d3_word *ids_buffer =
       d3plot_read_solid_element_ids(plot_file, &num_ids_buffer);
   if (num_ids_buffer > 0) {
+    all_ids = _insert_sorted(all_ids, *num_ids, ids_buffer, num_ids_buffer);
     *num_ids += num_ids_buffer;
-    all_ids = realloc(all_ids, *num_ids * sizeof(d3_word));
-    memcpy(&all_ids[offset], ids_buffer, num_ids_buffer * sizeof(d3_word));
-    offset += num_ids_buffer;
     free(ids_buffer);
   }
 
   ids_buffer = d3plot_read_beam_element_ids(plot_file, &num_ids_buffer);
   if (num_ids_buffer > 0) {
+    all_ids = _insert_sorted(all_ids, *num_ids, ids_buffer, num_ids_buffer);
     *num_ids += num_ids_buffer;
-    all_ids = realloc(all_ids, *num_ids * sizeof(d3_word));
-    memcpy(&all_ids[offset], ids_buffer, num_ids_buffer * sizeof(d3_word));
-    offset += num_ids_buffer;
     free(ids_buffer);
   }
 
   ids_buffer = d3plot_read_shell_element_ids(plot_file, &num_ids_buffer);
   if (num_ids_buffer > 0) {
+    all_ids = _insert_sorted(all_ids, *num_ids, ids_buffer, num_ids_buffer);
     *num_ids += num_ids_buffer;
-    all_ids = realloc(all_ids, *num_ids * sizeof(d3_word));
-    memcpy(&all_ids[offset], ids_buffer, num_ids_buffer * sizeof(d3_word));
-    offset += num_ids_buffer;
     free(ids_buffer);
   }
 
   ids_buffer = d3plot_read_solid_shell_element_ids(plot_file, &num_ids_buffer);
   if (num_ids_buffer > 0) {
+    all_ids = _insert_sorted(all_ids, *num_ids, ids_buffer, num_ids_buffer);
     *num_ids += num_ids_buffer;
-    all_ids = realloc(all_ids, *num_ids * sizeof(d3_word));
-    memcpy(&all_ids[offset], ids_buffer, num_ids_buffer * sizeof(d3_word));
-    offset += num_ids_buffer;
     free(ids_buffer);
   }
-
-  /* TODO: We can take advantage of the fact that the ids are already sorted and
-   * so achieve much higher performance */
-  if (sort)
-    _quick_sort(all_ids, 0, *num_ids - 1);
 
   return all_ids;
 }
@@ -626,27 +611,39 @@ d3_word *_d3plot_read_ids(d3plot_file *plot_file, size_t *num_ids,
   lhs = rhs;                                                                   \
   rhs = temp
 
-int _partition(d3_word *arr, int64_t low, int64_t high) {
-  const d3_word pivot = arr[high];
-  int64_t i = low - 1;
+d3_word *_insert_sorted(d3_word *dst, size_t dst_size, const d3_word *src,
+                        size_t src_size) {
+  if (!dst) {
+    dst = malloc(src_size * sizeof(d3_word));
+    memcpy(dst, src, src_size * sizeof(d3_word));
+    return dst;
+  }
 
-  int64_t j = low;
-  while (j <= high - 1) {
-    if (arr[j] < pivot) {
+  const size_t dst_min = dst[0];
+  const size_t dst_max = dst[dst_size - 1];
+  const size_t src_min = src[0];
+  const size_t src_max = src[src_size - 1];
+
+  dst = realloc(dst, (dst_size + src_size) * sizeof(d3_word));
+
+  if (src_max <= dst_min) {
+    /* Insert before dst*/
+    memcpy(&dst[src_size], dst, dst_size * sizeof(d3_word));
+    memcpy(dst, src, src_size * sizeof(d3_word));
+  } else if (src_min >= dst_max) {
+    /* Insert after dst*/
+    memcpy(&dst[dst_size], src, src_size * sizeof(d3_word));
+  } else {
+    /* Insert inside dst*/
+    size_t i = 0;
+    while (i < dst_size && !(dst[i] < src_min && dst[i + 1] > src_min)) {
       i++;
-      SWAP(arr[i], arr[j]);
     }
-    j++;
-  }
-  SWAP(arr[i + 1], arr[high]);
-  return (i + 1);
-}
+    i++;
 
-void _quick_sort(d3_word *arr, int64_t low, int64_t high) {
-  if (low < high) {
-    const int pi = _partition(arr, low, high);
-
-    _quick_sort(arr, low, pi - 1);
-    _quick_sort(arr, pi + 1, high);
+    memcpy(&dst[i + src_size], &dst[i], (dst_size - i) * sizeof(d3_word));
+    memcpy(&dst[i], src, src_size * sizeof(d3_word));
   }
+
+  return dst;
 }

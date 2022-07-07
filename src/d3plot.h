@@ -76,8 +76,7 @@ d3_word *d3plot_read_shell_element_ids(d3plot_file *plot_file, size_t *num_ids);
 d3_word *d3plot_read_solid_shell_element_ids(d3plot_file *plot_file,
                                              size_t *num_ids);
 /* sort .... wether to sort the resulting ids in ascending order*/
-d3_word *d3plot_read_all_element_ids(d3plot_file *plot_file, size_t *num_ids,
-                                     int sort);
+d3_word *d3plot_read_all_element_ids(d3plot_file *plot_file, size_t *num_ids);
 /* Returns an array containing all axes of all nodes at a given state. See:
  * XYZXYZXYZXYZ...*/
 double *d3plot_read_node_coordinates(d3plot_file *plot_file, size_t state,
@@ -103,8 +102,8 @@ double *_d3plot_read_node_data(d3plot_file *plot_file, size_t state,
                                size_t *num_nodes, size_t data_type);
 d3_word *_d3plot_read_ids(d3plot_file *plot_file, size_t *num_ids,
                           size_t data_type, size_t num_ids_value);
-int _partition(d3_word *arr, int64_t low, int64_t high);
-void _quick_sort(d3_word *arr, int64_t low, int64_t high);
+d3_word *_insert_sorted(d3_word *dst, size_t dst_size, const d3_word *src,
+                        size_t src_size);
 
 #ifdef __cplusplus
 }
