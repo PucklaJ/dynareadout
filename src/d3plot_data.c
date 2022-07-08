@@ -70,8 +70,8 @@ int _d3plot_read_geometry_data(d3plot_file *plot_file) {
   }
 
   if (CDP.nel2 > 0) {
+    DT_PTR_SET(D3PLT_PTR_EL2_CONNECT);
     d3_buffer_skip_words(&plot_file->buffer, 6 * CDP.nel2);
-    /* TODO: read function for nel2 data*/
   }
 
   if (CDP.nel4 > 0) {

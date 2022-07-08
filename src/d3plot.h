@@ -36,7 +36,8 @@
 #define D3PLT_PTR_EL48_IDS (D3PLT_PTR_EL4_IDS + 1)
 #define D3PLT_PTR_EL8_CONNECT (D3PLT_PTR_EL48_IDS + 1)
 #define D3PLT_PTR_ELT_CONNECT (D3PLT_PTR_EL8_CONNECT + 1)
-#define D3PLT_PTR_STATE_TIME (D3PLT_PTR_ELT_CONNECT + 1)
+#define D3PLT_PTR_EL2_CONNECT (D3PLT_PTR_ELT_CONNECT + 1)
+#define D3PLT_PTR_STATE_TIME (D3PLT_PTR_EL2_CONNECT + 1)
 #define D3PLT_PTR_STATE_NODE_COORDS (D3PLT_PTR_STATE_TIME + 1)
 #define D3PLT_PTR_STATE_NODE_VEL (D3PLT_PTR_STATE_NODE_COORDS + 1)
 #define D3PLT_PTR_STATE_NODE_ACC (D3PLT_PTR_STATE_NODE_VEL + 1)
@@ -96,6 +97,10 @@ d3plot_solid *d3plot_read_solid_elements(d3plot_file *plot_file,
  * elements. The return value needs to be deallocated by free*/
 d3plot_thick_shell *d3plot_read_thick_shell_elements(d3plot_file *plot_file,
                                                      size_t *num_thick_shells);
+/* Returns the node connectivity + orientation node + material number of all
+ * beam elements. The return value needs to be deallocated by free*/
+d3plot_beam *d3plot_read_beam_elements(d3plot_file *plot_file,
+                                       size_t *num_beams);
 
 /***** Data sections *******/
 int _d3plot_read_geometry_data(d3plot_file *plot_file);

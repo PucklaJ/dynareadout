@@ -185,6 +185,9 @@ TEST_CASE("d3plot") {
       d3plot_read_thick_shell_elements(&plot_file, &num_elements);
   REQUIRE(num_elements == 0);
 
+  d3plot_beam *beams = d3plot_read_beam_elements(&plot_file, &num_elements);
+  REQUIRE(num_elements == 0);
+
   d3plot_close(&plot_file);
 }
 
