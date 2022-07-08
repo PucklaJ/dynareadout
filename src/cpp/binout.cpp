@@ -39,6 +39,8 @@ Binout::Binout(const std::filesystem::path &file_name) {
   m_handle = binout_open(file_name.string().c_str());
   char *open_error = binout_open_error(&m_handle);
   if (open_error) {
+    // Call binout_close since the destructor is not getting called
+    binout_close(&m_handle);
     throw Exception(String(open_error, strlen(open_error) + 1));
   }
 }

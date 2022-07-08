@@ -245,6 +245,15 @@ TEST_CASE("Array") {
 
     CHECK(std::find(v1.begin(), v1.end(), 5) != v1.end());
     CHECK(std::find(v1.begin(), v1.end(), 6) == v1.end());
+
+    for (auto &i : v1) {
+      i += 5;
+    }
+    CHECK(v1[0] == 6);
+    CHECK(v1[1] == 7);
+    CHECK(v1[2] == 8);
+    CHECK(v1[3] == 9);
+    CHECK(v1[4] == 10);
   }
 }
 #endif

@@ -36,7 +36,18 @@ if get_config("build_cpp") then
         add_deps("binout")
         add_includedirs("src")
         add_files("src/cpp/binout*.cpp")
-        add_headerfiles("src/cpp/binout*.hpp", "src/cpp/vector.hpp")
+        add_headerfiles("src/cpp/binout*.hpp", "src/cpp/array.hpp", "src/cpp/vec.hpp")
+        if is_kind("shared") then
+            add_rules("utils.symbols.export_all", {export_classes = true})
+        end
+
+    target("d3plot_cpp")
+        set_kind("$(kind)")
+        set_languages("cxx17")
+        add_deps("d3plot")
+        add_includedirs("src")
+        add_files("src/cpp/d3*.cpp")
+        add_headerfiles("src/cpp/d3*.hpp", "src/cpp/array.hpp")
         if is_kind("shared") then
             add_rules("utils.symbols.export_all", {export_classes = true})
         end
@@ -62,6 +73,11 @@ if get_config("build_test") then
         set_kind("binary")
         set_languages("cxx17")
         add_deps("d3plot")
+        if get_config("build_cpp") then
+            add_deps("d3plot_cpp")
+            add_defines("D3PLOT_CPP")
+            add_includedirs("src/cpp")
+        end
         add_packages("doctest")
         add_includedirs("src")
         add_files("test/d3plot_test.cpp")

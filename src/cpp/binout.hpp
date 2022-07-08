@@ -55,7 +55,7 @@ public:
     const char *what() const noexcept override;
 
   private:
-    String m_error_str;
+    const String m_error_str;
   };
 
   Binout(const std::filesystem::path &file_name);

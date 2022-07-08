@@ -35,7 +35,7 @@ namespace dro {
 
 template <typename T> class Array {
 public:
-  class Iterator {
+  class ConstIterator {
   public:
     using iterator_category = std::input_iterator_tag;
     using difference_type = std::ptrdiff_t;
@@ -43,31 +43,43 @@ public:
     using pointer = T *;   // or also value_type*
     using reference = T &; // or also value_type&
 
-    explicit Iterator(pointer data, difference_type index) noexcept
+    explicit ConstIterator(pointer data, difference_type index) noexcept
         : m_data(data), m_index(index) {}
-    Iterator operator++() noexcept {
+    ConstIterator operator++() noexcept {
       m_index++;
       return *this;
     }
-    Iterator operator++(int) noexcept {
+    ConstIterator operator++(int) noexcept {
       auto rv = *this;
       ++(*this);
       return rv;
     }
-    bool operator==(const Iterator &rhs) const noexcept {
+    bool operator==(const ConstIterator &rhs) const noexcept {
       return m_index == rhs.m_index;
     }
-    bool operator!=(const Iterator &rhs) const noexcept {
+    bool operator!=(const ConstIterator &rhs) const noexcept {
       return m_index != rhs.m_index;
     }
-    reference operator*() { return m_data[m_index]; }
     const reference operator*() const { return m_data[m_index]; }
-    pointer operator->() { return &m_data[m_index]; }
     const pointer operator->() const { return &m_data[m_index]; }
 
-  private:
+  public:
     pointer m_data;
     difference_type m_index;
+  };
+
+  class Iterator : public ConstIterator {
+  public:
+    Iterator(typename ConstIterator::pointer data,
+             typename ConstIterator::difference_type index) noexcept
+        : ConstIterator(data, index) {}
+
+    typename ConstIterator::reference operator*() {
+      return ConstIterator::m_data[ConstIterator::m_index];
+    }
+    typename ConstIterator::pointer operator->() {
+      return &ConstIterator::m_data[ConstIterator::m_index];
+    }
   };
 
   Array(T *data, size_t size, bool delete_data = true) noexcept;
@@ -81,11 +93,14 @@ public:
   T *data() noexcept { return m_data; }
   const T *data() const noexcept { return m_data; }
   size_t size() const noexcept { return m_size; }
+  bool empty() const noexcept { return m_size == 0; }
 
   std::string str() const noexcept;
 
   Iterator begin() noexcept { return Iterator(m_data, 0); }
   Iterator end() noexcept { return Iterator(m_data, m_size); }
+  ConstIterator begin() const noexcept { return ConstIterator(m_data, 0); }
+  ConstIterator end() const noexcept { return ConstIterator(m_data, m_size); }
 
 private:
   T *m_data;

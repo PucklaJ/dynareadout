@@ -27,6 +27,9 @@
 #define DOCTEST_CONFIG_TREAT_CHAR_STAR_AS_STRING
 #include <d3plot.h>
 #include <doctest/doctest.h>
+#ifdef D3PLOT_CPP
+#include <d3plot.hpp>
+#endif
 
 #define CHECK_APPROX(lhs, rhs) CHECK_LT(fabs(lhs - rhs), 10e-6)
 
@@ -225,6 +228,162 @@ TEST_CASE("d3plot") {
 
   d3plot_close(&plot_file);
 }
+
+#ifdef D3PLOT_CPP
+TEST_CASE("d3plot C++") {
+  try {
+    dro::D3plot plot_file("i_dont_exist");
+    FAIL("No exception was thrown");
+  } catch (const dro::D3plot::Exception &e) {
+    CHECK(strlen(e.what()) > 0);
+  }
+
+  dro::D3plot plot_file("test_data/d3plot");
+
+  REQUIRE(plot_file.num_time_steps() == 102);
+
+  {
+    const auto node_ids(plot_file.read_node_ids());
+
+    REQUIRE(node_ids.size() == 114893);
+    CHECK(node_ids[59530] == 84285019);
+    CHECK(node_ids[0] == 10);
+    CHECK(node_ids[114892] == 84340381);
+    CHECK(node_ids[2458] == 2852);
+  }
+
+  {
+    const auto element_ids(plot_file.read_all_element_ids());
+
+    REQUIRE(element_ids.size() == 133456);
+    CHECK(element_ids[0] == 1);
+    CHECK(element_ids[1] == 2);
+    CHECK(element_ids[2] == 3);
+    CHECK(element_ids[3] == 4);
+    CHECK(element_ids[133318] == 72044862);
+  }
+
+  CHECK_APPROX(plot_file.read_time(0), 0.0);
+  CHECK_APPROX(plot_file.read_time(1), 0.0999492854);
+  CHECK_APPROX(plot_file.read_time(2), 0.1998985708);
+  CHECK_APPROX(plot_file.read_time(3), 0.2998797894);
+  CHECK_APPROX(plot_file.read_time(4), 0.399907);
+  CHECK_APPROX(plot_file.read_time(5), 0.499967);
+  CHECK_APPROX(plot_file.read_time(6), 0.599917);
+  CHECK_APPROX(plot_file.read_time(7), 0.699972);
+  CHECK_APPROX(plot_file.read_time(8), 0.799929);
+  CHECK_APPROX(plot_file.read_time(9), 0.899985);
+  CHECK_APPROX(plot_file.read_time(10), 0.999915);
+  CHECK_APPROX(plot_file.read_time(11), 1.099944);
+  CHECK_APPROX(plot_file.read_time(12), 1.199965);
+  CHECK_APPROX(plot_file.read_time(13), 1.299985);
+  CHECK_APPROX(plot_file.read_time(14), 1.399986);
+  CHECK_APPROX(plot_file.read_time(15), 1.499983);
+  CHECK_APPROX(plot_file.read_time(16), 1.599941);
+  CHECK_APPROX(plot_file.read_time(17), 1.699989);
+  CHECK_APPROX(plot_file.read_time(18), 1.799880);
+  CHECK_APPROX(plot_file.read_time(19), 1.899986);
+
+  {
+    const auto node_data(plot_file.read_node_coordinates(0));
+    REQUIRE(node_data.size() == 114893);
+    CHECK_APPROX(node_data[0][0], 0.031293001);
+    CHECK_APPROX(node_data[0][1], -0.075000003);
+    CHECK_APPROX(node_data[0][2], 69.1887664795);
+  }
+
+  {
+    const auto node_data(plot_file.read_node_velocity(0));
+    REQUIRE(node_data.size() == 114893);
+    CHECK_APPROX(node_data[0][0], 0.0);
+    CHECK_APPROX(node_data[0][1], 0.0);
+    CHECK_APPROX(node_data[0][2], 0.0);
+  }
+
+  {
+    const auto node_data(plot_file.read_node_acceleration(0));
+    REQUIRE(node_data.size() == 114893);
+    CHECK_APPROX(node_data[0][0], 0.0);
+    CHECK_APPROX(node_data[0][1], 0.0);
+    CHECK_APPROX(node_data[0][2], 0.0);
+  }
+
+  {
+    const auto solids(plot_file.read_solid_elements());
+    REQUIRE(solids.size() == 45000);
+
+    CHECK(solids[43988].node_ids[0] == 32229);
+    CHECK(solids[43988].node_ids[1] == 32230);
+    CHECK(solids[43988].node_ids[2] == 32306);
+    CHECK(solids[43988].node_ids[3] == 32305);
+    CHECK(solids[43988].node_ids[4] == 33065);
+    CHECK(solids[43988].node_ids[5] == 33066);
+    CHECK(solids[43988].node_ids[6] == 33142);
+    CHECK(solids[43988].node_ids[7] == 33141);
+
+    CHECK(solids[44086].node_ids[0] == 32328);
+    CHECK(solids[44086].node_ids[1] == 32329);
+    CHECK(solids[44086].node_ids[2] == 32405);
+    CHECK(solids[44086].node_ids[3] == 32404);
+    CHECK(solids[44086].node_ids[4] == 33164);
+    CHECK(solids[44086].node_ids[5] == 33165);
+    CHECK(solids[44086].node_ids[6] == 33241);
+    CHECK(solids[44086].node_ids[7] == 33240);
+
+    CHECK(solids[43985].node_ids[0] == 32226);
+    CHECK(solids[43985].node_ids[1] == 32227);
+    CHECK(solids[43985].node_ids[2] == 32303);
+    CHECK(solids[43985].node_ids[3] == 32302);
+    CHECK(solids[43985].node_ids[4] == 33062);
+    CHECK(solids[43985].node_ids[5] == 33063);
+    CHECK(solids[43985].node_ids[6] == 33139);
+    CHECK(solids[43985].node_ids[7] == 33138);
+
+    for (const auto &solid : solids) {
+      CHECK(solid.material_id == 9);
+    }
+  }
+
+  {
+    const auto thick_shells(plot_file.read_thick_shell_elements());
+    REQUIRE(thick_shells.empty());
+  }
+
+  {
+    const auto beams(plot_file.read_beam_elements());
+    REQUIRE(beams.empty());
+  }
+
+  {
+    const auto shells(plot_file.read_shell_elements());
+    REQUIRE(shells.size() == 88456);
+
+    /* EL4 87441: (113858, 113859, 113808, 113807) 8*/
+    CHECK(shells[87441].node_ids[0] == 113858);
+    CHECK(shells[87441].node_ids[1] == 113859);
+    CHECK(shells[87441].node_ids[2] == 113808);
+    CHECK(shells[87441].node_ids[3] == 113807);
+    CHECK(shells[87441].material_id == 8);
+    /* EL4 88455: (114892, 114893, 114842, 114841) 8*/
+    CHECK(shells[88455].node_ids[0] == 114892);
+    CHECK(shells[88455].node_ids[1] == 114893);
+    CHECK(shells[88455].node_ids[2] == 114842);
+    CHECK(shells[88455].node_ids[3] == 114841);
+    CHECK(shells[88455].material_id == 8);
+    /* EL4 87806: (114231, 114232, 114181, 114180) 8*/
+    CHECK(shells[87806].node_ids[0] == 114231);
+    CHECK(shells[87806].node_ids[1] == 114232);
+    CHECK(shells[87806].node_ids[2] == 114181);
+    CHECK(shells[87806].node_ids[3] == 114180);
+    CHECK(shells[87806].material_id == 8);
+
+    for (const auto &shell : shells) {
+      CHECK(shell.material_id >= 1);
+      CHECK(shell.material_id <= 8);
+    }
+  }
+}
+#endif
 
 TEST_CASE("_get_nth_digit") {
   const d3_word value = 123456;
