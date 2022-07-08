@@ -181,6 +181,10 @@ TEST_CASE("d3plot") {
 
   free(solids);
 
+  d3plot_thick_shell *thick_shells =
+      d3plot_read_thick_shell_elements(&plot_file, &num_elements);
+  REQUIRE(num_elements == 0);
+
   d3plot_close(&plot_file);
 }
 

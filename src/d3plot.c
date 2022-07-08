@@ -522,6 +522,48 @@ d3plot_solid *d3plot_read_solid_elements(d3plot_file *plot_file,
   return solids;
 }
 
+d3plot_thick_shell *d3plot_read_thick_shell_elements(d3plot_file *plot_file,
+                                                     size_t *num_thick_shells) {
+  if (plot_file->control_data.nelt == 0) {
+    *num_thick_shells = 0;
+    return NULL;
+  }
+
+  *num_thick_shells = plot_file->control_data.nelt;
+  d3plot_thick_shell *thick_shells =
+      malloc(*num_thick_shells * sizeof(d3plot_thick_shell));
+  if (plot_file->buffer.word_size == 4) {
+    uint32_t *thick_shells32 = malloc(*num_thick_shells * 9 * sizeof(uint32_t));
+    d3_buffer_read_words_at(&plot_file->buffer, thick_shells32,
+                            9 * *num_thick_shells,
+                            plot_file->data_pointers[D3PLT_PTR_ELT_CONNECT]);
+
+    size_t i = 0;
+    while (i < *num_thick_shells) {
+      size_t j = 0;
+      while (j < 8) {
+        thick_shells[i].node_ids[j + 0] = thick_shells32[i * 9 + j + 0];
+        thick_shells[i].node_ids[j + 1] = thick_shells32[i * 9 + j + 1];
+        thick_shells[i].node_ids[j + 2] = thick_shells32[i * 9 + j + 2];
+        thick_shells[i].node_ids[j + 3] = thick_shells32[i * 9 + j + 3];
+
+        j += 4;
+      }
+      thick_shells[i].material_id = thick_shells32[i * 9 + 8];
+
+      i++;
+    }
+
+    free(thick_shells32);
+  } else {
+    d3_buffer_read_words_at(&plot_file->buffer, thick_shells,
+                            9 * *num_thick_shells,
+                            plot_file->data_pointers[D3PLT_PTR_ELT_CONNECT]);
+  }
+
+  return thick_shells;
+}
+
 const char *_d3plot_get_file_type_name(d3_word file_type) {
   switch (file_type) {
   case D3_FILE_TYPE_D3PLOT:

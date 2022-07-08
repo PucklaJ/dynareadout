@@ -29,17 +29,18 @@
 #include "d3_defines.h"
 
 #define D3PLT_PTR_NODE_COORDS 0
-#define D3PLT_PTR_NODE_IDS 1
-#define D3PLT_PTR_EL8_IDS 2
-#define D3PLT_PTR_EL2_IDS 3
-#define D3PLT_PTR_EL4_IDS 4
-#define D3PLT_PTR_EL48_IDS 5
-#define D3PLT_PTR_EL8_CONNECT 6
-#define D3PLT_PTR_STATE_TIME 7
-#define D3PLT_PTR_STATE_NODE_COORDS 8
-#define D3PLT_PTR_STATE_NODE_VEL 9
-#define D3PLT_PTR_STATE_NODE_ACC 10
-#define D3PLT_PTR_STATES 11
+#define D3PLT_PTR_NODE_IDS (D3PLT_PTR_NODE_COORDS + 1)
+#define D3PLT_PTR_EL8_IDS (D3PLT_PTR_NODE_IDS + 1)
+#define D3PLT_PTR_EL2_IDS (D3PLT_PTR_EL8_IDS + 1)
+#define D3PLT_PTR_EL4_IDS (D3PLT_PTR_EL2_IDS + 1)
+#define D3PLT_PTR_EL48_IDS (D3PLT_PTR_EL4_IDS + 1)
+#define D3PLT_PTR_EL8_CONNECT (D3PLT_PTR_EL48_IDS + 1)
+#define D3PLT_PTR_ELT_CONNECT (D3PLT_PTR_EL8_CONNECT + 1)
+#define D3PLT_PTR_STATE_TIME (D3PLT_PTR_ELT_CONNECT + 1)
+#define D3PLT_PTR_STATE_NODE_COORDS (D3PLT_PTR_STATE_TIME + 1)
+#define D3PLT_PTR_STATE_NODE_VEL (D3PLT_PTR_STATE_NODE_COORDS + 1)
+#define D3PLT_PTR_STATE_NODE_ACC (D3PLT_PTR_STATE_NODE_VEL + 1)
+#define D3PLT_PTR_STATES (D3PLT_PTR_STATE_NODE_ACC + 1)
 #define D3PLT_PTR_COUNT D3PLT_PTR_STATES
 
 typedef struct {
@@ -91,6 +92,10 @@ double d3plot_read_time(d3plot_file *plot_file, size_t state);
  * elements. The return value needs to be deallocated by free*/
 d3plot_solid *d3plot_read_solid_elements(d3plot_file *plot_file,
                                          size_t *num_solids);
+/* Returns the node connectivity + material number of all 8 node thick shell
+ * elements. The return value needs to be deallocated by free*/
+d3plot_thick_shell *d3plot_read_thick_shell_elements(d3plot_file *plot_file,
+                                                     size_t *num_thick_shells);
 
 /***** Data sections *******/
 int _d3plot_read_geometry_data(d3plot_file *plot_file);
