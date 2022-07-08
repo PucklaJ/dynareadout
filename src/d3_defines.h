@@ -36,6 +36,13 @@ typedef struct {
 
 typedef d3plot_solid d3plot_thick_shell;
 
+typedef struct {
+  d3_word node_ids[2];
+  d3_word orientation_node_id;
+  d3_word _null[2];
+  d3_word material_id;
+} d3plot_beam;
+
 #define D3_FILE_TYPE_D3PLOT 1
 #define D3_FILE_TYPE_D3DRLF 2
 #define D3_FILE_TYPE_D3THDT 3

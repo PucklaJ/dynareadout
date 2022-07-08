@@ -564,6 +564,41 @@ d3plot_thick_shell *d3plot_read_thick_shell_elements(d3plot_file *plot_file,
   return thick_shells;
 }
 
+d3plot_beam *d3plot_read_beam_elements(d3plot_file *plot_file,
+                                       size_t *num_beams) {
+  if (plot_file->control_data.nel2 == 0) {
+    *num_beams = 0;
+    return NULL;
+  }
+
+  *num_beams = plot_file->control_data.nel2;
+  d3plot_beam *beams = malloc(*num_beams * sizeof(d3plot_beam));
+  if (plot_file->buffer.word_size == 4) {
+    uint32_t *beams32 = malloc(*num_beams * 6 * sizeof(uint32_t));
+    d3_buffer_read_words_at(&plot_file->buffer, beams32, 6 * *num_beams,
+                            plot_file->data_pointers[D3PLT_PTR_EL2_CONNECT]);
+
+    size_t i = 0;
+    while (i < *num_beams) {
+      beams[i].node_ids[0] = beams32[i * 6 + 0];
+      beams[i].node_ids[1] = beams32[i * 6 + 1];
+      beams[i].orientation_node_id = beams32[i * 6 + 2];
+      beams[i]._null[0] = beams32[i * 6 + 3];
+      beams[i]._null[1] = beams32[i * 6 + 4];
+      beams[i].material_id = beams32[i * 6 + 5];
+
+      i++;
+    }
+
+    free(beams32);
+  } else {
+    d3_buffer_read_words_at(&plot_file->buffer, beams, 6 * *num_beams,
+                            plot_file->data_pointers[D3PLT_PTR_EL2_CONNECT]);
+  }
+
+  return beams;
+}
+
 const char *_d3plot_get_file_type_name(d3_word file_type) {
   switch (file_type) {
   case D3_FILE_TYPE_D3PLOT:
