@@ -53,7 +53,7 @@ int _d3plot_read_geometry_data(d3plot_file *plot_file) {
   d3_buffer_skip_words(&plot_file->buffer, CDP.numnp * CDP.ndim);
 
   if (CDP.nel8 > 0) {
-    /* TODO: read function for nel8 data*/
+    DT_PTR_SET(D3PLT_PTR_EL8_CONNECT);
     d3_buffer_skip_words(&plot_file->buffer, 9 * CDP.nel8);
   } else if (CDP.nel8 < 0) {
     const int64_t nel8 = CDP.nel8 * -1;

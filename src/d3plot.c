@@ -482,6 +482,46 @@ double d3plot_read_time(d3plot_file *plot_file, size_t state) {
   return time;
 }
 
+d3plot_solid *d3plot_read_solid_elements(d3plot_file *plot_file,
+                                         size_t *num_solids) {
+  if (plot_file->control_data.nel8 <= 0) {
+    /* nel8 represents the number of extra nodes for ten node solids*/
+    *num_solids = 0;
+    return NULL;
+  }
+
+  *num_solids = plot_file->control_data.nel8;
+  d3plot_solid *solids = malloc(*num_solids * sizeof(d3plot_solid));
+  if (plot_file->buffer.word_size == 4) {
+    uint32_t *solids32 = malloc(*num_solids * 9 * sizeof(uint32_t));
+    d3_buffer_read_words_at(&plot_file->buffer, solids32, 9 * *num_solids,
+                            plot_file->data_pointers[D3PLT_PTR_EL8_CONNECT]);
+
+    size_t i = 0;
+    while (i < *num_solids) {
+      size_t j = 0;
+      while (j < 8) {
+        solids[i].node_ids[j + 0] = solids32[i * 9 + j + 0];
+        solids[i].node_ids[j + 1] = solids32[i * 9 + j + 1];
+        solids[i].node_ids[j + 2] = solids32[i * 9 + j + 2];
+        solids[i].node_ids[j + 3] = solids32[i * 9 + j + 3];
+
+        j += 4;
+      }
+      solids[i].material_id = solids32[i * 9 + 8];
+
+      i++;
+    }
+
+    free(solids32);
+  } else {
+    d3_buffer_read_words_at(&plot_file->buffer, solids, 9 * *num_solids,
+                            plot_file->data_pointers[D3PLT_PTR_EL8_CONNECT]);
+  }
+
+  return solids;
+}
+
 const char *_d3plot_get_file_type_name(d3_word file_type) {
   switch (file_type) {
   case D3_FILE_TYPE_D3PLOT:
