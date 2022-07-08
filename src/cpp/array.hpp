@@ -33,7 +33,7 @@
 
 namespace dro {
 
-template <typename T> class Vector {
+template <typename T> class Array {
 public:
   class Iterator {
   public:
@@ -70,13 +70,13 @@ public:
     difference_type m_index;
   };
 
-  Vector(T *data, size_t size, bool delete_data = true) noexcept;
-  Vector(Vector<T> &&rhs) noexcept;
-  ~Vector() noexcept;
+  Array(T *data, size_t size, bool delete_data = true) noexcept;
+  Array(Array<T> &&rhs) noexcept;
+  ~Array() noexcept;
 
   inline T &operator[](size_t index);
   inline const T &operator[](size_t index) const;
-  Vector<T> &operator=(Vector<T> &&rhs) noexcept;
+  Array<T> &operator=(Array<T> &&rhs) noexcept;
 
   T *data() noexcept { return m_data; }
   const T *data() const noexcept { return m_data; }
@@ -94,22 +94,22 @@ private:
 };
 
 template <typename T>
-Vector<T>::Vector(T *data, size_t size, bool delete_data) noexcept
+Array<T>::Array(T *data, size_t size, bool delete_data) noexcept
     : m_data(data), m_size(size), m_delete_data(delete_data) {}
 
 template <typename T>
-Vector<T>::Vector(Vector<T> &&rhs) noexcept
+Array<T>::Array(Array<T> &&rhs) noexcept
     : m_data(rhs.m_data), m_size(rhs.m_size), m_delete_data(rhs.m_delete_data) {
   rhs.m_data = nullptr;
   rhs.m_size = 0;
 }
 
-template <typename T> Vector<T>::~Vector() noexcept {
+template <typename T> Array<T>::~Array() noexcept {
   if (m_delete_data && m_data)
     free(m_data);
 }
 
-template <typename T> T &Vector<T>::operator[](size_t index) {
+template <typename T> T &Array<T>::operator[](size_t index) {
   if (index > m_size - 1) {
     throw std::runtime_error("Index out of Range");
   }
@@ -117,7 +117,7 @@ template <typename T> T &Vector<T>::operator[](size_t index) {
   return m_data[index];
 }
 
-template <typename T> const T &Vector<T>::operator[](size_t index) const {
+template <typename T> const T &Array<T>::operator[](size_t index) const {
   if (index > m_size - 1) {
     throw std::runtime_error("Index out of Range");
   }
@@ -125,8 +125,7 @@ template <typename T> const T &Vector<T>::operator[](size_t index) const {
   return m_data[index];
 }
 
-template <typename T>
-Vector<T> &Vector<T>::operator=(Vector<T> &&rhs) noexcept {
+template <typename T> Array<T> &Array<T>::operator=(Array<T> &&rhs) noexcept {
   m_data = rhs.m_data;
   m_size = rhs.m_size;
   m_delete_data = rhs.m_delete_data;
@@ -135,7 +134,7 @@ Vector<T> &Vector<T>::operator=(Vector<T> &&rhs) noexcept {
   return *this;
 }
 
-template <typename T> std::string Vector<T>::str() const noexcept {
+template <typename T> std::string Array<T>::str() const noexcept {
   static_assert(std::is_same_v<T, char> || std::is_same_v<T, int8_t> ||
                 std::is_same_v<T, uint8_t>);
 
@@ -144,7 +143,7 @@ template <typename T> std::string Vector<T>::str() const noexcept {
 }
 
 template <typename T>
-bool operator==(const Vector<T> &str1, const char *str2) noexcept {
+bool operator==(const Array<T> &str1, const char *str2) noexcept {
   static_assert(std::is_same_v<T, char> || std::is_same_v<T, int8_t> ||
                 std::is_same_v<T, uint8_t>);
   if (str1.data()[str1.size() - 1] == '\0') {
@@ -165,24 +164,22 @@ bool operator==(const Vector<T> &str1, const char *str2) noexcept {
 }
 
 template <typename T>
-inline bool operator==(const char *str2, const Vector<T> &str1) noexcept {
+inline bool operator==(const char *str2, const Array<T> &str1) noexcept {
   return str1 == str2;
 }
 
 template <typename T>
-inline bool operator==(const std::string &str2,
-                       const Vector<T> &str1) noexcept {
+inline bool operator==(const std::string &str2, const Array<T> &str1) noexcept {
   return str1 == str2.c_str();
 }
 
 template <typename T>
-inline bool operator==(const Vector<T> &str1,
-                       const std::string &str2) noexcept {
+inline bool operator==(const Array<T> &str1, const std::string &str2) noexcept {
   return str1 == str2.c_str();
 }
 
 template <typename T>
-inline std::ostream &operator<<(std::ostream &stream, const Vector<T> &str) {
+inline std::ostream &operator<<(std::ostream &stream, const Array<T> &str) {
   static_assert(std::is_same_v<T, char> || std::is_same_v<T, int8_t> ||
                 std::is_same_v<T, uint8_t>);
 
@@ -192,6 +189,6 @@ inline std::ostream &operator<<(std::ostream &stream, const Vector<T> &str) {
   return stream;
 }
 
-typedef Vector<char> String;
+typedef Array<char> String;
 
 } // namespace dro

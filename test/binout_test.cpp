@@ -39,7 +39,7 @@
 #endif
 
 namespace dro {
-template <typename T> doctest::String toString(const Vector<T> &str) {
+template <typename T> doctest::String toString(const Array<T> &str) {
   static_assert(std::is_same_v<T, char> || std::is_same_v<T, int8_t> ||
                 std::is_same_v<T, uint8_t>);
 
@@ -219,7 +219,7 @@ TEST_CASE("binout0000 C++") {
   }
 }
 
-TEST_CASE("Vector") {
+TEST_CASE("Array") {
   SUBCASE("Iterator") {
     int *data = (int *)malloc(5 * sizeof(int));
     data[0] = 1;
@@ -228,7 +228,7 @@ TEST_CASE("Vector") {
     data[3] = 4;
     data[4] = 5;
 
-    dro::Vector<int> v1(data, 5);
+    dro::Array<int> v1(data, 5);
     int counter = 0;
     for (const auto i : v1) {
       CHECK(i == (counter + 1));
@@ -510,9 +510,13 @@ TEST_CASE("glob") {
   size_t num_files;
   char **globed_files = binout_glob("src/*.c", &num_files);
 
-  CHECK(num_files == 3);
-  CHECK(path_elements_contain(globed_files, num_files, "src/binout.c"));
+  CHECK(num_files == 7);
   CHECK(path_elements_contain(globed_files, num_files, "src/binout_glob.c"));
+  CHECK(path_elements_contain(globed_files, num_files, "src/binout.c"));
+  CHECK(path_elements_contain(globed_files, num_files, "src/d3_buffer.c"));
+  CHECK(path_elements_contain(globed_files, num_files, "src/d3plot_data.c"));
+  CHECK(path_elements_contain(globed_files, num_files, "src/d3plot_state.c"));
+  CHECK(path_elements_contain(globed_files, num_files, "src/d3plot.c"));
   CHECK(path_elements_contain(globed_files, num_files, "src/path.c"));
   binout_free_glob(globed_files, num_files);
 }
