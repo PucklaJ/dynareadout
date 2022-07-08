@@ -146,6 +146,41 @@ TEST_CASE("d3plot") {
 
   free(node_data);
 
+  d3plot_solid *solids = d3plot_read_solid_elements(&plot_file, &num_elements);
+  REQUIRE(num_elements == 45000);
+
+  CHECK(solids[43988].node_ids[0] == 32229);
+  CHECK(solids[43988].node_ids[1] == 32230);
+  CHECK(solids[43988].node_ids[2] == 32306);
+  CHECK(solids[43988].node_ids[3] == 32305);
+  CHECK(solids[43988].node_ids[4] == 33065);
+  CHECK(solids[43988].node_ids[5] == 33066);
+  CHECK(solids[43988].node_ids[6] == 33142);
+  CHECK(solids[43988].node_ids[7] == 33141);
+  CHECK(solids[43988].material_id == 9);
+
+  CHECK(solids[44086].node_ids[0] == 32328);
+  CHECK(solids[44086].node_ids[1] == 32329);
+  CHECK(solids[44086].node_ids[2] == 32405);
+  CHECK(solids[44086].node_ids[3] == 32404);
+  CHECK(solids[44086].node_ids[4] == 33164);
+  CHECK(solids[44086].node_ids[5] == 33165);
+  CHECK(solids[44086].node_ids[6] == 33241);
+  CHECK(solids[44086].node_ids[7] == 33240);
+  CHECK(solids[44086].material_id == 9);
+
+  CHECK(solids[43985].node_ids[0] == 32226);
+  CHECK(solids[43985].node_ids[1] == 32227);
+  CHECK(solids[43985].node_ids[2] == 32303);
+  CHECK(solids[43985].node_ids[3] == 32302);
+  CHECK(solids[43985].node_ids[4] == 33062);
+  CHECK(solids[43985].node_ids[5] == 33063);
+  CHECK(solids[43985].node_ids[6] == 33139);
+  CHECK(solids[43985].node_ids[7] == 33138);
+  CHECK(solids[43985].material_id == 9);
+
+  free(solids);
+
   d3plot_close(&plot_file);
 }
 

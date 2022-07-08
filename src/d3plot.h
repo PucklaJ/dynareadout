@@ -34,11 +34,12 @@
 #define D3PLT_PTR_EL2_IDS 3
 #define D3PLT_PTR_EL4_IDS 4
 #define D3PLT_PTR_EL48_IDS 5
-#define D3PLT_PTR_STATE_TIME 6
-#define D3PLT_PTR_STATE_NODE_COORDS 7
-#define D3PLT_PTR_STATE_NODE_VEL 8
-#define D3PLT_PTR_STATE_NODE_ACC 9
-#define D3PLT_PTR_STATES 10
+#define D3PLT_PTR_EL8_CONNECT 6
+#define D3PLT_PTR_STATE_TIME 7
+#define D3PLT_PTR_STATE_NODE_COORDS 8
+#define D3PLT_PTR_STATE_NODE_VEL 9
+#define D3PLT_PTR_STATE_NODE_ACC 10
+#define D3PLT_PTR_STATES 11
 #define D3PLT_PTR_COUNT D3PLT_PTR_STATES
 
 typedef struct {
@@ -86,6 +87,10 @@ double *d3plot_read_node_velocity(d3plot_file *plot_file, size_t state,
 double *d3plot_read_node_acceleration(d3plot_file *plot_file, size_t state,
                                       size_t *num_nodes);
 double d3plot_read_time(d3plot_file *plot_file, size_t state);
+/* Returns the node connectivity + material number of all 8 node solid
+ * elements. The return value needs to be deallocated by free*/
+d3plot_solid *d3plot_read_solid_elements(d3plot_file *plot_file,
+                                         size_t *num_solids);
 
 /***** Data sections *******/
 int _d3plot_read_geometry_data(d3plot_file *plot_file);

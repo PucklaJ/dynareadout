@@ -29,6 +29,11 @@
 
 typedef uint64_t d3_word;
 
+typedef struct {
+  d3_word node_ids[8];
+  d3_word material_id;
+} d3plot_solid;
+
 #define D3_FILE_TYPE_D3PLOT 1
 #define D3_FILE_TYPE_D3DRLF 2
 #define D3_FILE_TYPE_D3THDT 3
