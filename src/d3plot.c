@@ -599,6 +599,40 @@ d3plot_beam *d3plot_read_beam_elements(d3plot_file *plot_file,
   return beams;
 }
 
+d3plot_shell *d3plot_read_shell_elements(d3plot_file *plot_file,
+                                         size_t *num_shells) {
+  if (plot_file->control_data.nel4 == 0) {
+    *num_shells = 0;
+    return NULL;
+  }
+
+  *num_shells = plot_file->control_data.nel4;
+  d3plot_shell *shells = malloc(*num_shells * sizeof(d3plot_shell));
+  if (plot_file->buffer.word_size == 4) {
+    uint32_t *shells32 = malloc(*num_shells * 5 * sizeof(uint32_t));
+    d3_buffer_read_words_at(&plot_file->buffer, shells32, 5 * *num_shells,
+                            plot_file->data_pointers[D3PLT_PTR_EL4_CONNECT]);
+
+    size_t i = 0;
+    while (i < *num_shells) {
+      shells[i].node_ids[0] = shells32[i * 5 + 0];
+      shells[i].node_ids[1] = shells32[i * 5 + 1];
+      shells[i].node_ids[2] = shells32[i * 5 + 2];
+      shells[i].node_ids[3] = shells32[i * 5 + 3];
+      shells[i].material_id = shells32[i * 5 + 4];
+
+      i++;
+    }
+
+    free(shells32);
+  } else {
+    d3_buffer_read_words_at(&plot_file->buffer, shells, 5 * *num_shells,
+                            plot_file->data_pointers[D3PLT_PTR_EL4_CONNECT]);
+  }
+
+  return shells;
+}
+
 const char *_d3plot_get_file_type_name(d3_word file_type) {
   switch (file_type) {
   case D3_FILE_TYPE_D3PLOT:

@@ -157,7 +157,6 @@ TEST_CASE("d3plot") {
   CHECK(solids[43988].node_ids[5] == 33066);
   CHECK(solids[43988].node_ids[6] == 33142);
   CHECK(solids[43988].node_ids[7] == 33141);
-  CHECK(solids[43988].material_id == 9);
 
   CHECK(solids[44086].node_ids[0] == 32328);
   CHECK(solids[44086].node_ids[1] == 32329);
@@ -167,7 +166,6 @@ TEST_CASE("d3plot") {
   CHECK(solids[44086].node_ids[5] == 33165);
   CHECK(solids[44086].node_ids[6] == 33241);
   CHECK(solids[44086].node_ids[7] == 33240);
-  CHECK(solids[44086].material_id == 9);
 
   CHECK(solids[43985].node_ids[0] == 32226);
   CHECK(solids[43985].node_ids[1] == 32227);
@@ -177,7 +175,12 @@ TEST_CASE("d3plot") {
   CHECK(solids[43985].node_ids[5] == 33063);
   CHECK(solids[43985].node_ids[6] == 33139);
   CHECK(solids[43985].node_ids[7] == 33138);
-  CHECK(solids[43985].material_id == 9);
+
+  size_t i = 0;
+  while (i < num_elements) {
+    CHECK(solids[i].material_id == 9);
+    i++;
+  }
 
   free(solids);
 
@@ -187,6 +190,38 @@ TEST_CASE("d3plot") {
 
   d3plot_beam *beams = d3plot_read_beam_elements(&plot_file, &num_elements);
   REQUIRE(num_elements == 0);
+
+  d3plot_shell *shells = d3plot_read_shell_elements(&plot_file, &num_elements);
+  REQUIRE(num_elements == 88456);
+
+  /* EL4 87441: (113858, 113859, 113808, 113807) 8*/
+  CHECK(shells[87441].node_ids[0] == 113858);
+  CHECK(shells[87441].node_ids[1] == 113859);
+  CHECK(shells[87441].node_ids[2] == 113808);
+  CHECK(shells[87441].node_ids[3] == 113807);
+  CHECK(shells[87441].material_id == 8);
+  /* EL4 88455: (114892, 114893, 114842, 114841) 8*/
+  CHECK(shells[88455].node_ids[0] == 114892);
+  CHECK(shells[88455].node_ids[1] == 114893);
+  CHECK(shells[88455].node_ids[2] == 114842);
+  CHECK(shells[88455].node_ids[3] == 114841);
+  CHECK(shells[88455].material_id == 8);
+  /* EL4 87806: (114231, 114232, 114181, 114180) 8*/
+  CHECK(shells[87806].node_ids[0] == 114231);
+  CHECK(shells[87806].node_ids[1] == 114232);
+  CHECK(shells[87806].node_ids[2] == 114181);
+  CHECK(shells[87806].node_ids[3] == 114180);
+  CHECK(shells[87806].material_id == 8);
+
+  i = 0;
+  while (i < num_elements) {
+    CHECK(shells[i].material_id >= 1);
+    CHECK(shells[i].material_id <= 8);
+
+    i++;
+  }
+
+  free(shells);
 
   d3plot_close(&plot_file);
 }
