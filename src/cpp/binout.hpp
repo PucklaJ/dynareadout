@@ -24,7 +24,7 @@
  ************************************************************************************/
 
 #pragma once
-#include "vector.hpp"
+#include "array.hpp"
 #include <binout.h>
 #include <binout_defines.h>
 #include <exception>
@@ -61,7 +61,7 @@ public:
   Binout(const std::filesystem::path &file_name);
   ~Binout() noexcept;
 
-  template <typename T> Vector<T> read(const std::string &path_to_variable);
+  template <typename T> Array<T> read(const std::string &path_to_variable);
   BinoutType get_type_id(const std::string &path_to_variable) const;
   bool variable_exists(const std::string &path_to_variable) const noexcept;
   std::vector<String> get_children(const std::string &path) const noexcept;
