@@ -34,6 +34,8 @@ typedef struct {
   d3_word material_id;
 } d3plot_solid;
 
+typedef d3plot_solid d3plot_thick_shell;
+
 #define D3_FILE_TYPE_D3PLOT 1
 #define D3_FILE_TYPE_D3DRLF 2
 #define D3_FILE_TYPE_D3THDT 3

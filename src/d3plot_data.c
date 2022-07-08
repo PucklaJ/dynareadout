@@ -32,6 +32,9 @@
   plot_file->data_pointers[index] = plot_file->buffer.cur_word
 
 int _d3plot_read_geometry_data(d3plot_file *plot_file) {
+  /* TODO: We can skip the entire GEOMETRY DATA section since we already know
+   * how big it is and where to find the data*/
+
   if (CDP.element_connectivity_packed) {
     plot_file->error_string = malloc(45);
     sprintf(plot_file->error_string,
@@ -62,8 +65,8 @@ int _d3plot_read_geometry_data(d3plot_file *plot_file) {
   }
 
   if (CDP.nelt > 0) {
+    DT_PTR_SET(D3PLT_PTR_ELT_CONNECT);
     d3_buffer_skip_words(&plot_file->buffer, 9 * CDP.nelt);
-    /* TODO: read function for nelt data*/
   }
 
   if (CDP.nel2 > 0) {
