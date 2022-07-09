@@ -164,20 +164,17 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
 
   const size_t node_data_start = plot_file->buffer.cur_word;
 
-  size_t it = _get_nth_digit(CDP.it, 0);
-  size_t N = it * (it > 1);
+  uint8_t it = _get_nth_digit(CDP.it, 0);
+  uint8_t N = it * (it > 1);
   if (N == 2) {
     it = 1;
     N = 3;
   }
-  const size_t mass_N = _get_nth_digit(CDP.it, 1) == 1;
+  const uint8_t mass_N = _get_nth_digit(CDP.it, 1) == 1;
 
   const size_t NND =
       ((it + N + mass_N) + CDP.ndim * (CDP.iu + CDP.iv + CDP.ia)) * CDP.numnp;
 
-  double temp[3], node_flux[3], mass_scaling, u[3], v[3], a[3];
-
-  size_t n = 0;
   if (it > 0) {
     d3_buffer_skip_words(&plot_file->buffer, it * CDP.numnp);
     /* TODO: read function for IT data*/
