@@ -82,6 +82,62 @@ int _d3plot_read_geometry_data(d3plot_file *plot_file) {
   return 1;
 }
 
+int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
+  if (CDP.narbs == 0) {
+    CDP.numrbs = 0;
+
+    return 1;
+  }
+
+  int64_t nsort;
+  d3_word nsortd = 0, nsrhd = 0, nsrbd = 0, nsrsd = 0, nsrtd = 0,
+          nmmat = plot_file->control_data.nmmat;
+  if (plot_file->buffer.word_size == 4) {
+    int32_t nsort32;
+    d3_buffer_read_words(&plot_file->buffer, &nsort32, 1);
+    nsort = nsort32;
+  } else {
+    d3_buffer_read_words(&plot_file->buffer, &nsort, 1);
+  }
+  d3_buffer_skip_words(&plot_file->buffer, 4);
+  /* TODO: Find out what NSRH, NSRB, NSRS and NSRT is for*/
+  d3_buffer_read_words(&plot_file->buffer, &nsortd, 1);
+  d3_buffer_read_words(&plot_file->buffer, &nsrhd, 1);
+  d3_buffer_read_words(&plot_file->buffer, &nsrbd, 1);
+  d3_buffer_read_words(&plot_file->buffer, &nsrsd, 1);
+  d3_buffer_read_words(&plot_file->buffer, &nsrtd, 1);
+
+  CDP.numrbs = 0;
+
+  if (nsort < 0) {
+    d3_buffer_skip_words(&plot_file->buffer, 4);
+    /* TODO: Find out what NSRMA, NSRMU, NSRMP and NSRTM is for*/
+
+    d3_buffer_read_words(&plot_file->buffer, &CDP.numrbs, 1);
+    d3_buffer_read_words(&plot_file->buffer, &nmmat, 1);
+  } else {
+    plot_file->error_string = malloc(39 + 20);
+    sprintf(plot_file->error_string, "Non negative nsort (%d) is not supported",
+            nsort);
+    return 0;
+  }
+
+  DT_PTR_SET(D3PLT_PTR_NODE_IDS);
+  d3_buffer_skip_words(&plot_file->buffer, nsortd); /* nusern*/
+  DT_PTR_SET(D3PLT_PTR_EL8_IDS);
+  d3_buffer_skip_words(&plot_file->buffer, nsrhd); /* nuserh*/
+  DT_PTR_SET(D3PLT_PTR_EL2_IDS);
+  d3_buffer_skip_words(&plot_file->buffer, nsrbd); /* nuserb*/
+  DT_PTR_SET(D3PLT_PTR_EL4_IDS);
+  d3_buffer_skip_words(&plot_file->buffer, nsrsd); /* nusers*/
+  DT_PTR_SET(D3PLT_PTR_EL48_IDS);
+  d3_buffer_skip_words(&plot_file->buffer, nsrtd); /* nusert*/
+  d3_buffer_skip_words(&plot_file->buffer,
+                       nmmat * 3); /* norder + nsrmu_a + nsrmp_a*/
+
+  return 1;
+}
+
 int _d3plot_read_extra_node_connectivity(d3plot_file *plot_file) {
   if (CDP.nel8 < 0) {
     const int64_t nel8 = CDP.nel8 * -1;
@@ -161,62 +217,6 @@ int _d3plot_read_header(d3plot_file *plot_file) {
       break;
     }
   }
-
-  return 1;
-}
-
-int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
-  if (CDP.narbs == 0) {
-    CDP.numrbs = 0;
-
-    return 1;
-  }
-
-  int64_t nsort;
-  d3_word nsortd = 0, nsrhd = 0, nsrbd = 0, nsrsd = 0, nsrtd = 0,
-          nmmat = plot_file->control_data.nmmat;
-  if (plot_file->buffer.word_size == 4) {
-    int32_t nsort32;
-    d3_buffer_read_words(&plot_file->buffer, &nsort32, 1);
-    nsort = nsort32;
-  } else {
-    d3_buffer_read_words(&plot_file->buffer, &nsort, 1);
-  }
-  d3_buffer_skip_words(&plot_file->buffer, 4);
-  /* TODO: Find out what NSRH, NSRB, NSRS and NSRT is for*/
-  d3_buffer_read_words(&plot_file->buffer, &nsortd, 1);
-  d3_buffer_read_words(&plot_file->buffer, &nsrhd, 1);
-  d3_buffer_read_words(&plot_file->buffer, &nsrbd, 1);
-  d3_buffer_read_words(&plot_file->buffer, &nsrsd, 1);
-  d3_buffer_read_words(&plot_file->buffer, &nsrtd, 1);
-
-  CDP.numrbs = 0;
-
-  if (nsort < 0) {
-    d3_buffer_skip_words(&plot_file->buffer, 4);
-    /* TODO: Find out what NSRMA, NSRMU, NSRMP and NSRTM is for*/
-
-    d3_buffer_read_words(&plot_file->buffer, &CDP.numrbs, 1);
-    d3_buffer_read_words(&plot_file->buffer, &nmmat, 1);
-  } else {
-    plot_file->error_string = malloc(39 + 20);
-    sprintf(plot_file->error_string, "Non negative nsort (%d) is not supported",
-            nsort);
-    return 0;
-  }
-
-  DT_PTR_SET(D3PLT_PTR_NODE_IDS);
-  d3_buffer_skip_words(&plot_file->buffer, nsortd); /* nusern*/
-  DT_PTR_SET(D3PLT_PTR_EL8_IDS);
-  d3_buffer_skip_words(&plot_file->buffer, nsrhd); /* nuserh*/
-  DT_PTR_SET(D3PLT_PTR_EL2_IDS);
-  d3_buffer_skip_words(&plot_file->buffer, nsrbd); /* nuserb*/
-  DT_PTR_SET(D3PLT_PTR_EL4_IDS);
-  d3_buffer_skip_words(&plot_file->buffer, nsrsd); /* nusers*/
-  DT_PTR_SET(D3PLT_PTR_EL48_IDS);
-  d3_buffer_skip_words(&plot_file->buffer, nsrtd); /* nusert*/
-  d3_buffer_skip_words(&plot_file->buffer,
-                       nmmat * 3); /* norder + nsrmu_a + nsrmp_a*/
 
   return 1;
 }
