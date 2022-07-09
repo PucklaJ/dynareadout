@@ -66,8 +66,8 @@ extern "C" {
 
 /* ----- Public functions ------ */
 
-/* Open a binout file and parse its records to be ready to read data
- * After opening it needs to be closed by binout_close*/
+/* Open a binout file (or multiple files by globbing) and parse its records to
+ * be ready to read data After opening it needs to be closed by binout_close*/
 binout_file binout_open(const char *file_name);
 /* Closes the binout file and deallocates all memory*/
 void binout_close(binout_file *bin_file);
@@ -106,7 +106,7 @@ uint64_t binout_get_type_id(binout_file *bin_file,
                             const char *path_to_variable);
 /* Returns whether a record with the given path and variable name exists*/
 int binout_variable_exists(binout_file *bin_file, const char *path_to_variable);
-/* Returns the entries under a given path. The returns value needs to be
+/* Returns the entries under a given path. The return value needs to be
  * deallocated by binout_free_children*/
 char **binout_get_children(binout_file *bin_file, const char *path,
                            size_t *num_children);
