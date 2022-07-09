@@ -51,11 +51,10 @@ typedef struct {
   struct {
     /* These are all the values inside the CONTROL DATA section of the first
      * d3plot file (root file)*/
-    d3_word run_time, source_version, release_version, version, ndim, numnp,
-        icode, nglbv, it, iu, iv, ia, nummat8, numds, numst, nv3d, nel2,
-        nummat2, nv1d, nel4, nummat4, nv2d, neiph, neips, edlopt, nmsph, ngpsph,
-        narbs, nelt, nummatt, nv3dt, ioshl[4], ialemat, ncfdv1, ncfdv2, nadapt,
-        nmmat, numfluid, inn, npefg, nel48, idtdt, extra, words[6], nel20, nt3d;
+    d3_word ndim, numnp, icode, nglbv, it, iu, iv, ia, nummat8, nv3d, nel2,
+        nummat2, nv1d, nel4, nummat4, nv2d, neiph, neips, nmsph, narbs, nelt,
+        nummatt, nv3dt, ioshl[4], ialemat, ncfdv1, nadapt, nmmat, npefg, nel48,
+        idtdt, nel20, nt3d;
     /* This will be calculated*/
     d3_word numrbs;
     /* These variables can by negative*/

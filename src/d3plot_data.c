@@ -150,7 +150,7 @@ int _d3plot_read_extra_node_connectivity(d3plot_file *plot_file) {
     /* TODO: read function for nel48 data*/
   }
 
-  if (CDP.extra > 0 && CDP.nel20 > 0) {
+  if (CDP.nel20 > 0) {
     d3_buffer_skip_words(&plot_file->buffer, 13 * CDP.nel20);
     /* TODO: read function for nel20 data*/
   }

@@ -30,6 +30,14 @@
 #define READ_CONTROL_DATA_PLOT_FILE_WORD(value)                                \
   plot_file.control_data.value = 0;                                            \
   d3_buffer_read_words(&plot_file.buffer, &plot_file.control_data.value, 1)
+#define READ_CONTROL_DATA_PLOT_FILE_SIGNED_WORD(value)                         \
+  if (plot_file.buffer.word_size == 4) {                                       \
+    int32_t value32;                                                           \
+    d3_buffer_read_words(&plot_file.buffer, &value32, 1);                      \
+    CDA.value = value32;                                                       \
+  } else {                                                                     \
+    d3_buffer_read_words(&plot_file.buffer, &CDA.value, 1);                    \
+  }
 #define READ_CONTROL_DATA_WORD(value)                                          \
   d3_word value = 0;                                                           \
   d3_buffer_read_words(&plot_file.buffer, &value, 1)
@@ -43,15 +51,23 @@ d3plot_file d3plot_open(const char *root_file_name) {
 
   plot_file.buffer = d3_buffer_open(root_file_name);
   if (plot_file.buffer.error_string) {
-    plot_file.error_string = malloc(strlen(plot_file.buffer.error_string) + 1);
-    memcpy(plot_file.error_string, plot_file.buffer.error_string,
-           strlen(plot_file.buffer.error_string) + 1);
+    /* Swaperoo*/
+    plot_file.error_string = plot_file.buffer.error_string;
+    plot_file.buffer.error_string = NULL;
     return plot_file;
   }
 
-  d3_buffer_skip_words(&plot_file.buffer, 10); /* Title*/
+  /* Allocate the first data pointers*/
+  plot_file.data_pointers = malloc(D3PLT_PTR_COUNT * sizeof(size_t));
+  size_t i = 0;
+  while (i < D3PLT_PTR_COUNT) {
+    plot_file.data_pointers[i] = 0;
 
-  READ_CONTROL_DATA_PLOT_FILE_WORD(run_time);
+    i++;
+  }
+
+  d3_buffer_skip_words(&plot_file.buffer, 10); /* Title*/
+  d3_buffer_skip_words(&plot_file.buffer, 1);  /* TODO: Run time*/
 
   READ_CONTROL_DATA_WORD(file_type);
   if (file_type > 1000) {
@@ -59,6 +75,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
     /* TODO: all external(users) numbers (Node, Element, Material and Rigid
   Surface Nodes) will be written in I8 format.*/
   }
+  /* Quit immediately if this is not a d3plot file*/
   if (file_type != D3_FILE_TYPE_D3PLOT) {
     plot_file.error_string = malloc(50);
     sprintf(plot_file.error_string, "Wrong file type: %s",
@@ -66,9 +83,9 @@ d3plot_file d3plot_open(const char *root_file_name) {
     return plot_file;
   }
 
-  READ_CONTROL_DATA_PLOT_FILE_WORD(source_version);
-  READ_CONTROL_DATA_PLOT_FILE_WORD(release_version);
-  READ_CONTROL_DATA_PLOT_FILE_WORD(version);
+  d3_buffer_skip_words(&plot_file.buffer, 1); /* TODO: Source version*/
+  d3_buffer_skip_words(&plot_file.buffer, 1); /* TODO: Release version*/
+  d3_buffer_skip_words(&plot_file.buffer, 1); /* TODO: Version*/
   READ_CONTROL_DATA_PLOT_FILE_WORD(ndim);
   READ_CONTROL_DATA_PLOT_FILE_WORD(numnp);
   READ_CONTROL_DATA_PLOT_FILE_WORD(icode);
@@ -77,10 +94,10 @@ d3plot_file d3plot_open(const char *root_file_name) {
   READ_CONTROL_DATA_PLOT_FILE_WORD(iu);
   READ_CONTROL_DATA_PLOT_FILE_WORD(iv);
   READ_CONTROL_DATA_PLOT_FILE_WORD(ia);
-  READ_CONTROL_DATA_PLOT_FILE_WORD(nel8);
+  READ_CONTROL_DATA_PLOT_FILE_SIGNED_WORD(nel8);
   READ_CONTROL_DATA_PLOT_FILE_WORD(nummat8);
-  READ_CONTROL_DATA_PLOT_FILE_WORD(numds);
-  READ_CONTROL_DATA_PLOT_FILE_WORD(numst);
+  d3_buffer_skip_words(&plot_file.buffer, 1); /* TODO: NUMDS*/
+  d3_buffer_skip_words(&plot_file.buffer, 1); /* TODO: NUMST*/
   READ_CONTROL_DATA_PLOT_FILE_WORD(nv3d);
   READ_CONTROL_DATA_PLOT_FILE_WORD(nel2);
   READ_CONTROL_DATA_PLOT_FILE_WORD(nummat2);
@@ -90,18 +107,10 @@ d3plot_file d3plot_open(const char *root_file_name) {
   READ_CONTROL_DATA_PLOT_FILE_WORD(nv2d);
   READ_CONTROL_DATA_PLOT_FILE_WORD(neiph);
   READ_CONTROL_DATA_PLOT_FILE_WORD(neips);
-
-  if (plot_file.buffer.word_size == 4) {
-    int32_t maxint32;
-    d3_buffer_read_words(&plot_file.buffer, &maxint32, 1);
-    CDA.maxint = maxint32;
-  } else {
-    d3_buffer_read_words(&plot_file.buffer, &CDA.maxint, 1);
-  }
-
+  READ_CONTROL_DATA_PLOT_FILE_SIGNED_WORD(maxint);
   /*READ_CONTROL_DATA_PLOT_FILE_WORD(edlopt); Not used in LS-Dyna?*/
   READ_CONTROL_DATA_PLOT_FILE_WORD(nmsph);
-  READ_CONTROL_DATA_PLOT_FILE_WORD(ngpsph);
+  d3_buffer_skip_words(&plot_file.buffer, 1); /* TODO: NGPSPH*/
   READ_CONTROL_DATA_PLOT_FILE_WORD(narbs);
   READ_CONTROL_DATA_PLOT_FILE_WORD(nelt);
   READ_CONTROL_DATA_PLOT_FILE_WORD(nummatt);
@@ -112,23 +121,18 @@ d3plot_file d3plot_open(const char *root_file_name) {
   READ_CONTROL_DATA_PLOT_FILE_WORD(ioshl[3]);
   READ_CONTROL_DATA_PLOT_FILE_WORD(ialemat);
   READ_CONTROL_DATA_PLOT_FILE_WORD(ncfdv1);
-  READ_CONTROL_DATA_PLOT_FILE_WORD(ncfdv2);
+  d3_buffer_skip_words(&plot_file.buffer, 1); /* TODO: NCFDV2*/
   READ_CONTROL_DATA_PLOT_FILE_WORD(nadapt);
   READ_CONTROL_DATA_PLOT_FILE_WORD(nmmat);
-  READ_CONTROL_DATA_PLOT_FILE_WORD(numfluid);
-  READ_CONTROL_DATA_PLOT_FILE_WORD(inn);
+  d3_buffer_skip_words(&plot_file.buffer, 1); /* TODO: NUMFLUID*/
+  d3_buffer_skip_words(&plot_file.buffer, 1); /* TODO: INN*/
   READ_CONTROL_DATA_PLOT_FILE_WORD(npefg);
   READ_CONTROL_DATA_PLOT_FILE_WORD(nel48);
   READ_CONTROL_DATA_PLOT_FILE_WORD(idtdt);
-  READ_CONTROL_DATA_PLOT_FILE_WORD(extra);
-  READ_CONTROL_DATA_PLOT_FILE_WORD(words[0]);
-  READ_CONTROL_DATA_PLOT_FILE_WORD(words[1]);
-  READ_CONTROL_DATA_PLOT_FILE_WORD(words[2]);
-  READ_CONTROL_DATA_PLOT_FILE_WORD(words[3]);
-  READ_CONTROL_DATA_PLOT_FILE_WORD(words[4]);
-  READ_CONTROL_DATA_PLOT_FILE_WORD(words[5]);
+  READ_CONTROL_DATA_WORD(extra);
+  d3_buffer_skip_words(&plot_file.buffer, 6); /* TODO: WORDS*/
 
-  if (CDA.extra > 0) {
+  if (extra > 0) {
     READ_CONTROL_DATA_PLOT_FILE_WORD(nel20);
     READ_CONTROL_DATA_PLOT_FILE_WORD(nt3d);
   } else {
@@ -151,7 +155,15 @@ d3plot_file d3plot_open(const char *root_file_name) {
     }
   }
 
-  size_t i = 0;
+  /* Quit immediately if NDIM is not supported*/
+  if (CDA.ndim != 3) {
+    plot_file.error_string = malloc(50);
+    sprintf(plot_file.error_string, "A ndim value of %d is not supported",
+            CDA.ndim);
+    return plot_file;
+  }
+
+  i = 0;
   while (i < 4) {
     CDA.ioshl[i] -= 999 * (CDA.ioshl[i] == 1000);
 
@@ -199,6 +211,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
     CDA.istrn = _get_nth_digit(CDA.idtdt, 4);
   }
 
+  /* Compute MDLOPT*/
   if (CDA.maxint >= 0) {
     CDA.mdlopt = 0;
   } else if (CDA.maxint < -10000) {
@@ -214,7 +227,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
   }
 
   if (CDA.idtdt < 100) {
-    /* We need to compute istrn*/
+    /* We need to compute ISTRN*/
     /*ISTRN can only be computed as follows and if NV2D > 0.
       If NV2D-MAXINT*(6*IOSHL(1)+IOSHL(2)+NEIPS)+8*IOSHL(3)+4*IOSHL(4) > 1
       Then ISTRN = 1, else ISTRN = 0
@@ -246,15 +259,6 @@ d3plot_file d3plot_open(const char *root_file_name) {
         CDA.istrn = 0;
       }
     }
-  }
-
-  /* Allocate the first data pointers*/
-  plot_file.data_pointers = malloc(D3PLT_PTR_COUNT * sizeof(size_t));
-  i = 0;
-  while (i < D3PLT_PTR_COUNT) {
-    plot_file.data_pointers[i] = 0;
-
-    i++;
   }
 
   /* We are done with CONTROL DATA now comes the real data*/
@@ -320,13 +324,14 @@ d3plot_file d3plot_open(const char *root_file_name) {
     return plot_file;
   }
 
-  /* Read EOF marker (D3_EOF)*/
+  /* Read EOF marker*/
   double eof_marker;
   d3_buffer_read_double_word(&plot_file.buffer, &eof_marker);
 
   if (eof_marker != D3_EOF) {
-    plot_file.error_string = malloc(30);
-    sprintf(plot_file.error_string, "Here should be the EOF marker");
+    plot_file.error_string = malloc(50);
+    sprintf(plot_file.error_string, "Here (%d) should be the EOF marker",
+            plot_file.buffer.cur_word - 1);
     return plot_file;
   }
 
@@ -790,11 +795,12 @@ d3_word *_insert_sorted(d3_word *dst, size_t dst_size, const d3_word *src,
     memcpy(&dst[dst_size], src, src_size * sizeof(d3_word));
   } else {
     /* Insert inside dst*/
-    size_t i = 0;
-    while (i < dst_size && !(dst[i] < src_min && dst[i + 1] > src_min)) {
+    /* Search for index where i-1 is lesser than min and i is greater than min
+     */
+    size_t i = 1;
+    while (i < dst_size && !(dst[i - 1] < src_min && dst[i] > src_min)) {
       i++;
     }
-    i++;
 
     memcpy(&dst[i + src_size], &dst[i], (dst_size - i) * sizeof(d3_word));
     memcpy(&dst[i], src, src_size * sizeof(d3_word));
