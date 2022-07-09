@@ -24,6 +24,7 @@
  ************************************************************************************/
 
 #include "d3plot.hpp"
+#include <ctime>
 
 namespace dro {
 
@@ -151,6 +152,10 @@ Array<d3plot_shell> D3plot::read_shell_elements() {
 String D3plot::read_title() {
   char *title = d3plot_read_title(&m_handle);
   return String(title);
+}
+
+struct tm *D3plot::read_run_time() {
+  return d3plot_read_run_time(&m_handle);
 }
 
 } // namespace dro

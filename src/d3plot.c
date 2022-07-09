@@ -26,6 +26,7 @@
 #include "d3plot.h"
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define READ_CONTROL_DATA_PLOT_FILE_WORD(value)                                \
   plot_file.control_data.value = 0;                                            \
@@ -67,7 +68,8 @@ d3plot_file d3plot_open(const char *root_file_name) {
   }
 
   d3_buffer_skip_words(&plot_file.buffer, 10); /* Title*/
-  d3_buffer_skip_words(&plot_file.buffer, 1);  /* TODO: Run time*/
+  plot_file.data_pointers[D3PLT_PTR_RUN_TIME] = plot_file.buffer.cur_word;
+  d3_buffer_skip_words(&plot_file.buffer, 1); /* Run time*/
 
   READ_CONTROL_DATA_WORD(file_type);
   if (file_type > 1000) {
@@ -640,6 +642,15 @@ char *d3plot_read_title(d3plot_file *plot_file) {
                           plot_file->data_pointers[D3PLT_PTR_TITLE]);
   title[10 * plot_file->buffer.word_size] = '\0';
   return title;
+}
+
+struct tm *d3plot_read_run_time(d3plot_file *plot_file) {
+  d3_word run_time = 0;
+  d3_buffer_read_words_at(&plot_file->buffer, &run_time, 1,
+                          plot_file->data_pointers[D3PLT_PTR_RUN_TIME]);
+  const time_t epoch_time = run_time;
+
+  return localtime(&epoch_time);
 }
 
 const char *_d3plot_get_file_type_name(d3_word file_type) {

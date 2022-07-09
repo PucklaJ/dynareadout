@@ -86,6 +86,8 @@ public:
   Array<d3plot_shell> read_shell_elements();
   // Returns a string holding the Title of the d3plot file
   String read_title();
+  // Returns the time at which the simulation has been run as calender time
+  struct tm *read_run_time();
 
   // Returns the number of states (time steps)
   inline size_t num_time_steps() const { return m_handle.num_states; }
