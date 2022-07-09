@@ -28,6 +28,8 @@
 #include "d3_buffer.h"
 #include "d3_defines.h"
 
+struct tm;
+
 /* This holds all data needed to read d3plot files*/
 typedef struct {
   struct {
@@ -124,6 +126,8 @@ d3plot_shell *d3plot_read_shell_elements(d3plot_file *plot_file,
 /* Returns a null terminated string holding the Title of the d3plot file. The
  * return value needs to be deallocated by free.*/
 char *d3plot_read_title(d3plot_file *plot_file);
+/* Returns the time at which the simulation has been run as calender time*/
+struct tm *d3plot_read_run_time(d3plot_file *plot_file);
 
 /***** Data sections *******/
 /* GEOMETRY DATA pg. 17*/
