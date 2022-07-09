@@ -457,4 +457,34 @@ TEST_CASE("_insert_sorted") {
 
     free(_dst);
   }
+  {
+    const d3_word dst[1] = {4};
+    const d3_word src[4] = {10, 11, 12, 13};
+    d3_word *_dst = (d3_word *)malloc(1 * sizeof(d3_word));
+    memcpy(_dst, dst, sizeof(dst));
+
+    _dst = _insert_sorted(_dst, 1, src, 4);
+    CHECK(_dst[0] == 4);
+    CHECK(_dst[1] == 10);
+    CHECK(_dst[2] == 11);
+    CHECK(_dst[3] == 12);
+    CHECK(_dst[4] == 13);
+
+    free(_dst);
+  }
+  {
+    const d3_word dst[1] = {14};
+    const d3_word src[4] = {10, 11, 12, 13};
+    d3_word *_dst = (d3_word *)malloc(1 * sizeof(d3_word));
+    memcpy(_dst, dst, sizeof(dst));
+
+    _dst = _insert_sorted(_dst, 1, src, 4);
+    CHECK(_dst[0] == 10);
+    CHECK(_dst[1] == 11);
+    CHECK(_dst[2] == 12);
+    CHECK(_dst[3] == 13);
+    CHECK(_dst[4] == 14);
+
+    free(_dst);
+  }
 }
