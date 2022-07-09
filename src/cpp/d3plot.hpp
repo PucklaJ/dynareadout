@@ -63,6 +63,7 @@ public:
   Array<d3plot_thick_shell> read_thick_shell_elements();
   Array<d3plot_beam> read_beam_elements();
   Array<d3plot_shell> read_shell_elements();
+  String read_title();
 
   inline size_t num_time_steps() const { return m_handle.num_states; }
 

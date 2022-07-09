@@ -79,6 +79,10 @@ TEST_CASE("d3plot") {
     return;
   }
 
+  char *title = d3plot_read_title(&plot_file);
+  CHECK(title == "Pouch_macro_37Ah                        ");
+  free(title);
+
   REQUIRE(plot_file.num_states == 102);
 
   size_t num_nodes;
@@ -239,6 +243,11 @@ TEST_CASE("d3plot C++") {
   }
 
   dro::D3plot plot_file("test_data/d3plot");
+
+  {
+    const auto title(plot_file.read_title());
+    CHECK(title == "Pouch_macro_37Ah                        ");
+  }
 
   REQUIRE(plot_file.num_time_steps() == 102);
 

@@ -41,7 +41,7 @@ Binout::Binout(const std::filesystem::path &file_name) {
   if (open_error) {
     // Call binout_close since the destructor is not getting called
     binout_close(&m_handle);
-    throw Exception(String(open_error, strlen(open_error) + 1));
+    throw Exception(String(open_error));
   }
 }
 
@@ -51,8 +51,7 @@ BinoutType Binout::get_type_id(const std::string &path_to_variable) const {
   const BinoutType type_id{static_cast<BinoutType>(binout_get_type_id(
       const_cast<binout_file *>(&m_handle), path_to_variable.c_str()))};
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string,
-                           strlen(m_handle.error_string) + 1, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return type_id;
@@ -84,8 +83,7 @@ template <> Array<int8_t> Binout::read(const std::string &path_to_variable) {
   int8_t *data =
       binout_read_int8_t(&m_handle, path_to_variable.c_str(), &data_size);
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string,
-                           strlen(m_handle.error_string) + 1, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<int8_t>(data, data_size);
@@ -103,8 +101,7 @@ template <> Array<int32_t> Binout::read(const std::string &path_to_variable) {
   int32_t *data =
       binout_read_int32_t(&m_handle, path_to_variable.c_str(), &data_size);
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string,
-                           strlen(m_handle.error_string) + 1, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<int32_t>(data, data_size);
@@ -115,8 +112,7 @@ template <> Array<int64_t> Binout::read(const std::string &path_to_variable) {
   int64_t *data =
       binout_read_int64_t(&m_handle, path_to_variable.c_str(), &data_size);
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string,
-                           strlen(m_handle.error_string) + 1, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<int64_t>(data, data_size);
@@ -127,8 +123,7 @@ template <> Array<uint8_t> Binout::read(const std::string &path_to_variable) {
   uint8_t *data =
       binout_read_uint8_t(&m_handle, path_to_variable.c_str(), &data_size);
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string,
-                           strlen(m_handle.error_string) + 1, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<uint8_t>(data, data_size);
@@ -139,8 +134,7 @@ template <> Array<uint16_t> Binout::read(const std::string &path_to_variable) {
   uint16_t *data =
       binout_read_uint16_t(&m_handle, path_to_variable.c_str(), &data_size);
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string,
-                           strlen(m_handle.error_string) + 1, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<uint16_t>(data, data_size);
@@ -151,8 +145,7 @@ template <> Array<uint32_t> Binout::read(const std::string &path_to_variable) {
   uint32_t *data =
       binout_read_uint32_t(&m_handle, path_to_variable.c_str(), &data_size);
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string,
-                           strlen(m_handle.error_string) + 1, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<uint32_t>(data, data_size);
@@ -163,8 +156,7 @@ template <> Array<uint64_t> Binout::read(const std::string &path_to_variable) {
   uint64_t *data =
       binout_read_uint64_t(&m_handle, path_to_variable.c_str(), &data_size);
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string,
-                           strlen(m_handle.error_string) + 1, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<uint64_t>(data, data_size);
@@ -175,8 +167,7 @@ template <> Array<float> Binout::read(const std::string &path_to_variable) {
   float *data =
       binout_read_float(&m_handle, path_to_variable.c_str(), &data_size);
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string,
-                           strlen(m_handle.error_string) + 1, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<float>(data, data_size);
@@ -187,8 +178,7 @@ template <> Array<double> Binout::read(const std::string &path_to_variable) {
   double *data =
       binout_read_double(&m_handle, path_to_variable.c_str(), &data_size);
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string,
-                           strlen(m_handle.error_string) + 1, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<double>(data, data_size);

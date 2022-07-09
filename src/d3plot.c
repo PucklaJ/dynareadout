@@ -37,7 +37,6 @@
 
 d3plot_file d3plot_open(const char *root_file_name) {
   d3plot_file plot_file;
-  CDA.title = NULL;
   plot_file.error_string = NULL;
   plot_file.data_pointers = NULL;
   plot_file.num_states = 0;
@@ -50,10 +49,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
     return plot_file;
   }
 
-  /* Read Title*/
-  CDA.title = malloc(10 * plot_file.buffer.word_size + 1);
-  d3_buffer_read_words(&plot_file.buffer, CDA.title, 10);
-  CDA.title[10 * plot_file.buffer.word_size] = '\0';
+  d3_buffer_skip_words(&plot_file.buffer, 10); /* Title*/
 
   READ_CONTROL_DATA_PLOT_FILE_WORD(run_time);
 
@@ -368,11 +364,9 @@ d3plot_file d3plot_open(const char *root_file_name) {
 void d3plot_close(d3plot_file *plot_file) {
   d3_buffer_close(&plot_file->buffer);
 
-  free(plot_file->control_data.title);
   free(plot_file->data_pointers);
   free(plot_file->error_string);
 
-  plot_file->control_data.title = NULL;
   plot_file->num_states = 0;
 }
 
@@ -631,6 +625,16 @@ d3plot_shell *d3plot_read_shell_elements(d3plot_file *plot_file,
   }
 
   return shells;
+}
+
+char *d3plot_read_title(d3plot_file *plot_file) {
+  char *title = malloc(10 * plot_file->buffer.word_size + 1);
+  /* We never set D3PLT_PTR_TITLE, but because the Title is at position 0 we
+   * don't need to*/
+  d3_buffer_read_words_at(&plot_file->buffer, title, 10,
+                          plot_file->data_pointers[D3PLT_PTR_TITLE]);
+  title[10 * plot_file->buffer.word_size] = '\0';
+  return title;
 }
 
 const char *_d3plot_get_file_type_name(d3_word file_type) {

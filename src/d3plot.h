@@ -28,7 +28,8 @@
 #include "d3_buffer.h"
 #include "d3_defines.h"
 
-#define D3PLT_PTR_NODE_COORDS 0
+#define D3PLT_PTR_TITLE 0
+#define D3PLT_PTR_NODE_COORDS (D3PLT_PTR_TITLE + 1)
 #define D3PLT_PTR_NODE_IDS (D3PLT_PTR_NODE_COORDS + 1)
 #define D3PLT_PTR_EL8_IDS (D3PLT_PTR_NODE_IDS + 1)
 #define D3PLT_PTR_EL2_IDS (D3PLT_PTR_EL8_IDS + 1)
@@ -48,7 +49,6 @@
 /* This holds all data needed to read d3plot files*/
 typedef struct {
   struct {
-    char *title;
     /* These are all the values inside the CONTROL DATA section of the first
      * d3plot file (root file)*/
     d3_word run_time, source_version, release_version, version, ndim, numnp,
@@ -140,6 +140,9 @@ d3plot_beam *d3plot_read_beam_elements(d3plot_file *plot_file,
  * shell elements. The return value needs to be deallocated by free*/
 d3plot_shell *d3plot_read_shell_elements(d3plot_file *plot_file,
                                          size_t *num_shells);
+/* Returns a null terminated string holding the Title of the d3plot file. The
+ * return value needs to be deallocated by free.*/
+char *d3plot_read_title(d3plot_file *plot_file);
 
 /***** Data sections *******/
 /* GEOMETRY DATA pg. 17*/

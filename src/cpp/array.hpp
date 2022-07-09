@@ -204,6 +204,12 @@ inline std::ostream &operator<<(std::ostream &stream, const Array<T> &str) {
   return stream;
 }
 
-typedef Array<char> String;
+class String : public Array<char> {
+public:
+  String(char *data, size_t size, bool delete_data = true) noexcept
+      : Array<char>(data, size, delete_data) {}
+  String(char *str, bool delete_data = true) noexcept
+      : Array<char>(str, strlen(str) + 1, delete_data) {}
+};
 
 } // namespace dro
