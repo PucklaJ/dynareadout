@@ -33,8 +33,11 @@
 
 namespace dro {
 
+// An Array takes ownership over some arbitrary C array and frees its memory in
+// the destructor
 template <typename T> class Array {
 public:
+  // An iterator which can not write the array
   class ConstIterator {
   public:
     using iterator_category = std::input_iterator_tag;
@@ -68,6 +71,7 @@ public:
     difference_type m_index;
   };
 
+  // An Iterator which can write the array
   class Iterator : public ConstIterator {
   public:
     Iterator(typename ConstIterator::pointer data,
@@ -82,6 +86,9 @@ public:
     }
   };
 
+  // data ........... An C array allocated by malloc
+  // size ........... The number of elements inside data
+  // delete_data .... Wether to free data in the destructor
   Array(T *data, size_t size, bool delete_data = true) noexcept;
   Array(Array<T> &&rhs) noexcept;
   ~Array() noexcept;
@@ -95,6 +102,7 @@ public:
   size_t size() const noexcept { return m_size; }
   bool empty() const noexcept { return m_size == 0; }
 
+  // Convert the array to a std::string. Only works for uint8_t, int8_t and char
   std::string str() const noexcept;
 
   Iterator begin() noexcept { return Iterator(m_data, 0); }
@@ -125,7 +133,7 @@ template <typename T> Array<T>::~Array() noexcept {
 }
 
 template <typename T> T &Array<T>::operator[](size_t index) {
-  if (index > m_size - 1) {
+  if (empty() || index > m_size - 1) {
     throw std::runtime_error("Index out of Range");
   }
 
@@ -133,7 +141,7 @@ template <typename T> T &Array<T>::operator[](size_t index) {
 }
 
 template <typename T> const T &Array<T>::operator[](size_t index) const {
-  if (index > m_size - 1) {
+  if (empty() || index > m_size - 1) {
     throw std::runtime_error("Index out of Range");
   }
 
@@ -161,6 +169,12 @@ template <typename T>
 bool operator==(const Array<T> &str1, const char *str2) noexcept {
   static_assert(std::is_same_v<T, char> || std::is_same_v<T, int8_t> ||
                 std::is_same_v<T, uint8_t>);
+  // An empty String can be equal to a string with 0 length
+  if (str1.empty()) {
+    return strlen(str2) == 0;
+  }
+
+  // If the string ends with a null terminator we can use strcmp()
   if (str1.data()[str1.size() - 1] == '\0') {
     return strcmp(reinterpret_cast<const char *>(str1.data()), str2) == 0;
   }
