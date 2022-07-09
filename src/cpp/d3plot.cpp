@@ -43,7 +43,7 @@ D3plot::D3plot(const std::filesystem::path &root_file_name) {
     m_handle.error_string = NULL;
     d3plot_close(&m_handle);
 
-    throw Exception(String(error_string, strlen(error_string) + 1));
+    throw Exception(String(error_string));
   }
 }
 
@@ -146,6 +146,11 @@ Array<d3plot_shell> D3plot::read_shell_elements() {
   d3plot_shell *elements = d3plot_read_shell_elements(&m_handle, &num_elements);
 
   return Array<d3plot_shell>(elements, num_elements);
+}
+
+String D3plot::read_title() {
+  char *title = d3plot_read_title(&m_handle);
+  return String(title);
 }
 
 } // namespace dro
