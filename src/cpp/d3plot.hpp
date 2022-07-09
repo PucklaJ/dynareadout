@@ -90,6 +90,9 @@ public:
   // Returns the number of states (time steps)
   inline size_t num_time_steps() const { return m_handle.num_states; }
 
+  inline d3plot_file &get_handle() { return m_handle; }
+  inline const d3plot_file &get_handle() const { return m_handle; }
+
 private:
   // The underlying C handle of the d3plot file
   d3plot_file m_handle;

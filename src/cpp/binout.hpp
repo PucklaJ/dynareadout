@@ -46,6 +46,8 @@ enum BinoutType {
   Invalid = BINOUT_TYPE_INVALID
 };
 
+// This class is used to open and read data from a binout file (or multiple
+// files by globbing)
 class Binout {
 public:
   class Exception : public std::exception {
@@ -58,18 +60,25 @@ public:
     const String m_error_str;
   };
 
+  // Open a binout file (or multiple files by globbing) and parse its records to
+  // be ready to read data
   Binout(const std::filesystem::path &file_name);
   ~Binout() noexcept;
 
+  // Read data from the file. The type id of the data has to match T
   template <typename T> Array<T> read(const std::string &path_to_variable);
+  // Returns the type id of the given variable. The type id is one of BinoutType
   BinoutType get_type_id(const std::string &path_to_variable) const;
+  // Returns whether a record with the given path and variable name exists
   bool variable_exists(const std::string &path_to_variable) const noexcept;
+  // Returns the entries under a given path
   std::vector<String> get_children(const std::string &path) const noexcept;
 
   binout_file &get_handle() noexcept { return m_handle; }
   const binout_file &get_handle() const noexcept { return m_handle; }
 
 private:
+  // The underlying C handle of the binout file
   binout_file m_handle;
 };
 
