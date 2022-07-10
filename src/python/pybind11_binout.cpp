@@ -23,40 +23,18 @@
  * 3. This notice may not be removed or altered from any source distribution.
  ************************************************************************************/
 
+#include "conversions.hpp"
 #include <binout.hpp>
 #include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
 namespace dro {
 
 template <typename T>
-inline std::vector<T> array_vector_wrapper(Array<T> &&arr) noexcept {
-  std::vector<T> vec;
-  vec.resize(arr.size());
-  memcpy(vec.data(), arr.data(), arr.size() * sizeof(T));
-  return vec;
-}
-
-template <typename T>
 std::vector<T> binout_read_type_wrapper(Binout &bin_file,
                                         const std::string &path_to_variable) {
   return array_vector_wrapper(bin_file.read<T>(path_to_variable));
-}
-
-template <typename T> py::list array_to_python_list(Array<T> &&arr) {
-  py::list l;
-
-  for (const auto &v : arr) {
-    l.append(v);
-  }
-
-  return l;
-}
-
-template <typename T> py::str array_to_python_string(Array<T> &&arr) {
-  return py::str(arr.str());
 }
 
 py::object binout_read_wrapper(dro::Binout &bin_file,
