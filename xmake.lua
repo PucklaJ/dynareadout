@@ -17,6 +17,9 @@ add_rules("mode.debug", "mode.release")
 target("binout")
     set_kind("$(kind)")
     set_languages("ansi")
+    if is_plat("linux") then
+        add_cxxflags("-fPIC")
+    end
     add_files("src/binout*.c", "src/path.c")
     add_headerfiles("src/binout*.h", "src/path.h")
     if is_kind("shared") then
@@ -26,6 +29,9 @@ target("binout")
 target("d3plot")
     set_kind("$(kind)")
     set_languages("ansi")
+    if is_plat("linux") then
+        add_cxxflags("-fPIC")
+    end
     add_files("src/d3*.c")
     add_headerfiles("src/d3*.h")
     if is_kind("shared") then
@@ -33,10 +39,13 @@ target("d3plot")
     end
 target_end()
 
-if get_config("build_cpp") then
+if get_config("build_cpp") or get_config("build_python") then
     target("binout_cpp")
         set_kind("$(kind)")
         set_languages("cxx17")
+        if is_plat("linux") then
+            add_cxxflags("-fPIC")
+        end
         add_deps("binout")
         add_includedirs("src")
         add_files("src/cpp/binout*.cpp")
@@ -48,6 +57,9 @@ if get_config("build_cpp") then
     target("d3plot_cpp")
         set_kind("$(kind)")
         set_languages("cxx17")
+        if is_plat("linux") then
+            add_cxxflags("-fPIC")
+        end
         add_deps("d3plot")
         add_includedirs("src")
         add_files("src/cpp/d3*.cpp")
@@ -92,11 +104,14 @@ if get_config("build_python") then
     add_requires("python3", "pybind11")
     target("binout_pybind11")
         set_kind("shared")
-        set_languages("cxx11")
-        add_deps("binout")
+        set_languages("cxx17")
+        if is_plat("linux") then
+            add_cxxflags("-fPIC")
+        end
+        add_deps("binout_cpp")
         add_packages("pybind11")
         add_files("src/python/pybind11_binout.cpp")
-        add_includedirs("src")
+        add_includedirs("src", "src/cpp")
         add_rpathdirs("@executable_path")
 
         on_load(function (target)
