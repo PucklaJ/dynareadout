@@ -26,25 +26,40 @@
 #ifndef D3_DEFINES_H
 #define D3_DEFINES_H
 #include <stdint.h>
+#ifdef __cplusplus
+#include <array>
+#endif
 
 typedef uint64_t d3_word;
 
 typedef struct {
+#ifdef __cplusplus
+  std::array<d3_word, 8> node_ids;
+#else
   d3_word node_ids[8];
+#endif
   d3_word material_id;
 } d3plot_solid;
 
 typedef d3plot_solid d3plot_thick_shell;
 
 typedef struct {
+#ifdef __cplusplus
+  std::array<d3_word, 2> node_ids;
+#else
   d3_word node_ids[2];
+#endif
   d3_word orientation_node_id;
   d3_word _null[2];
   d3_word material_id;
 } d3plot_beam;
 
 typedef struct {
+#ifdef __cplusplus
+  std::array<d3_word, 4> node_ids;
+#else
   d3_word node_ids[4];
+#endif
   d3_word material_id;
 } d3plot_shell;
 
