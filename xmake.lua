@@ -7,6 +7,10 @@ option("build_test")
 option("build_cpp")
     set_default(true)
     set_showmenu(true)
+
+option("build_python")
+    set_default(false)
+    set_showmenu(true)
 option_end()
 
 add_rules("mode.debug", "mode.release")
@@ -82,4 +86,23 @@ if get_config("build_test") then
         add_includedirs("src")
         add_files("test/d3plot_test.cpp")
     target_end()
+end
+
+if get_config("build_python") then
+    add_requires("python3", "pybind11")
+    target("binout_pybind11")
+        set_kind("shared")
+        set_languages("cxx11")
+        add_deps("binout")
+        add_packages("pybind11")
+        add_files("src/python/pybind11_binout.cpp")
+        add_includedirs("src")
+        add_rpathdirs("@executable_path")
+
+        on_load(function (target)
+            os.execv("python3-config", {"--extension-suffix"}, {stdout="/tmp/python_config_name.txt"})
+            ext_name = io.readfile("/tmp/python_config_name.txt")
+            ext_name = ext_name:gsub("%s+", "")
+            target:set("filename", "libbinout" .. ext_name)
+        end)
 end
