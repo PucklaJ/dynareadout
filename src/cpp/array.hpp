@@ -160,9 +160,15 @@ template <typename T> Array<T> &Array<T>::operator=(Array<T> &&rhs) noexcept {
 template <typename T> std::string Array<T>::str() const noexcept {
   static_assert(std::is_same_v<T, char> || std::is_same_v<T, int8_t> ||
                 std::is_same_v<T, uint8_t>);
+  if (empty()) {
+    return std::string();
+  }
 
-  std::string str(reinterpret_cast<const char *>(m_data), m_size);
-  return str;
+  if (m_data[m_size - 1] == '\0') {
+    return std::string(reinterpret_cast<const char *>(m_data), m_size - 1);
+  }
+
+  return std::string(reinterpret_cast<const char *>(m_data), m_size);
 }
 
 template <typename T>
