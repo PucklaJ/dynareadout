@@ -9,18 +9,18 @@ This library also supports bindings to other languages
 | Language | Implemented |
 | -------- | :---------: |
 | C++      |      ✅      |
-| Python   |      ❌      |
+| Python   |      ✅      |
 | Go       |      ❌      |
 
 ## Build
 
 You just need any C compiler and [xmake](https://xmake.io) as the build system. Just call `xmake` and the library will build. You can find the built binaries inside the build folder. To also build some of the bindings you need to call `xmake f` with one or more of the following flags. And then `xmake` again.
 
-| Language | Flag            | Default |
-| -------- | --------------- | :-----: |
-| C++      | `--build_cpp=y` |    ✅    |
-| Python   | -               |    ❌    |
-| Go       | -               |    ❌    |
+| Language | Flag               | Default |
+| -------- | ------------------ | :-----: |
+| C++      | `--build_cpp=y`    |    ✅    |
+| Python   | `--build_python=y` |    ❌    |
+| Go       | -                  |    ❌    |
 
 ## xmake repo
 
