@@ -3,7 +3,7 @@
 
 namespace dro {
 
-typedef uint64_t uVec3[3];
-typedef double dVec3[3];
+typedef std::array<uint64_t, 3> uVec3;
+typedef std::array<double, 3> dVec3;
 
 } // namespace dro

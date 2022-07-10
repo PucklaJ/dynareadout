@@ -29,28 +29,11 @@
 
 namespace py = pybind11;
 
-namespace dro {
-
-py::list dVec3_array_to_python_list(Array<dVec3> &&arr) {
-  py::list l;
-  for (const auto &v : arr) {
-    py::list l1;
-    l1.append(v[0]);
-    l1.append(v[1]);
-    l1.append(v[2]);
-    l.append(l1);
-  }
-
-  return l;
-}
-
-} // namespace dro
-
 #define D3PLOT_READ_WRAPPER(func)                                              \
   [](dro::D3plot &plot_file) { return array_vector_wrapper(plot_file.func()); }
 #define D3PLOT_READ_STATE_WRAPPER(func)                                        \
   [](dro::D3plot &plot_file, size_t state) {                                   \
-    return dVec3_array_to_python_list(plot_file.func(state));                  \
+    return array_vector_wrapper(plot_file.func(state));                        \
   }
 
 PYBIND11_MODULE(libd3plot, m) {
