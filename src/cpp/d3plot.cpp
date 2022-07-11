@@ -179,4 +179,9 @@ struct tm *D3plot::read_run_time() {
   return d3plot_read_run_time(&m_handle);
 }
 
+D3plotPart D3plot::read_part(size_t part_index) {
+  d3plot_part part = d3plot_read_part(&m_handle, part_index);
+  return D3plotPart(part);
+}
+
 } // namespace dro

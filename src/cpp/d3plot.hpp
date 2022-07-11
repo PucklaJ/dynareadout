@@ -25,6 +25,7 @@
 
 #pragma once
 #include "array.hpp"
+#include "d3plot_part.hpp"
 #include "vec.hpp"
 #include <d3plot.h>
 #include <exception>
@@ -93,6 +94,9 @@ public:
   String read_title();
   // Returns the time at which the simulation has been run as calender time
   struct tm *read_run_time();
+  // Returns all elements of a part. The part_index can retrieved by iterating
+  // over the array returned by read_part_ids
+  D3plotPart read_part(size_t part_index);
 
   // Returns the number of states (time steps)
   inline size_t num_time_steps() const { return m_handle.num_states; }
