@@ -536,6 +536,33 @@ TEST_CASE("d3plot C++") {
           "Jellyroll                                           "
           "                    ");
   }
+
+  auto part(plot_file.read_part(0));
+  CHECK(part.get_shell_elements().size() == 120);
+
+  part = plot_file.read_part(1);
+  CHECK(part.get_shell_elements().size() == 10);
+
+  part = plot_file.read_part(2);
+  CHECK(part.get_shell_elements().size() == 118);
+
+  part = plot_file.read_part(3);
+  CHECK(part.get_shell_elements().size() == 12);
+
+  part = plot_file.read_part(4);
+  CHECK(part.get_shell_elements().size() == 7368);
+
+  part = plot_file.read_part(5);
+  CHECK(part.get_shell_elements().size() == 828);
+
+  part = plot_file.read_part(6);
+  CHECK(part.get_shell_elements().size() == 75000);
+
+  part = plot_file.read_part(7);
+  CHECK(part.get_shell_elements().size() == 5000);
+
+  part = plot_file.read_part(8);
+  CHECK(part.get_solid_elements().size() == 45000);
 }
 #endif
 
