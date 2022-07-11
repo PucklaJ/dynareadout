@@ -132,8 +132,10 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
   d3_buffer_skip_words(&plot_file->buffer, nsrsd); /* nusers*/
   DT_PTR_SET(D3PLT_PTR_EL48_IDS);
   d3_buffer_skip_words(&plot_file->buffer, nsrtd); /* nusert*/
-  d3_buffer_skip_words(&plot_file->buffer,
-                       nmmat * 3); /* norder + nsrmu_a + nsrmp_a*/
+  DT_PTR_SET(D3PLT_PTR_PART_IDS);
+  d3_buffer_skip_words(&plot_file->buffer, nmmat); /* norder*/
+  d3_buffer_skip_words(&plot_file->buffer, 2 * nmmat);
+  /* TODO: Find out what NSRMU and NSRMP is for*/
 
   return 1;
 }
@@ -181,8 +183,8 @@ int _d3plot_read_header(d3plot_file *plot_file) {
     } else if (ntype == 90001) {
       d3_word numprop = 0;
       d3_buffer_read_words(&plot_file->buffer, &numprop, 1);
+      DT_PTR_SET(D3PLT_PTR_PART_TITLES);
       d3_buffer_skip_words(&plot_file->buffer, (1 + 18) * numprop);
-      /* TODO: read function for part titles*/
 
     } else if (ntype == 90002) {
       d3_word numcon = 0;

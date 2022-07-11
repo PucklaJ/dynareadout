@@ -92,6 +92,27 @@ Array<d3_word> D3plot::read_all_element_ids() {
   return Array<d3_word>(ids, num_ids);
 }
 
+Array<d3_word> D3plot::read_part_ids() {
+  size_t num_ids;
+  d3_word *ids = d3plot_read_part_ids(&m_handle, &num_ids);
+
+  return Array<d3_word>(ids, num_ids);
+}
+
+std::vector<String> D3plot::read_part_titles() {
+  size_t num_parts;
+  char **part_titles = d3plot_read_part_titles(&m_handle, &num_parts);
+
+  std::vector<String> vec;
+  vec.reserve(num_parts);
+  for (size_t i = 0; i < num_parts; i++) {
+    vec.emplace_back(part_titles[i]);
+  }
+
+  free(part_titles);
+  return vec;
+}
+
 Array<dVec3> D3plot::read_node_coordinates(size_t state) {
   size_t num_nodes;
   dVec3 *nodes = reinterpret_cast<dVec3 *>(

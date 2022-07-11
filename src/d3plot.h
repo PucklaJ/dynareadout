@@ -88,6 +88,12 @@ d3_word *d3plot_read_solid_shell_element_ids(d3plot_file *plot_file,
 /* Read all ids of the solid, beam, shell and solid shell elements. The return
  * value needs to be deallocated by free*/
 d3_word *d3plot_read_all_element_ids(d3plot_file *plot_file, size_t *num_ids);
+/* Read all ids of the parts. The return value needs to be deallocated by free*/
+d3_word *d3plot_read_part_ids(d3plot_file *plot_file, size_t *num_parts);
+/* Returns an array containing null terminated strings for the part titles. Each
+ * element of the array needs to be deallocated by free and the array itself
+ * also needs to deallocated by free*/
+char **d3plot_read_part_titles(d3plot_file *plot_file, size_t *num_parts);
 /* Returns an array containing all axes of all nodes at a given state. See:
  * XYZXYZXYZXYZ...*/
 /* Read the node coordinates of all nodes of a given state (time step). The

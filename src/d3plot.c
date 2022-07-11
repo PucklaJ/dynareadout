@@ -442,6 +442,35 @@ d3_word *d3plot_read_all_element_ids(d3plot_file *plot_file, size_t *num_ids) {
   return all_ids;
 }
 
+d3_word *d3plot_read_part_ids(d3plot_file *plot_file, size_t *num_parts) {
+  return _d3plot_read_ids(plot_file, num_parts, D3PLT_PTR_PART_IDS,
+                          plot_file->control_data.nmmat);
+}
+
+char **d3plot_read_part_titles(d3plot_file *plot_file, size_t *num_parts) {
+  *num_parts = plot_file->control_data.nmmat;
+  char **part_titles = malloc(*num_parts * sizeof(char *));
+
+  size_t i = 0;
+  while (i < *num_parts) {
+    part_titles[i] = malloc(18 * plot_file->buffer.word_size + 1);
+    if (i == 0)
+      d3_buffer_read_words_at(&plot_file->buffer, part_titles[i], 18,
+                              plot_file->data_pointers[D3PLT_PTR_PART_TITLES] +
+                                  1);
+    else {
+      d3_buffer_skip_words(&plot_file->buffer, 1);
+      d3_buffer_read_words(&plot_file->buffer, part_titles[i], 18);
+    }
+
+    part_titles[i][18 * plot_file->buffer.word_size] = '\0';
+
+    i++;
+  }
+
+  return part_titles;
+}
+
 double *d3plot_read_node_coordinates(d3plot_file *plot_file, size_t state,
                                      size_t *num_nodes) {
   return _d3plot_read_node_data(plot_file, state, num_nodes,

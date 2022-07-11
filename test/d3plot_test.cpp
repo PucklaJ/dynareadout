@@ -241,6 +241,50 @@ TEST_CASE("d3plot") {
 
   free(shells);
 
+  size_t num_parts;
+  d3_word *part_ids = d3plot_read_part_ids(&plot_file, &num_parts);
+  REQUIRE(num_parts == 9);
+  CHECK(part_ids[0] == 67000063);
+  CHECK(part_ids[1] == 67000064);
+  CHECK(part_ids[2] == 70000063);
+  CHECK(part_ids[3] == 70000064);
+  CHECK(part_ids[4] == 71000063);
+  CHECK(part_ids[5] == 72000063);
+  CHECK(part_ids[6] == 72000064);
+  CHECK(part_ids[7] == 72000065);
+  CHECK(part_ids[8] == 73000001);
+
+  free(part_ids);
+
+  char **part_titles = d3plot_read_part_titles(&plot_file, &num_parts);
+  REQUIRE(num_parts == 9);
+  CHECK(part_titles[0] == "Negative_Terminal_Copper_Anode                      "
+                          "                    ");
+  CHECK(part_titles[1] == "Negative_Terminal_Copper_Anode_Minus                "
+                          "                    ");
+  CHECK(part_titles[2] == "Positive_Terminal_Aluminum_Cathode                  "
+                          "                    ");
+  CHECK(part_titles[3] == "Positive_Terminal_Aluminum_Cathode_Plus             "
+                          "                    ");
+  CHECK(part_titles[4] == "Pouch                                               "
+                          "                    ");
+  CHECK(part_titles[5] == "Pouch_Fold                                          "
+                          "                    ");
+  CHECK(part_titles[6] == "Impactor                                            "
+                          "                    ");
+  CHECK(part_titles[7] == "Ground                                              "
+                          "                    ");
+  CHECK(part_titles[8] == "Jellyroll                                           "
+                          "                    ");
+
+  i = 0;
+  while (i < num_parts) {
+    free(part_titles[i]);
+
+    i++;
+  }
+  free(part_titles);
+
   d3plot_close(&plot_file);
 }
 
@@ -411,6 +455,50 @@ TEST_CASE("d3plot C++") {
       CHECK(shell.material_id >= 1);
       CHECK(shell.material_id <= 8);
     }
+  }
+
+  {
+    const auto part_ids(plot_file.read_part_ids());
+    REQUIRE(part_ids.size() == 9);
+    CHECK(part_ids[0] == 67000063);
+    CHECK(part_ids[1] == 67000064);
+    CHECK(part_ids[2] == 70000063);
+    CHECK(part_ids[3] == 70000064);
+    CHECK(part_ids[4] == 71000063);
+    CHECK(part_ids[5] == 72000063);
+    CHECK(part_ids[6] == 72000064);
+    CHECK(part_ids[7] == 72000065);
+    CHECK(part_ids[8] == 73000001);
+
+    const auto part_titles = plot_file.read_part_titles();
+    REQUIRE(part_titles.size() == 9);
+    CHECK(part_titles[0] ==
+          "Negative_Terminal_Copper_Anode                      "
+          "                    ");
+    CHECK(part_titles[1] ==
+          "Negative_Terminal_Copper_Anode_Minus                "
+          "                    ");
+    CHECK(part_titles[2] ==
+          "Positive_Terminal_Aluminum_Cathode                  "
+          "                    ");
+    CHECK(part_titles[3] ==
+          "Positive_Terminal_Aluminum_Cathode_Plus             "
+          "                    ");
+    CHECK(part_titles[4] ==
+          "Pouch                                               "
+          "                    ");
+    CHECK(part_titles[5] ==
+          "Pouch_Fold                                          "
+          "                    ");
+    CHECK(part_titles[6] ==
+          "Impactor                                            "
+          "                    ");
+    CHECK(part_titles[7] ==
+          "Ground                                              "
+          "                    ");
+    CHECK(part_titles[8] ==
+          "Jellyroll                                           "
+          "                    ");
   }
 }
 #endif
