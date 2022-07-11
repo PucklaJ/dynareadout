@@ -81,9 +81,9 @@ d3_word *d3plot_read_beam_element_ids(d3plot_file *plot_file, size_t *num_ids);
 /* Read all ids of the shell elements. The return value needs to be deallocated
  * by free*/
 d3_word *d3plot_read_shell_element_ids(d3plot_file *plot_file, size_t *num_ids);
-/* Read all ids of the solid shell elements. The return value needs to be
+/* Read all ids of the thick shell elements. The return value needs to be
  * deallocated by free*/
-d3_word *d3plot_read_solid_shell_element_ids(d3plot_file *plot_file,
+d3_word *d3plot_read_thick_shell_element_ids(d3plot_file *plot_file,
                                              size_t *num_ids);
 /* Read all ids of the solid, beam, shell and solid shell elements. The return
  * value needs to be deallocated by free*/
@@ -134,6 +134,10 @@ d3plot_shell *d3plot_read_shell_elements(d3plot_file *plot_file,
 char *d3plot_read_title(d3plot_file *plot_file);
 /* Returns the time at which the simulation has been run as calender time*/
 struct tm *d3plot_read_run_time(d3plot_file *plot_file);
+/* Returns all elements of a part. The part_index can retrieved by iterating
+ * over the array returned by d3plot_read_part_ids. The return value needs to be
+ * deallocated by _d3plot_free_part*/
+d3plot_part d3plot_read_part(d3plot_file *plot_file, size_t part_index);
 
 /***** Data sections *******/
 /* GEOMETRY DATA pg. 17*/
@@ -168,6 +172,8 @@ d3_word *_d3plot_read_ids(d3plot_file *plot_file, size_t *num_ids,
 /* Insert a sorted (ascending) array (src) into a sorted array (dst)*/
 d3_word *_insert_sorted(d3_word *dst, size_t dst_size, const d3_word *src,
                         size_t src_size);
+/* Deallocates all memory of a d3plot_part*/
+void d3plot_free_part(d3plot_part *part);
 /********************************/
 
 #ifdef __cplusplus

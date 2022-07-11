@@ -399,10 +399,10 @@ d3_word *d3plot_read_shell_element_ids(d3plot_file *plot_file,
                           plot_file->control_data.nel4);
 }
 
-d3_word *d3plot_read_solid_shell_element_ids(d3plot_file *plot_file,
+d3_word *d3plot_read_thick_shell_element_ids(d3plot_file *plot_file,
                                              size_t *num_ids) {
-  return _d3plot_read_ids(plot_file, num_ids, D3PLT_PTR_EL48_IDS,
-                          plot_file->control_data.nel48);
+  return _d3plot_read_ids(plot_file, num_ids, D3PLT_PTR_ELT_IDS,
+                          plot_file->control_data.nelt);
 }
 
 d3_word *d3plot_read_all_element_ids(d3plot_file *plot_file, size_t *num_ids) {
@@ -432,7 +432,7 @@ d3_word *d3plot_read_all_element_ids(d3plot_file *plot_file, size_t *num_ids) {
     free(ids_buffer);
   }
 
-  ids_buffer = d3plot_read_solid_shell_element_ids(plot_file, &num_ids_buffer);
+  ids_buffer = d3plot_read_thick_shell_element_ids(plot_file, &num_ids_buffer);
   if (num_ids_buffer > 0) {
     all_ids = _insert_sorted(all_ids, *num_ids, ids_buffer, num_ids_buffer);
     *num_ids += num_ids_buffer;
@@ -682,6 +682,59 @@ struct tm *d3plot_read_run_time(d3plot_file *plot_file) {
   return localtime(&epoch_time);
 }
 
+#define ADD_ELEMENTS_TO_PART(id_func, el_func, el_type, part_num, part_ids)    \
+  ids = id_func(plot_file, &num_elements);                                     \
+  if (num_elements > 0) {                                                      \
+    el_type *els = el_func(plot_file, &num_elements);                          \
+                                                                               \
+    size_t i = 0;                                                              \
+    while (i < num_elements) {                                                 \
+      /* For some reason materials in d3plot are parts -_('_')_-*/             \
+      if (els[i].material_id == part_index) {                                  \
+        part.part_num++;                                                       \
+        part.part_ids =                                                        \
+            realloc(part.part_ids, part.part_num * sizeof(d3_word));           \
+        part.part_ids[part.part_num - 1] = ids[i];                             \
+      }                                                                        \
+                                                                               \
+      i++;                                                                     \
+    }                                                                          \
+                                                                               \
+    free(ids);                                                                 \
+    free(els);                                                                 \
+  }
+
+d3plot_part d3plot_read_part(d3plot_file *plot_file, size_t part_index) {
+  /* Use LS-Dyna's internal index system (Fortran starts by 1)*/
+  part_index++;
+  d3plot_part part;
+  part.solid_ids = NULL;
+  part.thick_shell_ids = NULL;
+  part.beam_ids = NULL;
+  part.shell_ids = NULL;
+  part.num_solids = 0;
+  part.num_thick_shells = 0;
+  part.num_beams = 0;
+  part.num_shells = 0;
+
+  size_t num_elements;
+  d3_word *ids;
+
+  ADD_ELEMENTS_TO_PART(d3plot_read_solid_element_ids,
+                       d3plot_read_solid_elements, d3plot_solid, num_solids,
+                       solid_ids);
+  ADD_ELEMENTS_TO_PART(d3plot_read_thick_shell_element_ids,
+                       d3plot_read_thick_shell_elements, d3plot_thick_shell,
+                       num_thick_shells, thick_shell_ids);
+  ADD_ELEMENTS_TO_PART(d3plot_read_beam_element_ids, d3plot_read_beam_elements,
+                       d3plot_beam, num_beams, beam_ids);
+  ADD_ELEMENTS_TO_PART(d3plot_read_shell_element_ids,
+                       d3plot_read_shell_elements, d3plot_shell, num_shells,
+                       shell_ids);
+
+  return part;
+}
+
 const char *_d3plot_get_file_type_name(d3_word file_type) {
   switch (file_type) {
   case D3_FILE_TYPE_D3PLOT:
@@ -847,4 +900,20 @@ d3_word *_insert_sorted(d3_word *dst, size_t dst_size, const d3_word *src,
   }
 
   return dst;
+}
+
+void d3plot_free_part(d3plot_part *part) {
+  free(part->solid_ids);
+  free(part->thick_shell_ids);
+  free(part->beam_ids);
+  free(part->shell_ids);
+
+  part->solid_ids = NULL;
+  part->thick_shell_ids = NULL;
+  part->beam_ids = NULL;
+  part->shell_ids = NULL;
+  part->num_solids = 0;
+  part->num_thick_shells = 0;
+  part->num_beams = 0;
+  part->num_shells = 0;
 }
