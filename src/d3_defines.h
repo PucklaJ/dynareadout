@@ -63,6 +63,18 @@ typedef struct {
   d3_word material_id;
 } d3plot_shell;
 
+typedef struct {
+  d3_word *solid_ids;
+  d3_word *thick_shell_ids;
+  d3_word *beam_ids;
+  d3_word *shell_ids;
+
+  size_t num_solids;
+  size_t num_thick_shells;
+  size_t num_beams;
+  size_t num_shells;
+} d3plot_part;
+
 #define D3_FILE_TYPE_D3PLOT 1
 #define D3_FILE_TYPE_D3DRLF 2
 #define D3_FILE_TYPE_D3THDT 3
@@ -93,8 +105,8 @@ typedef struct {
 #define D3PLT_PTR_EL8_IDS (D3PLT_PTR_NODE_IDS + 1)
 #define D3PLT_PTR_EL2_IDS (D3PLT_PTR_EL8_IDS + 1)
 #define D3PLT_PTR_EL4_IDS (D3PLT_PTR_EL2_IDS + 1)
-#define D3PLT_PTR_EL48_IDS (D3PLT_PTR_EL4_IDS + 1)
-#define D3PLT_PTR_PART_IDS (D3PLT_PTR_EL48_IDS + 1)
+#define D3PLT_PTR_ELT_IDS (D3PLT_PTR_EL4_IDS + 1)
+#define D3PLT_PTR_PART_IDS (D3PLT_PTR_ELT_IDS + 1)
 #define D3PLT_PTR_EL8_CONNECT (D3PLT_PTR_PART_IDS + 1)
 #define D3PLT_PTR_ELT_CONNECT (D3PLT_PTR_EL8_CONNECT + 1)
 #define D3PLT_PTR_EL2_CONNECT (D3PLT_PTR_ELT_CONNECT + 1)

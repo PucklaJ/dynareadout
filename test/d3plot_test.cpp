@@ -285,6 +285,42 @@ TEST_CASE("d3plot") {
   }
   free(part_titles);
 
+  d3plot_part part = d3plot_read_part(&plot_file, 0);
+  CHECK(part.num_shells == 120);
+  d3plot_free_part(&part);
+
+  part = d3plot_read_part(&plot_file, 1);
+  CHECK(part.num_shells == 10);
+  d3plot_free_part(&part);
+
+  part = d3plot_read_part(&plot_file, 2);
+  CHECK(part.num_shells == 118);
+  d3plot_free_part(&part);
+
+  part = d3plot_read_part(&plot_file, 3);
+  CHECK(part.num_shells == 12);
+  d3plot_free_part(&part);
+
+  part = d3plot_read_part(&plot_file, 4);
+  CHECK(part.num_shells == 7368);
+  d3plot_free_part(&part);
+
+  part = d3plot_read_part(&plot_file, 5);
+  CHECK(part.num_shells == 828);
+  d3plot_free_part(&part);
+
+  part = d3plot_read_part(&plot_file, 6);
+  CHECK(part.num_shells == 75000);
+  d3plot_free_part(&part);
+
+  part = d3plot_read_part(&plot_file, 7);
+  CHECK(part.num_shells == 5000);
+  d3plot_free_part(&part);
+
+  part = d3plot_read_part(&plot_file, 8);
+  CHECK(part.num_solids == 45000);
+  d3plot_free_part(&part);
+
   d3plot_close(&plot_file);
 }
 

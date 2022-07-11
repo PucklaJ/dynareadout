@@ -130,7 +130,7 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
   d3_buffer_skip_words(&plot_file->buffer, nsrbd); /* nuserb*/
   DT_PTR_SET(D3PLT_PTR_EL4_IDS);
   d3_buffer_skip_words(&plot_file->buffer, nsrsd); /* nusers*/
-  DT_PTR_SET(D3PLT_PTR_EL48_IDS);
+  DT_PTR_SET(D3PLT_PTR_ELT_IDS);
   d3_buffer_skip_words(&plot_file->buffer, nsrtd); /* nusert*/
   DT_PTR_SET(D3PLT_PTR_PART_IDS);
   d3_buffer_skip_words(&plot_file->buffer, nmmat); /* norder*/
