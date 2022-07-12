@@ -115,20 +115,21 @@ double *d3plot_read_node_acceleration(d3plot_file *plot_file, size_t state,
 double d3plot_read_time(d3plot_file *plot_file, size_t state);
 /* Returns the node connectivity + material number of all 8 node solid
  * elements. The return value needs to be deallocated by free*/
-d3plot_solid *d3plot_read_solid_elements(d3plot_file *plot_file,
-                                         size_t *num_solids);
+d3plot_solid_con *d3plot_read_solid_elements(d3plot_file *plot_file,
+                                             size_t *num_solids);
 /* Returns the node connectivity + material number of all 8 node thick shell
  * elements. The return value needs to be deallocated by free*/
-d3plot_thick_shell *d3plot_read_thick_shell_elements(d3plot_file *plot_file,
-                                                     size_t *num_thick_shells);
+d3plot_thick_shell_con *
+d3plot_read_thick_shell_elements(d3plot_file *plot_file,
+                                 size_t *num_thick_shells);
 /* Returns the node connectivity + orientation node + material number of all
  * beam elements. The return value needs to be deallocated by free*/
-d3plot_beam *d3plot_read_beam_elements(d3plot_file *plot_file,
-                                       size_t *num_beams);
+d3plot_beam_con *d3plot_read_beam_elements(d3plot_file *plot_file,
+                                           size_t *num_beams);
 /* Returns the node connectivity +  material number of all
  * shell elements. The return value needs to be deallocated by free*/
-d3plot_shell *d3plot_read_shell_elements(d3plot_file *plot_file,
-                                         size_t *num_shells);
+d3plot_shell_con *d3plot_read_shell_elements(d3plot_file *plot_file,
+                                             size_t *num_shells);
 /* Returns a null terminated string holding the Title of the d3plot file. The
  * return value needs to be deallocated by free.*/
 char *d3plot_read_title(d3plot_file *plot_file);

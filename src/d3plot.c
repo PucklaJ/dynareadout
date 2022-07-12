@@ -512,8 +512,8 @@ double d3plot_read_time(d3plot_file *plot_file, size_t state) {
   return time;
 }
 
-d3plot_solid *d3plot_read_solid_elements(d3plot_file *plot_file,
-                                         size_t *num_solids) {
+d3plot_solid_con *d3plot_read_solid_elements(d3plot_file *plot_file,
+                                             size_t *num_solids) {
   if (plot_file->control_data.nel8 <= 0) {
     /* nel8 represents the number of extra nodes for ten node solids*/
     *num_solids = 0;
@@ -521,7 +521,7 @@ d3plot_solid *d3plot_read_solid_elements(d3plot_file *plot_file,
   }
 
   *num_solids = plot_file->control_data.nel8;
-  d3plot_solid *solids = malloc(*num_solids * sizeof(d3plot_solid));
+  d3plot_solid_con *solids = malloc(*num_solids * sizeof(d3plot_solid_con));
   if (plot_file->buffer.word_size == 4) {
     uint32_t *solids32 = malloc(*num_solids * 9 * sizeof(uint32_t));
     d3_buffer_read_words_at(&plot_file->buffer, solids32, 9 * *num_solids,
@@ -552,16 +552,17 @@ d3plot_solid *d3plot_read_solid_elements(d3plot_file *plot_file,
   return solids;
 }
 
-d3plot_thick_shell *d3plot_read_thick_shell_elements(d3plot_file *plot_file,
-                                                     size_t *num_thick_shells) {
+d3plot_thick_shell_con *
+d3plot_read_thick_shell_elements(d3plot_file *plot_file,
+                                 size_t *num_thick_shells) {
   if (plot_file->control_data.nelt == 0) {
     *num_thick_shells = 0;
     return NULL;
   }
 
   *num_thick_shells = plot_file->control_data.nelt;
-  d3plot_thick_shell *thick_shells =
-      malloc(*num_thick_shells * sizeof(d3plot_thick_shell));
+  d3plot_thick_shell_con *thick_shells =
+      malloc(*num_thick_shells * sizeof(d3plot_thick_shell_con));
   if (plot_file->buffer.word_size == 4) {
     uint32_t *thick_shells32 = malloc(*num_thick_shells * 9 * sizeof(uint32_t));
     d3_buffer_read_words_at(&plot_file->buffer, thick_shells32,
@@ -594,15 +595,15 @@ d3plot_thick_shell *d3plot_read_thick_shell_elements(d3plot_file *plot_file,
   return thick_shells;
 }
 
-d3plot_beam *d3plot_read_beam_elements(d3plot_file *plot_file,
-                                       size_t *num_beams) {
+d3plot_beam_con *d3plot_read_beam_elements(d3plot_file *plot_file,
+                                           size_t *num_beams) {
   if (plot_file->control_data.nel2 == 0) {
     *num_beams = 0;
     return NULL;
   }
 
   *num_beams = plot_file->control_data.nel2;
-  d3plot_beam *beams = malloc(*num_beams * sizeof(d3plot_beam));
+  d3plot_beam_con *beams = malloc(*num_beams * sizeof(d3plot_beam_con));
   if (plot_file->buffer.word_size == 4) {
     uint32_t *beams32 = malloc(*num_beams * 6 * sizeof(uint32_t));
     d3_buffer_read_words_at(&plot_file->buffer, beams32, 6 * *num_beams,
@@ -629,15 +630,15 @@ d3plot_beam *d3plot_read_beam_elements(d3plot_file *plot_file,
   return beams;
 }
 
-d3plot_shell *d3plot_read_shell_elements(d3plot_file *plot_file,
-                                         size_t *num_shells) {
+d3plot_shell_con *d3plot_read_shell_elements(d3plot_file *plot_file,
+                                             size_t *num_shells) {
   if (plot_file->control_data.nel4 == 0) {
     *num_shells = 0;
     return NULL;
   }
 
   *num_shells = plot_file->control_data.nel4;
-  d3plot_shell *shells = malloc(*num_shells * sizeof(d3plot_shell));
+  d3plot_shell_con *shells = malloc(*num_shells * sizeof(d3plot_shell_con));
   if (plot_file->buffer.word_size == 4) {
     uint32_t *shells32 = malloc(*num_shells * 5 * sizeof(uint32_t));
     d3_buffer_read_words_at(&plot_file->buffer, shells32, 5 * *num_shells,
@@ -721,15 +722,15 @@ d3plot_part d3plot_read_part(d3plot_file *plot_file, size_t part_index) {
   d3_word *ids;
 
   ADD_ELEMENTS_TO_PART(d3plot_read_solid_element_ids,
-                       d3plot_read_solid_elements, d3plot_solid, num_solids,
+                       d3plot_read_solid_elements, d3plot_solid_con, num_solids,
                        solid_ids);
   ADD_ELEMENTS_TO_PART(d3plot_read_thick_shell_element_ids,
-                       d3plot_read_thick_shell_elements, d3plot_thick_shell,
+                       d3plot_read_thick_shell_elements, d3plot_thick_shell_con,
                        num_thick_shells, thick_shell_ids);
   ADD_ELEMENTS_TO_PART(d3plot_read_beam_element_ids, d3plot_read_beam_elements,
-                       d3plot_beam, num_beams, beam_ids);
+                       d3plot_beam_con, num_beams, beam_ids);
   ADD_ELEMENTS_TO_PART(d3plot_read_shell_element_ids,
-                       d3plot_read_shell_elements, d3plot_shell, num_shells,
+                       d3plot_read_shell_elements, d3plot_shell_con, num_shells,
                        shell_ids);
 
   return part;

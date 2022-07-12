@@ -37,22 +37,23 @@ namespace py = pybind11;
   }
 
 PYBIND11_MODULE(libd3plot, m) {
-  py::class_<d3plot_solid>(m, "d3plot_solid")
-      .def_readonly("node_ids", &d3plot_solid::node_ids)
-      .def_readonly("material_id", &d3plot_solid::material_id)
+  py::class_<d3plot_solid_con>(m, "d3plot_solid_con")
+      .def_readonly("node_ids", &d3plot_solid_con::node_ids)
+      .def_readonly("material_id", &d3plot_solid_con::material_id)
 
       ;
 
-  py::class_<d3plot_beam>(m, "d3plot_beam")
-      .def_readonly("node_ids", &d3plot_beam::node_ids)
-      .def_readonly("orientation_node_id", &d3plot_beam::orientation_node_id)
-      .def_readonly("material_id", &d3plot_beam::material_id)
+  py::class_<d3plot_beam_con>(m, "d3plot_beam_con")
+      .def_readonly("node_ids", &d3plot_beam_con::node_ids)
+      .def_readonly("orientation_node_id",
+                    &d3plot_beam_con::orientation_node_id)
+      .def_readonly("material_id", &d3plot_beam_con::material_id)
 
       ;
 
-  py::class_<d3plot_shell>(m, "d3plot_shell")
-      .def_readonly("node_ids", &d3plot_shell::node_ids)
-      .def_readonly("material_id", &d3plot_shell::material_id)
+  py::class_<d3plot_shell_con>(m, "d3plot_shell_con")
+      .def_readonly("node_ids", &d3plot_shell_con::node_ids)
+      .def_readonly("material_id", &d3plot_shell_con::material_id)
 
       ;
 

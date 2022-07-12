@@ -164,7 +164,8 @@ TEST_CASE("d3plot") {
 
   free(node_data);
 
-  d3plot_solid *solids = d3plot_read_solid_elements(&plot_file, &num_elements);
+  d3plot_solid_con *solids =
+      d3plot_read_solid_elements(&plot_file, &num_elements);
   REQUIRE(num_elements == 45000);
 
   CHECK(solids[43988].node_ids[0] == 32229);
@@ -202,14 +203,15 @@ TEST_CASE("d3plot") {
 
   free(solids);
 
-  d3plot_thick_shell *thick_shells =
+  d3plot_thick_shell_con *thick_shells =
       d3plot_read_thick_shell_elements(&plot_file, &num_elements);
   REQUIRE(num_elements == 0);
 
-  d3plot_beam *beams = d3plot_read_beam_elements(&plot_file, &num_elements);
+  d3plot_beam_con *beams = d3plot_read_beam_elements(&plot_file, &num_elements);
   REQUIRE(num_elements == 0);
 
-  d3plot_shell *shells = d3plot_read_shell_elements(&plot_file, &num_elements);
+  d3plot_shell_con *shells =
+      d3plot_read_shell_elements(&plot_file, &num_elements);
   REQUIRE(num_elements == 88456);
 
   /* EL4 87441: (113858, 113859, 113808, 113807) 8*/
