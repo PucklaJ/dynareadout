@@ -122,6 +122,11 @@ d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
 d3plot_thick_shell *d3plot_read_thick_shells_state(d3plot_file *plot_file,
                                                    size_t state,
                                                    size_t *num_thick_shells);
+/* Returns Axial Force, S shear resultant, T shear resultant, S bending moment,
+ * T bending moment and Torsional resultant of all beams for a given state. The
+ * return value needs to be deallocated by free.*/
+d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
+                                     size_t *num_beams);
 /* Returns the node connectivity + material number of all 8 node solid
  * elements. The return value needs to be deallocated by free*/
 d3plot_solid_con *d3plot_read_solid_elements(d3plot_file *plot_file,

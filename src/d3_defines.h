@@ -136,6 +136,15 @@ typedef struct {
   };
 } d3plot_thick_shell;
 
+typedef struct {
+  double axial_force;
+  double s_shear_resultant;
+  double t_shear_resultant;
+  double s_bending_moment;
+  double t_bending_moment;
+  double torsional_resultant;
+} d3plot_beam;
+
 #define D3_FILE_TYPE_D3PLOT 1
 #define D3_FILE_TYPE_D3DRLF 2
 #define D3_FILE_TYPE_D3THDT 3
@@ -179,7 +188,8 @@ typedef struct {
 #define D3PLT_PTR_STATE_NODE_ACC (D3PLT_PTR_STATE_NODE_VEL + 1)
 #define D3PLT_PTR_STATE_ELEMENT_SOLID (D3PLT_PTR_STATE_NODE_ACC + 1)
 #define D3PLT_PTR_STATE_ELEMENT_THICK_SHELL (D3PLT_PTR_STATE_ELEMENT_SOLID + 1)
-#define D3PLT_PTR_STATES (D3PLT_PTR_STATE_ELEMENT_THICK_SHELL + 1)
+#define D3PLT_PTR_STATE_ELEMENT_BEAM (D3PLT_PTR_STATE_ELEMENT_THICK_SHELL + 1)
+#define D3PLT_PTR_STATES (D3PLT_PTR_STATE_ELEMENT_BEAM + 1)
 #define D3PLT_PTR_COUNT D3PLT_PTR_STATES
 
 #endif

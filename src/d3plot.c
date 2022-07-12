@@ -771,6 +771,83 @@ d3plot_thick_shell *d3plot_read_thick_shells_state(d3plot_file *plot_file,
 
     free(data);
   }
+
+  return thick_shells;
+}
+
+d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
+                                     size_t *num_beams) {
+  *num_beams = plot_file->control_data.nel2;
+  if (*num_beams == 0) {
+    return NULL;
+  }
+
+  if (state >= plot_file->num_states) {
+    plot_file->error_string = malloc(50);
+    sprintf(plot_file->error_string, "%d is out of bounds for the states",
+            state);
+    *num_beams = 0;
+    return NULL;
+  }
+
+  d3plot_beam *beams = malloc(*num_beams * sizeof(d3plot_beam));
+  if (plot_file->buffer.word_size == 4) {
+    float *data = malloc(plot_file->control_data.nel2 *
+                         plot_file->control_data.nv1d * sizeof(float));
+
+    d3_buffer_read_words_at(
+        &plot_file->buffer, data,
+        plot_file->control_data.nel2 * plot_file->control_data.nv1d,
+        plot_file->data_pointers[D3PLT_PTR_STATES + state] +
+            plot_file->data_pointers[D3PLT_PTR_STATE_ELEMENT_BEAM]);
+
+    size_t i = 0;
+    size_t o = 0;
+    while (i < *num_beams) {
+      beams[i].axial_force = data[o++];
+      beams[i].s_shear_resultant = data[o++];
+      beams[i].t_shear_resultant = data[o++];
+      beams[i].s_bending_moment = data[o++];
+      beams[i].t_bending_moment = data[o++];
+      beams[i].torsional_resultant = data[o++];
+      if (plot_file->control_data.nv1d > 6) {
+        /* TODO: If there are values output at beam integration points, then
+         * NV1D = 6 + 5 * BEAMIP*/
+        o += plot_file->control_data.nv1d - 6;
+      }
+
+      i++;
+    }
+
+    free(data);
+  } else {
+    double *data = malloc(plot_file->control_data.nel2 *
+                          plot_file->control_data.nv1d * sizeof(double));
+
+    d3_buffer_read_words_at(
+        &plot_file->buffer, data,
+        plot_file->control_data.nel2 * plot_file->control_data.nv1d,
+        plot_file->data_pointers[D3PLT_PTR_STATES + state] +
+            plot_file->data_pointers[D3PLT_PTR_STATE_ELEMENT_BEAM]);
+
+    size_t i = 0;
+    size_t o = 0;
+    while (i < *num_beams) {
+      memcpy(&beams[i], &data[o], sizeof(d3plot_beam));
+      o += sizeof(d3plot_beam) / sizeof(double);
+      if (plot_file->control_data.nv1d > 6) {
+        /* TODO: If there are values output at beam integration points, then
+         * NV1D = 6 + 5 * BEAMIP*/
+        o += plot_file->control_data.nv1d - 6;
+      }
+
+      i++;
+    }
+
+    free(data);
+  }
+
+  return beams;
 }
 
 d3plot_solid_con *d3plot_read_solid_elements(d3plot_file *plot_file,
