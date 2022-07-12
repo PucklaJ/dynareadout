@@ -334,6 +334,10 @@ TEST_CASE("d3plot") {
   REQUIRE(num_elements == 0);
   free(thick_shells);
 
+  d3plot_beam *beams = d3plot_read_beams_state(&plot_file, 101, &num_elements);
+  REQUIRE(num_elements == 0);
+  free(beams);
+
   d3plot_close(&plot_file);
 }
 
@@ -585,6 +589,11 @@ TEST_CASE("d3plot C++") {
   {
     const auto thick_shells = plot_file.read_thick_shells_state(101);
     REQUIRE(thick_shells.empty());
+  }
+
+  {
+    const auto beams = plot_file.read_beams_state(101);
+    REQUIRE(beams.empty());
   }
 }
 #endif
