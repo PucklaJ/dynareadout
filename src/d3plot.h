@@ -113,6 +113,10 @@ double *d3plot_read_node_acceleration(d3plot_file *plot_file, size_t state,
                                       size_t *num_nodes);
 /* Read the time of a given state (time step) in milliseconds*/
 double d3plot_read_time(d3plot_file *plot_file, size_t state);
+/* Returns stress, strain (if NEIPH >= 6) for a given state. The return value
+ * needs to be deallocated by free.*/
+d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
+                                       size_t *num_solids);
 /* Returns the node connectivity + material number of all 8 node solid
  * elements. The return value needs to be deallocated by free*/
 d3plot_solid_con *d3plot_read_solid_elements(d3plot_file *plot_file,

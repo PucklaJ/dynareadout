@@ -164,84 +164,85 @@ TEST_CASE("d3plot") {
 
   free(node_data);
 
-  d3plot_solid_con *solids =
+  d3plot_solid_con *solids_con =
       d3plot_read_solid_elements(&plot_file, &num_elements);
   REQUIRE(num_elements == 45000);
 
-  CHECK(solids[43988].node_ids[0] == 32229);
-  CHECK(solids[43988].node_ids[1] == 32230);
-  CHECK(solids[43988].node_ids[2] == 32306);
-  CHECK(solids[43988].node_ids[3] == 32305);
-  CHECK(solids[43988].node_ids[4] == 33065);
-  CHECK(solids[43988].node_ids[5] == 33066);
-  CHECK(solids[43988].node_ids[6] == 33142);
-  CHECK(solids[43988].node_ids[7] == 33141);
+  CHECK(solids_con[43988].node_ids[0] == 32229);
+  CHECK(solids_con[43988].node_ids[1] == 32230);
+  CHECK(solids_con[43988].node_ids[2] == 32306);
+  CHECK(solids_con[43988].node_ids[3] == 32305);
+  CHECK(solids_con[43988].node_ids[4] == 33065);
+  CHECK(solids_con[43988].node_ids[5] == 33066);
+  CHECK(solids_con[43988].node_ids[6] == 33142);
+  CHECK(solids_con[43988].node_ids[7] == 33141);
 
-  CHECK(solids[44086].node_ids[0] == 32328);
-  CHECK(solids[44086].node_ids[1] == 32329);
-  CHECK(solids[44086].node_ids[2] == 32405);
-  CHECK(solids[44086].node_ids[3] == 32404);
-  CHECK(solids[44086].node_ids[4] == 33164);
-  CHECK(solids[44086].node_ids[5] == 33165);
-  CHECK(solids[44086].node_ids[6] == 33241);
-  CHECK(solids[44086].node_ids[7] == 33240);
+  CHECK(solids_con[44086].node_ids[0] == 32328);
+  CHECK(solids_con[44086].node_ids[1] == 32329);
+  CHECK(solids_con[44086].node_ids[2] == 32405);
+  CHECK(solids_con[44086].node_ids[3] == 32404);
+  CHECK(solids_con[44086].node_ids[4] == 33164);
+  CHECK(solids_con[44086].node_ids[5] == 33165);
+  CHECK(solids_con[44086].node_ids[6] == 33241);
+  CHECK(solids_con[44086].node_ids[7] == 33240);
 
-  CHECK(solids[43985].node_ids[0] == 32226);
-  CHECK(solids[43985].node_ids[1] == 32227);
-  CHECK(solids[43985].node_ids[2] == 32303);
-  CHECK(solids[43985].node_ids[3] == 32302);
-  CHECK(solids[43985].node_ids[4] == 33062);
-  CHECK(solids[43985].node_ids[5] == 33063);
-  CHECK(solids[43985].node_ids[6] == 33139);
-  CHECK(solids[43985].node_ids[7] == 33138);
+  CHECK(solids_con[43985].node_ids[0] == 32226);
+  CHECK(solids_con[43985].node_ids[1] == 32227);
+  CHECK(solids_con[43985].node_ids[2] == 32303);
+  CHECK(solids_con[43985].node_ids[3] == 32302);
+  CHECK(solids_con[43985].node_ids[4] == 33062);
+  CHECK(solids_con[43985].node_ids[5] == 33063);
+  CHECK(solids_con[43985].node_ids[6] == 33139);
+  CHECK(solids_con[43985].node_ids[7] == 33138);
 
   size_t i = 0;
   while (i < num_elements) {
-    CHECK(solids[i].material_id == 9);
+    CHECK(solids_con[i].material_id == 9);
     i++;
   }
 
-  free(solids);
+  free(solids_con);
 
-  d3plot_thick_shell_con *thick_shells =
+  d3plot_thick_shell_con *thick_shells_con =
       d3plot_read_thick_shell_elements(&plot_file, &num_elements);
   REQUIRE(num_elements == 0);
 
-  d3plot_beam_con *beams = d3plot_read_beam_elements(&plot_file, &num_elements);
+  d3plot_beam_con *beams_con =
+      d3plot_read_beam_elements(&plot_file, &num_elements);
   REQUIRE(num_elements == 0);
 
-  d3plot_shell_con *shells =
+  d3plot_shell_con *shells_con =
       d3plot_read_shell_elements(&plot_file, &num_elements);
   REQUIRE(num_elements == 88456);
 
   /* EL4 87441: (113858, 113859, 113808, 113807) 8*/
-  CHECK(shells[87441].node_ids[0] == 113858);
-  CHECK(shells[87441].node_ids[1] == 113859);
-  CHECK(shells[87441].node_ids[2] == 113808);
-  CHECK(shells[87441].node_ids[3] == 113807);
-  CHECK(shells[87441].material_id == 8);
+  CHECK(shells_con[87441].node_ids[0] == 113858);
+  CHECK(shells_con[87441].node_ids[1] == 113859);
+  CHECK(shells_con[87441].node_ids[2] == 113808);
+  CHECK(shells_con[87441].node_ids[3] == 113807);
+  CHECK(shells_con[87441].material_id == 8);
   /* EL4 88455: (114892, 114893, 114842, 114841) 8*/
-  CHECK(shells[88455].node_ids[0] == 114892);
-  CHECK(shells[88455].node_ids[1] == 114893);
-  CHECK(shells[88455].node_ids[2] == 114842);
-  CHECK(shells[88455].node_ids[3] == 114841);
-  CHECK(shells[88455].material_id == 8);
+  CHECK(shells_con[88455].node_ids[0] == 114892);
+  CHECK(shells_con[88455].node_ids[1] == 114893);
+  CHECK(shells_con[88455].node_ids[2] == 114842);
+  CHECK(shells_con[88455].node_ids[3] == 114841);
+  CHECK(shells_con[88455].material_id == 8);
   /* EL4 87806: (114231, 114232, 114181, 114180) 8*/
-  CHECK(shells[87806].node_ids[0] == 114231);
-  CHECK(shells[87806].node_ids[1] == 114232);
-  CHECK(shells[87806].node_ids[2] == 114181);
-  CHECK(shells[87806].node_ids[3] == 114180);
-  CHECK(shells[87806].material_id == 8);
+  CHECK(shells_con[87806].node_ids[0] == 114231);
+  CHECK(shells_con[87806].node_ids[1] == 114232);
+  CHECK(shells_con[87806].node_ids[2] == 114181);
+  CHECK(shells_con[87806].node_ids[3] == 114180);
+  CHECK(shells_con[87806].material_id == 8);
 
   i = 0;
   while (i < num_elements) {
-    CHECK(shells[i].material_id >= 1);
-    CHECK(shells[i].material_id <= 8);
+    CHECK(shells_con[i].material_id >= 1);
+    CHECK(shells_con[i].material_id <= 8);
 
     i++;
   }
 
-  free(shells);
+  free(shells_con);
 
   size_t num_parts;
   d3_word *part_ids = d3plot_read_part_ids(&plot_file, &num_parts);
@@ -322,6 +323,11 @@ TEST_CASE("d3plot") {
   part = d3plot_read_part(&plot_file, 8);
   CHECK(part.num_solids == 45000);
   d3plot_free_part(&part);
+
+  d3plot_solid *solids =
+      d3plot_read_solids_state(&plot_file, 101, &num_elements);
+  REQUIRE(num_elements == 45000);
+  free(solids);
 
   d3plot_close(&plot_file);
 }
@@ -565,6 +571,11 @@ TEST_CASE("d3plot C++") {
 
   part = plot_file.read_part(8);
   CHECK(part.get_solid_elements().size() == 45000);
+
+  {
+    const auto solids = plot_file.read_solids_state(101);
+    REQUIRE(solids.size() == 45000);
+  }
 }
 #endif
 

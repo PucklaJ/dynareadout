@@ -141,6 +141,17 @@ double D3plot::read_time(size_t state) {
   return d3plot_read_time(&m_handle, state);
 }
 
+Array<d3plot_solid> D3plot::read_solids_state(size_t state) {
+  size_t num_elements;
+  d3plot_solid *elements =
+      d3plot_read_solids_state(&m_handle, state, &num_elements);
+  if (m_handle.error_string) {
+    throw Exception(String(m_handle.error_string, false));
+  }
+
+  return Array<d3plot_solid>(elements, num_elements);
+}
+
 Array<d3plot_solid_con> D3plot::read_solid_elements() {
   size_t num_elements;
   d3plot_solid_con *elements =
