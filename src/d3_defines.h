@@ -39,9 +39,9 @@ typedef struct {
   d3_word node_ids[8];
 #endif
   d3_word material_id;
-} d3plot_solid;
+} d3plot_solid_con;
 
-typedef d3plot_solid d3plot_thick_shell;
+typedef d3plot_solid_con d3plot_thick_shell_con;
 
 typedef struct {
 #ifdef __cplusplus
@@ -52,7 +52,7 @@ typedef struct {
   d3_word orientation_node_id;
   d3_word _null[2];
   d3_word material_id;
-} d3plot_beam;
+} d3plot_beam_con;
 
 typedef struct {
 #ifdef __cplusplus
@@ -61,7 +61,7 @@ typedef struct {
   d3_word node_ids[4];
 #endif
   d3_word material_id;
-} d3plot_shell;
+} d3plot_shell_con;
 
 typedef struct {
   d3_word *solid_ids;
@@ -74,6 +74,41 @@ typedef struct {
   size_t num_beams;
   size_t num_shells;
 } d3plot_part;
+
+typedef struct {
+  double x;
+  double y;
+  double z;
+  union {
+    double xy;
+    double yx;
+  };
+  union {
+    double yz;
+    double zy;
+  };
+  union {
+    double zx;
+    double xz;
+  };
+} d3plot_tensor;
+
+typedef struct {
+  union {
+    d3plot_tensor sigma;
+    d3plot_tensor stress;
+  };
+  union {
+    double effective_plastic_strain;
+    double material_dependent_value;
+  };
+  double extra1;
+  double extra2;
+  union {
+    d3plot_tensor epsilon;
+    d3plot_tensor strain;
+  };
+} d3plot_solid;
 
 #define D3_FILE_TYPE_D3PLOT 1
 #define D3_FILE_TYPE_D3DRLF 2

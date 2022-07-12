@@ -80,16 +80,16 @@ public:
 
   // Returns the node connectivity + material number of all 8 node solid
   // elements
-  Array<d3plot_solid> read_solid_elements();
+  Array<d3plot_solid_con> read_solid_elements();
   // Returns the node connectivity + material number of all 8 node thick shell
   // elements
-  Array<d3plot_thick_shell> read_thick_shell_elements();
+  Array<d3plot_thick_shell_con> read_thick_shell_elements();
   // Returns the node connectivity + orientation node + material number of all
   // beam elements
-  Array<d3plot_beam> read_beam_elements();
+  Array<d3plot_beam_con> read_beam_elements();
   // Returns the node connectivity + material number of all shell
   // elements
-  Array<d3plot_shell> read_shell_elements();
+  Array<d3plot_shell_con> read_shell_elements();
   // Returns a string holding the Title of the d3plot file
   String read_title();
   // Returns the time at which the simulation has been run as calender time

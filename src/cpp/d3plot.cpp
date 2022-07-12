@@ -141,33 +141,36 @@ double D3plot::read_time(size_t state) {
   return d3plot_read_time(&m_handle, state);
 }
 
-Array<d3plot_solid> D3plot::read_solid_elements() {
+Array<d3plot_solid_con> D3plot::read_solid_elements() {
   size_t num_elements;
-  d3plot_solid *elements = d3plot_read_solid_elements(&m_handle, &num_elements);
+  d3plot_solid_con *elements =
+      d3plot_read_solid_elements(&m_handle, &num_elements);
 
-  return Array<d3plot_solid>(elements, num_elements);
+  return Array<d3plot_solid_con>(elements, num_elements);
 }
 
-Array<d3plot_thick_shell> D3plot::read_thick_shell_elements() {
+Array<d3plot_thick_shell_con> D3plot::read_thick_shell_elements() {
   size_t num_elements;
-  d3plot_thick_shell *elements =
+  d3plot_thick_shell_con *elements =
       d3plot_read_thick_shell_elements(&m_handle, &num_elements);
 
-  return Array<d3plot_thick_shell>(elements, num_elements);
+  return Array<d3plot_thick_shell_con>(elements, num_elements);
 }
 
-Array<d3plot_beam> D3plot::read_beam_elements() {
+Array<d3plot_beam_con> D3plot::read_beam_elements() {
   size_t num_elements;
-  d3plot_beam *elements = d3plot_read_beam_elements(&m_handle, &num_elements);
+  d3plot_beam_con *elements =
+      d3plot_read_beam_elements(&m_handle, &num_elements);
 
-  return Array<d3plot_beam>(elements, num_elements);
+  return Array<d3plot_beam_con>(elements, num_elements);
 }
 
-Array<d3plot_shell> D3plot::read_shell_elements() {
+Array<d3plot_shell_con> D3plot::read_shell_elements() {
   size_t num_elements;
-  d3plot_shell *elements = d3plot_read_shell_elements(&m_handle, &num_elements);
+  d3plot_shell_con *elements =
+      d3plot_read_shell_elements(&m_handle, &num_elements);
 
-  return Array<d3plot_shell>(elements, num_elements);
+  return Array<d3plot_shell_con>(elements, num_elements);
 }
 
 String D3plot::read_title() {
