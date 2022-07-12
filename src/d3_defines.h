@@ -110,7 +110,7 @@ typedef struct {
   };
 } d3plot_solid;
 
-/* Only used for d3plot_thick_shell*/
+/* Only used for d3plot_thick_shell and d3plot_shell*/
 typedef struct {
   union {
     d3plot_tensor sigma;
@@ -144,6 +144,21 @@ typedef struct {
   double t_bending_moment;
   double torsional_resultant;
 } d3plot_beam;
+
+typedef struct {
+  d3plot_surface mid;
+  d3plot_surface inner;
+  d3plot_surface outer;
+  union {
+    d3plot_tensor inner_epsilon;
+    d3plot_tensor inner_strain;
+  };
+  union {
+    d3plot_tensor outer_epsilon;
+    d3plot_tensor outer_strain;
+  };
+  double internal_energy;
+} d3plot_shell;
 
 #define D3_FILE_TYPE_D3PLOT 1
 #define D3_FILE_TYPE_D3DRLF 2
@@ -189,7 +204,8 @@ typedef struct {
 #define D3PLT_PTR_STATE_ELEMENT_SOLID (D3PLT_PTR_STATE_NODE_ACC + 1)
 #define D3PLT_PTR_STATE_ELEMENT_THICK_SHELL (D3PLT_PTR_STATE_ELEMENT_SOLID + 1)
 #define D3PLT_PTR_STATE_ELEMENT_BEAM (D3PLT_PTR_STATE_ELEMENT_THICK_SHELL + 1)
-#define D3PLT_PTR_STATES (D3PLT_PTR_STATE_ELEMENT_BEAM + 1)
+#define D3PLT_PTR_STATE_ELEMENT_SHELL (D3PLT_PTR_STATE_ELEMENT_BEAM + 1)
+#define D3PLT_PTR_STATES (D3PLT_PTR_STATE_ELEMENT_SHELL + 1)
 #define D3PLT_PTR_COUNT D3PLT_PTR_STATES
 
 #endif

@@ -850,6 +850,185 @@ d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
   return beams;
 }
 
+d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
+                                       size_t *num_shells) {
+  *num_shells = plot_file->control_data.nel4;
+  if (*num_shells == 0) {
+    return NULL;
+  }
+
+  if (state >= plot_file->num_states) {
+    plot_file->error_string = malloc(50);
+    sprintf(plot_file->error_string, "%d is out of bounds for the states",
+            state);
+    *num_shells = 0;
+    return NULL;
+  }
+
+  d3plot_shell *shells = malloc(*num_shells * sizeof(d3plot_shell));
+  if (plot_file->buffer.word_size == 4) {
+    float *data = malloc(plot_file->control_data.nel4 *
+                         plot_file->control_data.nv2d * sizeof(float));
+
+    d3_buffer_read_words_at(
+        &plot_file->buffer, data,
+        plot_file->control_data.nel4 * plot_file->control_data.nv2d,
+        plot_file->data_pointers[D3PLT_PTR_STATES + state] +
+            plot_file->data_pointers[D3PLT_PTR_STATE_ELEMENT_SHELL]);
+
+    size_t i = 0;
+    size_t o = 0;
+    while (i < *num_shells) {
+      shells[i].mid.sigma.x = data[o++];
+      shells[i].mid.sigma.y = data[o++];
+      shells[i].mid.sigma.z = data[o++];
+      shells[i].mid.sigma.xy = data[o++];
+      shells[i].mid.sigma.yz = data[o++];
+      shells[i].mid.sigma.zx = data[o++];
+      shells[i].mid.effective_plastic_strain = data[o++];
+      /* TODO: Define NEIPS additional history values here for mid surface*/
+      o += plot_file->control_data.neips;
+      shells[i].inner.sigma.x = data[o++];
+      shells[i].inner.sigma.y = data[o++];
+      shells[i].inner.sigma.z = data[o++];
+      shells[i].inner.sigma.xy = data[o++];
+      shells[i].inner.sigma.yz = data[o++];
+      shells[i].inner.sigma.zx = data[o++];
+      shells[i].inner.effective_plastic_strain = data[o++];
+      /* TODO: Define NEIPS additional history values here for inner surface*/
+      o += plot_file->control_data.neips;
+      shells[i].outer.sigma.x = data[o++];
+      shells[i].outer.sigma.y = data[o++];
+      shells[i].outer.sigma.z = data[o++];
+      shells[i].outer.sigma.xy = data[o++];
+      shells[i].outer.sigma.yz = data[o++];
+      shells[i].outer.sigma.zx = data[o++];
+      shells[i].outer.effective_plastic_strain = data[o++];
+      /* TODO: Define NEIPS additional history values here for outer surface*/
+      o += plot_file->control_data.neips;
+      if (plot_file->control_data.maxint > 3) {
+        /* TODO: If MAXINT >3 then define an additional (MAXINT-3 )* (6*IOSHL(1)
+         * + 1*IOSHL(2) + 8*IOSHL(3) + 4*IOSHL(4) + NEIPS) quantities here*/
+        o += (plot_file->control_data.maxint - 3) *
+             (6 * plot_file->control_data.ioshl[0] +
+              1 * plot_file->control_data.ioshl[1] +
+              8 * plot_file->control_data.ioshl[2] +
+              4 * plot_file->control_data.ioshl[3] +
+              plot_file->control_data.neips);
+      }
+      /* TODO:
+       * Bending moment-Mx (local shell coordinate system)
+       * Bending moment-My
+       * Bending moment-Mxy
+       * Shear resultant-Qx
+       * Shear resultant-Qy
+       * Normal resultant-Nx
+       * Normal resultant-Ny
+       * Normal resultant-Nxy
+       * Thickness
+       * Element dependent variable
+       * Element dependent variable*/
+      o += 11;
+      if (plot_file->control_data.istrn == 0) {
+        shells[i].internal_energy = data[o++];
+        memset(&shells[i].inner_epsilon, 0, 2 * sizeof(d3plot_tensor));
+      } else if (plot_file->control_data.istrn == 1) {
+        shells[i].inner_epsilon.x = data[o++];
+        shells[i].inner_epsilon.y = data[o++];
+        shells[i].inner_epsilon.z = data[o++];
+        shells[i].inner_epsilon.xy = data[o++];
+        shells[i].inner_epsilon.yz = data[o++];
+        shells[i].inner_epsilon.zx = data[o++];
+
+        shells[i].outer_epsilon.x = data[o++];
+        shells[i].outer_epsilon.y = data[o++];
+        shells[i].outer_epsilon.z = data[o++];
+        shells[i].outer_epsilon.xy = data[o++];
+        shells[i].outer_epsilon.yz = data[o++];
+        shells[i].outer_epsilon.zx = data[o++];
+
+        if (plot_file->control_data.nv2d >= 45) {
+          shells[i].internal_energy = data[o++];
+        } else {
+          shells[i].internal_energy = 0.0;
+        }
+      }
+
+      i++;
+    }
+
+    free(data);
+  } else {
+    double *data = malloc(plot_file->control_data.nel4 *
+                          plot_file->control_data.nv2d * sizeof(double));
+
+    d3_buffer_read_words_at(
+        &plot_file->buffer, data,
+        plot_file->control_data.nel4 * plot_file->control_data.nv2d,
+        plot_file->data_pointers[D3PLT_PTR_STATES + state] +
+            plot_file->data_pointers[D3PLT_PTR_STATE_ELEMENT_SHELL]);
+
+    size_t i = 0;
+    size_t o = 0;
+    while (i < *num_shells) {
+      memcpy(&shells[i].mid, &data[o], sizeof(d3plot_surface));
+      o += sizeof(d3plot_surface) / sizeof(double);
+      /* TODO: Define NEIPS additional history values here for mid surface*/
+      o += plot_file->control_data.neips;
+      memcpy(&shells[i].inner, &data[o], sizeof(d3plot_surface));
+      o += sizeof(d3plot_surface) / sizeof(double);
+      /* TODO: Define NEIPS additional history values here for inner surface*/
+      o += plot_file->control_data.neips;
+      memcpy(&shells[i].outer, &data[o], sizeof(d3plot_surface));
+      o += sizeof(d3plot_surface) / sizeof(double);
+      /* TODO: Define NEIPS additional history values here for outer surface*/
+      o += plot_file->control_data.neips;
+      if (plot_file->control_data.maxint > 3) {
+        /* TODO: If MAXINT >3 then define an additional (MAXINT-3 )* (6*IOSHL(1)
+         * + 1*IOSHL(2) + 8*IOSHL(3) + 4*IOSHL(4) + NEIPS) quantities here*/
+        o += (plot_file->control_data.maxint - 3) *
+             (6 * plot_file->control_data.ioshl[0] +
+              1 * plot_file->control_data.ioshl[1] +
+              8 * plot_file->control_data.ioshl[2] +
+              4 * plot_file->control_data.ioshl[3] +
+              plot_file->control_data.neips);
+      }
+      /* TODO:
+       * Bending moment-Mx (local shell coordinate system)
+       * Bending moment-My
+       * Bending moment-Mxy
+       * Shear resultant-Qx
+       * Shear resultant-Qy
+       * Normal resultant-Nx
+       * Normal resultant-Ny
+       * Normal resultant-Nxy
+       * Thickness
+       * Element dependent variable
+       * Element dependent variable*/
+      o += 11;
+      if (plot_file->control_data.istrn == 0) {
+        shells[i].internal_energy = data[o++];
+        memset(&shells[i].inner_epsilon, 0, 2 * sizeof(d3plot_tensor));
+      } else if (plot_file->control_data.istrn == 1) {
+        memcpy(&shells[i].inner_epsilon, &data[o], 2 * sizeof(d3plot_tensor));
+        o += 2 * sizeof(d3plot_tensor) / sizeof(double);
+
+        if (plot_file->control_data.nv2d >= 45) {
+          shells[i].internal_energy = data[o++];
+        } else {
+          shells[i].internal_energy = 0.0;
+        }
+      }
+
+      i++;
+    }
+
+    free(data);
+  }
+
+  return shells;
+}
+
 d3plot_solid_con *d3plot_read_solid_elements(d3plot_file *plot_file,
                                              size_t *num_solids) {
   if (plot_file->control_data.nel8 <= 0) {
