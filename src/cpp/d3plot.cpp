@@ -152,6 +152,17 @@ Array<d3plot_solid> D3plot::read_solids_state(size_t state) {
   return Array<d3plot_solid>(elements, num_elements);
 }
 
+Array<d3plot_thick_shell> D3plot::read_thick_shells_state(size_t state) {
+  size_t num_elements;
+  d3plot_thick_shell *elements =
+      d3plot_read_thick_shells_state(&m_handle, state, &num_elements);
+  if (m_handle.error_string) {
+    throw Exception(String(m_handle.error_string, false));
+  }
+
+  return Array<d3plot_thick_shell>(elements, num_elements);
+}
+
 Array<d3plot_solid_con> D3plot::read_solid_elements() {
   size_t num_elements;
   d3plot_solid_con *elements =
