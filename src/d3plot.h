@@ -117,6 +117,11 @@ double d3plot_read_time(d3plot_file *plot_file, size_t state);
  * needs to be deallocated by free.*/
 d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
                                        size_t *num_solids);
+/* Returns stress, strain (if ISTRN == 1) for a given state. The return value
+ * needs to be deallocated by free.*/
+d3plot_thick_shell *d3plot_read_thick_shells_state(d3plot_file *plot_file,
+                                                   size_t state,
+                                                   size_t *num_thick_shells);
 /* Returns the node connectivity + material number of all 8 node solid
  * elements. The return value needs to be deallocated by free*/
 d3plot_solid_con *d3plot_read_solid_elements(d3plot_file *plot_file,

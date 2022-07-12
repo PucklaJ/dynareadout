@@ -27,6 +27,9 @@
 #include <stdlib.h>
 
 #define CDP plot_file->control_data
+#define DT_PTR_SET(value)                                                      \
+  if (plot_file->num_states == 1)                                              \
+  plot_file->data_pointers[value] = plot_file->buffer.cur_word - state_start
 
 int _d3plot_read_state_data(d3plot_file *plot_file) {
   const size_t state_start = plot_file->buffer.cur_word;
@@ -191,26 +194,17 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   }
 
   if (CDP.iu) {
-    if (plot_file->num_states == 1)
-      plot_file->data_pointers[D3PLT_PTR_STATE_NODE_COORDS] =
-          plot_file->buffer.cur_word - state_start;
-
+    DT_PTR_SET(D3PLT_PTR_STATE_NODE_COORDS);
     d3_buffer_skip_words(&plot_file->buffer, 3 * CDP.numnp);
   }
 
   if (CDP.iv) {
-    if (plot_file->num_states == 1)
-      plot_file->data_pointers[D3PLT_PTR_STATE_NODE_VEL] =
-          plot_file->buffer.cur_word - state_start;
-
+    DT_PTR_SET(D3PLT_PTR_STATE_NODE_VEL);
     d3_buffer_skip_words(&plot_file->buffer, 3 * CDP.numnp);
   }
 
   if (CDP.ia) {
-    if (plot_file->num_states == 1)
-      plot_file->data_pointers[D3PLT_PTR_STATE_NODE_ACC] =
-          plot_file->buffer.cur_word - state_start;
-
+    DT_PTR_SET(D3PLT_PTR_STATE_NODE_ACC);
     d3_buffer_skip_words(&plot_file->buffer, 3 * CDP.numnp);
   }
 
@@ -236,9 +230,7 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
       CDP.nmsph * 0; /* We don't support SMOOTH PARTICLE HYDRODYNAMICS*/
   const size_t elem_data_start = plot_file->buffer.cur_word;
 
-  if (plot_file->num_states == 1)
-    plot_file->data_pointers[D3PLT_PTR_STATE_ELEMENT_SOLID] =
-        plot_file->buffer.cur_word - state_start;
+  DT_PTR_SET(D3PLT_PTR_STATE_ELEMENT_SOLID);
   d3_buffer_skip_words(&plot_file->buffer, CDP.nv3d * CDP.nel8);
 
   d3_buffer_skip_words(&plot_file->buffer, CDP.nv1d * CDP.nel2);
@@ -249,8 +241,8 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
 
   /* Then follows who knows what -_(′_′)_-*/
   /* But because we don't support NMSPH, we can assume that NELT follows*/
+  DT_PTR_SET(D3PLT_PTR_STATE_ELEMENT_THICK_SHELL);
   d3_buffer_skip_words(&plot_file->buffer, CDP.nv3dt * CDP.nelt);
-  /* TODO: read function for nelt data*/
 
   const size_t elem_data_end = plot_file->buffer.cur_word;
   const size_t elem_data_size = elem_data_end - elem_data_start;

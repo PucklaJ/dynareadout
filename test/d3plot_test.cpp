@@ -329,6 +329,11 @@ TEST_CASE("d3plot") {
   REQUIRE(num_elements == 45000);
   free(solids);
 
+  d3plot_thick_shell *thick_shells =
+      d3plot_read_thick_shells_state(&plot_file, 101, &num_elements);
+  REQUIRE(num_elements == 0);
+  free(thick_shells);
+
   d3plot_close(&plot_file);
 }
 
@@ -575,6 +580,11 @@ TEST_CASE("d3plot C++") {
   {
     const auto solids = plot_file.read_solids_state(101);
     REQUIRE(solids.size() == 45000);
+  }
+
+  {
+    const auto thick_shells = plot_file.read_thick_shells_state(101);
+    REQUIRE(thick_shells.empty());
   }
 }
 #endif

@@ -79,6 +79,8 @@ public:
   double read_time(size_t state);
   // Returns stress, strain (if NEIPH >= 6) for a given state
   Array<d3plot_solid> read_solids_state(size_t state);
+  // Returns stress, strain (if ISTRN == 1) for a given state
+  Array<d3plot_thick_shell> read_thick_shells_state(size_t state);
 
   // Returns the node connectivity + material number of all 8 node solid
   // elements
