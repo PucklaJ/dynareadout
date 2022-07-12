@@ -236,8 +236,8 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   DT_PTR_SET(D3PLT_PTR_STATE_ELEMENT_BEAM);
   d3_buffer_skip_words(&plot_file->buffer, CDP.nv1d * CDP.nel2);
 
+  DT_PTR_SET(D3PLT_PTR_STATE_ELEMENT_SHELL);
   d3_buffer_skip_words(&plot_file->buffer, CDP.nv2d * CDP.nel4);
-  /* TODO: read function for nel4 data*/
 
   /* Then follows who knows what -_(′_′)_-*/
   /* But because we don't support NMSPH, we can assume that NELT follows*/

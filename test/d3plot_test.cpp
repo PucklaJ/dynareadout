@@ -338,6 +338,11 @@ TEST_CASE("d3plot") {
   REQUIRE(num_elements == 0);
   free(beams);
 
+  d3plot_shell *shells =
+      d3plot_read_shells_state(&plot_file, 101, &num_elements);
+  REQUIRE(num_elements == 88456);
+  free(shells);
+
   d3plot_close(&plot_file);
 }
 
@@ -594,6 +599,11 @@ TEST_CASE("d3plot C++") {
   {
     const auto beams = plot_file.read_beams_state(101);
     REQUIRE(beams.empty());
+  }
+
+  {
+    const auto shells = plot_file.read_shells_state(101);
+    REQUIRE(shells.size() == 88456);
   }
 }
 #endif

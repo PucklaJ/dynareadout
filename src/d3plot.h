@@ -127,6 +127,11 @@ d3plot_thick_shell *d3plot_read_thick_shells_state(d3plot_file *plot_file,
  * return value needs to be deallocated by free.*/
 d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
                                      size_t *num_beams);
+/* Returns stress, strain (if ISTRN == 1) and some other variables (see docs pg.
+ * 36) of all shells for a given state. The return value needs to be deallocated
+ * by free.*/
+d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
+                                       size_t *num_shells);
 /* Returns the node connectivity + material number of all 8 node solid
  * elements. The return value needs to be deallocated by free*/
 d3plot_solid_con *d3plot_read_solid_elements(d3plot_file *plot_file,

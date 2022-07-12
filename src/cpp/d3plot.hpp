@@ -85,6 +85,9 @@ public:
   // moment, T bending moment and Torsional resultant of all beams for a given
   // state
   Array<d3plot_beam> read_beams_state(size_t state);
+  // Returns stress, strain (if ISTRN == 1) and some other variables (see docs
+  // pg. 36) of all shells for a given state
+  Array<d3plot_shell> read_shells_state(size_t state);
 
   // Returns the node connectivity + material number of all 8 node solid
   // elements
