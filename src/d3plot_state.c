@@ -236,8 +236,10 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
       CDP.nmsph * 0; /* We don't support SMOOTH PARTICLE HYDRODYNAMICS*/
   const size_t elem_data_start = plot_file->buffer.cur_word;
 
+  if (plot_file->num_states == 1)
+    plot_file->data_pointers[D3PLT_PTR_STATE_ELEMENT_SOLID] =
+        plot_file->buffer.cur_word - state_start;
   d3_buffer_skip_words(&plot_file->buffer, CDP.nv3d * CDP.nel8);
-  /* TODO: read function for nel8 data*/
 
   d3_buffer_skip_words(&plot_file->buffer, CDP.nv1d * CDP.nel2);
   /* TODO: read function for nel2 data*/
