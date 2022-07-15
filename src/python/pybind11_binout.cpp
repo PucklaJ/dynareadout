@@ -68,18 +68,6 @@ py::object binout_read_wrapper(dro::Binout &bin_file,
   }
 }
 
-std::vector<std::string>
-binout_get_children_wrapper(const dro::Binout &bin_file,
-                            const std::string &path) noexcept {
-  const auto children(bin_file.get_children(path));
-  std::vector<std::string> vec;
-  vec.resize(children.size());
-  for (size_t i = 0; i < children.size(); i++) {
-    vec[i] = children[i].str();
-  }
-  return vec;
-}
-
 } // namespace dro
 
 void add_binout_library_to_module(py::module_ &m) {
@@ -113,7 +101,7 @@ void add_binout_library_to_module(py::module_ &m) {
       .def("read_double", &dro::Binout::read<double>)
       .def("get_type_id", &dro::Binout::get_type_id)
       .def("variable_exists", &dro::Binout::variable_exists)
-      .def("get_children", &dro::binout_get_children_wrapper)
+      .def("get_children", &dro::Binout::get_children)
 
       ;
 }

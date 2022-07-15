@@ -27,6 +27,7 @@
 #include <d3_defines.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <sstream>
 #include <type_traits>
 #include <vec.hpp>
 #include <vector>
@@ -116,6 +117,23 @@ template <typename T> inline void add_array_type_to_module(py::module_ &m) {
 
   if constexpr (std::is_same_v<T, uint8_t> || std::is_same_v<T, int8_t>) {
     arr.def("__str__", &Array<T>::str);
+    arr.def("__repr__", [](Array<T> &arr) { return "'" + arr.str() + "'"; });
+  } else if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>) {
+    arr.def("__repr__", [](Array<T> &arr) {
+      std::stringstream str;
+
+      str << '[';
+
+      for (size_t i = 0; i < arr.size(); i++) {
+        str << arr[i];
+        if (i != arr.size() - 1)
+          str << ", ";
+      }
+
+      str << ']';
+
+      return str.str();
+    });
   }
 }
 
@@ -135,6 +153,7 @@ inline void add_array_to_module(py::module_ &m) {
       .def("__len__", &String::size)
       .def("__getitem__", &array_getitem<char>)
       .def("__str__", &String::str)
+      .def("__repr__", [](String &arr) { return "'" + arr.str() + "'"; })
 
       ;
 }
