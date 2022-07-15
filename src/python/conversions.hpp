@@ -24,9 +24,11 @@
  ************************************************************************************/
 
 #include <array.hpp>
+#include <d3_defines.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <type_traits>
+#include <vec.hpp>
 #include <vector>
 
 namespace py = pybind11;
@@ -84,8 +86,24 @@ template <typename T> inline const char *get_array_name() {
     return "FloatArray";
   } else if constexpr (std::is_same_v<T, double>) {
     return "DoubleArray";
-  } else {
-    return "InvalidArray";
+  } else if constexpr (std::is_same_v<T, dVec3>) {
+    return "Vec3Array";
+  } else if constexpr (std::is_same_v<T, d3plot_solid_con>) {
+    return "SolidConArray";
+  } else if constexpr (std::is_same_v<T, d3plot_beam_con>) {
+    return "BeamConArray";
+  } else if constexpr (std::is_same_v<T, d3plot_shell_con>) {
+    return "ShellConArray";
+  } else if constexpr (std::is_same_v<T, d3plot_thick_shell_con>) {
+    return "ThickShellConArray";
+  } else if constexpr (std::is_same_v<T, d3plot_solid>) {
+    return "SolidArray";
+  } else if constexpr (std::is_same_v<T, d3plot_thick_shell>) {
+    return "ThickShellArray";
+  } else if constexpr (std::is_same_v<T, d3plot_beam>) {
+    return "BeamArray";
+  } else if constexpr (std::is_same_v<T, d3plot_shell>) {
+    return "ShellArray";
   }
 }
 
@@ -112,6 +130,13 @@ inline void add_array_to_module(py::module_ &m) {
   add_array_type_to_module<uint64_t>(m);
   add_array_type_to_module<float>(m);
   add_array_type_to_module<double>(m);
+
+  py::class_<String>(m, "String")
+      .def("__len__", &String::size)
+      .def("__getitem__", &array_getitem<char>)
+      .def("__str__", &String::str)
+
+      ;
 }
 
 } // namespace dro
