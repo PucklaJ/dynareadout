@@ -82,11 +82,7 @@ binout_get_children_wrapper(const dro::Binout &bin_file,
 
 } // namespace dro
 
-PYBIND11_MODULE(libbinout, m) {
-  m.doc() = "Read in LS-Dyna Binout files";
-
-  dro::add_array_to_module(m);
-
+void add_binout_library_to_module(py::module_ &m) {
   py::enum_<dro::BinoutType>(m, "BinoutType")
       .value("Int8", dro::BinoutType::Int8)
       .value("Int16", dro::BinoutType::Int16)

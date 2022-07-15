@@ -47,8 +47,7 @@ inline void add_d3plot_arrays_to_module(py::module_ &m) {
   dro::add_array_type_to_module<dro::dVec3>(m);
 }
 
-PYBIND11_MODULE(libd3plot, m) {
-  dro::add_array_to_module(m);
+void add_d3plot_library_to_module(py::module_ &m) {
   add_d3plot_arrays_to_module(m);
 
   py::class_<d3plot_solid_con>(m, "d3plot_solid_con")
