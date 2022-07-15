@@ -26,6 +26,7 @@
 #include <array.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <type_traits>
 #include <vector>
 
 namespace py = pybind11;
@@ -52,6 +53,65 @@ template <typename T> py::list array_to_python_list(Array<T> &&arr) {
 
 template <typename T> py::str array_to_python_string(Array<T> &&arr) {
   return py::str(arr.str());
+}
+
+template <typename T> T &array_getitem(Array<T> &self, size_t index) {
+  try {
+    return self[index];
+  } catch (const std::runtime_error &) {
+    throw py::index_error("Index out of range");
+  }
+}
+
+template <typename T> inline const char *get_array_name() {
+  if constexpr (std::is_same_v<T, int8_t>) {
+    return "Int8Array";
+  } else if constexpr (std::is_same_v<T, uint8_t>) {
+    return "Uint8Array";
+  } else if constexpr (std::is_same_v<T, int16_t>) {
+    return "Int16Array";
+  } else if constexpr (std::is_same_v<T, uint16_t>) {
+    return "Uint16Array";
+  } else if constexpr (std::is_same_v<T, int32_t>) {
+    return "Int32Array";
+  } else if constexpr (std::is_same_v<T, uint32_t>) {
+    return "Uint32Array";
+  } else if constexpr (std::is_same_v<T, int64_t>) {
+    return "Int64Array";
+  } else if constexpr (std::is_same_v<T, uint64_t>) {
+    return "Uint64Array";
+  } else if constexpr (std::is_same_v<T, float>) {
+    return "FloatArray";
+  } else if constexpr (std::is_same_v<T, double>) {
+    return "DoubleArray";
+  } else {
+    return "InvalidArray";
+  }
+}
+
+template <typename T> inline void add_array_type_to_module(py::module_ &m) {
+  auto arr(py::class_<Array<T>>(m, get_array_name<T>())
+               .def("__len__", &Array<T>::size)
+               .def("__getitem__", &array_getitem<T>)
+
+  );
+
+  if constexpr (std::is_same_v<T, uint8_t> || std::is_same_v<T, int8_t>) {
+    arr.def("__str__", &Array<T>::str);
+  }
+}
+
+inline void add_array_to_module(py::module_ &m) {
+  add_array_type_to_module<int8_t>(m);
+  add_array_type_to_module<uint8_t>(m);
+  add_array_type_to_module<int16_t>(m);
+  add_array_type_to_module<uint16_t>(m);
+  add_array_type_to_module<int32_t>(m);
+  add_array_type_to_module<uint32_t>(m);
+  add_array_type_to_module<int64_t>(m);
+  add_array_type_to_module<uint64_t>(m);
+  add_array_type_to_module<float>(m);
+  add_array_type_to_module<double>(m);
 }
 
 } // namespace dro
