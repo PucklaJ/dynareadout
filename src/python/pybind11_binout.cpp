@@ -85,6 +85,8 @@ binout_get_children_wrapper(const dro::Binout &bin_file,
 PYBIND11_MODULE(libbinout, m) {
   m.doc() = "Read in LS-Dyna Binout files";
 
+  dro::add_array_to_module(m);
+
   py::enum_<dro::BinoutType>(m, "BinoutType")
       .value("Int8", dro::BinoutType::Int8)
       .value("Int16", dro::BinoutType::Int16)
@@ -103,16 +105,16 @@ PYBIND11_MODULE(libbinout, m) {
   py::class_<dro::Binout>(m, "Binout")
       .def(py::init<const std::string &>())
       .def("read", &dro::binout_read_wrapper)
-      .def("read_int8", &dro::binout_read_type_wrapper<int8_t>)
-      .def("read_uint8", &dro::binout_read_type_wrapper<uint8_t>)
-      .def("read_int16", &dro::binout_read_type_wrapper<int16_t>)
-      .def("read_uint16", &dro::binout_read_type_wrapper<uint16_t>)
-      .def("read_int32", &dro::binout_read_type_wrapper<int32_t>)
-      .def("read_uint32", &dro::binout_read_type_wrapper<uint32_t>)
-      .def("read_int64", &dro::binout_read_type_wrapper<int64_t>)
-      .def("read_uint64", &dro::binout_read_type_wrapper<uint64_t>)
-      .def("read_float", &dro::binout_read_type_wrapper<float>)
-      .def("read_double", &dro::binout_read_type_wrapper<double>)
+      .def("read_int8", &dro::Binout::read<int8_t>)
+      .def("read_uint8", &dro::Binout::read<uint8_t>)
+      .def("read_int16", &dro::Binout::read<int16_t>)
+      .def("read_uint16", &dro::Binout::read<uint16_t>)
+      .def("read_int32", &dro::Binout::read<int32_t>)
+      .def("read_uint32", &dro::Binout::read<uint32_t>)
+      .def("read_int64", &dro::Binout::read<int64_t>)
+      .def("read_uint64", &dro::Binout::read<uint64_t>)
+      .def("read_float", &dro::Binout::read<float>)
+      .def("read_double", &dro::Binout::read<double>)
       .def("get_type_id", &dro::Binout::get_type_id)
       .def("variable_exists", &dro::Binout::variable_exists)
       .def("get_children", &dro::binout_get_children_wrapper)

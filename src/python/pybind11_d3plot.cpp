@@ -37,6 +37,8 @@ namespace py = pybind11;
   }
 
 PYBIND11_MODULE(libd3plot, m) {
+  dro::add_array_to_module(m);
+
   py::class_<d3plot_solid_con>(m, "d3plot_solid_con")
       .def_readonly("node_ids", &d3plot_solid_con::node_ids)
       .def_readonly("material_id", &d3plot_solid_con::material_id)
