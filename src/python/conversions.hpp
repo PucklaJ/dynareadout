@@ -152,7 +152,7 @@ inline void add_array_to_module(py::module_ &m) {
   py::class_<String>(m, "String")
       .def("__len__", &String::size)
       .def("__getitem__", &array_getitem<char>)
-      .def("__str__", &String::str)
+      .def("__str__", [](String &arr) { return arr.str(); })
       .def("__repr__", [](String &arr) { return "'" + arr.str() + "'"; })
 
       ;
