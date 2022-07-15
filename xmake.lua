@@ -102,15 +102,16 @@ end
 
 if get_config("build_python") then
     add_requires("python3", "pybind11")
-    target("binout_pybind11")
+    target("pybind11_module")
         set_kind("shared")
         set_languages("cxx17")
         if is_plat("linux") then
             add_cxxflags("-fPIC")
         end
-        add_deps("binout_cpp")
+        add_deps("d3plot_cpp", "binout_cpp")
         add_packages("pybind11")
-        add_files("src/python/pybind11_binout.cpp")
+        add_files("src/python/*.cpp")
+        add_headerfiles("src/python/*.hpp")
         add_includedirs("src", "src/cpp")
         add_rpathdirs("@executable_path")
 
@@ -118,25 +119,6 @@ if get_config("build_python") then
             os.execv("python3-config", {"--extension-suffix"}, {stdout="/tmp/python_config_name.txt"})
             ext_name = io.readfile("/tmp/python_config_name.txt")
             ext_name = ext_name:gsub("%s+", "")
-            target:set("filename", "libbinout" .. ext_name)
-        end)
-
-    target("d3plot_pybind11")
-        set_kind("shared")
-        set_languages("cxx17")
-        if is_plat("linux") then
-            add_cxxflags("-fPIC")
-        end
-        add_deps("d3plot_cpp")
-        add_packages("pybind11")
-        add_files("src/python/pybind11_d3plot.cpp")
-        add_includedirs("src", "src/cpp")
-        add_rpathdirs("@executable_path")
-
-        on_load(function (target)
-            os.execv("python3-config", {"--extension-suffix"}, {stdout="/tmp/python_config_name.txt"})
-            ext_name = io.readfile("/tmp/python_config_name.txt")
-            ext_name = ext_name:gsub("%s+", "")
-            target:set("filename", "libd3plot" .. ext_name)
+            target:set("filename", "dynareadout" .. ext_name)
         end)
 end
