@@ -39,9 +39,9 @@ target("example")
   add_files("src/example.c")
 ```
 
-## Example
+## Examples
 
-### C
+### C - Binout
 
 ```c
 
@@ -97,7 +97,60 @@ int main(int args, char* argv[]) {
 }
 ```
 
-### C++
+### C - D3plot
+
+```c
+#include <d3plot.h>
+#include <stdio.h>
+
+int main(int args, char* argv[]) {
+  /* Just give it the first d3plot file and it opens all of them*/
+  d3plot_file plot_file = d3plot_open("simulation/d3plot");
+  /* Always make sure to check for errors*/
+  if (plot_file.error_string) {
+    fprintf(stderr, "Failed to open: %s\n", plot_file.error_string);
+    d3plot_close(&plot_file);
+    return 1;
+  }
+
+  /* Read the title and run time*/
+  char* title = d3plot_read_title(&plot_file);
+  printf("Title: %s\n", title);
+  /* Always make sure to check if the return value needs to be deallocated*/
+  free(title);
+
+  struct tm* run_time = d3plot_read_run_time(&plot_file);
+  printf("Date: %d.%d.%d\n", run_time.tm_mday, run_time.tm_mon, run_time.tm_year);
+
+  /* Read node ids*/
+  size_t num_nodes;
+  d3_word* node_ids = d3plot_read_node_ids(&plot_file, &num_nodes);
+
+  printf("Nodes: %d\n", num_nodes);
+  for (size_t i = 0; i < num_nodes; i++) {
+    printf("Node %d: %d\n", i, node_ids[i]);
+  }
+
+  free(node_ids);
+
+  /* Read node coordinates of time step 10*/
+  double* node_coords = d3plot_read_node_coordinates(&plot_file, 10, &num_nodes);
+
+  for (size_t i = 0; i < num_nodes; i++) {
+    printf("Node Coords %d: (%.2f, %.2f, %.2f)\n", i, node_coords[i * 3 + 0], node_coords[i * 3 + 1], node_coords[i * 3 + 2]);
+  }
+
+  free(node_coords);
+
+  /* Close the d3plot file at the end*/
+  d3plot_close(&plot_file);
+
+  return 0;
+}
+
+```
+
+### C++ - Binout
 
 ```C++
 #include <iostream>
@@ -113,11 +166,48 @@ int main(int args, char* argv[]) {
       std::cout << "Child: " << child << std::endl;
     }
 
-    const dro::Vector<int32_t> node_ids = bin_file.read<int32_t>("/nodout/metadata/ids");
+    const dro::Array<int32_t> node_ids = bin_file.read<int32_t>("/nodout/metadata/ids");
     for (const auto id : node_ids) {
       std::cout << "Node ID: " << id << std::endl;
     }
   } catch (const dro::Binout::Exception& e) {
+    std::cerr << "An error occurred: " << e.what() << std::endl;
+    return 1;
+  }
+
+  return 0;
+}
+
+```
+
+### C++ - D3plot
+
+```C++
+#include <iostream>
+#include <d3plot.hpp>
+
+int main(int args, char* argv[]) {
+  try {
+    dro::D3plot plot_file("simulation/d3plot");
+
+    const dro::String title(plot_file.read_title());
+    std::cout << "Title: " << title << std::endl;
+
+    struct tm* run_time = plot_file.read_run_time();
+    std::cout << "Date: " << run_time.tm_mday << "." << run_time.tm_mon << "." << run_time.tm_year << std::endl;
+
+    const dro::Array<d3_word> node_ids(plot_file.read_node_ids());
+    std::cout << "Nodes: " << node_ids.size() << std::endl;
+
+    for (const auto& nid : node_ids) {
+      std::cout << "Node ID: " << nid << std::endl;
+    }
+
+    const dro::Array<dro::dVec3> node_coords(plot_file.read_node_coordinates(10));
+    for (const auto& coords : node_coords) {
+      std::cout << "Node Coords: (" << coords[0] << ", " << coords[1] << ", " << coords[2] << ")" << std::endl;
+    }
+  } catch (const dro::D3plot::Exception& e) {
     std::cerr << "An error occurred: " << e.what() << std::endl;
     return 1;
   }
