@@ -47,6 +47,8 @@ public:
     const String m_error_str;
   };
 
+  static size_t index_for_id(const Array<d3_word> &ids, d3_word id);
+
   // Open a d3plot file family by giving the root file name
   // Example: d3plot of d3plot01, d3plot02, d3plot03, etc.
   D3plot(const std::filesystem::path &root_file_name);

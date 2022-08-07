@@ -35,6 +35,10 @@ const char *D3plot::Exception::what() const noexcept {
   return m_error_str.data();
 }
 
+size_t D3plot::index_for_id(const Array<d3_word> &ids, d3_word id) {
+  return d3plot_index_for_id(id, ids.data(), ids.size());
+}
+
 D3plot::D3plot(const std::filesystem::path &root_file_name) {
   m_handle = d3plot_open(root_file_name.string().c_str());
   if (m_handle.error_string) {

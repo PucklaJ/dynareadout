@@ -28,6 +28,7 @@
 #include "binout_glob.h"
 #include <binout.h>
 #include <binout_defines.h>
+#include <cstdint>
 #include <doctest/doctest.h>
 #include <iomanip>
 #include <iostream>
@@ -76,6 +77,7 @@ TEST_CASE("binout0000") {
   char **binout_children =
       binout_get_children(&bin_file, "/", &num_binout_children);
   REQUIRE(num_binout_children == 2);
+
   CHECK(binout_children[0] == "nodout");
   CHECK(binout_children[1] == "rcforc");
 

@@ -1253,6 +1253,10 @@ d3plot_part d3plot_read_part(d3plot_file *plot_file, size_t part_index) {
   return part;
 }
 
+size_t d3plot_index_for_id(d3_word id, const d3_word *ids, size_t num_ids) {
+  return _binary_search(ids, id, 0, num_ids - 1);
+}
+
 const char *_d3plot_get_file_type_name(d3_word file_type) {
   switch (file_type) {
   case D3_FILE_TYPE_D3PLOT:
@@ -1418,6 +1422,22 @@ d3_word *_insert_sorted(d3_word *dst, size_t dst_size, const d3_word *src,
   }
 
   return dst;
+}
+
+size_t _binary_search(const d3_word *arr, d3_word value, size_t start_index,
+                      size_t end_index) {
+  if (start_index == end_index && arr[start_index] != value) {
+    return UINT64_MAX;
+  }
+
+  const size_t mid_index = start_index + (end_index - start_index) / 2;
+  if (arr[mid_index] == value) {
+    return mid_index;
+  } else if (arr[mid_index] > value) {
+    return _binary_search(arr, value, start_index, mid_index - 1);
+  } else {
+    return _binary_search(arr, value, mid_index + 1, end_index);
+  }
 }
 
 void d3plot_free_part(d3plot_part *part) {

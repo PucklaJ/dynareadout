@@ -25,6 +25,7 @@
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #define DOCTEST_CONFIG_TREAT_CHAR_STAR_AS_STRING
+#include <cstdint>
 #include <ctime>
 #include <d3plot.h>
 #include <doctest/doctest.h>
@@ -43,7 +44,7 @@ TEST_CASE("d3_buffer") {
     return;
   }
 
-  CHECK(buffer.word_size == 4);
+  CHECK((buffer.word_size == 4));
   CHECK(buffer.num_file_handles == 28);
 
   char title[10 * 4 + 1];
@@ -701,4 +702,23 @@ TEST_CASE("_insert_sorted") {
 
     free(_dst);
   }
+}
+
+TEST_CASE("_binary_search") {
+  constexpr d3_word arr[] = {1, 2, 3, 4, 6, 7, 8, 9, 10, 11};
+  constexpr size_t arr_size = sizeof(arr) / sizeof(*arr);
+  size_t idx = _binary_search(arr, 6, 0, arr_size - 1);
+  CHECK(idx == 4);
+  idx = _binary_search(arr, 1, 0, arr_size - 1);
+  CHECK(idx == 0);
+  idx = _binary_search(arr, 10, 0, arr_size - 1);
+  CHECK(idx == 8);
+  idx = _binary_search(arr, 11, 0, arr_size - 1);
+  CHECK(idx == 9);
+  idx = _binary_search(arr, 12, 0, arr_size - 1);
+  CHECK(idx == UINT64_MAX);
+  idx = _binary_search(arr, 0, 0, arr_size - 1);
+  CHECK(idx == UINT64_MAX);
+  idx = _binary_search(arr, 5, 0, arr_size - 1);
+  CHECK(idx == UINT64_MAX);
 }
