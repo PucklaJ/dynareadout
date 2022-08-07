@@ -1048,14 +1048,15 @@ d3plot_solid_con *d3plot_read_solid_elements(d3plot_file *plot_file,
     while (i < *num_solids) {
       size_t j = 0;
       while (j < 8) {
-        solids[i].node_ids[j + 0] = solids32[i * 9 + j + 0];
-        solids[i].node_ids[j + 1] = solids32[i * 9 + j + 1];
-        solids[i].node_ids[j + 2] = solids32[i * 9 + j + 2];
-        solids[i].node_ids[j + 3] = solids32[i * 9 + j + 3];
+        /* Subtract 1 because Fortran starts by 1 and C starts by 0*/
+        solids[i].node_indices[j + 0] = solids32[i * 9 + j + 0] - 1;
+        solids[i].node_indices[j + 1] = solids32[i * 9 + j + 1] - 1;
+        solids[i].node_indices[j + 2] = solids32[i * 9 + j + 2] - 1;
+        solids[i].node_indices[j + 3] = solids32[i * 9 + j + 3] - 1;
 
         j += 4;
       }
-      solids[i].material_id = solids32[i * 9 + 8];
+      solids[i].material_index = solids32[i * 9 + 8] - 1;
 
       i++;
     }
@@ -1064,6 +1065,22 @@ d3plot_solid_con *d3plot_read_solid_elements(d3plot_file *plot_file,
   } else {
     d3_buffer_read_words_at(&plot_file->buffer, solids, 9 * *num_solids,
                             plot_file->data_pointers[D3PLT_PTR_EL8_CONNECT]);
+    size_t i;
+    while (i < *num_solids) {
+      size_t j;
+      while (j < 8) {
+        /* Subtract 1 because Fortran starts by 1 and C starts by 0*/
+        solids[i].node_indices[j + 0]--;
+        solids[i].node_indices[j + 1]--;
+        solids[i].node_indices[j + 2]--;
+        solids[i].node_indices[j + 3]--;
+
+        j += 4;
+      }
+      solids[i].material_index--;
+
+      i++;
+    }
   }
 
   return solids;
@@ -1090,14 +1107,15 @@ d3plot_read_thick_shell_elements(d3plot_file *plot_file,
     while (i < *num_thick_shells) {
       size_t j = 0;
       while (j < 8) {
-        thick_shells[i].node_ids[j + 0] = thick_shells32[i * 9 + j + 0];
-        thick_shells[i].node_ids[j + 1] = thick_shells32[i * 9 + j + 1];
-        thick_shells[i].node_ids[j + 2] = thick_shells32[i * 9 + j + 2];
-        thick_shells[i].node_ids[j + 3] = thick_shells32[i * 9 + j + 3];
+        /* Subtract 1 because Fortran starts by 1 and C starts by 0*/
+        thick_shells[i].node_indices[j + 0] = thick_shells32[i * 9 + j + 0] - 1;
+        thick_shells[i].node_indices[j + 1] = thick_shells32[i * 9 + j + 1] - 1;
+        thick_shells[i].node_indices[j + 2] = thick_shells32[i * 9 + j + 2] - 1;
+        thick_shells[i].node_indices[j + 3] = thick_shells32[i * 9 + j + 3] - 1;
 
         j += 4;
       }
-      thick_shells[i].material_id = thick_shells32[i * 9 + 8];
+      thick_shells[i].material_index = thick_shells32[i * 9 + 8] - 1;
 
       i++;
     }
@@ -1107,6 +1125,23 @@ d3plot_read_thick_shell_elements(d3plot_file *plot_file,
     d3_buffer_read_words_at(&plot_file->buffer, thick_shells,
                             9 * *num_thick_shells,
                             plot_file->data_pointers[D3PLT_PTR_ELT_CONNECT]);
+
+    size_t i;
+    while (i < *num_thick_shells) {
+      size_t j = 0;
+      while (j < 8) {
+        /* Subtract 1 because Fortran starts by 1 and C starts by 0*/
+        thick_shells[i].node_indices[j + 0]--;
+        thick_shells[i].node_indices[j + 1]--;
+        thick_shells[i].node_indices[j + 2]--;
+        thick_shells[i].node_indices[j + 3]--;
+
+        j += 4;
+      }
+      thick_shells[i].material_index--;
+
+      i++;
+    }
   }
 
   return thick_shells;
@@ -1128,12 +1163,13 @@ d3plot_beam_con *d3plot_read_beam_elements(d3plot_file *plot_file,
 
     size_t i = 0;
     while (i < *num_beams) {
-      beams[i].node_ids[0] = beams32[i * 6 + 0];
-      beams[i].node_ids[1] = beams32[i * 6 + 1];
-      beams[i].orientation_node_id = beams32[i * 6 + 2];
+      /* Subtract 1 because Fortran starts by 1 and C starts by 0*/
+      beams[i].node_indices[0] = beams32[i * 6 + 0] - 1;
+      beams[i].node_indices[1] = beams32[i * 6 + 1] - 1;
+      beams[i].orientation_node_index = beams32[i * 6 + 2] - 1;
       beams[i]._null[0] = beams32[i * 6 + 3];
       beams[i]._null[1] = beams32[i * 6 + 4];
-      beams[i].material_id = beams32[i * 6 + 5];
+      beams[i].material_index = beams32[i * 6 + 5] - 1;
 
       i++;
     }
@@ -1142,6 +1178,17 @@ d3plot_beam_con *d3plot_read_beam_elements(d3plot_file *plot_file,
   } else {
     d3_buffer_read_words_at(&plot_file->buffer, beams, 6 * *num_beams,
                             plot_file->data_pointers[D3PLT_PTR_EL2_CONNECT]);
+
+    size_t i = 0;
+    while (i < *num_beams) {
+      /* Subtract 1 because Fortran starts by 1 and C starts by 0*/
+      beams[i].node_indices[0]--;
+      beams[i].node_indices[1]--;
+      beams[i].orientation_node_index--;
+      beams[i].material_index--;
+
+      i++;
+    }
   }
 
   return beams;
@@ -1163,11 +1210,12 @@ d3plot_shell_con *d3plot_read_shell_elements(d3plot_file *plot_file,
 
     size_t i = 0;
     while (i < *num_shells) {
-      shells[i].node_ids[0] = shells32[i * 5 + 0];
-      shells[i].node_ids[1] = shells32[i * 5 + 1];
-      shells[i].node_ids[2] = shells32[i * 5 + 2];
-      shells[i].node_ids[3] = shells32[i * 5 + 3];
-      shells[i].material_id = shells32[i * 5 + 4];
+      /* Subtract 1 because Fortran starts by 1 and C starts by 0*/
+      shells[i].node_indices[0] = shells32[i * 5 + 0] - 1;
+      shells[i].node_indices[1] = shells32[i * 5 + 1] - 1;
+      shells[i].node_indices[2] = shells32[i * 5 + 2] - 1;
+      shells[i].node_indices[3] = shells32[i * 5 + 3] - 1;
+      shells[i].material_index = shells32[i * 5 + 4] - 1;
 
       i++;
     }
@@ -1176,6 +1224,18 @@ d3plot_shell_con *d3plot_read_shell_elements(d3plot_file *plot_file,
   } else {
     d3_buffer_read_words_at(&plot_file->buffer, shells, 5 * *num_shells,
                             plot_file->data_pointers[D3PLT_PTR_EL4_CONNECT]);
+
+    size_t i = 0;
+    while (i < *num_shells) {
+      /* Subtract 1 because Fortran starts by 1 and C starts by 0*/
+      shells[i].node_indices[0]--;
+      shells[i].node_indices[1]--;
+      shells[i].node_indices[2]--;
+      shells[i].node_indices[3]--;
+      shells[i].material_index--;
+
+      i++;
+    }
   }
 
   return shells;
@@ -1208,7 +1268,7 @@ struct tm *d3plot_read_run_time(d3plot_file *plot_file) {
     size_t i = 0;                                                              \
     while (i < num_elements) {                                                 \
       /* For some reason materials in d3plot are parts -_('_')_-*/             \
-      if (els[i].material_id == part_index) {                                  \
+      if (els[i].material_index == part_index) {                               \
         part.part_num++;                                                       \
         part.part_ids =                                                        \
             realloc(part.part_ids, part.part_num * sizeof(d3_word));           \
@@ -1223,8 +1283,6 @@ struct tm *d3plot_read_run_time(d3plot_file *plot_file) {
   }
 
 d3plot_part d3plot_read_part(d3plot_file *plot_file, size_t part_index) {
-  /* Use LS-Dyna's internal index system (Fortran starts by 1)*/
-  part_index++;
   d3plot_part part;
   part.solid_ids = NULL;
   part.thick_shell_ids = NULL;

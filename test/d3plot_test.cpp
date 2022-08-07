@@ -169,36 +169,36 @@ TEST_CASE("d3plot") {
       d3plot_read_solid_elements(&plot_file, &num_elements);
   REQUIRE(num_elements == 45000);
 
-  CHECK(solids_con[43988].node_ids[0] == 32229);
-  CHECK(solids_con[43988].node_ids[1] == 32230);
-  CHECK(solids_con[43988].node_ids[2] == 32306);
-  CHECK(solids_con[43988].node_ids[3] == 32305);
-  CHECK(solids_con[43988].node_ids[4] == 33065);
-  CHECK(solids_con[43988].node_ids[5] == 33066);
-  CHECK(solids_con[43988].node_ids[6] == 33142);
-  CHECK(solids_con[43988].node_ids[7] == 33141);
+  CHECK(solids_con[43988].node_indices[0] == 32228);
+  CHECK(solids_con[43988].node_indices[1] == 32229);
+  CHECK(solids_con[43988].node_indices[2] == 32305);
+  CHECK(solids_con[43988].node_indices[3] == 32304);
+  CHECK(solids_con[43988].node_indices[4] == 33064);
+  CHECK(solids_con[43988].node_indices[5] == 33065);
+  CHECK(solids_con[43988].node_indices[6] == 33141);
+  CHECK(solids_con[43988].node_indices[7] == 33140);
 
-  CHECK(solids_con[44086].node_ids[0] == 32328);
-  CHECK(solids_con[44086].node_ids[1] == 32329);
-  CHECK(solids_con[44086].node_ids[2] == 32405);
-  CHECK(solids_con[44086].node_ids[3] == 32404);
-  CHECK(solids_con[44086].node_ids[4] == 33164);
-  CHECK(solids_con[44086].node_ids[5] == 33165);
-  CHECK(solids_con[44086].node_ids[6] == 33241);
-  CHECK(solids_con[44086].node_ids[7] == 33240);
+  CHECK(solids_con[44086].node_indices[0] == 32327);
+  CHECK(solids_con[44086].node_indices[1] == 32328);
+  CHECK(solids_con[44086].node_indices[2] == 32404);
+  CHECK(solids_con[44086].node_indices[3] == 32403);
+  CHECK(solids_con[44086].node_indices[4] == 33163);
+  CHECK(solids_con[44086].node_indices[5] == 33164);
+  CHECK(solids_con[44086].node_indices[6] == 33240);
+  CHECK(solids_con[44086].node_indices[7] == 33239);
 
-  CHECK(solids_con[43985].node_ids[0] == 32226);
-  CHECK(solids_con[43985].node_ids[1] == 32227);
-  CHECK(solids_con[43985].node_ids[2] == 32303);
-  CHECK(solids_con[43985].node_ids[3] == 32302);
-  CHECK(solids_con[43985].node_ids[4] == 33062);
-  CHECK(solids_con[43985].node_ids[5] == 33063);
-  CHECK(solids_con[43985].node_ids[6] == 33139);
-  CHECK(solids_con[43985].node_ids[7] == 33138);
+  CHECK(solids_con[43985].node_indices[0] == 32225);
+  CHECK(solids_con[43985].node_indices[1] == 32226);
+  CHECK(solids_con[43985].node_indices[2] == 32302);
+  CHECK(solids_con[43985].node_indices[3] == 32301);
+  CHECK(solids_con[43985].node_indices[4] == 33061);
+  CHECK(solids_con[43985].node_indices[5] == 33062);
+  CHECK(solids_con[43985].node_indices[6] == 33138);
+  CHECK(solids_con[43985].node_indices[7] == 33137);
 
   size_t i = 0;
   while (i < num_elements) {
-    CHECK(solids_con[i].material_id == 9);
+    CHECK(solids_con[i].material_index == 8);
     i++;
   }
 
@@ -217,28 +217,28 @@ TEST_CASE("d3plot") {
   REQUIRE(num_elements == 88456);
 
   /* EL4 87441: (113858, 113859, 113808, 113807) 8*/
-  CHECK(shells_con[87441].node_ids[0] == 113858);
-  CHECK(shells_con[87441].node_ids[1] == 113859);
-  CHECK(shells_con[87441].node_ids[2] == 113808);
-  CHECK(shells_con[87441].node_ids[3] == 113807);
-  CHECK(shells_con[87441].material_id == 8);
+  CHECK(shells_con[87441].node_indices[0] == 113857);
+  CHECK(shells_con[87441].node_indices[1] == 113858);
+  CHECK(shells_con[87441].node_indices[2] == 113807);
+  CHECK(shells_con[87441].node_indices[3] == 113806);
+  CHECK(shells_con[87441].material_index == 7);
   /* EL4 88455: (114892, 114893, 114842, 114841) 8*/
-  CHECK(shells_con[88455].node_ids[0] == 114892);
-  CHECK(shells_con[88455].node_ids[1] == 114893);
-  CHECK(shells_con[88455].node_ids[2] == 114842);
-  CHECK(shells_con[88455].node_ids[3] == 114841);
-  CHECK(shells_con[88455].material_id == 8);
+  CHECK(shells_con[88455].node_indices[0] == 114891);
+  CHECK(shells_con[88455].node_indices[1] == 114892);
+  CHECK(shells_con[88455].node_indices[2] == 114841);
+  CHECK(shells_con[88455].node_indices[3] == 114840);
+  CHECK(shells_con[88455].material_index == 7);
   /* EL4 87806: (114231, 114232, 114181, 114180) 8*/
-  CHECK(shells_con[87806].node_ids[0] == 114231);
-  CHECK(shells_con[87806].node_ids[1] == 114232);
-  CHECK(shells_con[87806].node_ids[2] == 114181);
-  CHECK(shells_con[87806].node_ids[3] == 114180);
-  CHECK(shells_con[87806].material_id == 8);
+  CHECK(shells_con[87806].node_indices[0] == 114230);
+  CHECK(shells_con[87806].node_indices[1] == 114231);
+  CHECK(shells_con[87806].node_indices[2] == 114180);
+  CHECK(shells_con[87806].node_indices[3] == 114179);
+  CHECK(shells_con[87806].material_index == 7);
 
   i = 0;
   while (i < num_elements) {
-    CHECK(shells_con[i].material_id >= 1);
-    CHECK(shells_con[i].material_id <= 8);
+    CHECK(shells_con[i].material_index >= 0);
+    CHECK(shells_con[i].material_index <= 7);
 
     i++;
   }
@@ -445,35 +445,35 @@ TEST_CASE("d3plot C++") {
     const auto solids(plot_file.read_solid_elements());
     REQUIRE(solids.size() == 45000);
 
-    CHECK(solids[43988].node_ids[0] == 32229);
-    CHECK(solids[43988].node_ids[1] == 32230);
-    CHECK(solids[43988].node_ids[2] == 32306);
-    CHECK(solids[43988].node_ids[3] == 32305);
-    CHECK(solids[43988].node_ids[4] == 33065);
-    CHECK(solids[43988].node_ids[5] == 33066);
-    CHECK(solids[43988].node_ids[6] == 33142);
-    CHECK(solids[43988].node_ids[7] == 33141);
+    CHECK(solids[43988].node_indices[0] == 32228);
+    CHECK(solids[43988].node_indices[1] == 32229);
+    CHECK(solids[43988].node_indices[2] == 32305);
+    CHECK(solids[43988].node_indices[3] == 32304);
+    CHECK(solids[43988].node_indices[4] == 33064);
+    CHECK(solids[43988].node_indices[5] == 33065);
+    CHECK(solids[43988].node_indices[6] == 33141);
+    CHECK(solids[43988].node_indices[7] == 33140);
 
-    CHECK(solids[44086].node_ids[0] == 32328);
-    CHECK(solids[44086].node_ids[1] == 32329);
-    CHECK(solids[44086].node_ids[2] == 32405);
-    CHECK(solids[44086].node_ids[3] == 32404);
-    CHECK(solids[44086].node_ids[4] == 33164);
-    CHECK(solids[44086].node_ids[5] == 33165);
-    CHECK(solids[44086].node_ids[6] == 33241);
-    CHECK(solids[44086].node_ids[7] == 33240);
+    CHECK(solids[44086].node_indices[0] == 32327);
+    CHECK(solids[44086].node_indices[1] == 32328);
+    CHECK(solids[44086].node_indices[2] == 32404);
+    CHECK(solids[44086].node_indices[3] == 32403);
+    CHECK(solids[44086].node_indices[4] == 33163);
+    CHECK(solids[44086].node_indices[5] == 33164);
+    CHECK(solids[44086].node_indices[6] == 33240);
+    CHECK(solids[44086].node_indices[7] == 33239);
 
-    CHECK(solids[43985].node_ids[0] == 32226);
-    CHECK(solids[43985].node_ids[1] == 32227);
-    CHECK(solids[43985].node_ids[2] == 32303);
-    CHECK(solids[43985].node_ids[3] == 32302);
-    CHECK(solids[43985].node_ids[4] == 33062);
-    CHECK(solids[43985].node_ids[5] == 33063);
-    CHECK(solids[43985].node_ids[6] == 33139);
-    CHECK(solids[43985].node_ids[7] == 33138);
+    CHECK(solids[43985].node_indices[0] == 32225);
+    CHECK(solids[43985].node_indices[1] == 32226);
+    CHECK(solids[43985].node_indices[2] == 32302);
+    CHECK(solids[43985].node_indices[3] == 32301);
+    CHECK(solids[43985].node_indices[4] == 33061);
+    CHECK(solids[43985].node_indices[5] == 33062);
+    CHECK(solids[43985].node_indices[6] == 33138);
+    CHECK(solids[43985].node_indices[7] == 33137);
 
     for (const auto &solid : solids) {
-      CHECK(solid.material_id == 9);
+      CHECK(solid.material_index == 8);
     }
   }
 
@@ -492,27 +492,27 @@ TEST_CASE("d3plot C++") {
     REQUIRE(shells.size() == 88456);
 
     /* EL4 87441: (113858, 113859, 113808, 113807) 8*/
-    CHECK(shells[87441].node_ids[0] == 113858);
-    CHECK(shells[87441].node_ids[1] == 113859);
-    CHECK(shells[87441].node_ids[2] == 113808);
-    CHECK(shells[87441].node_ids[3] == 113807);
-    CHECK(shells[87441].material_id == 8);
+    CHECK(shells[87441].node_indices[0] == 113857);
+    CHECK(shells[87441].node_indices[1] == 113858);
+    CHECK(shells[87441].node_indices[2] == 113807);
+    CHECK(shells[87441].node_indices[3] == 113806);
+    CHECK(shells[87441].material_index == 7);
     /* EL4 88455: (114892, 114893, 114842, 114841) 8*/
-    CHECK(shells[88455].node_ids[0] == 114892);
-    CHECK(shells[88455].node_ids[1] == 114893);
-    CHECK(shells[88455].node_ids[2] == 114842);
-    CHECK(shells[88455].node_ids[3] == 114841);
-    CHECK(shells[88455].material_id == 8);
+    CHECK(shells[88455].node_indices[0] == 114891);
+    CHECK(shells[88455].node_indices[1] == 114892);
+    CHECK(shells[88455].node_indices[2] == 114841);
+    CHECK(shells[88455].node_indices[3] == 114840);
+    CHECK(shells[88455].material_index == 7);
     /* EL4 87806: (114231, 114232, 114181, 114180) 8*/
-    CHECK(shells[87806].node_ids[0] == 114231);
-    CHECK(shells[87806].node_ids[1] == 114232);
-    CHECK(shells[87806].node_ids[2] == 114181);
-    CHECK(shells[87806].node_ids[3] == 114180);
-    CHECK(shells[87806].material_id == 8);
+    CHECK(shells[87806].node_indices[0] == 114230);
+    CHECK(shells[87806].node_indices[1] == 114231);
+    CHECK(shells[87806].node_indices[2] == 114180);
+    CHECK(shells[87806].node_indices[3] == 114179);
+    CHECK(shells[87806].material_index == 7);
 
     for (const auto &shell : shells) {
-      CHECK(shell.material_id >= 1);
-      CHECK(shell.material_id <= 8);
+      CHECK(shell.material_index >= 0);
+      CHECK(shell.material_index <= 7);
     }
   }
 
