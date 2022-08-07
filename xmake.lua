@@ -71,7 +71,7 @@ if get_config("build_cpp") or get_config("build_python") then
 end
 
 if get_config("build_test") then
-    add_requires("doctest")
+    add_requires("doctest 2.4.8")
     target("binout_test")
         set_kind("binary")
         set_languages("cxx17")

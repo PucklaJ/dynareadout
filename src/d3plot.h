@@ -158,6 +158,9 @@ struct tm *d3plot_read_run_time(d3plot_file *plot_file);
  * over the array returned by d3plot_read_part_ids. The return value needs to be
  * deallocated by _d3plot_free_part*/
 d3plot_part d3plot_read_part(d3plot_file *plot_file, size_t part_index);
+/* Returns the index of id in the array ids. If it cannot be found then
+ * UINT64_MAX will be returned.*/
+size_t d3plot_index_for_id(d3_word id, const d3_word *ids, size_t num_ids);
 
 /***** Data sections *******/
 /* GEOMETRY DATA pg. 17*/
@@ -192,6 +195,8 @@ d3_word *_d3plot_read_ids(d3plot_file *plot_file, size_t *num_ids,
 /* Insert a sorted (ascending) array (src) into a sorted array (dst)*/
 d3_word *_insert_sorted(d3_word *dst, size_t dst_size, const d3_word *src,
                         size_t src_size);
+size_t _binary_search(const d3_word *arr, d3_word value, size_t start_index,
+                      size_t end_index);
 /* Deallocates all memory of a d3plot_part*/
 void d3plot_free_part(d3plot_part *part);
 /********************************/
