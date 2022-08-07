@@ -30,5 +30,6 @@ namespace dro {
 
 typedef std::array<uint64_t, 3> uVec3;
 typedef std::array<double, 3> dVec3;
+typedef std::array<float, 3> fVec3;
 
 } // namespace dro

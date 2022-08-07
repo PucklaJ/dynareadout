@@ -489,6 +489,24 @@ double *d3plot_read_node_acceleration(d3plot_file *plot_file, size_t state,
                                 D3PLT_PTR_STATE_NODE_ACC);
 }
 
+float *d3plot_read_node_coordinates_32(d3plot_file *plot_file, size_t state,
+                                       size_t *num_nodes) {
+  return _d3plot_read_node_data_32(plot_file, state, num_nodes,
+                                   D3PLT_PTR_STATE_NODE_COORDS);
+}
+
+float *d3plot_read_node_velocity_32(d3plot_file *plot_file, size_t state,
+                                    size_t *num_nodes) {
+  return _d3plot_read_node_data_32(plot_file, state, num_nodes,
+                                   D3PLT_PTR_STATE_NODE_VEL);
+}
+
+float *d3plot_read_node_acceleration_32(d3plot_file *plot_file, size_t state,
+                                        size_t *num_nodes) {
+  return _d3plot_read_node_data_32(plot_file, state, num_nodes,
+                                   D3PLT_PTR_STATE_NODE_ACC);
+}
+
 double d3plot_read_time(d3plot_file *plot_file, size_t state) {
   if (state >= plot_file->num_states) {
     plot_file->error_string = malloc(70);
@@ -1372,20 +1390,14 @@ int _get_nth_digit(d3_word value, int n) {
 
 double *_d3plot_read_node_data(d3plot_file *plot_file, size_t state,
                                size_t *num_nodes, size_t data_type) {
-  if (state >= plot_file->num_states) {
-    plot_file->error_string = malloc(70);
-    sprintf(plot_file->error_string, "%d is out of bounds for the states");
-    return NULL;
-  }
-
-  *num_nodes = plot_file->control_data.numnp;
-  double *coords = malloc(*num_nodes * 3 * sizeof(double));
-
   if (plot_file->buffer.word_size == 4) {
-    float *coords32 = malloc(*num_nodes * 3 * sizeof(float));
-    d3_buffer_read_words_at(&plot_file->buffer, coords32, *num_nodes * 3,
-                            plot_file->data_pointers[D3PLT_PTR_STATES + state] +
-                                plot_file->data_pointers[data_type]);
+    float *coords32 =
+        _d3plot_read_node_data_32(plot_file, state, num_nodes, data_type);
+    if (!coords32) {
+      return NULL;
+    }
+
+    double *coords = malloc(*num_nodes * 3 * sizeof(double));
     size_t i = 0;
     while (i < *num_nodes) {
       coords[i * 3 + 0] = coords32[i * 3 + 0];
@@ -1396,11 +1408,62 @@ double *_d3plot_read_node_data(d3plot_file *plot_file, size_t state,
     }
 
     free(coords32);
-  } else {
-    d3_buffer_read_words_at(&plot_file->buffer, coords, *num_nodes * 3,
-                            plot_file->data_pointers[D3PLT_PTR_STATES + state] +
-                                plot_file->data_pointers[data_type]);
+
+    return coords;
   }
+
+  if (state >= plot_file->num_states) {
+    plot_file->error_string = malloc(70);
+    sprintf(plot_file->error_string, "%d is out of bounds for the states");
+    return NULL;
+  }
+
+  *num_nodes = plot_file->control_data.numnp;
+  double *coords = malloc(*num_nodes * 3 * sizeof(double));
+
+  d3_buffer_read_words_at(&plot_file->buffer, coords, *num_nodes * 3,
+                          plot_file->data_pointers[D3PLT_PTR_STATES + state] +
+                              plot_file->data_pointers[data_type]);
+
+  return coords;
+}
+
+float *_d3plot_read_node_data_32(d3plot_file *plot_file, size_t state,
+                                 size_t *num_nodes, size_t data_type) {
+  if (plot_file->buffer.word_size == 8) {
+    double *coords64 =
+        _d3plot_read_node_data(plot_file, state, num_nodes, data_type);
+    if (!coords64) {
+      return NULL;
+    }
+
+    float *coords = malloc(*num_nodes * 3 * sizeof(float));
+    size_t i = 0;
+    while (i < *num_nodes) {
+      coords[i * 3 + 0] = coords64[i * 3 + 0];
+      coords[i * 3 + 1] = coords64[i * 3 + 1];
+      coords[i * 3 + 2] = coords64[i * 3 + 2];
+
+      i++;
+    }
+
+    free(coords64);
+
+    return coords;
+  }
+
+  if (state >= plot_file->num_states) {
+    plot_file->error_string = malloc(70);
+    sprintf(plot_file->error_string, "%d is out of bounds for the states");
+    return NULL;
+  }
+
+  *num_nodes = plot_file->control_data.numnp;
+  float *coords = malloc(*num_nodes * 3 * sizeof(float));
+
+  d3_buffer_read_words_at(&plot_file->buffer, coords, *num_nodes * 3,
+                          plot_file->data_pointers[D3PLT_PTR_STATES + state] +
+                              plot_file->data_pointers[data_type]);
 
   return coords;
 }

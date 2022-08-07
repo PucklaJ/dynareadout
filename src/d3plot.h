@@ -111,6 +111,18 @@ double *d3plot_read_node_velocity(d3plot_file *plot_file, size_t state,
  * with index 20: rv[20*3+0], rv[20*3+1], rv[20*3+2]*/
 double *d3plot_read_node_acceleration(d3plot_file *plot_file, size_t state,
                                       size_t *num_nodes);
+/* The same as d3plot_read_node_coordinates but it does not convert floats to
+ * double. It does the opposite if the word size is 8*/
+float *d3plot_read_node_coordinates_32(d3plot_file *plot_file, size_t state,
+                                       size_t *num_nodes);
+/* The same as d3plot_read_node_velocity but it does not convert floats to
+ * double. It does the opposite if the word size is 8*/
+float *d3plot_read_node_velocity_32(d3plot_file *plot_file, size_t state,
+                                    size_t *num_nodes);
+/* The same as d3plot_read_node_acceleration but it does not convert floats to
+ * double. It does the opposite if the word size is 8*/
+float *d3plot_read_node_acceleration_32(d3plot_file *plot_file, size_t state,
+                                        size_t *num_nodes);
 /* Read the time of a given state (time step) in milliseconds*/
 double d3plot_read_time(d3plot_file *plot_file, size_t state);
 /* Returns stress, strain (if NEIPH >= 6) for a given state. The return value
@@ -189,6 +201,10 @@ int _get_nth_digit(d3_word value, int n);
  * data_type is one of the D3PLT_PTR values*/
 double *_d3plot_read_node_data(d3plot_file *plot_file, size_t state,
                                size_t *num_nodes, size_t data_type);
+/* The same as _d3plot_read_node_data but it does not convert floats to
+ * double. It does the opposite if the word size is 8*/
+float *_d3plot_read_node_data_32(d3plot_file *plot_file, size_t state,
+                                 size_t *num_nodes, size_t data_type);
 /* A nice function to read node and element ids*/
 d3_word *_d3plot_read_ids(d3plot_file *plot_file, size_t *num_ids,
                           size_t data_type, size_t num_ids_value);
