@@ -77,6 +77,12 @@ public:
   Array<dVec3> read_node_velocity(size_t state);
   // Read the node acceleration of all nodes of a given state (time step)
   Array<dVec3> read_node_acceleration(size_t state);
+  // The same as read_node_coordinates but with floats instead of doubles
+  Array<fVec3> read_node_coordinates_32(size_t state);
+  // The same as read_node_velocity but with floats instead of doubles
+  Array<fVec3> read_node_velocity_32(size_t state);
+  // The same as read_node_acceleration but with floats instead of doubles
+  Array<fVec3> read_node_acceleration_32(size_t state);
   // Read the time of a given state (time step) in milliseconds
   double read_time(size_t state);
   // Returns stress, strain (if NEIPH >= 6) for a given state

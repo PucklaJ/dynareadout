@@ -141,29 +141,58 @@ TEST_CASE("d3plot") {
   CHECK_APPROX(d3plot_read_time(&plot_file, 18), 1.799880);
   CHECK_APPROX(d3plot_read_time(&plot_file, 19), 1.899986);
 
-  double *node_data = d3plot_read_node_coordinates(&plot_file, 0, &num_nodes);
-  REQUIRE(num_nodes == 114893);
-  CHECK_APPROX(node_data[0], 0.031293001);
-  CHECK_APPROX(node_data[1], -0.075000003);
-  CHECK_APPROX(node_data[2], 69.1887664795);
+  {
+    double *node_data = d3plot_read_node_coordinates(&plot_file, 0, &num_nodes);
+    REQUIRE(num_nodes == 114893);
+    CHECK_APPROX(node_data[0], 0.031293001);
+    CHECK_APPROX(node_data[1], -0.075000003);
+    CHECK_APPROX(node_data[2], 69.1887664795);
 
-  free(node_data);
+    free(node_data);
 
-  node_data = d3plot_read_node_velocity(&plot_file, 0, &num_nodes);
-  REQUIRE(num_nodes == 114893);
-  CHECK_APPROX(node_data[0], 0.0);
-  CHECK_APPROX(node_data[1], 0.0);
-  CHECK_APPROX(node_data[2], 0.0);
+    node_data = d3plot_read_node_velocity(&plot_file, 0, &num_nodes);
+    REQUIRE(num_nodes == 114893);
+    CHECK_APPROX(node_data[0], 0.0);
+    CHECK_APPROX(node_data[1], 0.0);
+    CHECK_APPROX(node_data[2], 0.0);
 
-  free(node_data);
+    free(node_data);
 
-  node_data = d3plot_read_node_acceleration(&plot_file, 0, &num_nodes);
-  REQUIRE(num_nodes == 114893);
-  CHECK_APPROX(node_data[0], 0.0);
-  CHECK_APPROX(node_data[1], 0.0);
-  CHECK_APPROX(node_data[2], 0.0);
+    node_data = d3plot_read_node_acceleration(&plot_file, 0, &num_nodes);
+    REQUIRE(num_nodes == 114893);
+    CHECK_APPROX(node_data[0], 0.0);
+    CHECK_APPROX(node_data[1], 0.0);
+    CHECK_APPROX(node_data[2], 0.0);
 
-  free(node_data);
+    free(node_data);
+  }
+
+  {
+    float *node_data =
+        d3plot_read_node_coordinates_32(&plot_file, 0, &num_nodes);
+    REQUIRE(num_nodes == 114893);
+    CHECK_APPROX(node_data[0], 0.031293001f);
+    CHECK_APPROX(node_data[1], -0.075000003f);
+    CHECK_APPROX(node_data[2], 69.1887664795f);
+
+    free(node_data);
+
+    node_data = d3plot_read_node_velocity_32(&plot_file, 0, &num_nodes);
+    REQUIRE(num_nodes == 114893);
+    CHECK_APPROX(node_data[0], 0.0f);
+    CHECK_APPROX(node_data[1], 0.0f);
+    CHECK_APPROX(node_data[2], 0.0f);
+
+    free(node_data);
+
+    node_data = d3plot_read_node_acceleration_32(&plot_file, 0, &num_nodes);
+    REQUIRE(num_nodes == 114893);
+    CHECK_APPROX(node_data[0], 0.0f);
+    CHECK_APPROX(node_data[1], 0.0f);
+    CHECK_APPROX(node_data[2], 0.0f);
+
+    free(node_data);
+  }
 
   d3plot_solid_con *solids_con =
       d3plot_read_solid_elements(&plot_file, &num_elements);

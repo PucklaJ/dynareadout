@@ -141,6 +141,30 @@ Array<dVec3> D3plot::read_node_acceleration(size_t state) {
   return Array<dVec3>(nodes, num_nodes);
 }
 
+Array<fVec3> D3plot::read_node_coordinates_32(size_t state) {
+  size_t num_nodes;
+  fVec3 *nodes = reinterpret_cast<fVec3 *>(
+      d3plot_read_node_coordinates_32(&m_handle, state, &num_nodes));
+
+  return Array<fVec3>(nodes, num_nodes);
+}
+
+Array<fVec3> D3plot::read_node_velocity_32(size_t state) {
+  size_t num_nodes;
+  fVec3 *nodes = reinterpret_cast<fVec3 *>(
+      d3plot_read_node_velocity_32(&m_handle, state, &num_nodes));
+
+  return Array<fVec3>(nodes, num_nodes);
+}
+
+Array<fVec3> D3plot::read_node_acceleration_32(size_t state) {
+  size_t num_nodes;
+  fVec3 *nodes = reinterpret_cast<fVec3 *>(
+      d3plot_read_node_acceleration_32(&m_handle, state, &num_nodes));
+
+  return Array<fVec3>(nodes, num_nodes);
+}
+
 double D3plot::read_time(size_t state) {
   return d3plot_read_time(&m_handle, state);
 }
