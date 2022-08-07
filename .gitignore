@@ -11,3 +11,8 @@ build/
 
 # Test Data
 test_data/d3plot*
+
+# LS PrePost
+*.cfile
+*.db
+*.msg

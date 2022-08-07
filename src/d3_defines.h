@@ -33,34 +33,37 @@
 typedef uint64_t d3_word;
 
 typedef struct {
+  /* Stores indices into the node_ids, node_coords, etc. arrays*/
 #ifdef __cplusplus
-  std::array<d3_word, 8> node_ids;
+  std::array<d3_word, 8> node_indices;
 #else
-  d3_word node_ids[8];
+  d3_word node_indices[8];
 #endif
-  d3_word material_id;
+  d3_word material_index;
 } d3plot_solid_con;
 
 typedef d3plot_solid_con d3plot_thick_shell_con;
 
 typedef struct {
+  /* Stores indices into the node_ids, node_coords, etc. arrays*/
 #ifdef __cplusplus
-  std::array<d3_word, 2> node_ids;
+  std::array<d3_word, 2> node_indices;
 #else
-  d3_word node_ids[2];
+  d3_word node_indices[2];
 #endif
-  d3_word orientation_node_id;
+  d3_word orientation_node_index;
   d3_word _null[2];
-  d3_word material_id;
+  d3_word material_index;
 } d3plot_beam_con;
 
 typedef struct {
+  /* Stores indices into the node_ids, node_coords, etc. arrays*/
 #ifdef __cplusplus
-  std::array<d3_word, 4> node_ids;
+  std::array<d3_word, 4> node_indices;
 #else
-  d3_word node_ids[4];
+  d3_word node_indices[4];
 #endif
-  d3_word material_id;
+  d3_word material_index;
 } d3plot_shell_con;
 
 typedef struct {
