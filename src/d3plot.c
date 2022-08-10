@@ -440,7 +440,7 @@ char **d3plot_read_part_titles(d3plot_file *plot_file, size_t *num_parts) {
 
   size_t i = 0;
   while (i < *num_parts) {
-    part_titles[i] = malloc(18 * plot_file->buffer.word_size + 1);
+    part_titles[i] = malloc(72 + 1);
     if (i == 0)
       /* PTITLE is always 72 bytes. So we need to divide by to get the correct
        * number of words*/
@@ -467,7 +467,7 @@ char **d3plot_read_part_titles(d3plot_file *plot_file, size_t *num_parts) {
       return NULL;
     }
 
-    part_titles[i][18 * plot_file->buffer.word_size] = '\0';
+    part_titles[i][72] = '\0';
 
     i++;
   }
@@ -1164,19 +1164,19 @@ d3plot_solid_con *d3plot_read_solid_elements(d3plot_file *plot_file,
       return NULL;
     }
 
-    size_t i;
+    size_t i = 0;
     while (i < *num_solids) {
-      size_t j;
+      size_t j = 0;
       while (j < 8) {
         /* Subtract 1 because Fortran starts by 1 and C starts by 0*/
-        solids[i].node_indices[j + 0]--;
-        solids[i].node_indices[j + 1]--;
-        solids[i].node_indices[j + 2]--;
-        solids[i].node_indices[j + 3]--;
+        solids[i].node_indices[j + 0] -= 1;
+        solids[i].node_indices[j + 1] -= 1;
+        solids[i].node_indices[j + 2] -= 1;
+        solids[i].node_indices[j + 3] -= 1;
 
         j += 4;
       }
-      solids[i].material_index--;
+      solids[i].material_index -= 1;
 
       i++;
     }
@@ -1240,19 +1240,19 @@ d3plot_read_thick_shell_elements(d3plot_file *plot_file,
       return NULL;
     }
 
-    size_t i;
+    size_t i = 0;
     while (i < *num_thick_shells) {
       size_t j = 0;
       while (j < 8) {
         /* Subtract 1 because Fortran starts by 1 and C starts by 0*/
-        thick_shells[i].node_indices[j + 0]--;
-        thick_shells[i].node_indices[j + 1]--;
-        thick_shells[i].node_indices[j + 2]--;
-        thick_shells[i].node_indices[j + 3]--;
+        thick_shells[i].node_indices[j + 0] -= 1;
+        thick_shells[i].node_indices[j + 1] -= 1;
+        thick_shells[i].node_indices[j + 2] -= 1;
+        thick_shells[i].node_indices[j + 3] -= 1;
 
         j += 4;
       }
-      thick_shells[i].material_index--;
+      thick_shells[i].material_index -= 1;
 
       i++;
     }
@@ -1311,10 +1311,10 @@ d3plot_beam_con *d3plot_read_beam_elements(d3plot_file *plot_file,
     size_t i = 0;
     while (i < *num_beams) {
       /* Subtract 1 because Fortran starts by 1 and C starts by 0*/
-      beams[i].node_indices[0]--;
-      beams[i].node_indices[1]--;
-      beams[i].orientation_node_index--;
-      beams[i].material_index--;
+      beams[i].node_indices[0] -= 1;
+      beams[i].node_indices[1] -= 1;
+      beams[i].orientation_node_index -= 1;
+      beams[i].material_index -= 1;
 
       i++;
     }
@@ -1372,11 +1372,11 @@ d3plot_shell_con *d3plot_read_shell_elements(d3plot_file *plot_file,
     size_t i = 0;
     while (i < *num_shells) {
       /* Subtract 1 because Fortran starts by 1 and C starts by 0*/
-      shells[i].node_indices[0]--;
-      shells[i].node_indices[1]--;
-      shells[i].node_indices[2]--;
-      shells[i].node_indices[3]--;
-      shells[i].material_index--;
+      shells[i].node_indices[0] -= 1;
+      shells[i].node_indices[1] -= 1;
+      shells[i].node_indices[2] -= 1;
+      shells[i].node_indices[3] -= 1;
+      shells[i].material_index -= 1;
 
       i++;
     }
