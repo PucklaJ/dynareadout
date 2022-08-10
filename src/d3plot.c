@@ -442,12 +442,16 @@ char **d3plot_read_part_titles(d3plot_file *plot_file, size_t *num_parts) {
   while (i < *num_parts) {
     part_titles[i] = malloc(18 * plot_file->buffer.word_size + 1);
     if (i == 0)
-      d3_buffer_read_words_at(&plot_file->buffer, part_titles[i], 18,
+      /* PTITLE is always 72 bytes. So we need to divide by to get the correct
+       * number of words*/
+      d3_buffer_read_words_at(&plot_file->buffer, part_titles[i],
+                              18 / (plot_file->buffer.word_size == 8 ? 2 : 1),
                               plot_file->data_pointers[D3PLT_PTR_PART_TITLES] +
                                   1);
     else {
       d3_buffer_skip_words(&plot_file->buffer, 1);
-      d3_buffer_read_words(&plot_file->buffer, part_titles[i], 18);
+      d3_buffer_read_words(&plot_file->buffer, part_titles[i],
+                           18 / (plot_file->buffer.word_size == 8 ? 2 : 1));
     }
 
     if (plot_file->buffer.error_string) {

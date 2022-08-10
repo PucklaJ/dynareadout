@@ -292,26 +292,40 @@ void d3_buffer_read_vec3(d3_buffer *buffer, double *words) {
 }
 
 void d3_buffer_skip_words(d3_buffer *buffer, size_t num_words) {
+  d3_buffer_skip_bytes(buffer, num_words * buffer->word_size);
+}
+
+void d3_buffer_skip_bytes(d3_buffer *buffer, size_t num_bytes) {
   size_t cur_file_pos = ftell(buffer->file_handles[buffer->cur_file_handle]);
-  if (cur_file_pos + num_words * buffer->word_size <
-      buffer->file_sizes[buffer->cur_file_handle]) {
-    if (fseek(buffer->file_handles[buffer->cur_file_handle],
-              num_words * buffer->word_size, SEEK_CUR) != 0) {
+  if (cur_file_pos + num_bytes < buffer->file_sizes[buffer->cur_file_handle]) {
+    if (fseek(buffer->file_handles[buffer->cur_file_handle], num_bytes,
+              SEEK_CUR) != 0) {
       ERROR_AND_RETURN_PTR("Seek Error");
     }
-    buffer->cur_word += num_words;
+    const size_t advanced = num_bytes / buffer->word_size;
+    if (advanced * buffer->word_size != num_bytes) {
+      ERROR_AND_RETURN_F_PTR(
+          "The number of bytes %d is not divisible by the word size %d",
+          num_bytes, buffer->word_size);
+    }
+    buffer->cur_word += advanced;
   } else {
-    const size_t words_skipped =
-        (buffer->file_sizes[buffer->cur_file_handle] - cur_file_pos) /
-        buffer->word_size;
+    const size_t bytes_skipped =
+        (buffer->file_sizes[buffer->cur_file_handle] - cur_file_pos);
     buffer->cur_file_handle++;
     if (fseek(buffer->file_handles[buffer->cur_file_handle], 0, SEEK_SET) !=
         0) {
       ERROR_AND_RETURN_PTR("Seek Error");
     }
-    buffer->cur_word += words_skipped;
+    const size_t advanced = bytes_skipped / buffer->word_size;
+    if (advanced * buffer->word_size != bytes_skipped) {
+      ERROR_AND_RETURN_F_PTR(
+          "The number of bytes %d is not divisible by the word size %d",
+          bytes_skipped, buffer->word_size);
+    }
+    buffer->cur_word += bytes_skipped;
 
-    d3_buffer_skip_words(buffer, num_words - words_skipped);
+    d3_buffer_skip_bytes(buffer, num_bytes - bytes_skipped);
   }
 }
 

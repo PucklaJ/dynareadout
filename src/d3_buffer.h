@@ -66,6 +66,10 @@ void d3_buffer_read_vec3(d3_buffer *buffer, double *words);
 /* Skip an arbitrary amount of words. Also handles skips across multiple files.
  * Sets error_string on error*/
 void d3_buffer_skip_words(d3_buffer *buffer, size_t num_words);
+/* Similar to d3_buffer_skip_words, but it skips bytes instead of words. Try to
+ * use the words one. This function ist just for some cases where the number of
+ * bytes is always the same no matter what the words size is*/
+void d3_buffer_skip_bytes(d3_buffer *buffer, size_t num_bytes);
 /* Skip to the next file. Especially needed a the end of the first file when
  * done with all the headers. Sets error_string on error*/
 int d3_buffer_next_file(d3_buffer *buffer);
