@@ -316,8 +316,9 @@ d3plot_file d3plot_open(const char *root_file_name) {
   d3_buffer_read_double_word(&plot_file.buffer, &eof_marker);
 
   if (eof_marker != D3_EOF) {
-    ERROR_AND_RETURN_F("Here 'd3plot':(%d) should be the EOF marker",
-                       plot_file.buffer.cur_word - 1);
+    ERROR_AND_RETURN_F(
+        "Here (before header) 'd3plot':(%d) should be the EOF marker",
+        plot_file.buffer.cur_word - 1);
   }
 
   if (!_d3plot_read_header(&plot_file)) {
@@ -430,6 +431,36 @@ d3_word *d3plot_read_all_element_ids(d3plot_file *plot_file, size_t *num_ids) {
 }
 
 d3_word *d3plot_read_part_ids(d3plot_file *plot_file, size_t *num_parts) {
+  if (plot_file->data_pointers[D3PLT_PTR_PART_IDS] == 0) {
+    if (plot_file->data_pointers[D3PLT_PTR_PART_TITLES] == 0) {
+      ERROR_AND_NO_RETURN_PTR("Could not retrieve part ids");
+      *num_parts = 0;
+      return NULL;
+    }
+
+    /* Read the part ids from the header if NSORT >= 0*/
+    *num_parts = plot_file->control_data.nmmat;
+    d3_word *part_ids = malloc(*num_parts * sizeof(d3_word));
+
+    size_t i = 0;
+    while (i < *num_parts) {
+      part_ids[i] = 0;
+
+      if (i == 0) {
+        d3_buffer_read_words_at(
+            &plot_file->buffer, &part_ids[i], 1,
+            plot_file->data_pointers[D3PLT_PTR_PART_TITLES]);
+      } else {
+        d3_buffer_read_words(&plot_file->buffer, &part_ids[i], 1);
+      }
+      d3_buffer_skip_bytes(&plot_file->buffer, 72);
+
+      i++;
+    }
+
+    return part_ids;
+  }
+
   return _d3plot_read_ids(plot_file, num_parts, D3PLT_PTR_PART_IDS,
                           plot_file->control_data.nmmat);
 }

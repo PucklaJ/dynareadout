@@ -638,6 +638,64 @@ TEST_CASE("d3plot C++") {
 }
 #endif
 
+TEST_CASE("basic01") {
+  d3plot_file plot_file = d3plot_open("test_data/basic01/d3plot");
+  if (plot_file.error_string) {
+    FAIL(plot_file.error_string);
+    d3plot_close(&plot_file);
+    return;
+  }
+
+  char *title = d3plot_read_title(&plot_file);
+  CHECK(title == "implicit tensile test                                        "
+                 "                   ");
+  free(title);
+
+  size_t num_parts;
+  d3_word *part_ids = d3plot_read_part_ids(&plot_file, &num_parts);
+  REQUIRE(num_parts == 1);
+  CHECK(part_ids[0] == 1);
+
+  free(part_ids);
+
+  char **part_titles = d3plot_read_part_titles(&plot_file, &num_parts);
+  REQUIRE(num_parts == 1);
+  CHECK(part_titles[0] == "shell tensile strip                                 "
+                          "                    ");
+
+  free(part_titles[0]);
+  free(part_titles);
+
+  size_t num_nodes;
+  d3_word *node_ids = d3plot_read_node_ids(&plot_file, &num_nodes);
+  REQUIRE(num_nodes == 186);
+
+  free(node_ids);
+
+  d3plot_part part1 = d3plot_read_part(&plot_file, 0);
+  CHECK(part1.num_shells == 150);
+  CHECK(part1.num_solids == 0);
+  CHECK(part1.num_beams == 0);
+  CHECK(part1.num_thick_shells == 0);
+
+  d3plot_free_part(&part1);
+
+  size_t num_elements;
+  d3_word *element_ids = d3plot_read_all_element_ids(&plot_file, &num_elements);
+  REQUIRE(num_elements == 150);
+
+  free(element_ids);
+
+  REQUIRE(plot_file.num_states == 2);
+
+  double *node_coords = d3plot_read_node_coordinates(&plot_file, 1, &num_nodes);
+  REQUIRE(num_nodes == 186);
+
+  free(node_coords);
+
+  d3plot_close(&plot_file);
+}
+
 TEST_CASE("_get_nth_digit") {
   const d3_word value = 123456;
   CHECK(_get_nth_digit(value, 0) == 6);

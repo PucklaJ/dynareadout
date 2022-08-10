@@ -93,6 +93,8 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
     return 1;
   }
 
+  const size_t user_ids_start = plot_file->buffer.cur_word;
+
   int64_t nsort;
   d3_word nsortd = 0, nsrhd = 0, nsrbd = 0, nsrsd = 0, nsrtd = 0,
           nmmat = plot_file->control_data.nmmat;
@@ -129,7 +131,6 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
   if (nsort < 0) {
     d3_buffer_skip_words(&plot_file->buffer, 4);
     /* TODO: Find out what NSRMA, NSRMU, NSRMP and NSRTM is for*/
-
     d3_buffer_read_words(&plot_file->buffer, &CDP.numrbs, 1);
     d3_buffer_read_words(&plot_file->buffer, &nmmat, 1);
 
@@ -138,10 +139,6 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
                                 plot_file->buffer.error_string);
       return 0;
     }
-  } else {
-    ERROR_AND_NO_RETURN_F_PTR("Non negative NSORT (%d) is not supported",
-                              nsort);
-    return 0;
   }
 
   DT_PTR_SET(D3PLT_PTR_NODE_IDS);
@@ -154,14 +151,28 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
   d3_buffer_skip_words(&plot_file->buffer, nsrsd); /* nusers*/
   DT_PTR_SET(D3PLT_PTR_ELT_IDS);
   d3_buffer_skip_words(&plot_file->buffer, nsrtd); /* nusert*/
-  DT_PTR_SET(D3PLT_PTR_PART_IDS);
-  d3_buffer_skip_words(&plot_file->buffer, nmmat); /* norder*/
-  d3_buffer_skip_words(&plot_file->buffer, 2 * nmmat);
-  /* TODO: Find out what NSRMU and NSRMP is for*/
+  if (nsort < 0) {
+    DT_PTR_SET(D3PLT_PTR_PART_IDS);
+    d3_buffer_skip_words(&plot_file->buffer, nmmat); /* norder*/
+    d3_buffer_skip_words(&plot_file->buffer, 2 * nmmat);
+    /* TODO: Find out what NSRMU and NSRMP is for*/
+  } else {
+    /* These values are not used when nsort >= 0*/
+    d3_buffer_skip_words(&plot_file->buffer, 3 * nmmat);
+  }
 
   if (plot_file->buffer.error_string) {
     ERROR_AND_NO_RETURN_F_PTR("Failed to skip words: %s",
                               plot_file->buffer.error_string);
+    return 0;
+  }
+
+  const size_t user_ids_end = plot_file->buffer.cur_word;
+  const size_t user_ids_size = user_ids_end - user_ids_start;
+  if (user_ids_size != CDP.narbs) {
+    ERROR_AND_NO_RETURN_F_PTR(
+        "The USER IDENTIFICATION NUMBERS section is false (%d != %d)",
+        user_ids_size, CDP.narbs);
     return 0;
   }
 
@@ -294,9 +305,10 @@ int _d3plot_read_header(d3plot_file *plot_file) {
       }
 
       if (eof_marker != D3_EOF) {
-        ERROR_AND_NO_RETURN_F_PTR(
-            "Here 'd3plot':(%d) should be the EOF marker (%f != %f)",
-            plot_file->buffer.cur_word - 1, eof_marker, D3_EOF);
+        ERROR_AND_NO_RETURN_F_PTR("Here (after header) 'd3plot':(%d) should be "
+                                  "the EOF marker (%f != %f)",
+                                  plot_file->buffer.cur_word - 1, eof_marker,
+                                  D3_EOF);
         return 0;
       }
 
