@@ -46,23 +46,28 @@ extern "C" {
 #endif
 
 /* Opens all d3plot files that belong to this root_file_name and also detects
- * the word_size*/
+ * the word_size. Sets error_string on error*/
 d3_buffer d3_buffer_open(const char *root_file_name);
 /* Cleans everything up. Should be called sometime after d3_buffer_open*/
 void d3_buffer_close(d3_buffer *buffer);
 /* Read a given number of words from the current position. words already needs
- * to be allocated with at least num_words*word_size bytes*/
+ * to be allocated with at least num_words*word_size bytes. Sets error_string on
+ * error*/
 void d3_buffer_read_words(d3_buffer *buffer, void *words, size_t num_words);
 /* Read a given number of words from the given position. words already needs
- * to be allocated with at least num_words*word_size bytes*/
+ * to be allocated with at least num_words*word_size bytes. Sets error_string on
+ * error*/
 void d3_buffer_read_words_at(d3_buffer *buffer, void *words, size_t num_words,
                              size_t word_pos);
+/* Sets error_string on error*/
 void d3_buffer_read_double_word(d3_buffer *buffer, double *word);
+/* Sets error_string on error*/
 void d3_buffer_read_vec3(d3_buffer *buffer, double *words);
-/* Skip an arbitrary amount of words. Also handles skips across multiple files*/
+/* Skip an arbitrary amount of words. Also handles skips across multiple files.
+ * Sets error_string on error*/
 void d3_buffer_skip_words(d3_buffer *buffer, size_t num_words);
 /* Skip to the next file. Especially needed a the end of the first file when
- * done with all the headers*/
+ * done with all the headers. Sets error_string on error*/
 int d3_buffer_next_file(d3_buffer *buffer);
 
 #ifdef __cplusplus
