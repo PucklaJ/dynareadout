@@ -48,6 +48,7 @@ typedef struct {
    * Holds file positions for every data record of a binout file*/
   binout_record_data_pointer **data_pointers;
   size_t *data_pointers_sizes;
+  size_t *data_pointers_capacities;
 
   FILE **file_handles;
   size_t num_file_handles;

@@ -70,6 +70,7 @@ binout_file binout_open(const char *file_name) {
   binout_file bin_file;
   bin_file.data_pointers = NULL;
   bin_file.data_pointers_sizes = NULL;
+  bin_file.data_pointers_capacities = NULL;
   bin_file.file_handles = NULL;
   bin_file.file_errors = NULL;
   bin_file.error_string = NULL;
@@ -84,7 +85,9 @@ binout_file binout_open(const char *file_name) {
 
   bin_file.file_handles = malloc(bin_file.num_file_handles * sizeof(FILE *));
   bin_file.data_pointers_sizes =
-      malloc(bin_file.num_file_handles * sizeof(size_t *));
+      malloc(bin_file.num_file_handles * sizeof(size_t));
+  bin_file.data_pointers_capacities =
+      malloc(bin_file.num_file_handles * sizeof(size_t));
   bin_file.data_pointers =
       malloc(bin_file.num_file_handles * sizeof(binout_record_data_pointer *));
 
@@ -108,6 +111,12 @@ binout_file binout_open(const char *file_name) {
       cur_file_index++;
       continue;
     }
+
+    /* Preallocate some data pointers to reduce the number of heap allocations*/
+    bin_file.data_pointers_capacities[cur_file_index] =
+        BINOUT_DATA_POINTER_PREALLOC;
+    bin_file.data_pointers[cur_file_index] = malloc(
+        BINOUT_DATA_POINTER_PREALLOC * sizeof(binout_record_data_pointer));
 
     binout_header header;
 
@@ -149,10 +158,11 @@ binout_file binout_open(const char *file_name) {
     /* Parse all records */
     size_t *cur_data_pointers_size =
         &bin_file.data_pointers_sizes[cur_file_index];
+    size_t *cur_data_pointers_capacity =
+        &bin_file.data_pointers_capacities[cur_file_index];
     binout_record_data_pointer **cur_data_pointers =
         &bin_file.data_pointers[cur_file_index];
     *cur_data_pointers_size = 0;
-    *cur_data_pointers = NULL;
 
     /* Store the current path which is changed by the CD commands*/
     path_t current_path;
@@ -249,9 +259,13 @@ binout_file binout_open(const char *file_name) {
           }
         } else {
           (*cur_data_pointers_size)++;
-          *cur_data_pointers = realloc(*cur_data_pointers,
-                                       *cur_data_pointers_size *
-                                           sizeof(binout_record_data_pointer));
+          /* Only reallocate if the size is greater than the capacity*/
+          if (*cur_data_pointers_size > *cur_data_pointers_capacity) {
+            *cur_data_pointers_capacity += BINOUT_DATA_POINTER_ALLOC_ADV;
+            *cur_data_pointers = realloc(
+                *cur_data_pointers, *cur_data_pointers_capacity *
+                                        sizeof(binout_record_data_pointer));
+          }
 
           dp = &(*cur_data_pointers)[*cur_data_pointers_size - 1];
           dp->name = variable_name;
@@ -294,6 +308,12 @@ binout_file binout_open(const char *file_name) {
       bin_file.file_handles[cur_file_index] = NULL;
     }
 
+    /* Reallocate the data pointers to directly fit the size*/
+    *cur_data_pointers_capacity = *cur_data_pointers_size;
+    *cur_data_pointers =
+        realloc(*cur_data_pointers, *cur_data_pointers_capacity *
+                                        sizeof(binout_record_data_pointer));
+
     cur_file_index++;
   }
 
@@ -326,6 +346,8 @@ binout_file binout_open(const char *file_name) {
           bin_file.data_pointers[bin_file.num_file_handles - 1];
       bin_file.data_pointers_sizes[cur_file_index] =
           bin_file.data_pointers_sizes[bin_file.num_file_handles - 1];
+      bin_file.data_pointers_capacities[cur_file_index] =
+          bin_file.data_pointers_capacities[bin_file.num_file_handles - 1];
       bin_file.file_handles[cur_file_index] =
           bin_file.file_handles[bin_file.num_file_handles - 1];
 
@@ -335,6 +357,9 @@ binout_file binout_open(const char *file_name) {
           bin_file.data_pointers,
           bin_file.num_file_handles * sizeof(binout_record_data_pointer *));
       bin_file.data_pointers_sizes =
+          realloc(bin_file.data_pointers_sizes,
+                  bin_file.num_file_handles * sizeof(size_t));
+      bin_file.data_pointers_capacities =
           realloc(bin_file.data_pointers_sizes,
                   bin_file.num_file_handles * sizeof(size_t));
       bin_file.file_handles = realloc(
@@ -388,6 +413,7 @@ void binout_close(binout_file *bin_file) {
 
   free(bin_file->data_pointers);
   free(bin_file->data_pointers_sizes);
+  free(bin_file->data_pointers_capacities);
   free(bin_file->file_handles);
   free(bin_file->file_errors);
   free(bin_file->error_string);
@@ -396,6 +422,7 @@ void binout_close(binout_file *bin_file) {
    * binout_close*/
   bin_file->data_pointers = NULL;
   bin_file->data_pointers_sizes = NULL;
+  bin_file->data_pointers_capacities = NULL;
   bin_file->file_handles = NULL;
   bin_file->file_errors = NULL;
   bin_file->error_string = NULL;
