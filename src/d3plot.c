@@ -167,7 +167,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
 
   /* Quit immediately if NDIM is not supported*/
   if (CDA.ndim != 3) {
-    ERROR_AND_RETURN_F("A ndim value of %d is not supported", CDA.ndim);
+    ERROR_AND_RETURN_F("A ndim value of %lu is not supported", CDA.ndim);
   }
 
   i = 0;
@@ -228,7 +228,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
     CDA.mdlopt = 1;
     CDA.maxint *= -1;
   } else {
-    ERROR_AND_RETURN_F("Invalid value for MAXINT: %s", CDA.maxint);
+    ERROR_AND_RETURN_F("Invalid value for MAXINT: %ld", CDA.maxint);
   }
 
   if (CDA.idtdt < 100) {
@@ -317,7 +317,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
 
   if (eof_marker != D3_EOF) {
     ERROR_AND_RETURN_F(
-        "Here (before header) 'd3plot':(%d) should be the EOF marker",
+        "Here (before header) 'd3plot':(%lu) should be the EOF marker",
         plot_file.buffer.cur_word - 1);
   }
 
@@ -544,7 +544,7 @@ float *d3plot_read_node_acceleration_32(d3plot_file *plot_file, size_t state,
 
 double d3plot_read_time(d3plot_file *plot_file, size_t state) {
   if (state >= plot_file->num_states) {
-    ERROR_AND_NO_RETURN_F_PTR("%d is out of bounds for the states", state);
+    ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
     return -1.0;
   }
 
@@ -578,7 +578,7 @@ d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
   }
 
   if (state >= plot_file->num_states) {
-    ERROR_AND_NO_RETURN_F_PTR("%d is out of bounds for the states", state);
+    ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
     *num_solids = 0;
     return NULL;
   }
@@ -715,7 +715,7 @@ d3plot_thick_shell *d3plot_read_thick_shells_state(d3plot_file *plot_file,
   }
 
   if (state >= plot_file->num_states) {
-    ERROR_AND_NO_RETURN_F_PTR("%d is out of bounds for the states", state);
+    ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
     *num_thick_shells = 0;
     return NULL;
   }
@@ -869,7 +869,7 @@ d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
   }
 
   if (state >= plot_file->num_states) {
-    ERROR_AND_NO_RETURN_F_PTR("%d is out of bounds for the states", state);
+    ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
     *num_beams = 0;
     return NULL;
   }
@@ -958,7 +958,7 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
   }
 
   if (state >= plot_file->num_states) {
-    ERROR_AND_NO_RETURN_F_PTR("%d is out of bounds for the states", state);
+    ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
     *num_shells = 0;
     return NULL;
   }
@@ -1581,7 +1581,7 @@ double *_d3plot_read_node_data(d3plot_file *plot_file, size_t state,
   }
 
   if (state >= plot_file->num_states) {
-    ERROR_AND_NO_RETURN_F_PTR("%d is out of bounds for the states", state);
+    ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
     return NULL;
   }
 
@@ -1627,7 +1627,7 @@ float *_d3plot_read_node_data_32(d3plot_file *plot_file, size_t state,
   }
 
   if (state >= plot_file->num_states) {
-    ERROR_AND_NO_RETURN_F_PTR("%d is out of bounds for the states", state);
+    ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
     return NULL;
   }
 

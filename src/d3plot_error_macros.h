@@ -33,7 +33,7 @@
   if (plot_file->error_string)                                                 \
     free(plot_file->error_string);                                             \
   plot_file->error_string = malloc(strlen(msg) + 1);                           \
-  sprintf(plot_file->error_string, msg);
+  sprintf(plot_file->error_string, "%s", msg);
 #define ERROR_AND_NO_RETURN_F_PTR(format_str, ...)                             \
   {                                                                            \
     char format_buffer[1024];                                                  \
@@ -44,7 +44,7 @@
   if (plot_file.error_string)                                                  \
     free(plot_file.error_string);                                              \
   plot_file.error_string = malloc(strlen(msg) + 1);                            \
-  sprintf(plot_file.error_string, msg);                                        \
+  sprintf(plot_file.error_string, "%s", msg);                                  \
   return plot_file;
 #define ERROR_AND_RETURN_F(format_str, ...)                                    \
   {                                                                            \
@@ -56,7 +56,7 @@
   if (plot_file->error_string)                                                 \
     free(plot_file->error_string);                                             \
   plot_file->error_string = malloc(strlen(msg) + 1);                           \
-  sprintf(plot_file->error_string, msg);                                       \
+  sprintf(plot_file->error_string, "%s", msg);                                 \
   return;
 #define ERROR_AND_RETURN_F_PTR(format_str, ...)                                \
   {                                                                            \

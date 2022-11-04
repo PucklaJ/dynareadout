@@ -431,11 +431,11 @@ void binout_close(binout_file *bin_file) {
 }
 
 void binout_print_records(binout_file *bin_file) {
-  printf("----- %d Files ---------------\n", bin_file->num_file_handles);
+  printf("----- %lu Files ---------------\n", bin_file->num_file_handles);
   size_t cur_file_index = 0;
   while (cur_file_index < bin_file->num_file_handles) {
 
-    printf("------ %d Data Pointers ------\n",
+    printf("------ %lu Data Pointers ------\n",
            bin_file->data_pointers_sizes[cur_file_index]);
 
     size_t i = 0;
@@ -443,17 +443,17 @@ void binout_print_records(binout_file *bin_file) {
       const binout_record_data_pointer *dp =
           &bin_file->data_pointers[cur_file_index][i];
       printf("---- %s ----\n", dp->name);
-      printf("- Data Length: %d --\n", dp->data_length);
+      printf("- Data Length: %lu --\n", dp->data_length);
       printf("- Type: %s -----\n", _binout_get_type_name(dp->type_id));
       printf("---------------------\n");
-      printf("- Records: %d --\n", dp->records_size);
+      printf("- Records: %lu --\n", dp->records_size);
 
       size_t j = 0;
       while (j < dp->records_size) {
         char *path_string = path_str(&dp->records[j].path);
         printf("- Path: %s ---\n", path_string);
         free(path_string);
-        printf("- File Pos: 0x%x ---\n", dp->records[j].file_pos);
+        printf("- File Pos: 0x%lx ---\n", dp->records[j].file_pos);
 
         j++;
       }

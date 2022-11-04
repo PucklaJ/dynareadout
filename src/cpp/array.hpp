@@ -63,7 +63,7 @@ public:
     bool operator!=(const ConstIterator &rhs) const noexcept {
       return m_index != rhs.m_index;
     }
-    const reference operator*() const { return m_data[m_index]; }
+    const reference operator*() { return m_data[m_index]; }
     const pointer operator->() const { return &m_data[m_index]; }
 
   public:

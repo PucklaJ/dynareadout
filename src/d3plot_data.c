@@ -171,7 +171,7 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
   const size_t user_ids_size = user_ids_end - user_ids_start;
   if (user_ids_size != CDP.narbs) {
     ERROR_AND_NO_RETURN_F_PTR(
-        "The USER IDENTIFICATION NUMBERS section is false (%d != %d)",
+        "The USER IDENTIFICATION NUMBERS section is false (%lu != %lu)",
         user_ids_size, CDP.narbs);
     return 0;
   }
@@ -305,10 +305,10 @@ int _d3plot_read_header(d3plot_file *plot_file) {
       }
 
       if (eof_marker != D3_EOF) {
-        ERROR_AND_NO_RETURN_F_PTR("Here (after header) 'd3plot':(%d) should be "
-                                  "the EOF marker (%f != %f)",
-                                  plot_file->buffer.cur_word - 1, eof_marker,
-                                  D3_EOF);
+        ERROR_AND_NO_RETURN_F_PTR(
+            "Here (after header) 'd3plot':(%lu) should be "
+            "the EOF marker (%f != %f)",
+            plot_file->buffer.cur_word - 1, eof_marker, D3_EOF);
         return 0;
       }
 
