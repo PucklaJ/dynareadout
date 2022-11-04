@@ -227,8 +227,8 @@ int _d3plot_read_header(d3plot_file *plot_file) {
     d3_word ntype = 0;
     d3_buffer_read_words(&plot_file->buffer, &ntype, 1);
     if (plot_file->buffer.error_string) {
-      ERROR_AND_RETURN_F_PTR("Failed to read NTYPE: %s",
-                             plot_file->buffer.error_string);
+      ERROR_AND_NO_RETURN_F_PTR("Failed to read NTYPE: %s",
+                                plot_file->buffer.error_string);
       return 0;
     }
 
@@ -246,8 +246,8 @@ int _d3plot_read_header(d3plot_file *plot_file) {
       d3_word numprop = 0;
       d3_buffer_read_words(&plot_file->buffer, &numprop, 1);
       if (plot_file->buffer.error_string) {
-        ERROR_AND_RETURN_F_PTR("Failed to read NUMPROP: %s",
-                               plot_file->buffer.error_string);
+        ERROR_AND_NO_RETURN_F_PTR("Failed to read NUMPROP: %s",
+                                  plot_file->buffer.error_string);
         return 0;
       }
       DT_PTR_SET(D3PLT_PTR_PART_TITLES);
@@ -263,8 +263,8 @@ int _d3plot_read_header(d3plot_file *plot_file) {
       d3_word numcon = 0;
       d3_buffer_read_words(&plot_file->buffer, &numcon, 1);
       if (plot_file->buffer.error_string) {
-        ERROR_AND_RETURN_F_PTR("Failed to read NUMCON: %s",
-                               plot_file->buffer.error_string);
+        ERROR_AND_NO_RETURN_F_PTR("Failed to read NUMCON: %s",
+                                  plot_file->buffer.error_string);
         return 0;
       }
       /* CTITLE is always 72 bytes*/
@@ -281,8 +281,8 @@ int _d3plot_read_header(d3plot_file *plot_file) {
       d3_word nline = 0;
       d3_buffer_read_words(&plot_file->buffer, &nline, 1);
       if (plot_file->buffer.error_string) {
-        ERROR_AND_RETURN_F_PTR("Failed to read NLINE: %s",
-                               plot_file->buffer.error_string);
+        ERROR_AND_NO_RETURN_F_PTR("Failed to read NLINE: %s",
+                                  plot_file->buffer.error_string);
         return 0;
       }
       /* KEYWORD is always 80 bytes*/

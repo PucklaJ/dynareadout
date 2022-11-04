@@ -47,11 +47,13 @@
     sprintf(format_buffer, format_str, __VA_ARGS__);                           \
     ERROR_AND_RETURN(format_buffer);                                           \
   }
-#define ERROR_AND_RETURN_PTR(msg)                                              \
+#define ERROR_AND_NO_RETURN_PTR(msg)                                           \
   if (buffer->error_string)                                                    \
     free(buffer->error_string);                                                \
   buffer->error_string = malloc(strlen(msg) + 1);                              \
-  sprintf(buffer->error_string, msg);                                          \
+  sprintf(buffer->error_string, msg);
+#define ERROR_AND_RETURN_PTR(msg)                                              \
+  ERROR_AND_NO_RETURN_PTR(msg);                                                \
   return;
 #define ERROR_AND_RETURN_F_PTR(format_str, ...)                                \
   {                                                                            \
@@ -342,7 +344,8 @@ int d3_buffer_next_file(d3_buffer *buffer) {
   }
 
   if (fseek(buffer->file_handles[buffer->cur_file_handle], 0, SEEK_SET) != 0) {
-    ERROR_AND_RETURN_PTR("Seek Error");
+    ERROR_AND_NO_RETURN_PTR("Seek Error");
+    return 0;
   }
 
   return 1;
