@@ -17,3 +17,6 @@ test_data/**/binout*
 *.cfile
 *.db
 *.msg
+
+# VS Code
+compile_commands.json

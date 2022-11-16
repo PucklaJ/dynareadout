@@ -112,11 +112,19 @@ binout_file binout_open(const char *file_name) {
       continue;
     }
 
+    /* Pointers to the data pointers of the current file*/
+    size_t *cur_data_pointers_size =
+        &bin_file.data_pointers_sizes[cur_file_index];
+    size_t *cur_data_pointers_capacity =
+        &bin_file.data_pointers_capacities[cur_file_index];
+    binout_record_data_pointer **cur_data_pointers =
+        &bin_file.data_pointers[cur_file_index];
+    *cur_data_pointers_size = 0;
+
     /* Preallocate some data pointers to reduce the number of heap allocations*/
-    bin_file.data_pointers_capacities[cur_file_index] =
-        BINOUT_DATA_POINTER_PREALLOC;
-    bin_file.data_pointers[cur_file_index] = malloc(
-        BINOUT_DATA_POINTER_PREALLOC * sizeof(binout_record_data_pointer));
+    *cur_data_pointers_capacity = BINOUT_DATA_POINTER_PREALLOC;
+    *cur_data_pointers = realloc(NULL, BINOUT_DATA_POINTER_PREALLOC *
+                                           sizeof(binout_record_data_pointer));
 
     binout_header header;
 
@@ -156,13 +164,6 @@ binout_file binout_open(const char *file_name) {
     }
 
     /* Parse all records */
-    size_t *cur_data_pointers_size =
-        &bin_file.data_pointers_sizes[cur_file_index];
-    size_t *cur_data_pointers_capacity =
-        &bin_file.data_pointers_capacities[cur_file_index];
-    binout_record_data_pointer **cur_data_pointers =
-        &bin_file.data_pointers[cur_file_index];
-    *cur_data_pointers_size = 0;
 
     /* Store the current path which is changed by the CD commands*/
     path_t current_path;
@@ -246,10 +247,10 @@ binout_file binout_open(const char *file_name) {
             &bin_file, cur_file_index, &current_path, variable_name);
 
         if (dp) {
+          free(variable_name);
           /* Just an assertion to make sure that the data_length stays
            * consistent*/
           if (data_length != dp->data_length) {
-            free(variable_name);
             cur_file_failed = 1;
             _binout_add_file_error(
                 &bin_file, file_names[cur_file_index],
