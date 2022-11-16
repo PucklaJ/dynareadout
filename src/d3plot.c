@@ -1671,15 +1671,9 @@ d3_word *_d3plot_read_ids(d3plot_file *plot_file, size_t *num_ids,
 
     size_t i = 0;
     while (i < *num_ids) {
-      ids[i + 0] = ids32[i + 0];
-      if (i < *num_ids - 1)
-        ids[i + 1] = ids32[i + 1];
-      if (i < *num_ids - 2)
-        ids[i + 2] = ids32[i + 2];
-      if (i < *num_ids - 3)
-        ids[i + 3] = ids32[i + 3];
+      ids[i] = ids32[i];
 
-      i += 4;
+      i++;
     }
 
     free(ids32);
