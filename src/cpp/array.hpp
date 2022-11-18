@@ -95,8 +95,10 @@ public:
   // data ........... An C array allocated by malloc
   // size ........... The number of elements inside data
   // delete_data .... Wether to free data in the destructor
+  Array() noexcept;
   Array(T *data, size_t size, bool delete_data = true) noexcept;
   Array(Array<T> &&rhs) noexcept;
+  Array(const Array<T> &rhs) = delete;
   ~Array() noexcept;
 
   inline T &operator[](size_t index);
@@ -131,6 +133,9 @@ template <typename T> Array<T> Array<T>::New(size_t size) {
   }
   return Array(data, size);
 }
+
+template <typename T>
+Array<T>::Array() noexcept : m_data(nullptr), m_size(0), m_delete_data(true) {}
 
 template <typename T>
 Array<T>::Array(T *data, size_t size, bool delete_data) noexcept
