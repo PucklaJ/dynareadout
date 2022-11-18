@@ -531,3 +531,24 @@ TEST_CASE("glob") {
   CHECK(path_elements_contain(globed_files, num_files, "src/path.c"));
   binout_free_glob(globed_files, num_files);
 }
+
+TEST_CASE("Array::New") {
+  auto arr = dro::Array<int>::New(5);
+  arr[0] = 1;
+  arr[1] = 10;
+  arr[2] = -3;
+  arr[3] = 500;
+  arr[4] = 670;
+  try {
+    arr[5] = 1;
+  } catch (const std::runtime_error &) {
+    CHECK(arr[0] == 1);
+    CHECK(arr[1] == 10);
+    CHECK(arr[2] == -3);
+    CHECK(arr[3] == 500);
+    CHECK(arr[4] == 670);
+
+    return;
+  }
+  FAIL("arr[5] should have thrown an exception");
+}

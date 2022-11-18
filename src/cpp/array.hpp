@@ -24,6 +24,7 @@
  ************************************************************************************/
 
 #pragma once
+#include <cerrno>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
@@ -34,7 +35,8 @@
 namespace dro {
 
 // An Array takes ownership over some arbitrary C array and frees its memory in
-// the destructor
+// the destructor. The memory of the C array NEEDS to be allocated by malloc,
+// calloc, realloc or reallocarray!
 template <typename T> class Array {
 public:
   // An iterator which can not write the array
@@ -86,6 +88,10 @@ public:
     }
   };
 
+  // Allocates memory and creates a new array with it
+  // size ........... Number of elements of the new array
+  static Array<T> New(size_t size);
+
   // data ........... An C array allocated by malloc
   // size ........... The number of elements inside data
   // delete_data .... Wether to free data in the destructor
@@ -115,6 +121,16 @@ private:
   size_t m_size;
   bool m_delete_data;
 };
+
+template <typename T> Array<T> Array<T>::New(size_t size) {
+  T *data = reinterpret_cast<T *>(malloc(size * sizeof(T)));
+  if (!data) {
+    throw std::runtime_error(
+        std::string("Failed to allocate memory for new array: ") +
+        strerror(errno));
+  }
+  return Array(data, size);
+}
 
 template <typename T>
 Array<T>::Array(T *data, size_t size, bool delete_data) noexcept
