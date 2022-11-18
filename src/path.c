@@ -52,7 +52,7 @@ void path_join(path_t *path, const char *element) {
 
 int path_is_abs(const char *path) { return path[0] == PATH_SEP; }
 
-int path_compatible(path_t *path1, path_t *path2) {
+int path_compatible(const path_t *path1, const path_t *path2) {
   if (path1->num_elements != path2->num_elements) {
     return 0;
   }
