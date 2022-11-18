@@ -28,6 +28,7 @@
 #include "binout_glob.h"
 #include "binout_records.h"
 #include "path.h"
+#include <assert.h>
 #include <errno.h>
 #include <string.h>
 
@@ -172,6 +173,8 @@ binout_file binout_open(const char *file_name) {
 
     int cur_file_failed = 0;
 
+    char variable_name_buffer[255];
+
     /* We cannot use EOF, so we use this*/
     while (1) {
       /* Check if we are already at the end or if an error occurred in ftell*/
@@ -221,10 +224,11 @@ binout_file binout_open(const char *file_name) {
         BIN_FILE_READ(variable_name_length, BINOUT_DATA_NAME_LENGTH, 1,
                       "Failed to read Name length of DATA record");
 
-        char *variable_name = malloc(variable_name_length + 1);
-        variable_name[variable_name_length] = '\0';
-        BIN_FILE_READ_FREE(variable_name, 1, variable_name_length,
-                           variable_name, "Failed to read Name of DATA record");
+        assert(variable_name_length + 1 < sizeof(variable_name_buffer));
+
+        variable_name_buffer[variable_name_length] = '\0';
+        BIN_FILE_READ(variable_name_buffer, 1, variable_name_length,
+                      "Failed to read Name of DATA record");
 
         /* How large the data segment of the data record is*/
         const uint64_t data_length =
@@ -234,7 +238,6 @@ binout_file binout_open(const char *file_name) {
         /* Skip the data since we will read it at a later point, if it is
          * requested by the programmer*/
         if (fseek(file_handle, data_length, SEEK_CUR) != 0) {
-          free(variable_name);
           cur_file_failed = 1;
           _binout_add_file_error(&bin_file, file_names[cur_file_index],
                                  "Failed to skip Data of DATA record");
@@ -244,10 +247,9 @@ binout_file binout_open(const char *file_name) {
         /* Get the according data pointer if there already is one or create a
          * new one*/
         binout_record_data_pointer *dp = _binout_get_data_pointer2(
-            &bin_file, cur_file_index, &current_path, variable_name);
+            &bin_file, cur_file_index, &current_path, variable_name_buffer);
 
         if (dp) {
-          free(variable_name);
           /* Just an assertion to make sure that the data_length stays
            * consistent*/
           if (data_length != dp->data_length) {
@@ -269,7 +271,8 @@ binout_file binout_open(const char *file_name) {
           }
 
           dp = &(*cur_data_pointers)[*cur_data_pointers_size - 1];
-          dp->name = variable_name;
+          dp->name = malloc(variable_name_length + 1);
+          memcpy(dp->name, variable_name_buffer, variable_name_length + 1);
           dp->data_length = data_length;
           dp->type_id = type_id;
           dp->records = realloc(NULL, BINOUT_DATA_RECORD_PREALLOC *
