@@ -43,6 +43,7 @@ typedef struct {
   uint64_t data_length; /* The length of a data segment of a record in bytes*/
   binout_record_data *records; /* An array holding all records*/
   size_t records_size;         /* The number of elements in records*/
+  size_t records_capacity;     /* The number of allocated elements in records*/
 } binout_record_data_pointer;
 
 #endif

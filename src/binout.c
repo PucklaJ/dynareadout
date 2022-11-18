@@ -270,10 +270,12 @@ binout_file binout_open(const char *file_name) {
 
           dp = &(*cur_data_pointers)[*cur_data_pointers_size - 1];
           dp->name = variable_name;
-          dp->records_size = 0;
           dp->data_length = data_length;
           dp->type_id = type_id;
-          dp->records = NULL;
+          dp->records = realloc(NULL, BINOUT_DATA_RECORD_PREALLOC *
+                                          sizeof(binout_record_data));
+          dp->records_capacity = BINOUT_DATA_RECORD_PREALLOC;
+          dp->records_size = 0;
         }
 
         /* Overwrite it if a record with the same name already exists.
@@ -281,8 +283,12 @@ binout_file binout_open(const char *file_name) {
         binout_record_data *rd = _binout_get_data(dp, &current_path);
         if (!rd) {
           dp->records_size++;
-          dp->records = realloc(dp->records,
-                                dp->records_size * sizeof(binout_record_data));
+          /* Only reallocate if the size is greater than the capacity*/
+          if (dp->records_size > dp->records_capacity) {
+            dp->records_capacity += BINOUT_DATA_RECORD_ALLOC_ADV;
+            dp->records = realloc(dp->records, dp->records_capacity *
+                                                   sizeof(binout_record_data));
+          }
 
           rd = &dp->records[dp->records_size - 1];
           rd->path.elements = NULL;
@@ -309,11 +315,22 @@ binout_file binout_open(const char *file_name) {
       bin_file.file_handles[cur_file_index] = NULL;
     }
 
-    /* Reallocate the data pointers to directly fit the size*/
+    /* Reallocate the data pointers and data records to directly fit the size*/
     *cur_data_pointers_capacity = *cur_data_pointers_size;
     *cur_data_pointers =
         realloc(*cur_data_pointers, *cur_data_pointers_capacity *
                                         sizeof(binout_record_data_pointer));
+    size_t i = 0;
+    while (i < *cur_data_pointers_size) {
+      (*cur_data_pointers)[i].records_capacity =
+          (*cur_data_pointers)[i].records_size;
+      (*cur_data_pointers)[i].records =
+          realloc((*cur_data_pointers)[i].records,
+                  (*cur_data_pointers)[i].records_capacity *
+                      sizeof(binout_record_data));
+
+      i++;
+    }
 
     cur_file_index++;
   }
