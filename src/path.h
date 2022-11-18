@@ -44,13 +44,12 @@ void path_join(path_t *path, const char *element);
 /* Check wether path is absolute instead of relative (Just checks if the first
  * char is PATH_SEP)*/
 int path_is_abs(const char *path);
-/* Checks if the main path of path1 equals the main path of path2
- * The main path of a path consists of the first two elements of the path or
- * of the first element if there are only two elements
- * Example: /nodout/metadata -> /nodout/metadata
- *          /nodout/slave_10002/metadata -> /nodout/slave_10002
- *          /nodout -> /nodout */
-int path_main_equals(path_t *path1, path_t *path2);
+/* Checks if two paths are compatible. This is used to determine if a certain
+ * record can be added to a certain data pointer.
+ * path1 ............... path of the new record (without variable name)
+ * path2 ............... path of the record of the data pointer (without
+ * variable name)*/
+int path_compatible(path_t *path1, path_t *path2);
 /* Parses the path for ".." and changes its elements accordingly
  * Example: /nodout/metadata/../d000001 -> /nodout/d000001*/
 void path_parse(path_t *path);

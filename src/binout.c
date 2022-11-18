@@ -823,22 +823,25 @@ binout_record_data_pointer *_binout_get_data_pointer(binout_file *bin_file,
   binout_record_data_pointer *dp = NULL;
   const size_t data_pointers_size = bin_file->data_pointers_sizes[file_index];
 
+  path_to_variable->num_elements--;
+
   uint64_t i = 0;
   while (i < data_pointers_size) {
     binout_record_data_pointer *bin_dp =
         &bin_file->data_pointers[file_index][i];
 
-    if (strcmp(
-            bin_dp->name,
-            path_to_variable->elements[path_to_variable->num_elements - 1]) ==
+    if (strcmp(bin_dp->name,
+               path_to_variable->elements[path_to_variable->num_elements]) ==
             0 &&
-        path_main_equals(&bin_dp->records[0].path, path_to_variable)) {
+        path_compatible(&bin_dp->records[0].path, path_to_variable)) {
       dp = bin_dp;
       break;
     }
 
     i++;
   }
+
+  path_to_variable->num_elements++;
 
   return dp;
 }
@@ -855,7 +858,7 @@ binout_record_data_pointer *_binout_get_data_pointer2(binout_file *bin_file,
         &bin_file->data_pointers[file_index][i];
 
     if (strcmp(bin_dp->name, variable) == 0 &&
-        path_main_equals(&bin_dp->records[0].path, path)) {
+        path_compatible(&bin_dp->records[0].path, path)) {
       dp = bin_dp;
       break;
     }

@@ -52,19 +52,67 @@ void path_join(path_t *path, const char *element) {
 
 int path_is_abs(const char *path) { return path[0] == PATH_SEP; }
 
-int path_main_equals(path_t *path1, path_t *path2) {
-  const size_t path1_main_size = path1->num_elements > 2 ? 2 : 1;
-  const size_t path2_main_size = path2->num_elements > 2 ? 2 : 1;
-  if (path1_main_size != path2_main_size) {
+int path_compatible(path_t *path1, path_t *path2) {
+  if (path1->num_elements != path2->num_elements) {
     return 0;
   }
 
   size_t i = 0;
-  while (i < path1_main_size) {
-    /* We need to do 'i+1' because the first element of an absolute path is
-     * always PATH_SEP*/
-    if (strcmp(path1->elements[i + 1], path2->elements[i + 1]) != 0) {
-      return 0;
+  while (i < path1->num_elements) {
+    if (strcmp(path1->elements[i], path2->elements[i]) != 0) {
+      if (i == path1->num_elements - 1) {
+        int path1_is_d = path1->elements[i][0] == 'd';
+
+        /* Check if path1 has a dxxxxxx element*/
+        if (path1_is_d) {
+          size_t len = strlen(path1->elements[i]);
+          if (len != 7) {
+            path1_is_d = 0;
+          } else {
+            size_t j = 1;
+            while (j < len) {
+              /* If the character is not a number*/
+              if (path1->elements[i][j] < 48 || path1->elements[i][j] > 57) {
+                path1_is_d = 0;
+                break;
+              }
+
+              j++;
+            }
+          }
+        }
+
+        if (path1_is_d) {
+          int path2_is_d = path2->elements[i][0] == 'd';
+
+          /* Check if path2 has a dxxxxxx element*/
+          if (path2_is_d) {
+            size_t len = strlen(path2->elements[i]);
+            if (len != 7) {
+              path2_is_d = 0;
+            } else {
+              size_t j = 1;
+              while (j < len) {
+                /* If the character is not a number*/
+                if (path2->elements[i][j] < 48 || path2->elements[i][j] > 57) {
+                  path2_is_d = 0;
+                  break;
+                }
+
+                j++;
+              }
+            }
+          }
+
+          if (path2_is_d) {
+            return 1;
+          }
+        } else {
+          return 0;
+        }
+      } else {
+        return 0;
+      }
     }
 
     i++;

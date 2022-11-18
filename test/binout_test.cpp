@@ -458,15 +458,72 @@ TEST_CASE("path_elements") {
   }
 }
 
-TEST_CASE("path_main_equals") {
+TEST_CASE("path_compatible") {
   {
-    const char *p1 = "/nodout/metadata";
-    const char *p2 = "/nodout/metadata";
+    const char *p1 = "/nodout/metadata/";
+    const char *p2 = "/nodout/metadata/";
     path_t p1t, p2t;
     p1t.elements = path_elements(p1, &p1t.num_elements);
     p2t.elements = path_elements(p2, &p2t.num_elements);
 
-    CHECK(path_main_equals(&p1t, &p2t));
+    CHECK(path_compatible(&p1t, &p2t));
+    path_free(&p1t);
+    path_free(&p2t);
+  }
+  {
+    const char *p1 = "/nodout/d000001/";
+    const char *p2 = "/nodout/d000002/";
+    path_t p1t, p2t;
+    p1t.elements = path_elements(p1, &p1t.num_elements);
+    p2t.elements = path_elements(p2, &p2t.num_elements);
+
+    CHECK(path_compatible(&p1t, &p2t));
+    path_free(&p1t);
+    path_free(&p2t);
+  }
+  {
+    const char *p1 = "/nodout/slave_100/metadata/";
+    const char *p2 = "/nodout/master_100/metadata/";
+    path_t p1t, p2t;
+    p1t.elements = path_elements(p1, &p1t.num_elements);
+    p2t.elements = path_elements(p2, &p2t.num_elements);
+
+    CHECK(!path_compatible(&p1t, &p2t));
+    path_free(&p1t);
+    path_free(&p2t);
+  }
+  {
+    const char *p1 = "/nodout/slave_100/metadata/";
+    const char *p2 = "/nodout/slave_100/d000001/";
+    path_t p1t, p2t;
+    p1t.elements = path_elements(p1, &p1t.num_elements);
+    p2t.elements = path_elements(p2, &p2t.num_elements);
+
+    CHECK(!path_compatible(&p1t, &p2t));
+    path_free(&p1t);
+    path_free(&p2t);
+  }
+  {
+    const char *p1 = "/nodout/slave_100/d000101/";
+    const char *p2 = "/nodout/slave_100/d000001/";
+    path_t p1t, p2t;
+    p1t.elements = path_elements(p1, &p1t.num_elements);
+    p2t.elements = path_elements(p2, &p2t.num_elements);
+
+    CHECK(path_compatible(&p1t, &p2t));
+    path_free(&p1t);
+    path_free(&p2t);
+  }
+  {
+    const char *p1 = "/nodout/d000101/";
+    const char *p2 = "/nodout/slave_100/d000101/";
+    path_t p1t, p2t;
+    p1t.elements = path_elements(p1, &p1t.num_elements);
+    p2t.elements = path_elements(p2, &p2t.num_elements);
+
+    CHECK(!path_compatible(&p1t, &p2t));
+    path_free(&p1t);
+    path_free(&p2t);
   }
 }
 
