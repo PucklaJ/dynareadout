@@ -28,6 +28,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
@@ -64,6 +65,9 @@ public:
     }
     bool operator!=(const ConstIterator &rhs) const noexcept {
       return m_index != rhs.m_index;
+    }
+    difference_type operator-(const ConstIterator &rhs) const {
+      return m_index - rhs.m_index;
     }
     const reference operator*() { return m_data[m_index]; }
     const pointer operator->() const { return &m_data[m_index]; }
