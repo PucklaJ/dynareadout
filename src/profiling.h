@@ -27,6 +27,7 @@
 #define PROFILING_H
 
 #include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 #include <time.h>
 
@@ -34,7 +35,15 @@ typedef struct {
   char const **execution_times_names;
   double *execution_times;
   size_t num_execution_times;
+
+  char const **current_executions;
+  size_t num_current_executions;
 } profiling_context_t;
+
+typedef struct {
+  clock_t start_time;
+  uint8_t should_end;
+} execution_t;
 
 extern profiling_context_t profiling_context;
 
@@ -42,15 +51,17 @@ extern profiling_context_t profiling_context;
 extern "C" {
 #endif
 
-void _END_PROFILE_SECTION(const char *name, clock_t start_time);
+execution_t _BEGIN_PROFILE_SECTION(const char *name);
+void _END_PROFILE_SECTION(const char *name, execution_t start_time);
 void END_PROFILING(const char *out_file_name);
 
 #ifdef __cplusplus
 }
 #endif
 
-#define BEGIN_PROFILE_FUNC() clock_t func_profiling_start_time = clock()
+#define BEGIN_PROFILE_FUNC()                                                   \
+  const execution_t func_profiling_start = _BEGIN_PROFILE_SECTION(__FUNCTION__)
 #define END_PROFILE_FUNC()                                                     \
-  _END_PROFILE_SECTION(__FUNCTION__, func_profiling_start_time)
+  _END_PROFILE_SECTION(__FUNCTION__, func_profiling_start)
 
 #endif

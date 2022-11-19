@@ -53,9 +53,23 @@ void profile_test_func2() {
   END_PROFILE_FUNC();
 }
 
+void profile_test_func3(int i = 0) {
+  BEGIN_PROFILE_FUNC();
+
+  if (i == 10000) {
+    END_PROFILE_FUNC();
+    return;
+  }
+
+  profile_test_func3(i + 1);
+
+  END_PROFILE_FUNC();
+}
+
 TEST_CASE("profiling") {
   profile_test_func1();
   profile_test_func2();
+  profile_test_func3();
 
   END_PROFILING("test_data/profiling_test.txt");
 }

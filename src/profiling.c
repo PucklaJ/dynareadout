@@ -28,7 +28,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-profiling_context_t profiling_context = {NULL, NULL, 0};
+profiling_context_t profiling_context = {NULL, NULL, 0, NULL, 0};
 
 signed long partition_execution_times(char const ***names, double **times,
                                       signed long low, signed long high) {
@@ -72,9 +72,45 @@ void quick_sort_execution_times(char const ***names, double **times,
   }
 }
 
-void _END_PROFILE_SECTION(const char *name, clock_t start_time) {
+execution_t _BEGIN_PROFILE_SECTION(const char *name) {
+  /* Only start profiling if it isn't already getting profiled (to avoid
+   * recursion issues)*/
+  execution_t rv = {0, 0};
+  size_t i = 0, index = ~0;
+  while (i < profiling_context.num_current_executions) {
+    if (index == ~0 && !profiling_context.current_executions[i]) {
+      index = i;
+    } else if (strcmp(profiling_context.current_executions[i], name) == 0) {
+      return rv;
+    }
+
+    i++;
+  }
+
+  if (index == ~0) {
+    profiling_context.num_current_executions++;
+    profiling_context.current_executions = realloc(
+        profiling_context.current_executions,
+        profiling_context.num_current_executions * sizeof(const char *));
+    index = profiling_context.num_current_executions - 1;
+  }
+
+  profiling_context.current_executions[index] = name;
+
+  rv.should_end = 1;
+  rv.start_time = clock();
+
+  return rv;
+}
+
+void _END_PROFILE_SECTION(const char *name, execution_t start) {
+  if (!start.should_end) {
+    return;
+  }
+
   clock_t end_time = clock();
-  const double elapsed_time = (double)(end_time - start_time) / CLOCKS_PER_SEC;
+  const double elapsed_time =
+      (double)(end_time - start.start_time) / CLOCKS_PER_SEC;
 
   size_t index = ~0;
   size_t i = 0;
@@ -87,11 +123,21 @@ void _END_PROFILE_SECTION(const char *name, clock_t start_time) {
     i++;
   }
 
+  i = 0;
+  while (i < profiling_context.num_current_executions) {
+    if (strcmp(profiling_context.current_executions[i], name) == 0) {
+      profiling_context.current_executions[i] = NULL;
+      break;
+    }
+
+    i++;
+  }
+
   if (index == ~0) {
     profiling_context.num_execution_times++;
     profiling_context.execution_times_names =
         realloc(profiling_context.execution_times_names,
-                profiling_context.num_execution_times * sizeof(char *));
+                profiling_context.num_execution_times * sizeof(const char *));
     profiling_context.execution_times =
         realloc(profiling_context.execution_times,
                 profiling_context.num_execution_times * sizeof(double));
@@ -107,7 +153,7 @@ void END_PROFILING(const char *out_file_name) {
   if (out_file_name && profiling_context.num_execution_times) {
     FILE *out_file = fopen(out_file_name, "w");
     if (!out_file) {
-      fprintf(stderr, "Failed to open profiling output file: %s\n",
+      fprintf(stderr, "[PROFILING] Failed to open profiling output file: %s\n",
               strerror(errno));
     } else {
       /* Sort execution times in decending order*/
@@ -131,9 +177,23 @@ void END_PROFILING(const char *out_file_name) {
     }
   }
 
+  size_t i = 0;
+  while (i < profiling_context.num_current_executions) {
+    if (profiling_context.current_executions[i]) {
+      fprintf(stderr,
+              "[PROFILING] %s is still executing when ending profiling\n",
+              profiling_context.current_executions[i]);
+    }
+
+    i++;
+  }
+
   free(profiling_context.execution_times_names);
   free(profiling_context.execution_times);
+  free(profiling_context.current_executions);
   profiling_context.execution_times_names = NULL;
   profiling_context.execution_times = NULL;
+  profiling_context.current_executions = NULL;
   profiling_context.num_execution_times = 0;
+  profiling_context.num_current_executions = 0;
 }
