@@ -26,6 +26,7 @@ if get_config("profiling") then
         if is_plat("linux") then
             add_cxxflags("-fPIC")
         end
+        add_options("profiling")
         add_files("src/profiling.c")
         add_headerfiles("src/profiling.h")
         if is_kind("shared") then
@@ -41,6 +42,7 @@ target("binout")
     if get_config("profiling") then
         add_deps("profiling")
     end
+    add_options("profiling")
     add_files("src/binout*.c", "src/path.c")
     add_headerfiles("src/binout*.h", "src/path.h")
     if is_kind("shared") then
@@ -56,6 +58,7 @@ target("d3plot")
     if get_config("profiling") then
         add_deps("profiling")
     end
+    add_options("profiling")
     add_files("src/d3*.c")
     add_headerfiles("src/d3*.h")
     if is_kind("shared") then
@@ -127,6 +130,7 @@ if get_config("build_test") then
         target("profiling_test")
             set_kind("binary")
             set_languages("cxx17")
+            add_options("profiling")
             add_deps("profiling")
             add_packages("doctest")
             add_includedirs("src")
@@ -144,6 +148,7 @@ if get_config("build_python") then
         end
         add_deps("d3plot_cpp", "binout_cpp")
         add_packages("pybind11")
+        add_options("profiling")
         add_files("src/python/*.cpp")
         add_headerfiles("src/python/*.hpp")
         add_includedirs("src", "src/cpp")

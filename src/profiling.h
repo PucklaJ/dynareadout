@@ -26,6 +26,8 @@
 #ifndef PROFILING_H
 #define PROFILING_H
 
+#ifdef PROFILING
+
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
@@ -68,5 +70,15 @@ void END_PROFILING(const char *out_file_name);
       _BEGIN_PROFILE_SECTION(#section_name)
 #define END_PROFILE_SECTION(section_name)                                      \
   _END_PROFILE_SECTION(#section_name, section_name##_profiling_start)
+
+#else
+
+#define BEGIN_PROFILE_FUNC()
+#define END_PROFILE_FUNC()
+#define BEGIN_PROFILE_SECTION(section_name)
+#define END_PROFILE_SECTION(section_name)
+#define END_PROFILING(out_file_name)
+
+#endif
 
 #endif
