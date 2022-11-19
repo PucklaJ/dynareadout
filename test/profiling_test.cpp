@@ -25,6 +25,7 @@
 
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
+#include <cmath>
 #include <doctest/doctest.h>
 #include <iostream>
 #include <profiling.h>
@@ -67,6 +68,11 @@ void profile_test_func3(int i = 0) {
 }
 
 TEST_CASE("profiling") {
+  BEGIN_PROFILE_SECTION(math_equation);
+  float math_value = sin(cos(sin(tan(5.0f + tan(5.0f)))));
+  math_value += sin(cos(sin(tan(math_value + tan(math_value)))));
+  END_PROFILE_SECTION(math_equation);
+
   profile_test_func1();
   profile_test_func2();
   profile_test_func3();

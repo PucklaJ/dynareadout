@@ -166,7 +166,7 @@ void END_PROFILING(const char *out_file_name) {
               profiling_context.num_execution_times);
       size_t i = 0;
       while (i < profiling_context.num_execution_times) {
-        fprintf(out_file, "--- %s: %10.3f ms ---\n",
+        fprintf(out_file, "--- %20s: %10.3f ms ---\n",
                 profiling_context.execution_times_names[i],
                 profiling_context.execution_times[i] * 1000.0);
 

@@ -63,5 +63,10 @@ void END_PROFILING(const char *out_file_name);
   const execution_t func_profiling_start = _BEGIN_PROFILE_SECTION(__FUNCTION__)
 #define END_PROFILE_FUNC()                                                     \
   _END_PROFILE_SECTION(__FUNCTION__, func_profiling_start)
+#define BEGIN_PROFILE_SECTION(section_name)                                    \
+  const execution_t section_name##_profiling_start =                           \
+      _BEGIN_PROFILE_SECTION(#section_name)
+#define END_PROFILE_SECTION(section_name)                                      \
+  _END_PROFILE_SECTION(#section_name, section_name##_profiling_start)
 
 #endif
