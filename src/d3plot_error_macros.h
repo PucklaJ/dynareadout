@@ -45,6 +45,7 @@
     free(plot_file.error_string);                                              \
   plot_file.error_string = malloc(strlen(msg) + 1);                            \
   sprintf(plot_file.error_string, "%s", msg);                                  \
+  END_PROFILE_FUNC();                                                          \
   return plot_file;
 #define ERROR_AND_RETURN_F(format_str, ...)                                    \
   {                                                                            \

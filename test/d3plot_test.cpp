@@ -23,7 +23,12 @@
  * 3. This notice may not be removed or altered from any source distribution.
  ************************************************************************************/
 
+#ifdef PROFILING
+#define DOCTEST_CONFIG_IMPLEMENT
+#include <profiling.h>
+#else
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#endif
 #define DOCTEST_CONFIG_TREAT_CHAR_STAR_AS_STRING
 #include <cstdint>
 #include <ctime>
@@ -867,3 +872,20 @@ TEST_CASE("_binary_search") {
   idx = _binary_search(arr, 5, 0, arr_size - 1);
   CHECK(idx == UINT64_MAX);
 }
+
+#ifdef PROFILING
+int main(int args, char *argv[]) {
+  doctest::Context ctx;
+
+  ctx.addFilter("test-case", "d3plot");
+  ctx.applyCommandLine(args, argv);
+
+  const int res = ctx.run();
+
+  if (ctx.shouldExit()) {
+    return res;
+  }
+
+  END_PROFILING("test_data/d3plot_profiling.txt");
+}
+#endif

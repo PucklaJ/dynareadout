@@ -24,6 +24,7 @@
  ************************************************************************************/
 
 #include "d3plot.h"
+#include "profiling.h"
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -47,6 +48,8 @@
 #include "d3plot_error_macros.h"
 
 d3plot_file d3plot_open(const char *root_file_name) {
+  BEGIN_PROFILE_FUNC();
+
   d3plot_file plot_file;
   plot_file.error_string = NULL;
   plot_file.data_pointers = NULL;
@@ -57,6 +60,8 @@ d3plot_file d3plot_open(const char *root_file_name) {
     /* Swaperoo*/
     plot_file.error_string = plot_file.buffer.error_string;
     plot_file.buffer.error_string = NULL;
+
+    END_PROFILE_FUNC();
     return plot_file;
   }
 
@@ -84,6 +89,8 @@ d3plot_file d3plot_open(const char *root_file_name) {
     plot_file.error_string = malloc(50);
     sprintf(plot_file.error_string, "Wrong file type: %s",
             _d3plot_get_file_type_name(file_type));
+
+    END_PROFILE_FUNC();
     return plot_file;
   }
 
@@ -283,18 +290,22 @@ d3plot_file d3plot_open(const char *root_file_name) {
   }
 
   if (!_d3plot_read_geometry_data(&plot_file)) {
+    END_PROFILE_FUNC();
     return plot_file;
   }
 
   if (!_d3plot_read_user_identification_numbers(&plot_file)) {
+    END_PROFILE_FUNC();
     return plot_file;
   }
 
   if (!_d3plot_read_extra_node_connectivity(&plot_file)) {
+    END_PROFILE_FUNC();
     return plot_file;
   }
 
   if (!_d3plot_read_adapted_element_parent_list(&plot_file)) {
+    END_PROFILE_FUNC();
     return plot_file;
   }
 
@@ -322,6 +333,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
   }
 
   if (!_d3plot_read_header(&plot_file)) {
+    END_PROFILE_FUNC();
     return plot_file;
   }
 
@@ -353,47 +365,79 @@ d3plot_file d3plot_open(const char *root_file_name) {
     }
   }
 
+  END_PROFILE_FUNC();
   return plot_file;
 }
 
 void d3plot_close(d3plot_file *plot_file) {
+  BEGIN_PROFILE_FUNC();
+
   d3_buffer_close(&plot_file->buffer);
 
   free(plot_file->data_pointers);
   free(plot_file->error_string);
 
   plot_file->num_states = 0;
+
+  END_PROFILE_FUNC();
 }
 
 d3_word *d3plot_read_node_ids(d3plot_file *plot_file, size_t *num_ids) {
-  return _d3plot_read_ids(plot_file, num_ids, D3PLT_PTR_NODE_IDS,
-                          plot_file->control_data.numnp);
+  BEGIN_PROFILE_FUNC();
+
+  d3_word *ids = _d3plot_read_ids(plot_file, num_ids, D3PLT_PTR_NODE_IDS,
+                                  plot_file->control_data.numnp);
+
+  END_PROFILE_FUNC();
+  return ids;
 }
 
 d3_word *d3plot_read_solid_element_ids(d3plot_file *plot_file,
                                        size_t *num_ids) {
-  return _d3plot_read_ids(plot_file, num_ids, D3PLT_PTR_EL8_IDS,
-                          plot_file->control_data.nel8);
+  BEGIN_PROFILE_FUNC();
+
+  d3_word *ids = _d3plot_read_ids(plot_file, num_ids, D3PLT_PTR_EL8_IDS,
+                                  plot_file->control_data.nel8);
+
+  END_PROFILE_FUNC();
+  return ids;
 }
 
 d3_word *d3plot_read_beam_element_ids(d3plot_file *plot_file, size_t *num_ids) {
-  return _d3plot_read_ids(plot_file, num_ids, D3PLT_PTR_EL2_IDS,
-                          plot_file->control_data.nel2);
+  BEGIN_PROFILE_FUNC();
+
+  d3_word *ids = _d3plot_read_ids(plot_file, num_ids, D3PLT_PTR_EL2_IDS,
+                                  plot_file->control_data.nel2);
+
+  END_PROFILE_FUNC();
+  return ids;
 }
 
 d3_word *d3plot_read_shell_element_ids(d3plot_file *plot_file,
                                        size_t *num_ids) {
-  return _d3plot_read_ids(plot_file, num_ids, D3PLT_PTR_EL4_IDS,
-                          plot_file->control_data.nel4);
+  BEGIN_PROFILE_FUNC();
+
+  d3_word *ids = _d3plot_read_ids(plot_file, num_ids, D3PLT_PTR_EL4_IDS,
+                                  plot_file->control_data.nel4);
+
+  END_PROFILE_FUNC();
+  return ids;
 }
 
 d3_word *d3plot_read_thick_shell_element_ids(d3plot_file *plot_file,
                                              size_t *num_ids) {
-  return _d3plot_read_ids(plot_file, num_ids, D3PLT_PTR_ELT_IDS,
-                          plot_file->control_data.nelt);
+  BEGIN_PROFILE_FUNC();
+
+  d3_word *ids = _d3plot_read_ids(plot_file, num_ids, D3PLT_PTR_ELT_IDS,
+                                  plot_file->control_data.nelt);
+
+  END_PROFILE_FUNC();
+  return ids;
 }
 
 d3_word *d3plot_read_all_element_ids(d3plot_file *plot_file, size_t *num_ids) {
+  BEGIN_PROFILE_FUNC();
+
   d3_word *all_ids = NULL;
   *num_ids = 0;
 
@@ -427,14 +471,19 @@ d3_word *d3plot_read_all_element_ids(d3plot_file *plot_file, size_t *num_ids) {
     free(ids_buffer);
   }
 
+  END_PROFILE_FUNC();
   return all_ids;
 }
 
 d3_word *d3plot_read_part_ids(d3plot_file *plot_file, size_t *num_parts) {
+  BEGIN_PROFILE_FUNC();
+
   if (plot_file->data_pointers[D3PLT_PTR_PART_IDS] == 0) {
     if (plot_file->data_pointers[D3PLT_PTR_PART_TITLES] == 0) {
       ERROR_AND_NO_RETURN_PTR("Could not retrieve part ids");
       *num_parts = 0;
+
+      END_PROFILE_FUNC();
       return NULL;
     }
 
@@ -458,14 +507,20 @@ d3_word *d3plot_read_part_ids(d3plot_file *plot_file, size_t *num_parts) {
       i++;
     }
 
+    END_PROFILE_FUNC();
     return part_ids;
   }
 
-  return _d3plot_read_ids(plot_file, num_parts, D3PLT_PTR_PART_IDS,
-                          plot_file->control_data.nmmat);
+  d3_word *ids = _d3plot_read_ids(plot_file, num_parts, D3PLT_PTR_PART_IDS,
+                                  plot_file->control_data.nmmat);
+
+  END_PROFILE_FUNC();
+  return ids;
 }
 
 char **d3plot_read_part_titles(d3plot_file *plot_file, size_t *num_parts) {
+  BEGIN_PROFILE_FUNC();
+
   *num_parts = plot_file->control_data.nmmat;
   char **part_titles = malloc(*num_parts * sizeof(char *));
 
@@ -495,6 +550,8 @@ char **d3plot_read_part_titles(d3plot_file *plot_file, size_t *num_parts) {
       }
       free(part_titles);
       *num_parts = 0;
+
+      END_PROFILE_FUNC();
       return NULL;
     }
 
@@ -503,48 +560,83 @@ char **d3plot_read_part_titles(d3plot_file *plot_file, size_t *num_parts) {
     i++;
   }
 
+  END_PROFILE_FUNC();
   return part_titles;
 }
 
 double *d3plot_read_node_coordinates(d3plot_file *plot_file, size_t state,
                                      size_t *num_nodes) {
-  return _d3plot_read_node_data(plot_file, state, num_nodes,
-                                D3PLT_PTR_STATE_NODE_COORDS);
+  BEGIN_PROFILE_FUNC();
+
+  double *data = _d3plot_read_node_data(plot_file, state, num_nodes,
+                                        D3PLT_PTR_STATE_NODE_COORDS);
+
+  END_PROFILE_FUNC();
+  return data;
 }
 
 double *d3plot_read_node_velocity(d3plot_file *plot_file, size_t state,
                                   size_t *num_nodes) {
-  return _d3plot_read_node_data(plot_file, state, num_nodes,
-                                D3PLT_PTR_STATE_NODE_VEL);
+  BEGIN_PROFILE_FUNC();
+
+  double *data = _d3plot_read_node_data(plot_file, state, num_nodes,
+                                        D3PLT_PTR_STATE_NODE_VEL);
+
+  END_PROFILE_FUNC();
+  return data;
 }
 
 double *d3plot_read_node_acceleration(d3plot_file *plot_file, size_t state,
                                       size_t *num_nodes) {
-  return _d3plot_read_node_data(plot_file, state, num_nodes,
-                                D3PLT_PTR_STATE_NODE_ACC);
+  BEGIN_PROFILE_FUNC();
+
+  double *data = _d3plot_read_node_data(plot_file, state, num_nodes,
+                                        D3PLT_PTR_STATE_NODE_ACC);
+
+  END_PROFILE_FUNC();
+  return data;
 }
 
 float *d3plot_read_node_coordinates_32(d3plot_file *plot_file, size_t state,
                                        size_t *num_nodes) {
-  return _d3plot_read_node_data_32(plot_file, state, num_nodes,
-                                   D3PLT_PTR_STATE_NODE_COORDS);
+  BEGIN_PROFILE_FUNC();
+
+  float *data = _d3plot_read_node_data_32(plot_file, state, num_nodes,
+                                          D3PLT_PTR_STATE_NODE_COORDS);
+
+  END_PROFILE_FUNC();
+  return data;
 }
 
 float *d3plot_read_node_velocity_32(d3plot_file *plot_file, size_t state,
                                     size_t *num_nodes) {
-  return _d3plot_read_node_data_32(plot_file, state, num_nodes,
-                                   D3PLT_PTR_STATE_NODE_VEL);
+  BEGIN_PROFILE_FUNC();
+
+  float *data = _d3plot_read_node_data_32(plot_file, state, num_nodes,
+                                          D3PLT_PTR_STATE_NODE_VEL);
+
+  END_PROFILE_FUNC();
+  return data;
 }
 
 float *d3plot_read_node_acceleration_32(d3plot_file *plot_file, size_t state,
                                         size_t *num_nodes) {
-  return _d3plot_read_node_data_32(plot_file, state, num_nodes,
-                                   D3PLT_PTR_STATE_NODE_ACC);
+  BEGIN_PROFILE_FUNC();
+
+  float *data = _d3plot_read_node_data_32(plot_file, state, num_nodes,
+                                          D3PLT_PTR_STATE_NODE_ACC);
+
+  END_PROFILE_FUNC();
+  return data;
 }
 
 double d3plot_read_time(d3plot_file *plot_file, size_t state) {
+  BEGIN_PROFILE_FUNC();
+
   if (state >= plot_file->num_states) {
     ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
+
+    END_PROFILE_FUNC();
     return -1.0;
   }
 
@@ -564,22 +656,30 @@ double d3plot_read_time(d3plot_file *plot_file, size_t state) {
   if (plot_file->buffer.error_string) {
     ERROR_AND_NO_RETURN_F_PTR("Failed to read words: %s",
                               plot_file->buffer.error_string);
+
+    END_PROFILE_FUNC();
     return -1.0;
   }
 
+  END_PROFILE_FUNC();
   return time;
 }
 
 d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
                                        size_t *num_solids) {
+  BEGIN_PROFILE_FUNC();
+
   *num_solids = plot_file->control_data.nel8;
   if (*num_solids == 0) {
+    END_PROFILE_FUNC();
     return NULL;
   }
 
   if (state >= plot_file->num_states) {
     ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
     *num_solids = 0;
+
+    END_PROFILE_FUNC();
     return NULL;
   }
 
@@ -600,6 +700,8 @@ d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
       *num_solids = 0;
       free(data);
       free(solids);
+
+      END_PROFILE_FUNC();
       return NULL;
     }
 
@@ -665,6 +767,8 @@ d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
       *num_solids = 0;
       free(data);
       free(solids);
+
+      END_PROFILE_FUNC();
       return NULL;
     }
 
@@ -703,20 +807,26 @@ d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
     free(data);
   }
 
+  END_PROFILE_FUNC();
   return solids;
 }
 
 d3plot_thick_shell *d3plot_read_thick_shells_state(d3plot_file *plot_file,
                                                    size_t state,
                                                    size_t *num_thick_shells) {
+  BEGIN_PROFILE_FUNC();
+
   *num_thick_shells = plot_file->control_data.nelt;
   if (*num_thick_shells == 0) {
+    END_PROFILE_FUNC();
     return NULL;
   }
 
   if (state >= plot_file->num_states) {
     ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
     *num_thick_shells = 0;
+
+    END_PROFILE_FUNC();
     return NULL;
   }
 
@@ -737,6 +847,8 @@ d3plot_thick_shell *d3plot_read_thick_shells_state(d3plot_file *plot_file,
       *num_thick_shells = 0;
       free(data);
       free(thick_shells);
+
+      END_PROFILE_FUNC();
       return NULL;
     }
 
@@ -816,6 +928,8 @@ d3plot_thick_shell *d3plot_read_thick_shells_state(d3plot_file *plot_file,
       *num_thick_shells = 0;
       free(data);
       free(thick_shells);
+
+      END_PROFILE_FUNC();
       return NULL;
     }
 
@@ -858,19 +972,25 @@ d3plot_thick_shell *d3plot_read_thick_shells_state(d3plot_file *plot_file,
     free(data);
   }
 
+  END_PROFILE_FUNC();
   return thick_shells;
 }
 
 d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
                                      size_t *num_beams) {
+  BEGIN_PROFILE_FUNC();
+
   *num_beams = plot_file->control_data.nel2;
   if (*num_beams == 0) {
+    END_PROFILE_FUNC();
     return NULL;
   }
 
   if (state >= plot_file->num_states) {
     ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
     *num_beams = 0;
+
+    END_PROFILE_FUNC();
     return NULL;
   }
 
@@ -890,6 +1010,8 @@ d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
       *num_beams = 0;
       free(data);
       free(beams);
+
+      END_PROFILE_FUNC();
       return NULL;
     }
 
@@ -927,6 +1049,8 @@ d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
       *num_beams = 0;
       free(data);
       free(beams);
+
+      END_PROFILE_FUNC();
       return NULL;
     }
 
@@ -947,19 +1071,25 @@ d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
     free(data);
   }
 
+  END_PROFILE_FUNC();
   return beams;
 }
 
 d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
                                        size_t *num_shells) {
+  BEGIN_PROFILE_FUNC();
+
   *num_shells = plot_file->control_data.nel4;
   if (*num_shells == 0) {
+    END_PROFILE_FUNC();
     return NULL;
   }
 
   if (state >= plot_file->num_states) {
     ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
     *num_shells = 0;
+
+    END_PROFILE_FUNC();
     return NULL;
   }
 
@@ -979,6 +1109,8 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
       *num_shells = 0;
       free(data);
       free(shells);
+
+      END_PROFILE_FUNC();
       return NULL;
     }
 
@@ -1079,6 +1211,8 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
       *num_shells = 0;
       free(data);
       free(shells);
+
+      END_PROFILE_FUNC();
       return NULL;
     }
 
@@ -1140,14 +1274,18 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
     free(data);
   }
 
+  END_PROFILE_FUNC();
   return shells;
 }
 
 d3plot_solid_con *d3plot_read_solid_elements(d3plot_file *plot_file,
                                              size_t *num_solids) {
+  BEGIN_PROFILE_FUNC();
+
   if (plot_file->control_data.nel8 <= 0) {
     /* nel8 represents the number of extra nodes for ten node solids*/
     *num_solids = 0;
+    END_PROFILE_FUNC();
     return NULL;
   }
 
@@ -1163,6 +1301,8 @@ d3plot_solid_con *d3plot_read_solid_elements(d3plot_file *plot_file,
       *num_solids = 0;
       free(solids32);
       free(solids);
+
+      END_PROFILE_FUNC();
       return NULL;
     }
 
@@ -1192,6 +1332,8 @@ d3plot_solid_con *d3plot_read_solid_elements(d3plot_file *plot_file,
                                 plot_file->buffer.error_string);
       *num_solids = 0;
       free(solids);
+
+      END_PROFILE_FUNC();
       return NULL;
     }
 
@@ -1213,14 +1355,18 @@ d3plot_solid_con *d3plot_read_solid_elements(d3plot_file *plot_file,
     }
   }
 
+  END_PROFILE_FUNC();
   return solids;
 }
 
 d3plot_thick_shell_con *
 d3plot_read_thick_shell_elements(d3plot_file *plot_file,
                                  size_t *num_thick_shells) {
+  BEGIN_PROFILE_FUNC();
+
   if (plot_file->control_data.nelt == 0) {
     *num_thick_shells = 0;
+    END_PROFILE_FUNC();
     return NULL;
   }
 
@@ -1238,6 +1384,8 @@ d3plot_read_thick_shell_elements(d3plot_file *plot_file,
       *num_thick_shells = 0;
       free(thick_shells32);
       free(thick_shells);
+
+      END_PROFILE_FUNC();
       return NULL;
     }
 
@@ -1268,6 +1416,8 @@ d3plot_read_thick_shell_elements(d3plot_file *plot_file,
                                 plot_file->buffer.error_string);
       *num_thick_shells = 0;
       free(thick_shells);
+
+      END_PROFILE_FUNC();
       return NULL;
     }
 
@@ -1289,13 +1439,17 @@ d3plot_read_thick_shell_elements(d3plot_file *plot_file,
     }
   }
 
+  END_PROFILE_FUNC();
   return thick_shells;
 }
 
 d3plot_beam_con *d3plot_read_beam_elements(d3plot_file *plot_file,
                                            size_t *num_beams) {
+  BEGIN_PROFILE_FUNC();
+
   if (plot_file->control_data.nel2 == 0) {
     *num_beams = 0;
+    END_PROFILE_FUNC();
     return NULL;
   }
 
@@ -1311,6 +1465,8 @@ d3plot_beam_con *d3plot_read_beam_elements(d3plot_file *plot_file,
       *num_beams = 0;
       free(beams32);
       free(beams);
+
+      END_PROFILE_FUNC();
       return NULL;
     }
 
@@ -1336,6 +1492,8 @@ d3plot_beam_con *d3plot_read_beam_elements(d3plot_file *plot_file,
                                 plot_file->buffer.error_string);
       *num_beams = 0;
       free(beams);
+
+      END_PROFILE_FUNC();
       return NULL;
     }
 
@@ -1351,13 +1509,17 @@ d3plot_beam_con *d3plot_read_beam_elements(d3plot_file *plot_file,
     }
   }
 
+  END_PROFILE_FUNC();
   return beams;
 }
 
 d3plot_shell_con *d3plot_read_shell_elements(d3plot_file *plot_file,
                                              size_t *num_shells) {
+  BEGIN_PROFILE_FUNC();
+
   if (plot_file->control_data.nel4 == 0) {
     *num_shells = 0;
+    END_PROFILE_FUNC();
     return NULL;
   }
 
@@ -1373,6 +1535,8 @@ d3plot_shell_con *d3plot_read_shell_elements(d3plot_file *plot_file,
       *num_shells = 0;
       free(shells32);
       free(shells);
+
+      END_PROFILE_FUNC();
       return NULL;
     }
 
@@ -1397,6 +1561,8 @@ d3plot_shell_con *d3plot_read_shell_elements(d3plot_file *plot_file,
                                 plot_file->buffer.error_string);
       *num_shells = 0;
       free(shells);
+
+      END_PROFILE_FUNC();
       return NULL;
     }
 
@@ -1413,10 +1579,13 @@ d3plot_shell_con *d3plot_read_shell_elements(d3plot_file *plot_file,
     }
   }
 
+  END_PROFILE_FUNC();
   return shells;
 }
 
 char *d3plot_read_title(d3plot_file *plot_file) {
+  BEGIN_PROFILE_FUNC();
+
   char *title = malloc(10 * plot_file->buffer.word_size + 1);
   /* We never set D3PLT_PTR_TITLE, but because the Title is at position 0 we
    * don't need to*/
@@ -1426,13 +1595,19 @@ char *d3plot_read_title(d3plot_file *plot_file) {
     ERROR_AND_NO_RETURN_F_PTR("Failed to read words: %s",
                               plot_file->buffer.error_string);
     free(title);
+
+    END_PROFILE_FUNC();
     return NULL;
   }
   title[10 * plot_file->buffer.word_size] = '\0';
+
+  END_PROFILE_FUNC();
   return title;
 }
 
 struct tm *d3plot_read_run_time(d3plot_file *plot_file) {
+  BEGIN_PROFILE_FUNC();
+
   d3_word run_time = 0;
   d3_buffer_read_words_at(&plot_file->buffer, &run_time, 1,
                           plot_file->data_pointers[D3PLT_PTR_RUN_TIME]);
@@ -1442,8 +1617,10 @@ struct tm *d3plot_read_run_time(d3plot_file *plot_file) {
     return NULL;
   }
   const time_t epoch_time = run_time;
+  struct tm *time_value = localtime(&epoch_time);
 
-  return localtime(&epoch_time);
+  END_PROFILE_FUNC();
+  return time_value;
 }
 
 #define ADD_ELEMENTS_TO_PART(id_func, el_func, el_type, part_num, part_ids)    \
@@ -1469,6 +1646,8 @@ struct tm *d3plot_read_run_time(d3plot_file *plot_file) {
   }
 
 d3plot_part d3plot_read_part(d3plot_file *plot_file, size_t part_index) {
+  BEGIN_PROFILE_FUNC();
+
   d3plot_part part;
   part.solid_ids = NULL;
   part.thick_shell_ids = NULL;
@@ -1494,11 +1673,17 @@ d3plot_part d3plot_read_part(d3plot_file *plot_file, size_t part_index) {
                        d3plot_read_shell_elements, d3plot_shell_con, num_shells,
                        shell_ids);
 
+  END_PROFILE_FUNC();
   return part;
 }
 
 size_t d3plot_index_for_id(d3_word id, const d3_word *ids, size_t num_ids) {
-  return _binary_search(ids, id, 0, num_ids - 1);
+  BEGIN_PROFILE_FUNC();
+
+  const size_t index = _binary_search(ids, id, 0, num_ids - 1);
+
+  END_PROFILE_FUNC();
+  return index;
 }
 
 const char *_d3plot_get_file_type_name(d3_word file_type) {
@@ -1543,13 +1728,17 @@ const char *_d3plot_get_file_type_name(d3_word file_type) {
 }
 
 int _get_nth_digit(d3_word value, int n) {
+  BEGIN_PROFILE_FUNC();
+
   int i = 0;
   while (1) {
     d3_word last_value = value;
     value /= 10;
     if (i == n) {
-      value *= 10;
-      return last_value - value;
+      value = last_value - value * 10;
+
+      END_PROFILE_FUNC();
+      return value;
     }
 
     i++;
@@ -1699,9 +1888,13 @@ d3_word *_d3plot_read_ids(d3plot_file *plot_file, size_t *num_ids,
 
 d3_word *_insert_sorted(d3_word *dst, size_t dst_size, const d3_word *src,
                         size_t src_size) {
+  BEGIN_PROFILE_FUNC();
+
   if (!dst) {
     dst = malloc(src_size * sizeof(d3_word));
     memcpy(dst, src, src_size * sizeof(d3_word));
+
+    END_PROFILE_FUNC();
     return dst;
   }
 
@@ -1732,6 +1925,7 @@ d3_word *_insert_sorted(d3_word *dst, size_t dst_size, const d3_word *src,
     memcpy(&dst[i], src, src_size * sizeof(d3_word));
   }
 
+  END_PROFILE_FUNC();
   return dst;
 }
 
@@ -1752,6 +1946,8 @@ size_t _binary_search(const d3_word *arr, d3_word value, size_t start_index,
 }
 
 void d3plot_free_part(d3plot_part *part) {
+  BEGIN_PROFILE_FUNC();
+
   free(part->solid_ids);
   free(part->thick_shell_ids);
   free(part->beam_ids);
@@ -1765,4 +1961,6 @@ void d3plot_free_part(d3plot_part *part) {
   part->num_thick_shells = 0;
   part->num_beams = 0;
   part->num_shells = 0;
+
+  END_PROFILE_FUNC();
 }
