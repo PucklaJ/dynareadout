@@ -80,7 +80,8 @@ execution_t _BEGIN_PROFILE_SECTION(const char *name) {
   while (i < profiling_context.num_current_executions) {
     if (index == ~0 && !profiling_context.current_executions[i]) {
       index = i;
-    } else if (strcmp(profiling_context.current_executions[i], name) == 0) {
+    } else if (profiling_context.current_executions[i] &&
+               strcmp(profiling_context.current_executions[i], name) == 0) {
       return rv;
     }
 

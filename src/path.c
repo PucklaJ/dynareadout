@@ -24,12 +24,15 @@
  ************************************************************************************/
 
 #include "path.h"
+#include "profiling.h"
 #include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
 void path_join(path_t *path, const char *element) {
+  BEGIN_PROFILE_FUNC();
+
   /* First get the elements of element, since it could be a path*/
   size_t num_elements;
   char **elements = path_elements(element, &num_elements);
@@ -48,12 +51,17 @@ void path_join(path_t *path, const char *element) {
   /* We don't need to call path_free_elements, since we use the elements
    * directly in path*/
   free(elements);
+
+  END_PROFILE_FUNC();
 }
 
 int path_is_abs(const char *path) { return path[0] == PATH_SEP; }
 
 int path_compatible(const path_t *path1, const path_t *path2) {
+  BEGIN_PROFILE_FUNC();
+
   if (path1->num_elements != path2->num_elements) {
+    END_PROFILE_FUNC();
     return 0;
   }
 
@@ -105,12 +113,15 @@ int path_compatible(const path_t *path1, const path_t *path2) {
           }
 
           if (path2_is_d) {
+            END_PROFILE_FUNC();
             return 1;
           }
         } else {
+          END_PROFILE_FUNC();
           return 0;
         }
       } else {
+        END_PROFILE_FUNC();
         return 0;
       }
     }
@@ -118,10 +129,13 @@ int path_compatible(const path_t *path1, const path_t *path2) {
     i++;
   }
 
+  END_PROFILE_FUNC();
   return 1;
 }
 
 void path_parse(path_t *path) {
+  BEGIN_PROFILE_FUNC();
+
   /* We start at 1, since we don't care about the first element of absolute
    * paths and if the first element is ".."*/
   size_t i = 1;
@@ -149,9 +163,13 @@ void path_parse(path_t *path) {
 
     i++;
   }
+
+  END_PROFILE_FUNC();
 }
 
 char **path_elements(const char *path, size_t *num_elements) {
+  BEGIN_PROFILE_FUNC();
+
   const size_t path_len = strlen(path);
 
   /* Handle the case for when there's only one character in the path. Real
@@ -162,6 +180,8 @@ char **path_elements(const char *path, size_t *num_elements) {
     elements[0] = malloc(2);
     elements[0][0] = path[0];
     elements[0][1] = '\0';
+
+    END_PROFILE_FUNC();
     return elements;
   }
 
@@ -220,24 +240,31 @@ char **path_elements(const char *path, size_t *num_elements) {
     i++;
   }
 
+  END_PROFILE_FUNC();
   return elements;
 }
 
 int path_elements_contain(char **elements, size_t num_elements,
                           const char *value) {
+  BEGIN_PROFILE_FUNC();
+
   size_t i = 0;
   while (i < num_elements) {
     if (strcmp(elements[i], value) == 0) {
+      END_PROFILE_FUNC();
       return 1;
     }
 
     i++;
   }
 
+  END_PROFILE_FUNC();
   return 0;
 }
 
 void path_free_elements(char **elements, size_t num_elements) {
+  BEGIN_PROFILE_FUNC();
+
   size_t i = 0;
   while (i < num_elements) {
     free(elements[i]);
@@ -245,6 +272,8 @@ void path_free_elements(char **elements, size_t num_elements) {
     i++;
   }
   free(elements);
+
+  END_PROFILE_FUNC();
 }
 
 void path_free(path_t *path) {
@@ -254,23 +283,30 @@ void path_free(path_t *path) {
 }
 
 int path_equals(path_t *path1, path_t *path2) {
+  BEGIN_PROFILE_FUNC();
+
   if (path1->num_elements != path2->num_elements) {
+    END_PROFILE_FUNC();
     return 0;
   }
 
   size_t i = 0;
   while (i < path1->num_elements) {
     if (strcmp(path1->elements[i], path2->elements[i]) != 0) {
+      END_PROFILE_FUNC();
       return 0;
     }
 
     i++;
   }
 
+  END_PROFILE_FUNC();
   return 1;
 }
 
 void path_copy(path_t *dst, path_t *src) {
+  BEGIN_PROFILE_FUNC();
+
   dst->num_elements = src->num_elements;
   dst->elements = malloc(dst->num_elements * sizeof(char *));
   size_t i = 0;
@@ -281,9 +317,13 @@ void path_copy(path_t *dst, path_t *src) {
 
     i++;
   }
+
+  END_PROFILE_FUNC();
 }
 
 char *path_str(path_t *path) {
+  BEGIN_PROFILE_FUNC();
+
   char *str = NULL;
   size_t str_size = 0;
 
@@ -305,5 +345,6 @@ char *path_str(path_t *path) {
     i++;
   }
 
+  END_PROFILE_FUNC();
   return str;
 }

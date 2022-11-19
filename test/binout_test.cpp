@@ -23,7 +23,12 @@
  * 3. This notice may not be removed or altered from any source distribution.
  ************************************************************************************/
 
+#ifdef PROFILING
+#define DOCTEST_CONFIG_IMPLEMENT
+#include <profiling.h>
+#else
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#endif
 #define DOCTEST_CONFIG_TREAT_CHAR_STAR_AS_STRING
 #include "binout_glob.h"
 #include <binout.h>
@@ -62,7 +67,7 @@ TEST_CASE("binout0000") {
     binout_close(&bin_file);
   }
 
-  const char *binout_file_name = "test_data/binout*";
+  const char *binout_file_name = "test_data/binout0*";
 
   binout_file bin_file = binout_open(binout_file_name);
   char *open_error = binout_open_error(&bin_file);
@@ -609,3 +614,22 @@ TEST_CASE("Array::New") {
   }
   FAIL("arr[5] should have thrown an exception");
 }
+
+#ifdef PROFILING
+int main(int args, char *argv[]) {
+  doctest::Context ctx;
+
+  ctx.addFilter("test-case", "binout0000");
+  ctx.applyCommandLine(args, argv);
+
+  const int res = ctx.run();
+
+  if (ctx.shouldExit()) {
+    return res;
+  }
+
+  END_PROFILING("test_data/binout_profiling.txt");
+
+  return res;
+}
+#endif

@@ -110,6 +110,7 @@ if get_config("build_test") then
         end
         add_packages("doctest")
         add_includedirs("src")
+        add_options("profiling")
         add_files("test/binout_test.cpp")
 
     target("d3plot_test")
@@ -123,6 +124,7 @@ if get_config("build_test") then
         end
         add_packages("doctest")
         add_includedirs("src")
+        add_options("profiling")
         add_files("test/d3plot_test.cpp")
     target_end()
     

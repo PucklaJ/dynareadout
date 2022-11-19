@@ -25,12 +25,15 @@
 
 #include "binout_glob.h"
 #include "path.h"
+#include "profiling.h"
 
 #ifdef _WIN32
 #include <io.h>
 #include <limits.h>
 
 char **binout_glob(const char *pattern, size_t *num_files) {
+  BEGIN_PROFILE_FUNC();
+
   struct _finddatai64_t find_buffer;
   intptr_t result = 0;
   *num_files = 0;
@@ -66,6 +69,7 @@ char **binout_glob(const char *pattern, size_t *num_files) {
 
   /* If it has no parent path just return*/
   if (parent_len == SIZE_MAX) {
+    END_PROFILE_FUNC();
     return globed_files;
   }
 
@@ -82,6 +86,7 @@ char **binout_glob(const char *pattern, size_t *num_files) {
     i++;
   }
 
+  END_PROFILE_FUNC();
   return globed_files;
 }
 
@@ -89,17 +94,22 @@ char **binout_glob(const char *pattern, size_t *num_files) {
 #include <glob.h>
 
 char **binout_glob(const char *pattern, size_t *num_files) {
+  BEGIN_PROFILE_FUNC();
+
   glob_t glob_buffer;
   const int error_code = glob(pattern, GLOB_TILDE, NULL, &glob_buffer);
 
   if (error_code != 0) {
     *num_files = 0;
     globfree(&glob_buffer);
+    END_PROFILE_FUNC();
     return NULL;
   }
 
   /* Directly use the values from glob_buffer. Why not?*/
   *num_files = glob_buffer.gl_pathc;
+
+  END_PROFILE_FUNC();
   return glob_buffer.gl_pathv;
 }
 

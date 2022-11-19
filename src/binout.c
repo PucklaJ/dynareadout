@@ -28,6 +28,7 @@
 #include "binout_glob.h"
 #include "binout_records.h"
 #include "path.h"
+#include "profiling.h"
 #include <assert.h>
 #include <errno.h>
 #include <string.h>
@@ -68,6 +69,8 @@
   bin_file->error_string = NULL;
 
 binout_file binout_open(const char *file_name) {
+  BEGIN_PROFILE_FUNC();
+
   binout_file bin_file;
   bin_file.data_pointers = NULL;
   bin_file.data_pointers_sizes = NULL;
@@ -81,6 +84,7 @@ binout_file binout_open(const char *file_name) {
   char **file_names = binout_glob(file_name, &bin_file.num_file_handles);
   if (bin_file.num_file_handles == 0) {
     _binout_add_file_error(&bin_file, file_name, "No files have been found");
+    END_PROFILE_FUNC();
     return bin_file;
   }
 
@@ -392,10 +396,14 @@ binout_file binout_open(const char *file_name) {
     cur_file_index++;
   }
 
+  END_PROFILE_FUNC();
+
   return bin_file;
 }
 
 void binout_close(binout_file *bin_file) {
+  BEGIN_PROFILE_FUNC();
+
   /* Free all files*/
   size_t cur_file_index = 0;
   while (cur_file_index < bin_file->num_file_handles) {
@@ -449,9 +457,13 @@ void binout_close(binout_file *bin_file) {
   bin_file->error_string = NULL;
   bin_file->num_file_handles = 0;
   bin_file->num_file_errors = 0;
+
+  END_PROFILE_FUNC();
 }
 
 void binout_print_records(binout_file *bin_file) {
+  BEGIN_PROFILE_FUNC();
+
   printf("----- %lu Files ---------------\n", bin_file->num_file_handles);
   size_t cur_file_index = 0;
   while (cur_file_index < bin_file->num_file_handles) {
@@ -488,6 +500,8 @@ void binout_print_records(binout_file *bin_file) {
   }
 
   printf("-----------------------------------------------\n");
+
+  END_PROFILE_FUNC();
 }
 
 void *binout_read(binout_file *bin_file, FILE *file_handle,
@@ -523,6 +537,7 @@ void *binout_read(binout_file *bin_file, FILE *file_handle,
   c_type *binout_read_##c_type(binout_file *bin_file,                          \
                                const char *path_to_variable,                   \
                                size_t *data_size) {                            \
+    BEGIN_PROFILE_FUNC();                                                      \
     CLEAR_ERROR_STRING();                                                      \
                                                                                \
     path_t _path_to_variable;                                                  \
@@ -545,13 +560,17 @@ void *binout_read(binout_file *bin_file, FILE *file_handle,
                 _binout_get_type_name(dp->type_id),                            \
                 _binout_get_type_name(binout_type));                           \
         NEW_ERROR_STRING(buffer);                                              \
+        END_PROFILE_FUNC();                                                    \
         return NULL;                                                           \
       }                                                                        \
                                                                                \
       const size_t type_size = _binout_get_type_size(dp->type_id);             \
                                                                                \
-      return binout_read(bin_file, bin_file->file_handles[cur_file_index], dp, \
-                         &_path_to_variable, type_size, data_size);            \
+      void *data =                                                             \
+          binout_read(bin_file, bin_file->file_handles[cur_file_index], dp,    \
+                      &_path_to_variable, type_size, data_size);               \
+      END_PROFILE_FUNC();                                                      \
+      return data;                                                             \
     }                                                                          \
                                                                                \
     path_free(&_path_to_variable);                                             \
@@ -571,6 +590,7 @@ DEFINE_BINOUT_READ_TYPE(double, BINOUT_TYPE_FLOAT64)
 
 uint64_t binout_get_type_id(binout_file *bin_file,
                             const char *path_to_variable) {
+  BEGIN_PROFILE_FUNC();
   CLEAR_ERROR_STRING();
 
   path_t _path;
@@ -586,17 +606,21 @@ uint64_t binout_get_type_id(binout_file *bin_file,
     }
 
     path_free(&_path);
+    END_PROFILE_FUNC();
     return dp->type_id;
   }
 
   path_free(&_path);
 
   NEW_ERROR_STRING("The given variable has not been found");
+  END_PROFILE_FUNC();
   return BINOUT_TYPE_INVALID;
 }
 
 int binout_variable_exists(binout_file *bin_file,
                            const char *path_to_variable) {
+  BEGIN_PROFILE_FUNC();
+
   path_t _path;
   _path.elements = path_elements(path_to_variable, &_path.num_elements);
 
@@ -618,16 +642,20 @@ int binout_variable_exists(binout_file *bin_file,
     }
 
     path_free(&_path);
+    END_PROFILE_FUNC();
     return 1;
   }
 
   path_free(&_path);
 
+  END_PROFILE_FUNC();
   return 0;
 }
 
 char **binout_get_children(binout_file *bin_file, const char *path,
                            size_t *num_children) {
+  BEGIN_PROFILE_FUNC();
+
   path_t _path;
   _path.elements = path_elements(path, &_path.num_elements);
 
@@ -727,14 +755,21 @@ char **binout_get_children(binout_file *bin_file, const char *path,
 
   path_free(&_path);
 
+  END_PROFILE_FUNC();
   return children;
 }
 
 void binout_free_children(char **children, size_t num_children) {
+  BEGIN_PROFILE_FUNC();
+
   path_free_elements(children, num_children);
+
+  END_PROFILE_FUNC();
 }
 
 char *binout_open_error(binout_file *bin_file) {
+  BEGIN_PROFILE_FUNC();
+
   char *file_error = NULL;
   size_t file_error_size = 0;
 
@@ -751,6 +786,7 @@ char *binout_open_error(binout_file *bin_file) {
     i++;
   }
 
+  END_PROFILE_FUNC();
   return file_error;
 }
 
@@ -840,6 +876,8 @@ const char *_binout_get_type_name(const uint64_t type_id) {
 binout_record_data_pointer *_binout_get_data_pointer(binout_file *bin_file,
                                                      size_t file_index,
                                                      path_t *path_to_variable) {
+  BEGIN_PROFILE_FUNC();
+
   binout_record_data_pointer *dp = NULL;
   const size_t data_pointers_size = bin_file->data_pointers_sizes[file_index];
 
@@ -863,6 +901,7 @@ binout_record_data_pointer *_binout_get_data_pointer(binout_file *bin_file,
 
   path_to_variable->num_elements++;
 
+  END_PROFILE_FUNC();
   return dp;
 }
 
@@ -870,6 +909,8 @@ binout_record_data_pointer *_binout_get_data_pointer2(binout_file *bin_file,
                                                       size_t file_index,
                                                       path_t *path,
                                                       const char *variable) {
+  BEGIN_PROFILE_FUNC();
+
   binout_record_data_pointer *dp = NULL;
   const size_t data_pointers_size = bin_file->data_pointers_sizes[file_index];
   uint64_t i = 0;
@@ -886,11 +927,14 @@ binout_record_data_pointer *_binout_get_data_pointer2(binout_file *bin_file,
     i++;
   }
 
+  END_PROFILE_FUNC();
   return dp;
 }
 
 binout_record_data *_binout_get_data(binout_record_data_pointer *dp,
                                      path_t *path) {
+  BEGIN_PROFILE_FUNC();
+
   binout_record_data *data = NULL;
   uint64_t i = 0;
   while (i < dp->records_size) {
@@ -902,6 +946,7 @@ binout_record_data *_binout_get_data(binout_record_data_pointer *dp,
     i++;
   }
 
+  END_PROFILE_FUNC();
   return data;
 }
 
