@@ -11,14 +11,35 @@ option("build_cpp")
 option("build_python")
     set_default(false)
     set_showmenu(true)
+    
+option("profiling")
+    set_default(false)
+    set_showmenu(true)
+    add_defines("PROFILING")
 option_end()
 
 add_rules("mode.debug", "mode.release")
+if get_config("profiling") then
+    target("profiling")
+        set_kind("$(kind)")
+        set_languages("ansi")
+        if is_plat("linux") then
+            add_cxxflags("-fPIC")
+        end
+        add_files("src/profiling.c")
+        add_headerfiles("src/profiling.h")
+        if is_kind("shared") then
+            add_rules("utils.symbols.export_all")
+        end
+end
 target("binout")
     set_kind("$(kind)")
     set_languages("ansi")
     if is_plat("linux") then
         add_cxxflags("-fPIC")
+    end
+    if get_config("profiling") then
+        add_deps("profiling")
     end
     add_files("src/binout*.c", "src/path.c")
     add_headerfiles("src/binout*.h", "src/path.h")
@@ -31,6 +52,9 @@ target("d3plot")
     set_languages("ansi")
     if is_plat("linux") then
         add_cxxflags("-fPIC")
+    end
+    if get_config("profiling") then
+        add_deps("profiling")
     end
     add_files("src/d3*.c")
     add_headerfiles("src/d3*.h")
