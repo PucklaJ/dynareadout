@@ -348,3 +348,17 @@ char *path_str(path_t *path) {
   END_PROFILE_FUNC();
   return str;
 }
+
+int path_cmp(const path_t *path1, const path_t *path2) {
+  size_t i = 0;
+  while (i < path1->num_elements && i < path2->num_elements) {
+    const int cmp_val = strcmp(path1->elements[i], path2->elements[i]);
+    if (cmp_val != 0) {
+      return cmp_val;
+    }
+
+    i++;
+  }
+
+  return path1->num_elements - path2->num_elements;
+}

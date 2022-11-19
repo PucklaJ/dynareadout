@@ -71,6 +71,7 @@ int path_equals(path_t *path1, path_t *path2);
 void path_copy(path_t *dst, path_t *src);
 /* Converts a path_t to a human readable string*/
 char *path_str(path_t *path);
+int path_cmp(const path_t *path1, const path_t *path2);
 
 #ifdef __cplusplus
 }

@@ -975,3 +975,62 @@ void _binout_add_file_error(binout_file *bin_file, const char *file_name,
                        [file_name_length + middle_length + message_length] =
       '\0';
 }
+
+size_t _binout_data_record_binary_search(binout_record_data *arr,
+                                         size_t start_index, size_t end_index,
+                                         const path_t *path, int *found) {
+  if (start_index == end_index) {
+    *found = path_cmp(&arr[start_index].path, path);
+
+    if (*found < 0) {
+      *found = 0;
+      return start_index + 1;
+    }
+    *found = *found == 0;
+    return start_index - !*found * (1 * (start_index != 0));
+  }
+
+  const size_t half_index = start_index + (end_index - start_index) / 2;
+
+  const int cmp_val = path_cmp(&arr[half_index].path, path);
+
+  if (cmp_val > 0) {
+    return _binout_data_record_binary_search(arr, start_index, half_index, path,
+                                             found);
+  } else if (cmp_val < 0) {
+    if (half_index == end_index - 1) {
+      return _binout_data_record_binary_search(arr, end_index, end_index, path,
+                                               found);
+    }
+    return _binout_data_record_binary_search(arr, half_index, end_index, path,
+                                             found);
+  }
+
+  *found = 1;
+  return half_index;
+}
+
+void _binout_data_record_insert_at(binout_record_data **arr, size_t *arr_size,
+                                   size_t *arr_cap, size_t index,
+                                   binout_record_data ele) {
+  assert(index <= *arr_size);
+
+  (*arr_size)++;
+  if (*arr_size > *arr_cap) {
+    *arr_cap += BINOUT_DATA_POINTER_ALLOC_ADV;
+    *arr = realloc(*arr, *arr_cap * sizeof(binout_record_data_pointer));
+  }
+
+  if (index == *arr_size - 1) {
+    (*arr)[index] = ele;
+    return;
+  }
+
+  /* Move everything to the right*/
+  size_t i = *arr_size - 1;
+  while (i > index) {
+    (*arr)[i] = (*arr)[i - 1];
+    i--;
+  }
+  (*arr)[index] = ele;
+}

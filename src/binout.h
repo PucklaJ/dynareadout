@@ -144,7 +144,12 @@ binout_record_data *_binout_get_data(binout_record_data_pointer *dp,
  * Example: "test_data/binout0000: Failed to open file"*/
 void _binout_add_file_error(binout_file *bin_file, const char *file_name,
                             const char *message);
-
+size_t _binout_data_record_binary_search(binout_record_data *arr,
+                                         size_t start_index, size_t end_index,
+                                         const path_t *path, int *found);
+void _binout_data_record_insert_at(binout_record_data **arr, size_t *arr_size,
+                                   size_t *arr_cap, size_t index,
+                                   binout_record_data ele);
 /* ----------------------------- */
 #ifdef __cplusplus
 }
