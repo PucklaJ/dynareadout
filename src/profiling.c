@@ -24,9 +24,53 @@
  ************************************************************************************/
 
 #include "profiling.h"
+#include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 profiling_context_t profiling_context = {NULL, NULL, 0};
+
+signed long partition_execution_times(char const ***names, double **times,
+                                      signed long low, signed long high) {
+  const double pivot = (*times)[high];
+
+  signed long i = low - 1, j = low;
+
+  while (j < high) {
+    if ((*times)[j] > pivot) {
+      i++;
+      /* Swap i and j*/
+      const char *temp_name = (*names)[i];
+      (*names)[i] = (*names)[j];
+      (*names)[j] = temp_name;
+      const double temp_time = (*times)[i];
+      (*times)[i] = (*times)[j];
+      (*times)[j] = temp_time;
+    }
+
+    j++;
+  }
+
+  /* Swap i + 1 and high*/
+  const char *temp_name = (*names)[i + 1];
+  (*names)[i + 1] = (*names)[high];
+  (*names)[high] = temp_name;
+  const double temp_time = (*times)[i + 1];
+  (*times)[i + 1] = (*times)[high];
+  (*times)[high] = temp_time;
+
+  return i + 1;
+}
+
+void quick_sort_execution_times(char const ***names, double **times,
+                                signed long low, signed long high) {
+  if (low < high) {
+    const signed long pi = partition_execution_times(names, times, low, high);
+
+    quick_sort_execution_times(names, times, low, pi - 1);
+    quick_sort_execution_times(names, times, pi + 1, high);
+  }
+}
 
 void _END_PROFILE_SECTION(const char *name, clock_t start_time) {
   clock_t end_time = clock();
@@ -59,7 +103,34 @@ void _END_PROFILE_SECTION(const char *name, clock_t start_time) {
   profiling_context.execution_times[index] += elapsed_time;
 }
 
-void END_PROFILING() {
+void END_PROFILING(const char *out_file_name) {
+  if (out_file_name && profiling_context.num_execution_times) {
+    FILE *out_file = fopen(out_file_name, "w");
+    if (!out_file) {
+      fprintf(stderr, "Failed to open profiling output file: %s\n",
+              strerror(errno));
+    } else {
+      /* Sort execution times in decending order*/
+      quick_sort_execution_times(
+          &profiling_context.execution_times_names,
+          &profiling_context.execution_times, 0,
+          (signed long)(profiling_context.num_execution_times - 1));
+
+      fprintf(out_file, "---------- %d Profiling Entries ---------\n",
+              profiling_context.num_execution_times);
+      size_t i = 0;
+      while (i < profiling_context.num_execution_times) {
+        fprintf(out_file, "--- %s: %10.3f ms ---\n",
+                profiling_context.execution_times_names[i],
+                profiling_context.execution_times[i] * 1000.0);
+
+        i++;
+      }
+      fprintf(out_file, "--------------------------------------------\n");
+      fclose(out_file);
+    }
+  }
+
   free(profiling_context.execution_times_names);
   free(profiling_context.execution_times);
   profiling_context.execution_times_names = NULL;

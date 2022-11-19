@@ -23,34 +23,39 @@
  * 3. This notice may not be removed or altered from any source distribution.
  ************************************************************************************/
 
-#ifndef PROFILING_H
-#define PROFILING_H
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 
-#include <stddef.h>
-#include <string.h>
-#include <time.h>
+#include <doctest/doctest.h>
+#include <iostream>
+#include <profiling.h>
 
-typedef struct {
-  char const **execution_times_names;
-  double *execution_times;
-  size_t num_execution_times;
-} profiling_context_t;
+void profile_test_func1() {
+  BEGIN_PROFILE_FUNC();
 
-extern profiling_context_t profiling_context;
+  for (size_t i = 0; i < 204987298347;) {
+    if (i < 10) {
+      i++;
+    } else {
+      i += (i * i) / (i / 2);
+    }
+  }
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void _END_PROFILE_SECTION(const char *name, clock_t start_time);
-void END_PROFILING(const char *out_file_name);
-
-#ifdef __cplusplus
+  END_PROFILE_FUNC();
 }
-#endif
 
-#define BEGIN_PROFILE_FUNC() clock_t func_profiling_start_time = clock()
-#define END_PROFILE_FUNC()                                                     \
-  _END_PROFILE_SECTION(__FUNCTION__, func_profiling_start_time)
+void profile_test_func2() {
+  BEGIN_PROFILE_FUNC();
 
-#endif
+  std::cout << "Hello World" << std::endl;
+  std::cout << "I am a function" << std::endl;
+  std::cout << "I just want to help you :-)" << std::endl;
+
+  END_PROFILE_FUNC();
+}
+
+TEST_CASE("profiling") {
+  profile_test_func1();
+  profile_test_func2();
+
+  END_PROFILING("test_data/profiling_test.txt");
+}

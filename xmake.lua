@@ -122,6 +122,16 @@ if get_config("build_test") then
         add_includedirs("src")
         add_files("test/d3plot_test.cpp")
     target_end()
+    
+    if get_config("profiling") then
+        target("profiling_test")
+            set_kind("binary")
+            set_languages("cxx17")
+            add_deps("profiling")
+            add_packages("doctest")
+            add_includedirs("src")
+            add_files("test/profiling_test.cpp")
+    end
 end
 
 if get_config("build_python") then

@@ -12,6 +12,7 @@ build/
 # Test Data
 test_data/**/d3plot*
 test_data/**/binout*
+test_data/profiling_test.txt
 
 # LS PrePost
 *.cfile
