@@ -287,20 +287,20 @@ binout_file binout_open(const char *file_name) {
 
         /* Overwrite it if a record with the same name already exists.
          * Apparently this can indeed be the case*/
-        binout_record_data *rd = _binout_get_data(dp, &current_path);
+        size_t insert_index;
+        binout_record_data *rd =
+            _binout_get_data(dp, &current_path, &insert_index);
         if (!rd) {
-          dp->records_size++;
-          /* Only reallocate if the size is greater than the capacity*/
-          if (dp->records_size > dp->records_capacity) {
-            dp->records_capacity += BINOUT_DATA_RECORD_ALLOC_ADV;
-            dp->records = realloc(dp->records, dp->records_capacity *
-                                                   sizeof(binout_record_data));
-          }
+          binout_record_data new_rd;
+          new_rd.path.elements = NULL;
+          new_rd.path.num_elements = 0;
+          path_copy(&new_rd.path, &current_path);
 
-          rd = &dp->records[dp->records_size - 1];
-          rd->path.elements = NULL;
-          rd->path.num_elements = 0;
-          path_copy(&rd->path, &current_path);
+          _binout_data_record_insert_at(&dp->records, &dp->records_size,
+                                        &dp->records_capacity, insert_index,
+                                        new_rd);
+
+          rd = &dp->records[insert_index];
         }
 
         rd->file_pos = file_pos;
@@ -508,7 +508,9 @@ void *binout_read(binout_file *bin_file, FILE *file_handle,
                   binout_record_data_pointer *dp, path_t *path_to_variable,
                   size_t type_size, size_t *data_size) {
   path_to_variable->num_elements--;
-  binout_record_data *record = _binout_get_data(dp, path_to_variable);
+  size_t _insert_index;
+  binout_record_data *record =
+      _binout_get_data(dp, path_to_variable, &_insert_index);
   path_to_variable->num_elements++;
   path_free(path_to_variable);
   if (!record) {
@@ -634,7 +636,8 @@ int binout_variable_exists(binout_file *bin_file,
     }
 
     _path.num_elements--;
-    binout_record_data *record = _binout_get_data(dp, &_path);
+    size_t _insert_index;
+    binout_record_data *record = _binout_get_data(dp, &_path, &_insert_index);
     _path.num_elements++;
     if (!record) {
       cur_file_index++;
@@ -932,22 +935,26 @@ binout_record_data_pointer *_binout_get_data_pointer2(binout_file *bin_file,
 }
 
 binout_record_data *_binout_get_data(binout_record_data_pointer *dp,
-                                     path_t *path) {
+                                     path_t *path, size_t *insert_index) {
   BEGIN_PROFILE_FUNC();
 
-  binout_record_data *data = NULL;
-  uint64_t i = 0;
-  while (i < dp->records_size) {
-    if (path_equals(&dp->records[i].path, path)) {
-      data = &dp->records[i];
-      break;
-    }
+  if (dp->records_size == 0) {
+    *insert_index = 0;
+    END_PROFILE_FUNC();
+    return NULL;
+  }
 
-    i++;
+  int found;
+  *insert_index = _binout_data_record_binary_search(
+      dp->records, 0, dp->records_size - 1, path, &found);
+
+  if (found) {
+    END_PROFILE_FUNC();
+    return &dp->records[*insert_index];
   }
 
   END_PROFILE_FUNC();
-  return data;
+  return NULL;
 }
 
 void _binout_add_file_error(binout_file *bin_file, const char *file_name,
@@ -979,15 +986,24 @@ void _binout_add_file_error(binout_file *bin_file, const char *file_name,
 size_t _binout_data_record_binary_search(binout_record_data *arr,
                                          size_t start_index, size_t end_index,
                                          const path_t *path, int *found) {
+  BEGIN_PROFILE_FUNC();
+
   if (start_index == end_index) {
     *found = path_cmp(&arr[start_index].path, path);
 
     if (*found < 0) {
       *found = 0;
-      return start_index + 1;
+      const size_t index = start_index + 1;
+
+      END_PROFILE_FUNC();
+      return index;
     }
+
     *found = *found == 0;
-    return start_index - !*found * (1 * (start_index != 0));
+    const size_t index = start_index - !*found * (1 * (start_index != 0));
+
+    END_PROFILE_FUNC();
+    return index;
   }
 
   const size_t half_index = start_index + (end_index - start_index) / 2;
@@ -995,15 +1011,24 @@ size_t _binout_data_record_binary_search(binout_record_data *arr,
   const int cmp_val = path_cmp(&arr[half_index].path, path);
 
   if (cmp_val > 0) {
-    return _binout_data_record_binary_search(arr, start_index, half_index, path,
-                                             found);
+    const size_t index = _binout_data_record_binary_search(
+        arr, start_index, half_index, path, found);
+
+    END_PROFILE_FUNC();
+    return index;
   } else if (cmp_val < 0) {
     if (half_index == end_index - 1) {
-      return _binout_data_record_binary_search(arr, end_index, end_index, path,
-                                               found);
+      const size_t index = _binout_data_record_binary_search(
+          arr, end_index, end_index, path, found);
+
+      END_PROFILE_FUNC();
+      return index;
     }
-    return _binout_data_record_binary_search(arr, half_index, end_index, path,
-                                             found);
+    const size_t index = _binout_data_record_binary_search(
+        arr, half_index, end_index, path, found);
+
+    END_PROFILE_FUNC();
+    return index;
   }
 
   *found = 1;
@@ -1013,16 +1038,20 @@ size_t _binout_data_record_binary_search(binout_record_data *arr,
 void _binout_data_record_insert_at(binout_record_data **arr, size_t *arr_size,
                                    size_t *arr_cap, size_t index,
                                    binout_record_data ele) {
+  BEGIN_PROFILE_FUNC();
+
   assert(index <= *arr_size);
 
   (*arr_size)++;
   if (*arr_size > *arr_cap) {
     *arr_cap += BINOUT_DATA_POINTER_ALLOC_ADV;
-    *arr = realloc(*arr, *arr_cap * sizeof(binout_record_data_pointer));
+    *arr = realloc(*arr, *arr_cap * sizeof(binout_record_data));
   }
 
   if (index == *arr_size - 1) {
     (*arr)[index] = ele;
+
+    END_PROFILE_FUNC();
     return;
   }
 
@@ -1033,4 +1062,6 @@ void _binout_data_record_insert_at(binout_record_data **arr, size_t *arr_size,
     i--;
   }
   (*arr)[index] = ele;
+
+  END_PROFILE_FUNC();
 }

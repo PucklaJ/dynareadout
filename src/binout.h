@@ -137,9 +137,10 @@ binout_record_data_pointer *_binout_get_data_pointer2(binout_file *bin_file,
                                                       size_t file_index,
                                                       path_t *path,
                                                       const char *variable);
-/* Returns the data record of a given path*/
+/* Returns the data record of a given path. Returns NULL if no record has been
+ * found and sets insert_index to the index at which to add the new one*/
 binout_record_data *_binout_get_data(binout_record_data_pointer *dp,
-                                     path_t *path);
+                                     path_t *path, size_t *insert_index);
 /* Add to the file_errors array:
  * Example: "test_data/binout0000: Failed to open file"*/
 void _binout_add_file_error(binout_file *bin_file, const char *file_name,
