@@ -527,9 +527,7 @@ void *binout_read(binout_file *bin_file, FILE *file_handle,
                   binout_record_data_pointer *dp, path_t *path_to_variable,
                   size_t type_size, size_t *data_size) {
   path_to_variable->num_elements--;
-  size_t _insert_index;
-  binout_record_data *record =
-      _binout_get_data(dp, path_to_variable, &_insert_index);
+  binout_record_data *record = _binout_get_data(dp, path_to_variable);
   path_to_variable->num_elements++;
   path_free(path_to_variable);
   if (!record) {
@@ -655,8 +653,7 @@ int binout_variable_exists(binout_file *bin_file,
     }
 
     _path.num_elements--;
-    size_t _insert_index;
-    binout_record_data *record = _binout_get_data(dp, &_path, &_insert_index);
+    binout_record_data *record = _binout_get_data(dp, &_path);
     _path.num_elements++;
     if (!record) {
       cur_file_index++;
@@ -954,22 +951,20 @@ binout_record_data_pointer *_binout_get_data_pointer2(binout_file *bin_file,
 }
 
 binout_record_data *_binout_get_data(binout_record_data_pointer *dp,
-                                     path_t *path, size_t *insert_index) {
+                                     path_t *path) {
   BEGIN_PROFILE_FUNC();
 
   if (dp->records_size == 0) {
-    *insert_index = 0;
     END_PROFILE_FUNC();
     return NULL;
   }
 
-  int found;
-  *insert_index = _binout_data_record_binary_search(
-      dp->records, 0, dp->records_size - 1, path, &found);
+  const size_t index = _binout_data_record_binary_search(
+      dp->records, 0, dp->records_size - 1, path);
 
-  if (found) {
+  if (index != ~0) {
     END_PROFILE_FUNC();
-    return &dp->records[*insert_index];
+    return &dp->records[index];
   }
 
   END_PROFILE_FUNC();
@@ -1004,22 +999,12 @@ void _binout_add_file_error(binout_file *bin_file, const char *file_name,
 
 size_t _binout_data_record_binary_search(binout_record_data *arr,
                                          size_t start_index, size_t end_index,
-                                         const path_t *path, int *found) {
+                                         const path_t *path) {
   BEGIN_PROFILE_FUNC();
 
   if (start_index == end_index) {
-    *found = path_cmp(&arr[start_index].path, path);
-
-    if (*found < 0) {
-      *found = 0;
-      const size_t index = start_index + 1;
-
-      END_PROFILE_FUNC();
-      return index;
-    }
-
-    *found = *found == 0;
-    const size_t index = start_index - !*found * (1 * (start_index != 0));
+    const size_t index =
+        path_cmp(&arr[start_index].path, path) == 0 ? start_index : ~0;
 
     END_PROFILE_FUNC();
     return index;
@@ -1030,27 +1015,26 @@ size_t _binout_data_record_binary_search(binout_record_data *arr,
   const int cmp_val = path_cmp(&arr[half_index].path, path);
 
   if (cmp_val > 0) {
-    const size_t index = _binout_data_record_binary_search(
-        arr, start_index, half_index, path, found);
+    const size_t index =
+        _binout_data_record_binary_search(arr, start_index, half_index, path);
 
     END_PROFILE_FUNC();
     return index;
   } else if (cmp_val < 0) {
     if (half_index == end_index - 1) {
-      const size_t index = _binout_data_record_binary_search(
-          arr, end_index, end_index, path, found);
+      const size_t index =
+          _binout_data_record_binary_search(arr, end_index, end_index, path);
 
       END_PROFILE_FUNC();
       return index;
     }
-    const size_t index = _binout_data_record_binary_search(
-        arr, half_index, end_index, path, found);
+    const size_t index =
+        _binout_data_record_binary_search(arr, half_index, end_index, path);
 
     END_PROFILE_FUNC();
     return index;
   }
 
-  *found = 1;
   return half_index;
 }
 
