@@ -31,6 +31,7 @@
 #else
 #include <unistd.h>
 #endif
+#include "profiling.h"
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,6 +41,7 @@
     free(buffer.error_string);                                                 \
   buffer.error_string = malloc(strlen(msg) + 1);                               \
   sprintf(buffer.error_string, "%s", msg);                                     \
+  END_PROFILE_FUNC();                                                          \
   return buffer;
 #define ERROR_AND_RETURN_F(format_str, ...)                                    \
   {                                                                            \
@@ -54,6 +56,7 @@
   sprintf(buffer->error_string, "%s", msg);
 #define ERROR_AND_RETURN_PTR(msg)                                              \
   ERROR_AND_NO_RETURN_PTR(msg);                                                \
+  END_PROFILE_FUNC();                                                          \
   return;
 #define ERROR_AND_RETURN_F_PTR(format_str, ...)                                \
   {                                                                            \
@@ -63,6 +66,8 @@
   }
 
 d3_buffer d3_buffer_open(const char *root_file_name) {
+  BEGIN_PROFILE_FUNC();
+
   d3_buffer buffer;
   buffer.num_file_handles = 0;
   buffer.cur_file_handle = 0;
@@ -96,6 +101,8 @@ d3_buffer d3_buffer_open(const char *root_file_name) {
       buffer.error_string = malloc(root_len + 3 + 2 + strlen(error_string) + 1);
       sprintf(buffer.error_string, "%s: %s", file_name_buffer, error_string);
       free(file_name_buffer);
+
+      END_PROFILE_FUNC();
       return buffer;
     }
 
@@ -154,10 +161,13 @@ d3_buffer d3_buffer_open(const char *root_file_name) {
   }
   buffer.cur_word = 0;
 
+  END_PROFILE_FUNC();
   return buffer;
 }
 
 void d3_buffer_close(d3_buffer *buffer) {
+  BEGIN_PROFILE_FUNC();
+
   /* Close all files*/
   buffer->cur_file_handle = 0;
   while (buffer->cur_file_handle < buffer->num_file_handles) {
@@ -174,9 +184,13 @@ void d3_buffer_close(d3_buffer *buffer) {
   buffer->error_string = NULL;
   buffer->num_file_handles = 0;
   buffer->cur_word = 0;
+
+  END_PROFILE_FUNC();
 }
 
 void d3_buffer_read_words(d3_buffer *buffer, void *words, size_t num_words) {
+  BEGIN_PROFILE_FUNC();
+
   size_t cur_file_pos = ftell(buffer->file_handles[buffer->cur_file_handle]);
   uint8_t *words_ptr = (uint8_t *)words;
 
@@ -188,6 +202,8 @@ void d3_buffer_read_words(d3_buffer *buffer, void *words, size_t num_words) {
       ERROR_AND_RETURN_PTR("Read Error");
     }
     buffer->cur_word += num_words;
+
+    END_PROFILE_FUNC();
     return;
   } else {
     size_t words_read = 0;
@@ -226,10 +242,14 @@ void d3_buffer_read_words(d3_buffer *buffer, void *words, size_t num_words) {
       }
     }
   }
+
+  END_PROFILE_FUNC();
 }
 
 void d3_buffer_read_words_at(d3_buffer *buffer, void *words, size_t num_words,
                              size_t word_pos) {
+  BEGIN_PROFILE_FUNC();
+
   if (word_pos == 0) {
     buffer->cur_word = 0;
     buffer->cur_file_handle = 0;
@@ -238,6 +258,8 @@ void d3_buffer_read_words_at(d3_buffer *buffer, void *words, size_t num_words,
     }
 
     d3_buffer_read_words(buffer, words, num_words);
+
+    END_PROFILE_FUNC();
     return;
   }
 
@@ -269,9 +291,13 @@ void d3_buffer_read_words_at(d3_buffer *buffer, void *words, size_t num_words,
 
   buffer->cur_word = word_pos;
   d3_buffer_read_words(buffer, words, num_words);
+
+  END_PROFILE_FUNC();
 }
 
 void d3_buffer_read_double_word(d3_buffer *buffer, double *word) {
+  BEGIN_PROFILE_FUNC();
+
   if (buffer->word_size == 4) {
     float word32;
     d3_buffer_read_words(buffer, &word32, 1);
@@ -279,9 +305,13 @@ void d3_buffer_read_double_word(d3_buffer *buffer, double *word) {
   } else {
     d3_buffer_read_words(buffer, word, 1);
   }
+
+  END_PROFILE_FUNC();
 }
 
 void d3_buffer_read_vec3(d3_buffer *buffer, double *words) {
+  BEGIN_PROFILE_FUNC();
+
   if (buffer->word_size == 4) {
     float words32[3];
     d3_buffer_read_words(buffer, words32, 3);
@@ -291,13 +321,19 @@ void d3_buffer_read_vec3(d3_buffer *buffer, double *words) {
   } else {
     d3_buffer_read_words(buffer, words, 3);
   }
+
+  END_PROFILE_FUNC();
 }
 
 void d3_buffer_skip_words(d3_buffer *buffer, size_t num_words) {
+  BEGIN_PROFILE_FUNC();
   d3_buffer_skip_bytes(buffer, num_words * buffer->word_size);
+  END_PROFILE_FUNC();
 }
 
 void d3_buffer_skip_bytes(d3_buffer *buffer, size_t num_bytes) {
+  BEGIN_PROFILE_FUNC();
+
   size_t cur_file_pos = ftell(buffer->file_handles[buffer->cur_file_handle]);
   if (cur_file_pos + num_bytes < buffer->file_sizes[buffer->cur_file_handle]) {
     if (fseek(buffer->file_handles[buffer->cur_file_handle], num_bytes,
@@ -329,9 +365,13 @@ void d3_buffer_skip_bytes(d3_buffer *buffer, size_t num_bytes) {
 
     d3_buffer_skip_bytes(buffer, num_bytes - bytes_skipped);
   }
+
+  END_PROFILE_FUNC();
 }
 
 int d3_buffer_next_file(d3_buffer *buffer) {
+  BEGIN_PROFILE_FUNC();
+
   const size_t cur_file_pos =
       ftell(buffer->file_handles[buffer->cur_file_handle]);
   buffer->cur_word +=
@@ -340,13 +380,16 @@ int d3_buffer_next_file(d3_buffer *buffer) {
   buffer->cur_file_handle++;
 
   if (buffer->cur_file_handle == buffer->num_file_handles) {
+    END_PROFILE_FUNC();
     return 0;
   }
 
   if (fseek(buffer->file_handles[buffer->cur_file_handle], 0, SEEK_SET) != 0) {
     ERROR_AND_NO_RETURN_PTR("Seek Error");
+    END_PROFILE_FUNC();
     return 0;
   }
 
+  END_PROFILE_FUNC();
   return 1;
 }
