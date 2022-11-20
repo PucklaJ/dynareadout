@@ -34,9 +34,9 @@
 #include <time.h>
 
 typedef struct {
-  char const **execution_times_names;
+  char const **execution_names;
   double *execution_times;
-  size_t num_execution_times;
+  size_t num_executions;
 
   char const **current_executions;
   size_t num_current_executions;

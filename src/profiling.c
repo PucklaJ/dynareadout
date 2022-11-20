@@ -115,8 +115,8 @@ void _END_PROFILE_SECTION(const char *name, execution_t start) {
 
   size_t index = ~0;
   size_t i = 0;
-  while (i < profiling_context.num_execution_times) {
-    if (strcmp(profiling_context.execution_times_names[i], name) == 0) {
+  while (i < profiling_context.num_executions) {
+    if (strcmp(profiling_context.execution_names[i], name) == 0) {
       index = i;
       break;
     }
@@ -135,23 +135,23 @@ void _END_PROFILE_SECTION(const char *name, execution_t start) {
   }
 
   if (index == ~0) {
-    profiling_context.num_execution_times++;
-    profiling_context.execution_times_names =
-        realloc(profiling_context.execution_times_names,
-                profiling_context.num_execution_times * sizeof(const char *));
+    profiling_context.num_executions++;
+    profiling_context.execution_names =
+        realloc(profiling_context.execution_names,
+                profiling_context.num_executions * sizeof(const char *));
     profiling_context.execution_times =
         realloc(profiling_context.execution_times,
-                profiling_context.num_execution_times * sizeof(double));
-    index = profiling_context.num_execution_times - 1;
+                profiling_context.num_executions * sizeof(double));
+    index = profiling_context.num_executions - 1;
     profiling_context.execution_times[index] = 0.0;
-    profiling_context.execution_times_names[index] = name;
+    profiling_context.execution_names[index] = name;
   }
 
   profiling_context.execution_times[index] += elapsed_time;
 }
 
 void END_PROFILING(const char *out_file_name) {
-  if (out_file_name && profiling_context.num_execution_times) {
+  if (out_file_name && profiling_context.num_executions) {
     FILE *out_file = fopen(out_file_name, "w");
     if (!out_file) {
       fprintf(stderr, "[PROFILING] Failed to open profiling output file: %s\n",
@@ -159,16 +159,16 @@ void END_PROFILING(const char *out_file_name) {
     } else {
       /* Sort execution times in decending order*/
       quick_sort_execution_times(
-          &profiling_context.execution_times_names,
+          &profiling_context.execution_names,
           &profiling_context.execution_times, 0,
-          (signed long)(profiling_context.num_execution_times - 1));
+          (signed long)(profiling_context.num_executions - 1));
 
       fprintf(out_file, "---------- %d Profiling Entries ---------\n",
-              profiling_context.num_execution_times);
+              profiling_context.num_executions);
       size_t i = 0;
-      while (i < profiling_context.num_execution_times) {
+      while (i < profiling_context.num_executions) {
         fprintf(out_file, "--- %20s: %10.3f ms ---\n",
-                profiling_context.execution_times_names[i],
+                profiling_context.execution_names[i],
                 profiling_context.execution_times[i] * 1000.0);
 
         i++;
@@ -189,12 +189,12 @@ void END_PROFILING(const char *out_file_name) {
     i++;
   }
 
-  free(profiling_context.execution_times_names);
+  free(profiling_context.execution_names);
   free(profiling_context.execution_times);
   free(profiling_context.current_executions);
-  profiling_context.execution_times_names = NULL;
+  profiling_context.execution_names = NULL;
   profiling_context.execution_times = NULL;
   profiling_context.current_executions = NULL;
-  profiling_context.num_execution_times = 0;
+  profiling_context.num_executions = 0;
   profiling_context.num_current_executions = 0;
 }
