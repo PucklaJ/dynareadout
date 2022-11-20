@@ -24,6 +24,7 @@
  ************************************************************************************/
 
 #include "d3plot.h"
+#include "profiling.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -34,17 +35,21 @@
 #include "d3plot_error_macros.h"
 
 int _d3plot_read_geometry_data(d3plot_file *plot_file) {
+  BEGIN_PROFILE_FUNC();
+
   /* TODO: We can skip the entire GEOMETRY DATA section since we already know
    * how big it is and where to find the data*/
 
   if (CDP.element_connectivity_packed) {
     ERROR_AND_NO_RETURN_PTR("Packed Element Connectivity is not supported");
+    END_PROFILE_FUNC();
     return 0;
   }
 
   if (CDP.icode != D3_CODE_OLD_DYNA3D &&
       CDP.icode != D3_CODE_NIKE3D_LS_DYNA3D_LS_NIKE3D) {
     ERROR_AND_NO_RETURN_PTR("The given order of the elements is not supported");
+    END_PROFILE_FUNC();
     return 0;
   }
 
@@ -80,16 +85,21 @@ int _d3plot_read_geometry_data(d3plot_file *plot_file) {
   if (plot_file->buffer.error_string) {
     ERROR_AND_NO_RETURN_F_PTR("Failed to skip words: %s",
                               plot_file->buffer.error_string);
+    END_PROFILE_FUNC();
     return 0;
   }
 
+  END_PROFILE_FUNC();
   return 1;
 }
 
 int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
+  BEGIN_PROFILE_FUNC();
+
   if (CDP.narbs == 0) {
     CDP.numrbs = 0;
 
+    END_PROFILE_FUNC();
     return 1;
   }
 
@@ -108,6 +118,8 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
   if (plot_file->buffer.error_string) {
     ERROR_AND_NO_RETURN_F_PTR("Failed to read NSORT: %s",
                               plot_file->buffer.error_string);
+
+    END_PROFILE_FUNC();
     return 0;
   }
 
@@ -123,6 +135,8 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
     ERROR_AND_NO_RETURN_F_PTR(
         "Failed to read NSORTD, NSRHD, NSRBD, NSRSD and NSRTD: %s",
         plot_file->buffer.error_string);
+
+    END_PROFILE_FUNC();
     return 0;
   }
 
@@ -137,6 +151,8 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
     if (plot_file->buffer.error_string) {
       ERROR_AND_NO_RETURN_F_PTR("Failed to read NUMRBS and NMMAT: %s",
                                 plot_file->buffer.error_string);
+
+      END_PROFILE_FUNC();
       return 0;
     }
   }
@@ -164,6 +180,8 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
   if (plot_file->buffer.error_string) {
     ERROR_AND_NO_RETURN_F_PTR("Failed to skip words: %s",
                               plot_file->buffer.error_string);
+
+    END_PROFILE_FUNC();
     return 0;
   }
 
@@ -173,13 +191,18 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
     ERROR_AND_NO_RETURN_F_PTR(
         "The USER IDENTIFICATION NUMBERS section is false (%lu != %lu)",
         user_ids_size, CDP.narbs);
+
+    END_PROFILE_FUNC();
     return 0;
   }
 
+  END_PROFILE_FUNC();
   return 1;
 }
 
 int _d3plot_read_extra_node_connectivity(d3plot_file *plot_file) {
+  BEGIN_PROFILE_FUNC();
+
   if (CDP.nel8 < 0) {
     const int64_t nel8 = CDP.nel8 * -1;
     d3_buffer_skip_words(&plot_file->buffer, 2 * nel8);
@@ -199,14 +222,20 @@ int _d3plot_read_extra_node_connectivity(d3plot_file *plot_file) {
   if (plot_file->buffer.error_string) {
     ERROR_AND_NO_RETURN_F_PTR("Failed to skip words: %s",
                               plot_file->buffer.error_string);
+
+    END_PROFILE_FUNC();
     return 0;
   }
 
+  END_PROFILE_FUNC();
   return 1;
 }
 
 int _d3plot_read_adapted_element_parent_list(d3plot_file *plot_file) {
+  BEGIN_PROFILE_FUNC();
+
   if (CDP.nadapt == 0) {
+    END_PROFILE_FUNC();
     return 1;
   }
 
@@ -216,19 +245,24 @@ int _d3plot_read_adapted_element_parent_list(d3plot_file *plot_file) {
   if (plot_file->buffer.error_string) {
     ERROR_AND_NO_RETURN_F_PTR("Failed to skip words: %s",
                               plot_file->buffer.error_string);
+    END_PROFILE_FUNC();
     return 0;
   }
 
+  END_PROFILE_FUNC();
   return 1;
 }
 
 int _d3plot_read_header(d3plot_file *plot_file) {
+  BEGIN_PROFILE_FUNC();
+
   while (1) {
     d3_word ntype = 0;
     d3_buffer_read_words(&plot_file->buffer, &ntype, 1);
     if (plot_file->buffer.error_string) {
       ERROR_AND_NO_RETURN_F_PTR("Failed to read NTYPE: %s",
                                 plot_file->buffer.error_string);
+      END_PROFILE_FUNC();
       return 0;
     }
 
@@ -239,6 +273,7 @@ int _d3plot_read_header(d3plot_file *plot_file) {
       if (plot_file->buffer.error_string) {
         ERROR_AND_NO_RETURN_F_PTR("Failed to skip words: %s",
                                   plot_file->buffer.error_string);
+        END_PROFILE_FUNC();
         return 0;
       }
 
@@ -248,6 +283,7 @@ int _d3plot_read_header(d3plot_file *plot_file) {
       if (plot_file->buffer.error_string) {
         ERROR_AND_NO_RETURN_F_PTR("Failed to read NUMPROP: %s",
                                   plot_file->buffer.error_string);
+        END_PROFILE_FUNC();
         return 0;
       }
       DT_PTR_SET(D3PLT_PTR_PART_TITLES);
@@ -257,6 +293,7 @@ int _d3plot_read_header(d3plot_file *plot_file) {
       if (plot_file->buffer.error_string) {
         ERROR_AND_NO_RETURN_F_PTR("Failed to skip words: %s",
                                   plot_file->buffer.error_string);
+        END_PROFILE_FUNC();
         return 0;
       }
     } else if (ntype == 90002) {
@@ -265,6 +302,7 @@ int _d3plot_read_header(d3plot_file *plot_file) {
       if (plot_file->buffer.error_string) {
         ERROR_AND_NO_RETURN_F_PTR("Failed to read NUMCON: %s",
                                   plot_file->buffer.error_string);
+        END_PROFILE_FUNC();
         return 0;
       }
       /* CTITLE is always 72 bytes*/
@@ -273,6 +311,7 @@ int _d3plot_read_header(d3plot_file *plot_file) {
       if (plot_file->buffer.error_string) {
         ERROR_AND_NO_RETURN_F_PTR("Failed to skip words: %s",
                                   plot_file->buffer.error_string);
+        END_PROFILE_FUNC();
         return 0;
       }
       /* TODO: read function for contact titles*/
@@ -283,6 +322,7 @@ int _d3plot_read_header(d3plot_file *plot_file) {
       if (plot_file->buffer.error_string) {
         ERROR_AND_NO_RETURN_F_PTR("Failed to read NLINE: %s",
                                   plot_file->buffer.error_string);
+        END_PROFILE_FUNC();
         return 0;
       }
       /* KEYWORD is always 80 bytes*/
@@ -290,6 +330,7 @@ int _d3plot_read_header(d3plot_file *plot_file) {
       if (plot_file->buffer.error_string) {
         ERROR_AND_NO_RETURN_F_PTR("Failed to skip words: %s",
                                   plot_file->buffer.error_string);
+        END_PROFILE_FUNC();
         return 0;
       }
       /* TODO: read function for extra keyword lines?*/
@@ -309,6 +350,7 @@ int _d3plot_read_header(d3plot_file *plot_file) {
             "Here (after header) 'd3plot':(%lu) should be "
             "the EOF marker (%f != %f)",
             plot_file->buffer.cur_word - 1, eof_marker, D3_EOF);
+        END_PROFILE_FUNC();
         return 0;
       }
 
@@ -316,5 +358,6 @@ int _d3plot_read_header(d3plot_file *plot_file) {
     }
   }
 
+  END_PROFILE_FUNC();
   return 1;
 }

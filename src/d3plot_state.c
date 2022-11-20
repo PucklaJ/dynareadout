@@ -24,6 +24,7 @@
  ************************************************************************************/
 
 #include "d3plot.h"
+#include "profiling.h"
 #include <stdlib.h>
 
 #define CDP plot_file->control_data
@@ -34,6 +35,8 @@
 #include "d3plot_error_macros.h"
 
 int _d3plot_read_state_data(d3plot_file *plot_file) {
+  BEGIN_PROFILE_FUNC();
+
   const size_t state_start = plot_file->buffer.cur_word;
 
   double time;
@@ -41,10 +44,12 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   if (plot_file->buffer.error_string) {
     ERROR_AND_NO_RETURN_F_PTR("Failed to read time: %s",
                               plot_file->buffer.error_string);
+    END_PROFILE_FUNC();
     return 0;
   }
 
   if (time == D3_EOF) {
+    END_PROFILE_FUNC();
     return 2;
   }
 
@@ -141,6 +146,7 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   if (plot_file->buffer.error_string) {
     ERROR_AND_NO_RETURN_F_PTR("Failed to skip words: %s",
                               plot_file->buffer.error_string);
+    END_PROFILE_FUNC();
     return 0;
   }
 
@@ -165,6 +171,7 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   if (plot_file->buffer.error_string) {
     ERROR_AND_NO_RETURN_F_PTR("Failed to skip RW: %s",
                               plot_file->buffer.error_string);
+    END_PROFILE_FUNC();
     return 0;
   }
 
@@ -174,6 +181,7 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   if (global_size != CDP.nglbv) {
     ERROR_AND_NO_RETURN_F_PTR("Size of GLOBAL is %lu instead of %lu",
                               global_size, CDP.nglbv);
+    END_PROFILE_FUNC();
     return 0;
   }
 
@@ -228,6 +236,7 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   if (plot_file->buffer.error_string) {
     ERROR_AND_NO_RETURN_F_PTR("Failed to skip words: %s",
                               plot_file->buffer.error_string);
+    END_PROFILE_FUNC();
     return 0;
   }
 
@@ -236,6 +245,7 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   if (node_data_size != NND) {
     ERROR_AND_NO_RETURN_F_PTR("NODEDATA should be %lu instead of %lu", NND,
                               node_data_size);
+    END_PROFILE_FUNC();
     return 0;
   }
 
@@ -246,6 +256,7 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   if (plot_file->buffer.error_string) {
     ERROR_AND_NO_RETURN_F_PTR("Failed to skip THERMDATA: %s",
                               plot_file->buffer.error_string);
+    END_PROFILE_FUNC();
     return 0;
   }
 
@@ -275,6 +286,7 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   if (plot_file->buffer.error_string) {
     ERROR_AND_NO_RETURN_F_PTR("Failed to skip ELEMDATA: %s",
                               plot_file->buffer.error_string);
+    END_PROFILE_FUNC();
     return 0;
   }
 
@@ -283,6 +295,7 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   if (elem_data_size < ENN) {
     ERROR_AND_NO_RETURN_F_PTR("ELEMDATA should be %lu instead of %lu", ENN,
                               elem_data_size);
+    END_PROFILE_FUNC();
     return 0;
   }
 
@@ -296,6 +309,7 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
     skip_words = CDP.nel8 + CDP.nelt + CDP.nel4 + CDP.nel2;
   } else {
     ERROR_AND_NO_RETURN_F_PTR("The value of MDLOPT is invalid: %d", CDP.mdlopt);
+    END_PROFILE_FUNC();
     return 0;
   }
 
@@ -304,6 +318,7 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
     if (plot_file->buffer.error_string) {
       ERROR_AND_NO_RETURN_F_PTR("Failed to skip Element Deletion Option: %s",
                                 plot_file->buffer.error_string);
+      END_PROFILE_FUNC();
       return 0;
     }
   }
@@ -312,5 +327,6 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   const size_t state_size =
       (state_end - state_start) * plot_file->buffer.word_size;
 
+  END_PROFILE_FUNC();
   return 1;
 }
