@@ -72,10 +72,49 @@ void quick_sort_execution_times(char const ***names, double **times,
   }
 }
 
+size_t execution_names_binary_search(char const **arr, size_t start_index,
+                                     size_t end_index, const char *name,
+                                     int *found) {
+  if (start_index == end_index) {
+    const int cmp_value = strcmp(arr[start_index], name);
+
+    if (cmp_value == 0) {
+      *found = 1;
+      return start_index;
+    }
+    if (cmp_value < 0) {
+      *found = 0;
+      return start_index + 1;
+    }
+
+    *found = 0;
+    return start_index;
+  }
+
+  const size_t half_index = start_index + (end_index - start_index) / 2;
+
+  const int cmp_val = strcmp(arr[half_index], name);
+
+  if (cmp_val > 0) {
+    return execution_names_binary_search(arr, start_index, half_index, name,
+                                         found);
+  } else if (cmp_val < 0) {
+    if (half_index == end_index - 1) {
+      return execution_names_binary_search(arr, end_index, end_index, name,
+                                           found);
+    }
+    return execution_names_binary_search(arr, half_index, end_index, name,
+                                         found);
+  }
+
+  *found = 1;
+  return half_index;
+}
+
 execution_t _BEGIN_PROFILE_SECTION(const char *name) {
   /* Only start profiling if it isn't already getting profiled (to avoid
    * recursion issues)*/
-  execution_t rv = {0, 0};
+  execution_t rv = {0, 0, ~0};
   size_t i = 0, index = ~0;
   while (i < profiling_context.num_current_executions) {
     if (index == ~0 && !profiling_context.current_executions[i]) {
@@ -99,6 +138,7 @@ execution_t _BEGIN_PROFILE_SECTION(const char *name) {
   profiling_context.current_executions[index] = name;
 
   rv.should_end = 1;
+  rv.current_execution_index = index;
   rv.start_time = clock();
 
   return rv;
@@ -113,28 +153,17 @@ void _END_PROFILE_SECTION(const char *name, execution_t start) {
   const double elapsed_time =
       (double)(end_time - start.start_time) / CLOCKS_PER_SEC;
 
-  size_t index = ~0;
-  size_t i = 0;
-  while (i < profiling_context.num_executions) {
-    if (strcmp(profiling_context.execution_names[i], name) == 0) {
-      index = i;
-      break;
-    }
-
-    i++;
+  int execution_found = profiling_context.num_executions != 0;
+  size_t index = 0;
+  if (execution_found) {
+    index = execution_names_binary_search(profiling_context.execution_names, 0,
+                                          profiling_context.num_executions - 1,
+                                          name, &execution_found);
   }
 
-  i = 0;
-  while (i < profiling_context.num_current_executions) {
-    if (strcmp(profiling_context.current_executions[i], name) == 0) {
-      profiling_context.current_executions[i] = NULL;
-      break;
-    }
+  profiling_context.current_executions[start.current_execution_index] = NULL;
 
-    i++;
-  }
-
-  if (index == ~0) {
+  if (!execution_found) {
     profiling_context.num_executions++;
     profiling_context.execution_names =
         realloc(profiling_context.execution_names,
@@ -142,7 +171,19 @@ void _END_PROFILE_SECTION(const char *name, execution_t start) {
     profiling_context.execution_times =
         realloc(profiling_context.execution_times,
                 profiling_context.num_executions * sizeof(double));
-    index = profiling_context.num_executions - 1;
+
+    if (profiling_context.num_executions != 1) {
+      /* Move everything to the right*/
+      size_t i = profiling_context.num_executions - 1;
+      while (i > index) {
+        profiling_context.execution_names[i] =
+            profiling_context.execution_names[i - 1];
+        profiling_context.execution_times[i] =
+            profiling_context.execution_times[i - 1];
+        i--;
+      }
+    }
+
     profiling_context.execution_times[index] = 0.0;
     profiling_context.execution_names[index] = name;
   }
@@ -157,7 +198,7 @@ void END_PROFILING(const char *out_file_name) {
       fprintf(stderr, "[PROFILING] Failed to open profiling output file: %s\n",
               strerror(errno));
     } else {
-      /* Sort execution times in decending order*/
+      /* Sort execution times in descending order*/
       quick_sort_execution_times(
           &profiling_context.execution_names,
           &profiling_context.execution_times, 0,

@@ -45,6 +45,7 @@ typedef struct {
 typedef struct {
   clock_t start_time;
   uint8_t should_end;
+  size_t current_execution_index;
 } execution_t;
 
 extern profiling_context_t profiling_context;
