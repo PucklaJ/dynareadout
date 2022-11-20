@@ -172,7 +172,7 @@ TEST_CASE("binout0000 C++") {
     }
   }
 
-  dro::Binout bin_file("test_data/binout*");
+  dro::Binout bin_file("test_data/binout0*");
   {
     const auto children = bin_file.get_children("/");
     REQUIRE(children.size() == 2);
@@ -583,7 +583,7 @@ TEST_CASE("glob") {
   size_t num_files;
   char **globed_files = binout_glob("src/*.c", &num_files);
 
-  CHECK(num_files == 7);
+  CHECK(num_files == 8);
   CHECK(path_elements_contain(globed_files, num_files, "src/binout_glob.c"));
   CHECK(path_elements_contain(globed_files, num_files, "src/binout.c"));
   CHECK(path_elements_contain(globed_files, num_files, "src/d3_buffer.c"));
@@ -591,6 +591,7 @@ TEST_CASE("glob") {
   CHECK(path_elements_contain(globed_files, num_files, "src/d3plot_state.c"));
   CHECK(path_elements_contain(globed_files, num_files, "src/d3plot.c"));
   CHECK(path_elements_contain(globed_files, num_files, "src/path.c"));
+  CHECK(path_elements_contain(globed_files, num_files, "src/profiling.c"));
   binout_free_glob(globed_files, num_files);
 }
 
