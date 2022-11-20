@@ -285,25 +285,44 @@ binout_file binout_open(const char *file_name) {
           dp->records_size = 0;
         }
 
-        /* Overwrite it if a record with the same name already exists.
-         * Apparently this can indeed be the case*/
-        size_t insert_index;
-        binout_record_data *rd =
-            _binout_get_data(dp, &current_path, &insert_index);
-        if (!rd) {
-          binout_record_data new_rd;
-          new_rd.path.elements = NULL;
-          new_rd.path.num_elements = 0;
-          path_copy(&new_rd.path, &current_path);
+        BEGIN_PROFILE_SECTION(binout_insert_new_data_record);
 
-          _binout_data_record_insert_at(&dp->records, &dp->records_size,
-                                        &dp->records_capacity, insert_index,
-                                        new_rd);
+        /* Create a new data record and insert it into the array. This does not
+         * handle the case if the same data records appears twice (which can
+         * indeed be the case, but I don't remember if it might have been
+         * because of a bug). But even if a data record appears twice, this
+         * should not be an issue.*/
+        binout_record_data rd;
+        rd.path.elements = NULL;
+        rd.path.num_elements = 0;
+        rd.file_pos = file_pos;
+        path_copy(&rd.path, &current_path);
 
-          rd = &dp->records[insert_index];
+        /* If the array is empty insert it at the first index*/
+        if (dp->records_size == 0) {
+          dp->records_size = 1;
+          dp->records[0] = rd;
+        } else {
+          /* If the last element is smaller than the new element, insert it at
+           * the end*/
+          if (path_cmp(&dp->records[dp->records_size - 1].path, &rd.path) < 0) {
+            dp->records_size++;
+            if (dp->records_size > dp->records_capacity) {
+              dp->records_capacity += BINOUT_DATA_RECORD_ALLOC_ADV;
+              dp->records =
+                  realloc(dp->records,
+                          dp->records_capacity * sizeof(binout_record_data));
+            }
+            dp->records[dp->records_size - 1] = rd;
+          } else {
+            /* This should never be called, since data records are stored in
+             * ascending order*/
+            _binout_data_record_insert_sorted(&dp->records, &dp->records_size,
+                                              &dp->records_capacity, rd);
+          }
         }
 
-        rd->file_pos = file_pos;
+        END_PROFILE_SECTION(binout_insert_new_data_record);
       } else {
         /* Just skip the record and ignore its data*/
         if (fseek(file_handle, record_data_length, SEEK_CUR) != 0) {
@@ -1035,24 +1054,42 @@ size_t _binout_data_record_binary_search(binout_record_data *arr,
   return half_index;
 }
 
-void _binout_data_record_insert_at(binout_record_data **arr, size_t *arr_size,
-                                   size_t *arr_cap, size_t index,
-                                   binout_record_data ele) {
+void _binout_data_record_insert_sorted(binout_record_data **arr,
+                                       size_t *arr_size, size_t *arr_cap,
+                                       binout_record_data ele) {
   BEGIN_PROFILE_FUNC();
 
-  assert(index <= *arr_size);
-
-  (*arr_size)++;
-  if (*arr_size > *arr_cap) {
-    *arr_cap += BINOUT_DATA_POINTER_ALLOC_ADV;
-    *arr = realloc(*arr, *arr_cap * sizeof(binout_record_data));
-  }
-
-  if (index == *arr_size - 1) {
-    (*arr)[index] = ele;
+  if (*arr_size == 0) {
+    *arr_size = 1;
+    (*arr)[0] = ele;
 
     END_PROFILE_FUNC();
     return;
+  }
+
+  /* If the last element is smaller than the new element, insert it at the end*/
+  if (path_cmp(&(*arr)[*arr_size - 1].path, &ele.path) < 0) {
+    (*arr_size)++;
+    if (*arr_size > *arr_cap) {
+      *arr_cap += BINOUT_DATA_RECORD_ALLOC_ADV;
+      *arr = realloc(*arr, *arr_cap * sizeof(binout_record_data));
+    }
+    (*arr)[*arr_size - 1] = ele;
+
+    END_PROFILE_FUNC();
+    return;
+  }
+
+  /* Loop until an element that is smaller than the new element has been found*/
+  size_t index = *arr_size;
+  while (index > 0 && path_cmp(&(*arr)[index - 1].path, &ele.path) > 0) {
+    index--;
+  }
+
+  (*arr_size)++;
+  if (*arr_size > *arr_cap) {
+    *arr_cap += BINOUT_DATA_RECORD_ALLOC_ADV;
+    *arr = realloc(*arr, *arr_cap * sizeof(binout_record_data));
   }
 
   /* Move everything to the right*/

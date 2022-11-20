@@ -148,9 +148,11 @@ void _binout_add_file_error(binout_file *bin_file, const char *file_name,
 size_t _binout_data_record_binary_search(binout_record_data *arr,
                                          size_t start_index, size_t end_index,
                                          const path_t *path, int *found);
-void _binout_data_record_insert_at(binout_record_data **arr, size_t *arr_size,
-                                   size_t *arr_cap, size_t index,
-                                   binout_record_data ele);
+/* Insert ele into arr so that arr is in ascending order. The ordering is based
+ * of path_cmp.*/
+void _binout_data_record_insert_sorted(binout_record_data **arr,
+                                       size_t *arr_size, size_t *arr_cap,
+                                       binout_record_data ele);
 /* ----------------------------- */
 #ifdef __cplusplus
 }
