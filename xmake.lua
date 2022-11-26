@@ -43,7 +43,7 @@ target("binout")
         add_deps("profiling")
     end
     add_options("profiling")
-    add_files("src/binout*.c", "src/path.c")
+    add_files("src/binout*.c", "src/path.c", "src/path_view.c")
     add_headerfiles("src/binout*.h", "src/path.h")
     if is_kind("shared") then
         add_rules("utils.symbols.export_all")

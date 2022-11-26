@@ -39,6 +39,7 @@
 #include <iomanip>
 #include <iostream>
 #include <path.h>
+#include <path_view.h>
 #include <sstream>
 #include <string>
 #ifdef BINOUT_CPP
@@ -769,6 +770,50 @@ TEST_CASE("binout_directory") {
   }
 
   binout_directory_free(&dir);
+}
+
+TEST_CASE("path_view") {
+  {
+    const char *str = "/nodout/metadata/ids";
+
+    path_view_t pv = path_view_new(str);
+    CHECK(path_view_strcmp(&pv, "/") == 0);
+
+    CHECK(path_view_advance(&pv) == 1);
+    CHECK(path_view_strcmp(&pv, "nodout") == 0);
+
+    CHECK(path_view_advance(&pv) == 1);
+    CHECK(path_view_strcmp(&pv, "metadata") == 0);
+
+    CHECK(path_view_advance(&pv) == 1);
+    CHECK(path_view_strcmp(&pv, "ids") == 0);
+
+    CHECK(path_view_advance(&pv) == 0);
+    CHECK(path_view_strcmp(&pv, "ids") == 0);
+  }
+
+  {
+    const char *str = "metadata/build";
+
+    path_view_t pv = path_view_new(str);
+    CHECK(path_view_strcmp(&pv, "metadata") == 0);
+
+    CHECK(path_view_advance(&pv) == 1);
+    CHECK(path_view_strcmp(&pv, "build") == 0);
+
+    CHECK(path_view_advance(&pv) == 0);
+    CHECK(path_view_strcmp(&pv, "build") == 0);
+  }
+
+  {
+    const char *str = "x_force";
+
+    path_view_t pv = path_view_new(str);
+    CHECK(path_view_strcmp(&pv, "x_force") == 0);
+
+    CHECK(path_view_advance(&pv) == 0);
+    CHECK(path_view_strcmp(&pv, "x_force") == 0);
+  }
 }
 
 #ifdef PROFILING
