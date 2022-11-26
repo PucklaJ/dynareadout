@@ -30,9 +30,10 @@
 #define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
 #endif
 #define DOCTEST_CONFIG_TREAT_CHAR_STAR_AS_STRING
-#include "binout_glob.h"
 #include <binout.h>
 #include <binout_defines.h>
+#include <binout_directory.h>
+#include <binout_glob.h>
 #include <cstdint>
 #include <doctest/doctest.h>
 #include <iomanip>
@@ -583,9 +584,11 @@ TEST_CASE("glob") {
   size_t num_files;
   char **globed_files = binout_glob("src/*.c", &num_files);
 
-  CHECK(num_files == 8);
+  CHECK(num_files == 9);
   CHECK(path_elements_contain(globed_files, num_files, "src/binout_glob.c"));
   CHECK(path_elements_contain(globed_files, num_files, "src/binout.c"));
+  CHECK(
+      path_elements_contain(globed_files, num_files, "src/binout_directory.c"));
   CHECK(path_elements_contain(globed_files, num_files, "src/d3_buffer.c"));
   CHECK(path_elements_contain(globed_files, num_files, "src/d3plot_data.c"));
   CHECK(path_elements_contain(globed_files, num_files, "src/d3plot_state.c"));
@@ -614,6 +617,158 @@ TEST_CASE("Array::New") {
     return;
   }
   FAIL("arr[5] should have thrown an exception");
+}
+
+char *stralloc(const char *str) {
+  const int len = strlen(str);
+  char *data = reinterpret_cast<char *>(malloc(len + 1));
+  memcpy(data, str, len + 1);
+  return data;
+}
+
+TEST_CASE("binout_directory") {
+  binout_directory_t dir;
+  dir.children = NULL;
+  dir.num_children = 0;
+
+  /*
+    /
+    I--nodout
+         I--metadata
+                I--ids
+                I--time
+         I--d000001
+                I--x_displacement
+                I--y_displacement
+    I--nodfor
+         I--metadata
+                I--ids
+                I--time
+         I--d000010
+                I--x_force
+                I--y_force
+  */
+
+  binout_directory_insert_folder(&dir, stralloc("nodout"));
+  binout_directory_insert_folder(&dir, stralloc("nodfor"));
+
+  binout_folder_insert_folder(&dir.children[0], NULL, stralloc("metadata"));
+  binout_folder_insert_folder(&dir.children[0], NULL, stralloc("d000001"));
+  binout_folder_insert_file(
+      &reinterpret_cast<binout_folder_t *>(dir.children[0].children)[0], NULL,
+      stralloc("ids"), BINOUT_TYPE_INT32, 10, 0, 200);
+  binout_folder_insert_file(
+      &reinterpret_cast<binout_folder_t *>(dir.children[0].children)[0], NULL,
+      stralloc("time"), BINOUT_TYPE_FLOAT32, 1, 0, 180);
+  binout_folder_insert_file(
+      &reinterpret_cast<binout_folder_t *>(dir.children[0].children)[1], NULL,
+      stralloc("x_displacement"), BINOUT_TYPE_FLOAT64, 10, 0, 300);
+  binout_folder_insert_file(
+      &reinterpret_cast<binout_folder_t *>(dir.children[0].children)[1], NULL,
+      stralloc("y_displacement"), BINOUT_TYPE_FLOAT64, 10, 0, 380);
+
+  binout_folder_insert_file(&dir.children[1], "metadata", stralloc("ids"),
+                            BINOUT_TYPE_INT64, 10, 1, 10);
+  binout_folder_insert_file(&dir.children[1], "metadata", stralloc("time"),
+                            BINOUT_TYPE_FLOAT64, 1, 1, 20);
+  binout_folder_insert_file(&dir.children[1], "d000010", stralloc("x_force"),
+                            BINOUT_TYPE_FLOAT64, 10, 1, 100);
+  binout_folder_insert_file(&dir.children[1], "d000010", stralloc("y_force"),
+                            BINOUT_TYPE_FLOAT64, 10, 1, 150);
+
+  {
+    const auto *file = binout_directory_get_file(&dir, "/nodout/metadata/ids");
+    REQUIRE(file != nullptr);
+    CHECK(file->type == BINOUT_FILE);
+    CHECK(file->name == "ids");
+    CHECK(file->var_type == BINOUT_TYPE_INT32);
+    CHECK(file->size == 10);
+    CHECK(file->file_index == 0);
+    CHECK(file->file_pos == 200);
+  }
+
+  {
+    const auto *file = binout_directory_get_file(&dir, "/nodout/metadata/time");
+    REQUIRE(file != nullptr);
+    CHECK(file->type == BINOUT_FILE);
+    CHECK(file->name == "time");
+    CHECK(file->var_type == BINOUT_TYPE_FLOAT32);
+    CHECK(file->size == 1);
+    CHECK(file->file_index == 0);
+    CHECK(file->file_pos == 180);
+  }
+
+  {
+    const auto *file =
+        binout_directory_get_file(&dir, "/nodout/d000001/x_displacement");
+    REQUIRE(file != nullptr);
+    CHECK(file->type == BINOUT_FILE);
+    CHECK(file->name == "x_displacement");
+    CHECK(file->var_type == BINOUT_TYPE_FLOAT64);
+    CHECK(file->size == 10);
+    CHECK(file->file_index == 0);
+    CHECK(file->file_pos == 300);
+  }
+
+  {
+    const auto *file =
+        binout_directory_get_file(&dir, "/nodout/d000001/y_displacement");
+    REQUIRE(file != nullptr);
+    CHECK(file->type == BINOUT_FILE);
+    CHECK(file->name == "y_displacement");
+    CHECK(file->var_type == BINOUT_TYPE_FLOAT64);
+    CHECK(file->size == 10);
+    CHECK(file->file_index == 0);
+    CHECK(file->file_pos == 380);
+  }
+
+  {
+    const auto *file = binout_directory_get_file(&dir, "/nodfor/metadata/ids");
+    REQUIRE(file != nullptr);
+    CHECK(file->type == BINOUT_FILE);
+    CHECK(file->name == "ids");
+    CHECK(file->var_type == BINOUT_TYPE_INT64);
+    CHECK(file->size == 10);
+    CHECK(file->file_index == 1);
+    CHECK(file->file_pos == 10);
+  }
+
+  {
+    const auto *file = binout_directory_get_file(&dir, "/nodfor/metadata/time");
+    REQUIRE(file != nullptr);
+    CHECK(file->type == BINOUT_FILE);
+    CHECK(file->name == "time");
+    CHECK(file->var_type == BINOUT_TYPE_FLOAT64);
+    CHECK(file->size == 1);
+    CHECK(file->file_index == 1);
+    CHECK(file->file_pos == 20);
+  }
+
+  {
+    const auto *file =
+        binout_directory_get_file(&dir, "/nodfor/d000010/x_force");
+    REQUIRE(file != nullptr);
+    CHECK(file->type == BINOUT_FILE);
+    CHECK(file->name == "x_force");
+    CHECK(file->var_type == BINOUT_TYPE_FLOAT64);
+    CHECK(file->size == 10);
+    CHECK(file->file_index == 1);
+    CHECK(file->file_pos == 100);
+  }
+
+  {
+    const auto *file =
+        binout_directory_get_file(&dir, "/nodfor/d000010/y_force");
+    REQUIRE(file != nullptr);
+    CHECK(file->type == BINOUT_FILE);
+    CHECK(file->name == "y_force");
+    CHECK(file->var_type == BINOUT_TYPE_FLOAT64);
+    CHECK(file->size == 10);
+    CHECK(file->file_index == 1);
+    CHECK(file->file_pos == 150);
+  }
+
+  binout_directory_free(&dir);
 }
 
 #ifdef PROFILING
