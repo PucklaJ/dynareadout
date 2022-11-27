@@ -25,6 +25,7 @@
 
 #include "path.h"
 #include "profiling.h"
+#include <assert.h>
 #include <limits.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -366,5 +367,17 @@ int path_cmp(const path_t *path1, const path_t *path2) {
   i = path1->num_elements - path2->num_elements;
 
   END_PROFILE_FUNC();
+  return i;
+}
+
+size_t path_move_up(const char *path) {
+  const int len = strlen(path);
+  assert(len > 1 && path[0] == PATH_SEP);
+
+  size_t i = path[len - 1] == PATH_SEP ? len - 2 : len - 1;
+  while (i > 0 && path[i] != PATH_SEP) {
+    i--;
+  }
+
   return i;
 }

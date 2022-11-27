@@ -60,6 +60,10 @@ int path_view_peek(const path_view_t *pv);
 /* Returns wether the string of the path view starts with the root folder*/
 int path_view_is_abs(const path_view_t *pv);
 
+int path_view_len(const path_view_t *pv);
+
+void path_view_cpy(char *dst, const path_view_t *src);
+
 void path_view_print(const path_view_t *pv);
 
 #ifdef __cplusplus

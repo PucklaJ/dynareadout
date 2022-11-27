@@ -62,24 +62,61 @@ void binout_directory_insert_folder(binout_directory_t *dir, char *name) {
   dir->children[index] = folder;
 }
 
-binout_folder_t *binout_folder_insert_folder(binout_folder_t *dir,
-                                             path_view_t *path, char *name) {
-  if (path == NULL) {
-    /* Add the folder directly underneath it*/
-    /* Only add the folder it does not already exist*/
-    size_t index = 0;
-    if (dir->num_children != 0) {
-      int found;
-      index = binout_directory_binary_search_folder_by_name(
-          (binout_folder_t *)dir->children, 0, dir->num_children - 1, name,
-          &found);
-      if (found) {
-        free(name);
-        return &((binout_folder_t *)dir->children)[index];
-      }
+binout_folder_t *
+binout_directory_insert_folder_by_path_view(binout_directory_t *dir,
+                                            path_view_t *path) {
+  size_t index = 0;
+  binout_folder_t *folder = NULL;
+  if (dir->num_children != 0) {
+    int found;
+    index = binout_directory_binary_search_folder_by_path_view_insert(
+        dir->children, 0, dir->num_children - 1, path, &found);
+    if (found) {
+      folder = &dir->children[index];
+    }
+  }
+
+  if (!folder) {
+    dir->num_children++;
+    dir->children =
+        realloc(dir->children, dir->num_children * sizeof(binout_folder_t));
+
+    /* Move everything to the right*/
+    size_t i = dir->num_children - 1;
+    while (i > index) {
+      dir->children[i] = dir->children[i - 1];
+      i--;
     }
 
-    /* Allocate memory for the new child*/
+    folder = &dir->children[index];
+    folder->type = BINOUT_FOLDER;
+    folder->name = path_view_stralloc(path);
+    folder->children = NULL;
+    folder->num_children = 0;
+  }
+
+  if (!path_view_advance(path)) {
+    return folder;
+  }
+
+  return binout_folder_insert_folder(folder, path);
+}
+
+binout_folder_t *binout_folder_insert_folder(binout_folder_t *dir,
+                                             path_view_t *path) {
+  size_t index = 0;
+  binout_folder_t *folder = NULL;
+  if (dir->num_children != 0) {
+    int found;
+    index = binout_directory_binary_search_folder_by_path_view_insert(
+        (binout_folder_t *)dir->children, 0, dir->num_children - 1, path,
+        &found);
+    if (found) {
+      folder = &((binout_folder_t *)dir->children)[index];
+    }
+  }
+
+  if (!folder) {
     dir->num_children++;
     dir->children =
         realloc(dir->children, dir->num_children * sizeof(binout_folder_t));
@@ -89,72 +126,21 @@ binout_folder_t *binout_folder_insert_folder(binout_folder_t *dir,
     while (i > index) {
       ((binout_folder_t *)dir->children)[i] =
           ((binout_folder_t *)dir->children)[i - 1];
-
       i--;
     }
 
-    binout_folder_t *folder = &((binout_folder_t *)dir->children)[index];
+    folder = &((binout_folder_t *)dir->children)[index];
     folder->type = BINOUT_FOLDER;
-    folder->name = name;
+    folder->name = path_view_stralloc(path);
     folder->children = NULL;
     folder->num_children = 0;
-
-    return folder;
-  } else {
-    /* Check if the parent folder already exists*/
-    binout_folder_t *parent_folder;
-    size_t index = 0;
-    if (dir->num_children != 0) {
-      int found;
-      index = binout_directory_binary_search_folder_by_path_view_insert(
-          (binout_folder_t *)dir->children, 0, dir->num_children - 1, path,
-          &found);
-      if (found) {
-        parent_folder = &((binout_folder_t *)dir->children)[index];
-      } else {
-        parent_folder = NULL;
-      }
-    } else {
-      parent_folder = NULL;
-    }
-
-    if (!parent_folder) {
-      /* Allocate memory for the new child*/
-      dir->num_children++;
-      dir->children =
-          realloc(dir->children, dir->num_children * sizeof(binout_folder_t));
-
-      /* Move everything to the right*/
-      size_t i = dir->num_children - 1;
-      while (i > index) {
-        ((binout_folder_t *)dir->children)[i] =
-            ((binout_folder_t *)dir->children)[i - 1];
-
-        i--;
-      }
-
-      /* Add a parent folder under which to add the folder*/
-      parent_folder = &((binout_folder_t *)dir->children)[index];
-      parent_folder->type = BINOUT_FOLDER;
-      parent_folder->name = path_view_stralloc(path);
-      parent_folder->children = NULL;
-      parent_folder->num_children = 0;
-    } else {
-      parent_folder = &((binout_folder_t *)dir->children)[index];
-    }
-
-    /* Advance to the next element*/
-    if (!path_view_advance(path)) {
-      /* Directly insert it underneath the parent*/
-      return binout_folder_insert_folder(parent_folder, NULL, name);
-    } else {
-      /* Recursively insert parent folders*/
-      binout_folder_t *folder =
-          binout_folder_insert_folder(parent_folder, path, name);
-
-      return folder;
-    }
   }
+
+  if (!path_view_advance(path)) {
+    return folder;
+  }
+
+  return binout_folder_insert_folder(folder, path);
 }
 
 void binout_folder_insert_file(binout_folder_t *dir, path_view_t *path,
@@ -196,23 +182,73 @@ void binout_folder_insert_file(binout_folder_t *dir, path_view_t *path,
     file->file_index = file_index;
     file->file_pos = file_pos;
   } else {
-    /* Make a copy of the path view*/
-    path_view_t parent_path = *path;
-    path_view_t *insert_path =
-        path_view_advance(path) == 0 ? NULL : &parent_path;
-
-    /* Advance to the last element, to get the name of the folder*/
-    while (path_view_advance(path))
-      ;
-    char *folder_name = path_view_stralloc(path);
-
     /* Insert the parent folder before inserting the file*/
-    binout_folder_t *parent_folder =
-        binout_folder_insert_folder(dir, insert_path, folder_name);
+    binout_folder_t *parent_folder = binout_folder_insert_folder(dir, path);
 
     binout_folder_insert_file(parent_folder, NULL, name, var_type, size,
                               file_index, file_pos);
   }
+}
+
+const binout_folder_or_file_t *
+binout_directory_get_children(const binout_directory_t *dir, path_view_t *path,
+                              size_t *num_children) {
+  if (dir->num_children == 0 || !path_view_is_abs(path)) {
+    *num_children = 0;
+    return NULL;
+  }
+
+  if (!path_view_advance(path)) {
+    *num_children = dir->num_children;
+    return (const binout_folder_or_file_t *)dir->children;
+  }
+
+  size_t index = binout_directory_binary_search_folder_by_path_view(
+      dir->children, 0, dir->num_children - 1, path);
+  if (index == (size_t)~0) {
+    *num_children = 0;
+    return NULL;
+  }
+
+  const binout_folder_t *folder = &dir->children[index];
+
+  if (!path_view_advance(path)) {
+    *num_children = folder->num_children;
+    return (const binout_folder_or_file_t *)folder->children;
+  }
+
+  return binout_folder_get_children(folder, path, num_children);
+}
+
+const binout_folder_or_file_t *
+binout_folder_get_children(const binout_folder_t *folder, path_view_t *path,
+                           size_t *num_children) {
+  if (folder->num_children == 0) {
+    *num_children = 0;
+    return NULL;
+  }
+
+  if (((binout_folder_or_file_t *)folder->children)[0].type == BINOUT_FILE) {
+    *num_children = 0;
+    return NULL;
+  }
+
+  size_t index = binout_directory_binary_search_folder_by_path_view(
+      (binout_folder_t *)folder->children, 0, folder->num_children - 1, path);
+  if (index == (size_t)~0) {
+    *num_children = 0;
+    return NULL;
+  }
+
+  const binout_folder_t *child =
+      &((const binout_folder_t *)folder->children)[index];
+
+  if (!path_view_advance(path)) {
+    *num_children = child->num_children;
+    return (const binout_folder_or_file_t *)child->children;
+  }
+
+  return binout_folder_get_children(child, path, num_children);
 }
 
 const binout_file_t *binout_directory_get_file(const binout_directory_t *dir,

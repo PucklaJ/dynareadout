@@ -98,6 +98,12 @@ int path_view_is_abs(const path_view_t *pv) {
   return pv->string[0] == PATH_SEP;
 }
 
+int path_view_len(const path_view_t *pv) { return pv->end - pv->start + 1; }
+
+void path_view_cpy(char *dst, const path_view_t *src) {
+  memcpy(dst, &src->string[src->start], src->end - src->start + 1);
+}
+
 void path_view_print(const path_view_t *pv) {
   printf("%s (%d - %d): ", pv->string, pv->start, pv->end);
   int i = pv->start;

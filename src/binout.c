@@ -72,9 +72,8 @@ binout_file binout_open(const char *file_name) {
   BEGIN_PROFILE_FUNC();
 
   binout_file bin_file;
-  bin_file.data_pointers = NULL;
-  bin_file.data_pointers_sizes = NULL;
-  bin_file.data_pointers_capacities = NULL;
+  bin_file.directory.children = NULL;
+  bin_file.directory.num_children = 0;
   bin_file.file_handles = NULL;
   bin_file.file_errors = NULL;
   bin_file.error_string = NULL;
@@ -89,12 +88,6 @@ binout_file binout_open(const char *file_name) {
   }
 
   bin_file.file_handles = malloc(bin_file.num_file_handles * sizeof(FILE *));
-  bin_file.data_pointers_sizes =
-      malloc(bin_file.num_file_handles * sizeof(size_t));
-  bin_file.data_pointers_capacities =
-      malloc(bin_file.num_file_handles * sizeof(size_t));
-  bin_file.data_pointers =
-      malloc(bin_file.num_file_handles * sizeof(binout_record_data_pointer *));
 
   size_t cur_file_index = 0;
   while (cur_file_index < bin_file.num_file_handles) {
@@ -116,20 +109,6 @@ binout_file binout_open(const char *file_name) {
       cur_file_index++;
       continue;
     }
-
-    /* Pointers to the data pointers of the current file*/
-    size_t *cur_data_pointers_size =
-        &bin_file.data_pointers_sizes[cur_file_index];
-    size_t *cur_data_pointers_capacity =
-        &bin_file.data_pointers_capacities[cur_file_index];
-    binout_record_data_pointer **cur_data_pointers =
-        &bin_file.data_pointers[cur_file_index];
-    *cur_data_pointers_size = 0;
-
-    /* Preallocate some data pointers to reduce the number of heap allocations*/
-    *cur_data_pointers_capacity = BINOUT_DATA_POINTER_PREALLOC;
-    *cur_data_pointers = realloc(NULL, BINOUT_DATA_POINTER_PREALLOC *
-                                           sizeof(binout_record_data_pointer));
 
     binout_header header;
 
@@ -171,13 +150,19 @@ binout_file binout_open(const char *file_name) {
     /* Parse all records */
 
     /* Store the current path which is changed by the CD commands*/
-    path_t current_path;
-    current_path.elements = NULL;
-    current_path.num_elements = 0;
+    /* Store 1KB on the stack, this should totally suffice*/
+    char current_path_string[1024];
+    current_path_string[0] = PATH_SEP;
+    current_path_string[1] = '\0';
+    path_view_t current_path = path_view_new(current_path_string);
+    binout_folder_t *current_folder = NULL;
 
     int cur_file_failed = 0;
 
+    /* A buffer for the variable name of the DATA command*/
     char variable_name_buffer[255];
+    /* A buffer for the path of the CD command*/
+    char path_buffer[1024];
 
     /* We cannot use EOF, so we use this*/
     while (1) {
@@ -201,24 +186,58 @@ binout_file binout_open(const char *file_name) {
       /* Execute code for all the different commands
        * Currently only CD and DATA. All other commands are ignored*/
       if (record_command == BINOUT_COMMAND_CD) {
-        char *path = malloc(record_data_length + 1);
-        path[record_data_length] = '\0';
+        assert(record_data_length < 1024);
 
-        BIN_FILE_READ_FREE(path, 1, record_data_length, path,
-                           "Failed to read PATH of CD record");
+        path_buffer[record_data_length] = '\0';
+        BIN_FILE_READ(path_buffer, 1, record_data_length,
+                      "Failed to read PATH of CD record");
 
-        if (path_is_abs(path) || !current_path.elements) {
-          if (current_path.elements) {
-            path_free(&current_path);
-          }
-          current_path.elements =
-              path_elements(path, &current_path.num_elements);
+        if (path_is_abs(path_buffer)) {
+          memcpy(current_path_string, path_buffer, record_data_length + 1);
+          current_path = path_view_new(current_path_string);
+          path_view_advance(&current_path);
+
+          current_folder = binout_directory_insert_folder_by_path_view(
+              &bin_file.directory, &current_path);
         } else {
-          path_join(&current_path, path);
-        }
-        free(path);
+          path_view_t path = path_view_new(path_buffer);
 
-        path_parse(&current_path);
+          while (1) {
+            if (path_view_strcmp(&path, "..") == 0) {
+              size_t index = path_move_up(current_path_string);
+              index += index == 0;
+
+              current_path_string[index] = '\0';
+            } else {
+              /* Join current_path_string with path*/
+              const int path_len = path_view_len(&path);
+              int len = strlen(current_path_string);
+              assert((len + path_len + 1) < 1024);
+
+              if (current_path_string[len - 1] != PATH_SEP) {
+                current_path_string[len] = PATH_SEP;
+                len++;
+
+                assert(len < 1024);
+              }
+
+              memcpy(&current_path_string[len], path_buffer,
+                     record_data_length + 1);
+              path_view_cpy(&current_path_string[len], &path);
+              current_path_string[len + path_len] = '\0';
+            }
+
+            if (!path_view_advance(&path)) {
+              break;
+            }
+          }
+
+          current_path = path_view_new(current_path_string);
+          path_view_advance(&current_path);
+
+          current_folder = binout_directory_insert_folder_by_path_view(
+              &bin_file.directory, &current_path);
+        }
       } else if (record_command == BINOUT_COMMAND_DATA) {
         uint64_t type_id = 0;
         uint8_t variable_name_length;
@@ -228,17 +247,23 @@ binout_file binout_open(const char *file_name) {
         BIN_FILE_READ(variable_name_length, BINOUT_DATA_NAME_LENGTH, 1,
                       "Failed to read Name length of DATA record");
 
-        assert(variable_name_length + 1 < sizeof(variable_name_buffer));
+        assert(variable_name_length + 1 <
+               (uint8_t)sizeof(variable_name_buffer));
 
         variable_name_buffer[variable_name_length] = '\0';
         BIN_FILE_READ(variable_name_buffer, 1, variable_name_length,
                       "Failed to read Name of DATA record");
 
+        /* If current_folder is NULL, this means that there are files inside
+         * '/', which we do not support. And LS Dyna does also not do this.
+         */
+        assert(current_folder != NULL);
+
         /* How large the data segment of the data record is*/
         const uint64_t data_length =
             record_data_length - header.record_typeid_field_size -
             BINOUT_DATA_NAME_LENGTH - variable_name_length;
-        const size_t file_pos = ftell(file_handle);
+        const long file_pos = ftell(file_handle);
         /* Skip the data since we will read it at a later point, if it is
          * requested by the programmer*/
         if (fseek(file_handle, data_length, SEEK_CUR) != 0) {
@@ -248,81 +273,11 @@ binout_file binout_open(const char *file_name) {
           break;
         }
 
-        /* Get the according data pointer if there already is one or create a
-         * new one*/
-        binout_record_data_pointer *dp = _binout_get_data_pointer2(
-            &bin_file, cur_file_index, &current_path, variable_name_buffer);
-
-        if (dp) {
-          /* Just an assertion to make sure that the data_length stays
-           * consistent*/
-          if (data_length != dp->data_length) {
-            cur_file_failed = 1;
-            _binout_add_file_error(
-                &bin_file, file_names[cur_file_index],
-                "The data length of one record is different from another even "
-                "though they should be the same");
-            break;
-          }
-        } else {
-          (*cur_data_pointers_size)++;
-          /* Only reallocate if the size is greater than the capacity*/
-          if (*cur_data_pointers_size > *cur_data_pointers_capacity) {
-            *cur_data_pointers_capacity += BINOUT_DATA_POINTER_ALLOC_ADV;
-            *cur_data_pointers = realloc(
-                *cur_data_pointers, *cur_data_pointers_capacity *
-                                        sizeof(binout_record_data_pointer));
-          }
-
-          dp = &(*cur_data_pointers)[*cur_data_pointers_size - 1];
-          dp->name = malloc(variable_name_length + 1);
-          memcpy(dp->name, variable_name_buffer, variable_name_length + 1);
-          dp->data_length = data_length;
-          dp->type_id = type_id;
-          dp->records = realloc(NULL, BINOUT_DATA_RECORD_PREALLOC *
-                                          sizeof(binout_record_data));
-          dp->records_capacity = BINOUT_DATA_RECORD_PREALLOC;
-          dp->records_size = 0;
-        }
-
-        BEGIN_PROFILE_SECTION(binout_insert_new_data_record);
-
-        /* Create a new data record and insert it into the array. This does not
-         * handle the case if the same data records appears twice (which can
-         * indeed be the case, but I don't remember if it might have been
-         * because of a bug). But even if a data record appears twice, this
-         * should not be an issue.*/
-        binout_record_data rd;
-        rd.path.elements = NULL;
-        rd.path.num_elements = 0;
-        rd.file_pos = file_pos;
-        path_copy(&rd.path, &current_path);
-
-        /* If the array is empty insert it at the first index*/
-        if (dp->records_size == 0) {
-          dp->records_size = 1;
-          dp->records[0] = rd;
-        } else {
-          /* If the last element is smaller than the new element, insert it at
-           * the end*/
-          if (path_cmp(&dp->records[dp->records_size - 1].path, &rd.path) < 0) {
-            dp->records_size++;
-            if (dp->records_size > dp->records_capacity) {
-              dp->records_capacity += BINOUT_DATA_RECORD_ALLOC_ADV;
-              dp->records =
-                  realloc(dp->records,
-                          dp->records_capacity * sizeof(binout_record_data));
-            }
-            dp->records[dp->records_size - 1] = rd;
-          } else {
-            /* This should never be called, since data records are stored in
-             * ascending order*/
-            _binout_data_record_insert_sorted(&dp->records, &dp->records_size,
-                                              &dp->records_capacity, rd);
-          }
-        }
-
-        END_PROFILE_SECTION(binout_insert_new_data_record);
+        char *variable_name = malloc(variable_name_length + 1);
+        memcpy(variable_name, variable_name_buffer, variable_name_length + 1);
+        binout_folder_insert_file(current_folder, NULL, variable_name,
+                                  (uint8_t)type_id, data_length,
+                                  (uint8_t)cur_file_index, file_pos);
       } else {
         /* Just skip the record and ignore its data*/
         if (fseek(file_handle, record_data_length, SEEK_CUR) != 0) {
@@ -334,28 +289,9 @@ binout_file binout_open(const char *file_name) {
       }
     }
 
-    path_free(&current_path);
-
     if (cur_file_failed) {
       fclose(file_handle);
       bin_file.file_handles[cur_file_index] = NULL;
-    }
-
-    /* Reallocate the data pointers and data records to directly fit the size*/
-    *cur_data_pointers_capacity = *cur_data_pointers_size;
-    *cur_data_pointers =
-        realloc(*cur_data_pointers, *cur_data_pointers_capacity *
-                                        sizeof(binout_record_data_pointer));
-    size_t i = 0;
-    while (i < *cur_data_pointers_size) {
-      (*cur_data_pointers)[i].records_capacity =
-          (*cur_data_pointers)[i].records_size;
-      (*cur_data_pointers)[i].records =
-          realloc((*cur_data_pointers)[i].records,
-                  (*cur_data_pointers)[i].records_capacity *
-                      sizeof(binout_record_data));
-
-      i++;
     }
 
     cur_file_index++;
@@ -367,45 +303,12 @@ binout_file binout_open(const char *file_name) {
   cur_file_index = 0;
   while (cur_file_index < bin_file.num_file_handles) {
     if (!bin_file.file_handles[cur_file_index]) {
-      /* Free all data pointers of the file*/
-      size_t i = 0;
-      while (i < bin_file.data_pointers_sizes[cur_file_index]) {
-        binout_record_data_pointer *dp =
-            &bin_file.data_pointers[cur_file_index][i];
-        size_t j = 0;
-        while (j < dp->records_size) {
-          path_free(&dp->records[j].path);
-
-          j++;
-        }
-        free(dp->records);
-        free(dp->name);
-
-        i++;
-      }
-      free(bin_file.data_pointers[cur_file_index]);
-
       /* Swap with the last element*/
-      bin_file.data_pointers[cur_file_index] =
-          bin_file.data_pointers[bin_file.num_file_handles - 1];
-      bin_file.data_pointers_sizes[cur_file_index] =
-          bin_file.data_pointers_sizes[bin_file.num_file_handles - 1];
-      bin_file.data_pointers_capacities[cur_file_index] =
-          bin_file.data_pointers_capacities[bin_file.num_file_handles - 1];
       bin_file.file_handles[cur_file_index] =
           bin_file.file_handles[bin_file.num_file_handles - 1];
 
       /* Reallocate memory*/
       bin_file.num_file_handles--;
-      bin_file.data_pointers = realloc(
-          bin_file.data_pointers,
-          bin_file.num_file_handles * sizeof(binout_record_data_pointer *));
-      bin_file.data_pointers_sizes =
-          realloc(bin_file.data_pointers_sizes,
-                  bin_file.num_file_handles * sizeof(size_t));
-      bin_file.data_pointers_capacities =
-          realloc(bin_file.data_pointers_sizes,
-                  bin_file.num_file_handles * sizeof(size_t));
       bin_file.file_handles = realloc(
           bin_file.file_handles, bin_file.num_file_handles * sizeof(FILE *));
 
@@ -426,25 +329,6 @@ void binout_close(binout_file *bin_file) {
   /* Free all files*/
   size_t cur_file_index = 0;
   while (cur_file_index < bin_file->num_file_handles) {
-    /* Free all data pointers*/
-    size_t i = 0;
-    while (i < bin_file->data_pointers_sizes[cur_file_index]) {
-      binout_record_data_pointer *dp =
-          &bin_file->data_pointers[cur_file_index][i];
-      /* Free all records*/
-      size_t j = 0;
-      while (j < dp->records_size) {
-        path_free(&dp->records[j].path);
-
-        j++;
-      }
-      free(dp->records);
-      free(dp->name);
-
-      i++;
-    }
-    free(bin_file->data_pointers[cur_file_index]);
-
     if (fclose(bin_file->file_handles[cur_file_index]) != 0) {
     }
 
@@ -459,18 +343,12 @@ void binout_close(binout_file *bin_file) {
     i++;
   }
 
-  free(bin_file->data_pointers);
-  free(bin_file->data_pointers_sizes);
-  free(bin_file->data_pointers_capacities);
-  free(bin_file->file_handles);
-  free(bin_file->file_errors);
-  free(bin_file->error_string);
+  binout_directory_free(&bin_file->directory);
 
   /* Set everything to 0 so that no error happens if function get called after
    * binout_close*/
-  bin_file->data_pointers = NULL;
-  bin_file->data_pointers_sizes = NULL;
-  bin_file->data_pointers_capacities = NULL;
+  bin_file->directory.children = NULL;
+  bin_file->directory.num_children = 0;
   bin_file->file_handles = NULL;
   bin_file->file_errors = NULL;
   bin_file->error_string = NULL;
@@ -480,78 +358,6 @@ void binout_close(binout_file *bin_file) {
   END_PROFILE_FUNC();
 }
 
-void binout_print_records(binout_file *bin_file) {
-  BEGIN_PROFILE_FUNC();
-
-  printf("----- %lu Files ---------------\n", bin_file->num_file_handles);
-  size_t cur_file_index = 0;
-  while (cur_file_index < bin_file->num_file_handles) {
-
-    printf("------ %lu Data Pointers ------\n",
-           bin_file->data_pointers_sizes[cur_file_index]);
-
-    size_t i = 0;
-    while (i < bin_file->data_pointers_sizes[cur_file_index]) {
-      const binout_record_data_pointer *dp =
-          &bin_file->data_pointers[cur_file_index][i];
-      printf("---- %s ----\n", dp->name);
-      printf("- Data Length: %lu --\n", dp->data_length);
-      printf("- Type: %s -----\n", _binout_get_type_name(dp->type_id));
-      printf("---------------------\n");
-      printf("- Records: %lu --\n", dp->records_size);
-
-      size_t j = 0;
-      while (j < dp->records_size) {
-        char *path_string = path_str(&dp->records[j].path);
-        printf("- Path: %s ---\n", path_string);
-        free(path_string);
-        printf("- File Pos: 0x%lx ---\n", dp->records[j].file_pos);
-
-        j++;
-      }
-
-      i++;
-    }
-
-    printf("-----------------------------------\n");
-
-    cur_file_index++;
-  }
-
-  printf("-----------------------------------------------\n");
-
-  END_PROFILE_FUNC();
-}
-
-void *binout_read(binout_file *bin_file, FILE *file_handle,
-                  binout_record_data_pointer *dp, path_t *path_to_variable,
-                  size_t type_size, size_t *data_size) {
-  path_to_variable->num_elements--;
-  binout_record_data *record = _binout_get_data(dp, path_to_variable);
-  path_to_variable->num_elements++;
-  path_free(path_to_variable);
-  if (!record) {
-    NEW_ERROR_STRING("The given path has not been found");
-    return NULL;
-  }
-
-  if (fseek(file_handle, record->file_pos, SEEK_SET) != 0) {
-    NEW_ERROR_STRING("Failed to seek to the position of the data");
-    return NULL;
-  }
-
-  void *data = malloc(dp->data_length);
-  if (fread(data, dp->data_length, 1, file_handle) != 1) {
-    free(data);
-    NEW_ERROR_STRING("Failed to read the data");
-    return NULL;
-  }
-
-  *data_size = dp->data_length / type_size;
-
-  return data;
-}
-
 #define DEFINE_BINOUT_READ_TYPE(c_type, binout_type)                           \
   c_type *binout_read_##c_type(binout_file *bin_file,                          \
                                const char *path_to_variable,                   \
@@ -559,41 +365,45 @@ void *binout_read(binout_file *bin_file, FILE *file_handle,
     BEGIN_PROFILE_FUNC();                                                      \
     CLEAR_ERROR_STRING();                                                      \
                                                                                \
-    path_t _path_to_variable;                                                  \
-    _path_to_variable.elements =                                               \
-        path_elements(path_to_variable, &_path_to_variable.num_elements);      \
-                                                                               \
-    size_t cur_file_index = 0;                                                 \
-    while (cur_file_index < bin_file->num_file_handles) {                      \
-      binout_record_data_pointer *dp = _binout_get_data_pointer(               \
-          bin_file, cur_file_index, &_path_to_variable);                       \
-      if (!dp) {                                                               \
-        cur_file_index++;                                                      \
-        continue;                                                              \
-      }                                                                        \
-                                                                               \
-      if (dp->type_id != binout_type) {                                        \
-        path_free(&_path_to_variable);                                         \
-        char buffer[50];                                                       \
-        sprintf(buffer, "The data is of type %s instead of %s",                \
-                _binout_get_type_name(dp->type_id),                            \
-                _binout_get_type_name(binout_type));                           \
-        NEW_ERROR_STRING(buffer);                                              \
-        END_PROFILE_FUNC();                                                    \
-        return NULL;                                                           \
-      }                                                                        \
-                                                                               \
-      const size_t type_size = _binout_get_type_size(dp->type_id);             \
-                                                                               \
-      void *data =                                                             \
-          binout_read(bin_file, bin_file->file_handles[cur_file_index], dp,    \
-                      &_path_to_variable, type_size, data_size);               \
+    path_view_t path = path_view_new(path_to_variable);                        \
+    const binout_file_t *file =                                                \
+        binout_directory_get_file(&bin_file->directory, &path);                \
+    if (!file) {                                                               \
+      NEW_ERROR_STRING("The given variable has not been found");               \
       END_PROFILE_FUNC();                                                      \
-      return data;                                                             \
+      return NULL;                                                             \
     }                                                                          \
                                                                                \
-    path_free(&_path_to_variable);                                             \
-    return NULL;                                                               \
+    if (file->type != binout_type) {                                           \
+      char buffer[50];                                                         \
+      sprintf(buffer, "The data is of type %s instead of %s",                  \
+              _binout_get_type_name(file->type),                               \
+              _binout_get_type_name(binout_type));                             \
+      NEW_ERROR_STRING(buffer);                                                \
+      END_PROFILE_FUNC();                                                      \
+      return NULL;                                                             \
+    }                                                                          \
+                                                                               \
+    const size_t type_size = _binout_get_type_size(binout_type);               \
+    FILE *file_handle = bin_file->file_handles[file->file_index];              \
+                                                                               \
+    if (fseek(file_handle, file->file_pos, SEEK_SET) != 0) {                   \
+      NEW_ERROR_STRING("Failed to seek to the position of the data");          \
+      END_PROFILE_FUNC();                                                      \
+      return NULL;                                                             \
+    }                                                                          \
+                                                                               \
+    c_type *data = malloc(file->size);                                         \
+    if (fread(data, file->size, 1, file_handle) != 1) {                        \
+      free(data);                                                              \
+      NEW_ERROR_STRING("Failed to read the data");                             \
+      END_PROFILE_FUNC();                                                      \
+      return NULL;                                                             \
+    }                                                                          \
+                                                                               \
+    *data_size = file->size / type_size;                                       \
+    END_PROFILE_FUNC();                                                        \
+    return data;                                                               \
   }
 
 DEFINE_BINOUT_READ_TYPE(int8_t, BINOUT_TYPE_INT8)
@@ -607,181 +417,74 @@ DEFINE_BINOUT_READ_TYPE(uint64_t, BINOUT_TYPE_UINT64)
 DEFINE_BINOUT_READ_TYPE(float, BINOUT_TYPE_FLOAT32)
 DEFINE_BINOUT_READ_TYPE(double, BINOUT_TYPE_FLOAT64)
 
-uint64_t binout_get_type_id(binout_file *bin_file,
-                            const char *path_to_variable) {
+uint8_t binout_get_type_id(binout_file *bin_file,
+                           const char *path_to_variable) {
   BEGIN_PROFILE_FUNC();
   CLEAR_ERROR_STRING();
 
-  path_t _path;
-  _path.elements = path_elements(path_to_variable, &_path.num_elements);
-
-  size_t cur_file_index = 0;
-  while (cur_file_index < bin_file->num_file_handles) {
-    binout_record_data_pointer *dp =
-        _binout_get_data_pointer(bin_file, cur_file_index, &_path);
-    if (!dp) {
-      cur_file_index++;
-      continue;
-    }
-
-    path_free(&_path);
+  path_view_t path = path_view_new(path_to_variable);
+  const binout_file_t *file =
+      binout_directory_get_file(&bin_file->directory, &path);
+  if (!file) {
+    NEW_ERROR_STRING("The given variable has not been found");
     END_PROFILE_FUNC();
-    return dp->type_id;
+    return BINOUT_TYPE_INVALID;
   }
 
-  path_free(&_path);
-
-  NEW_ERROR_STRING("The given variable has not been found");
   END_PROFILE_FUNC();
-  return BINOUT_TYPE_INVALID;
+  return file->type;
 }
 
 int binout_variable_exists(binout_file *bin_file,
                            const char *path_to_variable) {
   BEGIN_PROFILE_FUNC();
 
-  path_t _path;
-  _path.elements = path_elements(path_to_variable, &_path.num_elements);
-
-  size_t cur_file_index = 0;
-  while (cur_file_index < bin_file->num_file_handles) {
-    binout_record_data_pointer *dp =
-        _binout_get_data_pointer(bin_file, cur_file_index, &_path);
-    if (!dp) {
-      cur_file_index++;
-      continue;
-    }
-
-    _path.num_elements--;
-    binout_record_data *record = _binout_get_data(dp, &_path);
-    _path.num_elements++;
-    if (!record) {
-      cur_file_index++;
-      continue;
-    }
-
-    path_free(&_path);
-    END_PROFILE_FUNC();
-    return 1;
-  }
-
-  path_free(&_path);
+  path_view_t path = path_view_new(path_to_variable);
+  const binout_file_t *file =
+      binout_directory_get_file(&bin_file->directory, &path);
 
   END_PROFILE_FUNC();
-  return 0;
+  return file != NULL;
 }
 
-char **binout_get_children(binout_file *bin_file, const char *path,
+char **binout_get_children(binout_file *bin_file,
+                           const char *path_to_folder_or_file,
                            size_t *num_children) {
   BEGIN_PROFILE_FUNC();
 
-  path_t _path;
-  _path.elements = path_elements(path, &_path.num_elements);
+  path_view_t path = path_view_new(path_to_folder_or_file);
+  const binout_folder_or_file_t *folder_or_file =
+      binout_directory_get_children(&bin_file->directory, &path, num_children);
+  if (!folder_or_file) {
+    return NULL;
+  }
 
-  *num_children = 0;
-  char **children = NULL;
+  char **children = malloc(*num_children * sizeof(char *));
 
-  size_t cur_file_index = 0;
-  while (cur_file_index < bin_file->num_file_handles) {
-
+  if (folder_or_file->type == BINOUT_FOLDER) {
     size_t i = 0;
-    while (i < bin_file->data_pointers_sizes[cur_file_index]) {
-      binout_record_data_pointer *dp =
-          &bin_file->data_pointers[cur_file_index][i];
-
-      /* Find a record that is a child of path*/
-      size_t j = 0;
-      while (j < dp->records_size) {
-        binout_record_data *data = &dp->records[j];
-
-        /* Add the variable name to the elements of the data path
-         * And create a new array also containing the other path elements
-         * since this is easier to do than actually appending the existing
-         * array*/
-        size_t num_data_elements = data->path.num_elements + 1;
-        char **data_elements = malloc(num_data_elements * sizeof(char *));
-        memcpy(data_elements, data->path.elements,
-               data->path.num_elements * sizeof(char *));
-        data_elements[num_data_elements - 1] = dp->name;
-
-        /* Start at the last element of path and at the penultimate element of
-         * the record path*/
-        size_t _path_index = _path.num_elements - 1;
-        size_t data_index = num_data_elements - 2;
-        /* First find the last element that is equal to the last element of path
-         * We use SIZE_MAX since 0 - 1 == SIZE_MAX*/
-        while (data_index != SIZE_MAX) {
-          if (strcmp(_path.elements[_path_index], data_elements[data_index]) ==
-              0) {
-            break;
-          }
-
-          data_index--;
-        }
-
-        int path_fits = 1;
-
-        /* Wether the record is actually a child of path*/
-        if (data_index != SIZE_MAX) {
-          char *data_str = path_str(&data->path);
-          free(data_str);
-          /* Advance to the next to point to the actual child element */
-          data_index++;
-
-          /* If the match from above is not the first element*/
-          if (data_index > 1) {
-            /* Check if the rest of the path elements also match.
-             * We can start at data_index - 2 since we already know that
-             * data_index - 1 matches*/
-            size_t cur_data_index = data_index - 2;
-            _path_index--;
-            while (_path_index != SIZE_MAX) {
-              if (strcmp(_path.elements[_path_index],
-                         data_elements[cur_data_index]) != 0) {
-                path_fits = 0;
-                break;
-              }
-
-              _path_index--;
-              cur_data_index--;
-            }
-          }
-
-          /* If the record is actually a child add it to the children*/
-          if (path_fits) {
-            char *child = data_elements[data_index];
-
-            if (!path_elements_contain(children, *num_children, child)) {
-              (*num_children)++;
-              children = realloc(children, *num_children * sizeof(char *));
-              const size_t child_len = strlen(child);
-              children[*num_children - 1] = malloc(child_len + 1);
-              memcpy(children[*num_children - 1], child, child_len + 1);
-            }
-          }
-        }
-
-        free(data_elements);
-
-        j++;
-      }
+    while (i < *num_children) {
+      children[i] = ((const binout_folder_t *)folder_or_file)[i].name;
 
       i++;
     }
+  } else {
+    size_t i = 0;
+    while (i < *num_children) {
+      children[i] = ((const binout_file_t *)folder_or_file)[i].name;
 
-    cur_file_index++;
+      i++;
+    }
   }
-
-  path_free(&_path);
 
   END_PROFILE_FUNC();
   return children;
 }
 
-void binout_free_children(char **children, size_t num_children) {
+void binout_free_children(char **children) {
   BEGIN_PROFILE_FUNC();
 
-  path_free_elements(children, num_children);
+  free(children);
 
   END_PROFILE_FUNC();
 }
@@ -892,85 +595,6 @@ const char *_binout_get_type_name(const uint64_t type_id) {
   }
 }
 
-binout_record_data_pointer *_binout_get_data_pointer(binout_file *bin_file,
-                                                     size_t file_index,
-                                                     path_t *path_to_variable) {
-  BEGIN_PROFILE_FUNC();
-
-  binout_record_data_pointer *dp = NULL;
-  const size_t data_pointers_size = bin_file->data_pointers_sizes[file_index];
-
-  path_to_variable->num_elements--;
-
-  uint64_t i = 0;
-  while (i < data_pointers_size) {
-    binout_record_data_pointer *bin_dp =
-        &bin_file->data_pointers[file_index][i];
-
-    if (strcmp(bin_dp->name,
-               path_to_variable->elements[path_to_variable->num_elements]) ==
-            0 &&
-        path_compatible(&bin_dp->records[0].path, path_to_variable)) {
-      dp = bin_dp;
-      break;
-    }
-
-    i++;
-  }
-
-  path_to_variable->num_elements++;
-
-  END_PROFILE_FUNC();
-  return dp;
-}
-
-binout_record_data_pointer *_binout_get_data_pointer2(binout_file *bin_file,
-                                                      size_t file_index,
-                                                      path_t *path,
-                                                      const char *variable) {
-  BEGIN_PROFILE_FUNC();
-
-  binout_record_data_pointer *dp = NULL;
-  const size_t data_pointers_size = bin_file->data_pointers_sizes[file_index];
-  uint64_t i = 0;
-  while (i < data_pointers_size) {
-    binout_record_data_pointer *bin_dp =
-        &bin_file->data_pointers[file_index][i];
-
-    if (strcmp(bin_dp->name, variable) == 0 &&
-        path_compatible(&bin_dp->records[0].path, path)) {
-      dp = bin_dp;
-      break;
-    }
-
-    i++;
-  }
-
-  END_PROFILE_FUNC();
-  return dp;
-}
-
-binout_record_data *_binout_get_data(binout_record_data_pointer *dp,
-                                     path_t *path) {
-  BEGIN_PROFILE_FUNC();
-
-  if (dp->records_size == 0) {
-    END_PROFILE_FUNC();
-    return NULL;
-  }
-
-  const size_t index = _binout_data_record_binary_search(
-      dp->records, 0, dp->records_size - 1, path);
-
-  if (index != ~0) {
-    END_PROFILE_FUNC();
-    return &dp->records[index];
-  }
-
-  END_PROFILE_FUNC();
-  return NULL;
-}
-
 void _binout_add_file_error(binout_file *bin_file, const char *file_name,
                             const char *message) {
   const char *middle = ": ";
@@ -995,94 +619,4 @@ void _binout_add_file_error(binout_file *bin_file, const char *file_name,
   bin_file->file_errors[bin_file->num_file_errors - 1]
                        [file_name_length + middle_length + message_length] =
       '\0';
-}
-
-size_t _binout_data_record_binary_search(binout_record_data *arr,
-                                         size_t start_index, size_t end_index,
-                                         const path_t *path) {
-  BEGIN_PROFILE_FUNC();
-
-  if (start_index == end_index) {
-    const size_t index =
-        path_cmp(&arr[start_index].path, path) == 0 ? start_index : ~0;
-
-    END_PROFILE_FUNC();
-    return index;
-  }
-
-  const size_t half_index = start_index + (end_index - start_index) / 2;
-
-  const int cmp_val = path_cmp(&arr[half_index].path, path);
-
-  if (cmp_val > 0) {
-    const size_t index =
-        _binout_data_record_binary_search(arr, start_index, half_index, path);
-
-    END_PROFILE_FUNC();
-    return index;
-  } else if (cmp_val < 0) {
-    if (half_index == end_index - 1) {
-      const size_t index =
-          _binout_data_record_binary_search(arr, end_index, end_index, path);
-
-      END_PROFILE_FUNC();
-      return index;
-    }
-    const size_t index =
-        _binout_data_record_binary_search(arr, half_index, end_index, path);
-
-    END_PROFILE_FUNC();
-    return index;
-  }
-
-  return half_index;
-}
-
-void _binout_data_record_insert_sorted(binout_record_data **arr,
-                                       size_t *arr_size, size_t *arr_cap,
-                                       binout_record_data ele) {
-  BEGIN_PROFILE_FUNC();
-
-  if (*arr_size == 0) {
-    *arr_size = 1;
-    (*arr)[0] = ele;
-
-    END_PROFILE_FUNC();
-    return;
-  }
-
-  /* If the last element is smaller than the new element, insert it at the end*/
-  if (path_cmp(&(*arr)[*arr_size - 1].path, &ele.path) < 0) {
-    (*arr_size)++;
-    if (*arr_size > *arr_cap) {
-      *arr_cap += BINOUT_DATA_RECORD_ALLOC_ADV;
-      *arr = realloc(*arr, *arr_cap * sizeof(binout_record_data));
-    }
-    (*arr)[*arr_size - 1] = ele;
-
-    END_PROFILE_FUNC();
-    return;
-  }
-
-  /* Loop until an element that is smaller than the new element has been found*/
-  size_t index = *arr_size;
-  while (index > 0 && path_cmp(&(*arr)[index - 1].path, &ele.path) > 0) {
-    index--;
-  }
-
-  (*arr_size)++;
-  if (*arr_size > *arr_cap) {
-    *arr_cap += BINOUT_DATA_RECORD_ALLOC_ADV;
-    *arr = realloc(*arr, *arr_cap * sizeof(binout_record_data));
-  }
-
-  /* Move everything to the right*/
-  size_t i = *arr_size - 1;
-  while (i > index) {
-    (*arr)[i] = (*arr)[i - 1];
-    i--;
-  }
-  (*arr)[index] = ele;
-
-  END_PROFILE_FUNC();
 }
