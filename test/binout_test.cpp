@@ -93,10 +93,10 @@ TEST_CASE("binout0000") {
   binout_children =
       binout_get_children(&bin_file, "/nodout", &num_binout_children);
   REQUIRE(num_binout_children == 602);
-  CHECK(binout_children[0] == "metadata");
-  for (size_t i = 1; i <= 601; i++) {
+  CHECK(binout_children[num_binout_children - 1] == "metadata");
+  for (size_t i = 0; i < 601; i++) {
     std::stringstream stream;
-    stream << "d" << std::setfill('0') << std::right << std::setw(6) << i;
+    stream << "d" << std::setfill('0') << std::right << std::setw(6) << (i + 1);
     const std::string str(stream.str());
 
     CHECK(binout_children[i] == str.c_str());
@@ -107,13 +107,13 @@ TEST_CASE("binout0000") {
   binout_children =
       binout_get_children(&bin_file, "/nodout/metadata/", &num_binout_children);
   REQUIRE(num_binout_children == 7);
-  CHECK(binout_children[0] == "title");
-  CHECK(binout_children[1] == "version");
-  CHECK(binout_children[2] == "revision");
-  CHECK(binout_children[3] == "date");
-  CHECK(binout_children[4] == "legend");
-  CHECK(binout_children[5] == "legend_ids");
-  CHECK(binout_children[6] == "ids");
+  CHECK(binout_children[0] == "date");
+  CHECK(binout_children[1] == "ids");
+  CHECK(binout_children[2] == "legend");
+  CHECK(binout_children[3] == "legend_ids");
+  CHECK(binout_children[4] == "revision");
+  CHECK(binout_children[5] == "title");
+  CHECK(binout_children[6] == "version");
 
   binout_free_children(binout_children);
 
@@ -185,13 +185,13 @@ TEST_CASE("binout0000 C++") {
   {
     const auto children = bin_file.get_children("/nodout/metadata/");
     REQUIRE(children.size() == 7);
-    CHECK(children[0] == "title");
-    CHECK(children[1] == "version");
-    CHECK(children[2] == "revision");
-    CHECK(children[3] == "date");
-    CHECK(children[4] == "legend");
-    CHECK(children[5] == "legend_ids");
-    CHECK(children[6] == "ids");
+    CHECK(children[0] == "date");
+    CHECK(children[1] == "ids");
+    CHECK(children[2] == "legend");
+    CHECK(children[3] == "legend_ids");
+    CHECK(children[4] == "revision");
+    CHECK(children[5] == "title");
+    CHECK(children[6] == "version");
   }
 
   REQUIRE(bin_file.variable_exists("/nodout/metadata//legend"));
@@ -585,7 +585,7 @@ TEST_CASE("glob") {
   size_t num_files;
   char **globed_files = binout_glob("src/*.c", &num_files);
 
-  CHECK(num_files == 9);
+  CHECK(num_files == 10);
   CHECK(path_elements_contain(globed_files, num_files, "src/binout_glob.c"));
   CHECK(path_elements_contain(globed_files, num_files, "src/binout.c"));
   CHECK(
@@ -595,6 +595,7 @@ TEST_CASE("glob") {
   CHECK(path_elements_contain(globed_files, num_files, "src/d3plot_state.c"));
   CHECK(path_elements_contain(globed_files, num_files, "src/d3plot.c"));
   CHECK(path_elements_contain(globed_files, num_files, "src/path.c"));
+  CHECK(path_elements_contain(globed_files, num_files, "src/path_view.c"));
   CHECK(path_elements_contain(globed_files, num_files, "src/profiling.c"));
   binout_free_glob(globed_files, num_files);
 }
@@ -839,6 +840,17 @@ TEST_CASE("path_view") {
 
     CHECK(path_view_advance(&pv) == 0);
     CHECK(path_view_strcmp(&pv, "x_force") == 0);
+  }
+
+  {
+    const char *str = "/nodout/metadata//legend";
+
+    path_view_t pv = path_view_new(str);
+    CHECK(path_view_advance(&pv) == 1);
+    CHECK(path_view_advance(&pv) == 1);
+    CHECK(path_view_advance(&pv) == 1);
+
+    CHECK(path_view_strcmp(&pv, "legend") == 0);
   }
 }
 
