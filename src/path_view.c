@@ -26,6 +26,7 @@
 #include "path_view.h"
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 path_view_t path_view_new(const char *string) {
@@ -68,6 +69,33 @@ int path_view_advance(path_view_t *pv) {
 
 int path_view_strcmp(const path_view_t *pv, const char *str) {
   return strncmp(&pv->string[pv->start], str, pv->end - pv->start + 1);
+}
+
+char *path_view_stralloc(const path_view_t *pv) {
+  char *str = malloc(pv->end - pv->start + 1 + 1);
+  memcpy(str, pv->string, pv->end - pv->start + 1);
+  str[pv->end - pv->start + 1] = '\0';
+  return str;
+}
+
+int path_view_peek(const path_view_t *pv) {
+  int counter = 1;
+  const int len = strlen(pv->string);
+
+  int i = pv->end + 2;
+  while (i < len) {
+    if (pv->string[i] == PATH_SEP) {
+      counter++;
+    }
+
+    i++;
+  }
+
+  return counter + (pv->string[len - 1] != PATH_SEP);
+}
+
+int path_view_is_abs(const path_view_t *pv) {
+  return pv->string[0] == PATH_SEP;
 }
 
 void path_view_print(const path_view_t *pv) {

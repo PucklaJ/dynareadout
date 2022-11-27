@@ -51,6 +51,15 @@ int path_view_advance(path_view_t *pv);
 /* Like strcmp but with a path view and a string*/
 int path_view_strcmp(const path_view_t *pv, const char *str);
 
+/* Allocate memory and copy the current path view into it*/
+char *path_view_stralloc(const path_view_t *pv);
+
+/* Returns the number of path elements that are ahead plus the current one*/
+int path_view_peek(const path_view_t *pv);
+
+/* Returns wether the string of the path view starts with the root folder*/
+int path_view_is_abs(const path_view_t *pv);
+
 void path_view_print(const path_view_t *pv);
 
 #ifdef __cplusplus

@@ -24,7 +24,6 @@
  ************************************************************************************/
 
 #include "binout_directory.h"
-#include "path.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,7 +31,8 @@
 
 void binout_directory_insert_folder(binout_directory_t *dir, char *name) {
   /* Only insert the folder if it does not already exist*/
-  if (binout_folder_get_folder(dir->children, dir->num_children, name)) {
+  if (binout_folder_get_folder_by_name(dir->children, dir->num_children,
+                                       name)) {
     return;
   }
 
@@ -49,11 +49,11 @@ void binout_directory_insert_folder(binout_directory_t *dir, char *name) {
 }
 
 binout_folder_t *binout_folder_insert_folder(binout_folder_t *dir,
-                                             const char *path, char *name) {
+                                             path_view_t *path, char *name) {
   if (path == NULL) {
     /* Add the folder directly underneath it*/
     /* Only add the folder it does not already exist*/
-    binout_folder_t *folder = binout_folder_get_folder(
+    binout_folder_t *folder = binout_folder_get_folder_by_name(
         (binout_folder_t *)dir->children, dir->num_children, name);
     if (folder) {
       free(name);
@@ -73,12 +73,9 @@ binout_folder_t *binout_folder_insert_folder(binout_folder_t *dir,
 
     return folder;
   } else {
-    path_t p;
-    p.elements = path_elements(path, &p.num_elements);
-
     /* Check if the parent folder already exists*/
-    binout_folder_t *parent_folder = binout_folder_get_folder(
-        (binout_folder_t *)dir->children, dir->num_children, p.elements[0]);
+    binout_folder_t *parent_folder = binout_folder_get_folder_by_path_view(
+        (binout_folder_t *)dir->children, dir->num_children, path);
     if (!parent_folder) {
       /* Allocate memory for the new child*/
       dir->num_children++;
@@ -89,27 +86,13 @@ binout_folder_t *binout_folder_insert_folder(binout_folder_t *dir,
       parent_folder =
           &((binout_folder_t *)dir->children)[dir->num_children - 1];
       parent_folder->type = BINOUT_FOLDER;
-      parent_folder->name = p.elements[0];
+      parent_folder->name = path_view_stralloc(path);
       parent_folder->children = NULL;
       parent_folder->num_children = 0;
-    } else {
-      /* Avoid memory leaks*/
-      free(p.elements[0]);
     }
 
-    /* Advance to the next element and ignore p.elements[0]*/
-    char **elements = p.elements;
-    p.elements = &p.elements[1];
-    p.num_elements--;
-
-    if (p.num_elements == 1) {
-      /* Need to free manually. Otherwise this causes double free*/
-      size_t j = 0;
-      while (j < p.num_elements) {
-        free(p.elements[j++]);
-      }
-      free(elements);
-
+    /* Advance to the next element*/
+    if (!path_view_advance(path)) {
       /* Directly add it underneath parent*/
       parent_folder->num_children++;
       parent_folder->children =
@@ -126,30 +109,21 @@ binout_folder_t *binout_folder_insert_folder(binout_folder_t *dir,
 
       return folder;
     } else {
-      char *parent_path = path_str(&p);
-      /* Need to free manually. Otherwise this causes double free*/
-      size_t j = 0;
-      while (j < p.num_elements) {
-        free(p.elements[j++]);
-      }
-      free(elements);
-
       /* Recursively insert parent folders*/
       binout_folder_t *folder =
-          binout_folder_insert_folder(parent_folder, parent_path, name);
-      free(parent_path);
+          binout_folder_insert_folder(parent_folder, path, name);
 
       return folder;
     }
   }
 }
 
-void binout_folder_insert_file(binout_folder_t *dir, const char *path,
+void binout_folder_insert_file(binout_folder_t *dir, path_view_t *path,
                                char *name, uint8_t var_type, size_t size,
                                uint8_t file_index, long file_pos) {
   if (path == NULL) {
     /* Only add the file if it not already exists*/
-    if (binout_folder_get_file(dir, name)) {
+    if (binout_folder_get_file_by_name(dir, name)) {
       free(name);
       return;
     }
@@ -168,27 +142,42 @@ void binout_folder_insert_file(binout_folder_t *dir, const char *path,
     file->file_index = file_index;
     file->file_pos = file_pos;
   } else {
-    path_t p;
-    p.elements = path_elements(path, &p.num_elements);
-    p.num_elements--;
+    /* Make a copy of the path view*/
+    path_view_t parent_path = *path;
+    path_view_t *insert_path =
+        path_view_advance(path) == 0 ? NULL : &parent_path;
 
-    char *parent_path = path_str(&p);
+    /* Advance to the last element, to get the name of the folder*/
+    while (path_view_advance(path))
+      ;
+    char *folder_name = path_view_stralloc(path);
 
     /* Insert the parent folder before inserting the file*/
-    binout_folder_t *parent_folder = binout_folder_insert_folder(
-        dir, parent_path, p.elements[p.num_elements]);
-
-    free(parent_path);
-    path_free(&p);
+    binout_folder_t *parent_folder =
+        binout_folder_insert_folder(dir, insert_path, folder_name);
 
     binout_folder_insert_file(parent_folder, NULL, name, var_type, size,
                               file_index, file_pos);
   }
 }
 
-binout_folder_t *binout_folder_get_folder(binout_folder_t *folders,
-                                          size_t num_folders,
-                                          const char *name) {
+binout_folder_t *binout_folder_get_folder_by_path_view(
+    binout_folder_t *folders, size_t num_folders, const path_view_t *name) {
+  size_t i = 0;
+  while (i < num_folders) {
+    if (path_view_strcmp(name, folders[i].name) == 0) {
+      return &folders[i];
+    }
+
+    i++;
+  }
+
+  return NULL;
+}
+
+binout_folder_t *binout_folder_get_folder_by_name(binout_folder_t *folders,
+                                                  size_t num_folders,
+                                                  const char *name) {
   size_t i = 0;
   while (i < num_folders) {
     if (strcmp(folders[i].name, name) == 0) {
@@ -202,42 +191,31 @@ binout_folder_t *binout_folder_get_folder(binout_folder_t *folders,
 }
 
 const binout_file_t *binout_directory_get_file(const binout_directory_t *dir,
-                                               const char *path) {
-  assert(path != NULL && strlen(path) != 0 && path_is_abs(path));
+                                               path_view_t *path) {
+  assert(path != NULL && path_view_is_abs(path));
   assert(dir->num_children != 0);
-
-  path_t p;
-  p.elements = path_elements(path, &p.num_elements);
 
   /* The path needs to have at least 3 elements.
    * 1. The root folder
    * 2. The folder containing the file
    * 3. The file itself
    */
-  assert(p.num_elements > 2);
+  assert(path_view_peek(path) > 2);
+
+  /* Advance over the root folder*/
+  path_view_advance(path);
 
   /* Search for the folder. Linear Search*/
   size_t i = 0;
   while (i < dir->num_children) {
     const binout_folder_t *folder = &dir->children[i];
-    if (strcmp(folder->name, p.elements[1]) == 0) {
-      free(p.elements[0]);
-      free(p.elements[1]);
-      char **elements = p.elements;
-      p.elements = &p.elements[2];
-      p.num_elements -= 2;
-
-      char *file_path = path_str(&p);
-      /* Need to free manually. Otherwise this would give a double free*/
-      size_t j = 0;
-      while (j < p.num_elements) {
-        free(p.elements[j++]);
+    if (path_view_strcmp(path, folder->name) == 0) {
+      /* If we are already at the end*/
+      if (!path_view_advance(path)) {
+        return NULL;
       }
-      free(elements);
 
-      const binout_file_t *file = binout_folder_get_file(folder, file_path);
-      free(file_path);
-      return file;
+      return binout_folder_get_file_by_path_view(folder, path);
     }
 
     i++;
@@ -246,8 +224,9 @@ const binout_file_t *binout_directory_get_file(const binout_directory_t *dir,
   return NULL;
 }
 
-const binout_file_t *binout_folder_get_file(const binout_folder_t *dir,
-                                            const char *path) {
+const binout_file_t *
+binout_folder_get_file_by_path_view(const binout_folder_t *dir,
+                                    path_view_t *path) {
   if (dir->num_children == 0) {
     return NULL;
   }
@@ -258,45 +237,25 @@ const binout_file_t *binout_folder_get_file(const binout_folder_t *dir,
     size_t i = 0;
     while (i < dir->num_children) {
       const binout_file_t *file = &((binout_file_t *)dir->children)[i];
-      if (strcmp(file->name, path) == 0) {
+      if (path_view_strcmp(path, file->name) == 0) {
         return file;
       }
 
       i++;
     }
   } else {
-    path_t p;
-    p.elements = path_elements(path, &p.num_elements);
-
-    /* The path needs at least two elements, since this otherwise means that we
-     * are looking for a file in a folder with only folders*/
-    if (p.num_elements < 2) {
-      path_free(&p);
-      return NULL;
-    }
-
     /* Linear Search for the correct folder*/
     size_t i = 0;
     while (i < dir->num_children) {
       const binout_folder_t *folder = &((binout_folder_t *)dir->children)[i];
-      if (strcmp(folder->name, p.elements[0]) == 0) {
-        /* Advance the path and create a string from it*/
-        free(p.elements[0]);
-        char **elements = p.elements;
-        p.elements = &p.elements[1];
-        p.num_elements--;
-        char *file_path = path_str(&p);
-        /* Need to free manually. Otherwise this causes double free*/
-        size_t j = 0;
-        while (j < p.num_elements) {
-          free(p.elements[j++]);
+      if (path_view_strcmp(path, folder->name) == 0) {
+        /* Advance the path and check if we were already at the end*/
+        if (!path_view_advance(path)) {
+          return NULL;
         }
-        free(elements);
 
         /* Recursivly look for the file*/
-        const binout_file_t *file = binout_folder_get_file(folder, file_path);
-        free(file_path);
-        return file;
+        return binout_folder_get_file_by_path_view(folder, path);
       }
 
       i++;
@@ -304,6 +263,21 @@ const binout_file_t *binout_folder_get_file(const binout_folder_t *dir,
   }
 
   /* The file has not been found*/
+  return NULL;
+}
+
+const binout_file_t *binout_folder_get_file_by_name(const binout_folder_t *dir,
+                                                    const char *name) {
+  size_t i = 0;
+  while (i < dir->num_children) {
+    const binout_file_t *file = &((binout_file_t *)dir->children)[i];
+    if (strcmp(name, file->name) == 0) {
+      return file;
+    }
+
+    i++;
+  }
+
   return NULL;
 }
 
