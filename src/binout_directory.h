@@ -25,6 +25,7 @@
 
 #ifndef BINOUT_DIRECTORY_H
 #define BINOUT_DIRECTORY_H
+#include "path_view.h"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -70,20 +71,27 @@ extern "C" {
 void binout_directory_insert_folder(binout_directory_t *dir, char *name);
 
 binout_folder_t *binout_folder_insert_folder(binout_folder_t *dir,
-                                             const char *path, char *name);
+                                             path_view_t *path, char *name);
 
-void binout_folder_insert_file(binout_folder_t *dir, const char *path,
+void binout_folder_insert_file(binout_folder_t *dir, path_view_t *path,
                                char *name, uint8_t var_type, size_t size,
                                uint8_t file_index, long file_pos);
 
-binout_folder_t *binout_folder_get_folder(binout_folder_t *folders,
-                                          size_t num_folders, const char *name);
+binout_folder_t *binout_folder_get_folder_by_path_view(binout_folder_t *folders,
+                                                       size_t num_folders,
+                                                       const path_view_t *name);
+binout_folder_t *binout_folder_get_folder_by_name(binout_folder_t *folders,
+                                                  size_t num_folders,
+                                                  const char *name);
 
 const binout_file_t *binout_directory_get_file(const binout_directory_t *dir,
-                                               const char *path);
+                                               path_view_t *path);
 
-const binout_file_t *binout_folder_get_file(const binout_folder_t *dir,
-                                            const char *path);
+const binout_file_t *
+binout_folder_get_file_by_path_view(const binout_folder_t *dir,
+                                    path_view_t *path);
+const binout_file_t *binout_folder_get_file_by_name(const binout_folder_t *dir,
+                                                    const char *name);
 
 void binout_directory_free(binout_directory_t *dir);
 

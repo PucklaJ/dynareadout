@@ -668,17 +668,23 @@ TEST_CASE("binout_directory") {
       &reinterpret_cast<binout_folder_t *>(dir.children[0].children)[1], NULL,
       stralloc("y_displacement"), BINOUT_TYPE_FLOAT64, 10, 0, 380);
 
-  binout_folder_insert_file(&dir.children[1], "metadata", stralloc("ids"),
+  path_view_t p1 = path_view_new("metadata");
+  path_view_t p2 = path_view_new("metadata");
+  path_view_t p3 = path_view_new("d000010");
+  path_view_t p4 = path_view_new("d000010");
+
+  binout_folder_insert_file(&dir.children[1], &p1, stralloc("ids"),
                             BINOUT_TYPE_INT64, 10, 1, 10);
-  binout_folder_insert_file(&dir.children[1], "metadata", stralloc("time"),
+  binout_folder_insert_file(&dir.children[1], &p2, stralloc("time"),
                             BINOUT_TYPE_FLOAT64, 1, 1, 20);
-  binout_folder_insert_file(&dir.children[1], "d000010", stralloc("x_force"),
+  binout_folder_insert_file(&dir.children[1], &p3, stralloc("x_force"),
                             BINOUT_TYPE_FLOAT64, 10, 1, 100);
-  binout_folder_insert_file(&dir.children[1], "d000010", stralloc("y_force"),
+  binout_folder_insert_file(&dir.children[1], &p4, stralloc("y_force"),
                             BINOUT_TYPE_FLOAT64, 10, 1, 150);
 
   {
-    const auto *file = binout_directory_get_file(&dir, "/nodout/metadata/ids");
+    p1 = path_view_new("/nodout/metadata/ids");
+    const auto *file = binout_directory_get_file(&dir, &p1);
     REQUIRE(file != nullptr);
     CHECK(file->type == BINOUT_FILE);
     CHECK(file->name == "ids");
@@ -689,7 +695,8 @@ TEST_CASE("binout_directory") {
   }
 
   {
-    const auto *file = binout_directory_get_file(&dir, "/nodout/metadata/time");
+    p1 = path_view_new("/nodout/metadata/time");
+    const auto *file = binout_directory_get_file(&dir, &p1);
     REQUIRE(file != nullptr);
     CHECK(file->type == BINOUT_FILE);
     CHECK(file->name == "time");
@@ -700,8 +707,8 @@ TEST_CASE("binout_directory") {
   }
 
   {
-    const auto *file =
-        binout_directory_get_file(&dir, "/nodout/d000001/x_displacement");
+    p1 = path_view_new("/nodout/d000001/x_displacement");
+    const auto *file = binout_directory_get_file(&dir, &p1);
     REQUIRE(file != nullptr);
     CHECK(file->type == BINOUT_FILE);
     CHECK(file->name == "x_displacement");
@@ -712,8 +719,8 @@ TEST_CASE("binout_directory") {
   }
 
   {
-    const auto *file =
-        binout_directory_get_file(&dir, "/nodout/d000001/y_displacement");
+    p1 = path_view_new("/nodout/d000001/y_displacement");
+    const auto *file = binout_directory_get_file(&dir, &p1);
     REQUIRE(file != nullptr);
     CHECK(file->type == BINOUT_FILE);
     CHECK(file->name == "y_displacement");
@@ -724,7 +731,8 @@ TEST_CASE("binout_directory") {
   }
 
   {
-    const auto *file = binout_directory_get_file(&dir, "/nodfor/metadata/ids");
+    p1 = path_view_new("/nodfor/metadata/ids");
+    const auto *file = binout_directory_get_file(&dir, &p1);
     REQUIRE(file != nullptr);
     CHECK(file->type == BINOUT_FILE);
     CHECK(file->name == "ids");
@@ -735,7 +743,8 @@ TEST_CASE("binout_directory") {
   }
 
   {
-    const auto *file = binout_directory_get_file(&dir, "/nodfor/metadata/time");
+    p1 = path_view_new("/nodfor/metadata/time");
+    const auto *file = binout_directory_get_file(&dir, &p1);
     REQUIRE(file != nullptr);
     CHECK(file->type == BINOUT_FILE);
     CHECK(file->name == "time");
@@ -746,8 +755,8 @@ TEST_CASE("binout_directory") {
   }
 
   {
-    const auto *file =
-        binout_directory_get_file(&dir, "/nodfor/d000010/x_force");
+    p1 = path_view_new("/nodfor/d000010/x_force");
+    const auto *file = binout_directory_get_file(&dir, &p1);
     REQUIRE(file != nullptr);
     CHECK(file->type == BINOUT_FILE);
     CHECK(file->name == "x_force");
@@ -758,8 +767,8 @@ TEST_CASE("binout_directory") {
   }
 
   {
-    const auto *file =
-        binout_directory_get_file(&dir, "/nodfor/d000010/y_force");
+    p1 = path_view_new("/nodfor/d000010/y_force");
+    const auto *file = binout_directory_get_file(&dir, &p1);
     REQUIRE(file != nullptr);
     CHECK(file->type == BINOUT_FILE);
     CHECK(file->name == "y_force");
@@ -778,6 +787,7 @@ TEST_CASE("path_view") {
 
     path_view_t pv = path_view_new(str);
     CHECK(path_view_strcmp(&pv, "/") == 0);
+    CHECK(path_view_peek(&pv) == 4);
 
     CHECK(path_view_advance(&pv) == 1);
     CHECK(path_view_strcmp(&pv, "nodout") == 0);
