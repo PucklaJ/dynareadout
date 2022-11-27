@@ -88,7 +88,7 @@ TEST_CASE("binout0000") {
   CHECK(binout_children[0] == "nodout");
   CHECK(binout_children[1] == "rcforc");
 
-  binout_free_children(binout_children, num_binout_children);
+  binout_free_children(binout_children);
 
   binout_children =
       binout_get_children(&bin_file, "/nodout", &num_binout_children);
@@ -102,7 +102,7 @@ TEST_CASE("binout0000") {
     CHECK(binout_children[i] == str.c_str());
   }
 
-  binout_free_children(binout_children, num_binout_children);
+  binout_free_children(binout_children);
 
   binout_children =
       binout_get_children(&bin_file, "/nodout/metadata/", &num_binout_children);
@@ -115,7 +115,7 @@ TEST_CASE("binout0000") {
   CHECK(binout_children[5] == "legend_ids");
   CHECK(binout_children[6] == "ids");
 
-  binout_free_children(binout_children, num_binout_children);
+  binout_free_children(binout_children);
 
   REQUIRE(binout_variable_exists(&bin_file, "/nodout/metadata/legend"));
   REQUIRE(binout_get_type_id(&bin_file, "/nodout/metadata/legend") ==
@@ -653,8 +653,11 @@ TEST_CASE("binout_directory") {
   binout_directory_insert_folder(&dir, stralloc("nodfor"));
   binout_directory_insert_folder(&dir, stralloc("nodout"));
 
-  binout_folder_insert_folder(&dir.children[1], NULL, stralloc("d000001"));
-  binout_folder_insert_folder(&dir.children[1], NULL, stralloc("metadata"));
+  path_view_t p1 = path_view_new("d000001");
+  path_view_t p2 = path_view_new("metadata");
+
+  binout_folder_insert_folder(&dir.children[1], &p1);
+  binout_folder_insert_folder(&dir.children[1], &p2);
   binout_folder_insert_file(
       &reinterpret_cast<binout_folder_t *>(dir.children[1].children)[1], NULL,
       stralloc("ids"), BINOUT_TYPE_INT32, 10, 0, 200);
@@ -668,8 +671,8 @@ TEST_CASE("binout_directory") {
       &reinterpret_cast<binout_folder_t *>(dir.children[1].children)[0], NULL,
       stralloc("y_displacement"), BINOUT_TYPE_FLOAT64, 10, 0, 380);
 
-  path_view_t p1 = path_view_new("metadata");
-  path_view_t p2 = path_view_new("metadata");
+  p1 = path_view_new("metadata");
+  p2 = path_view_new("metadata");
   path_view_t p3 = path_view_new("d000010");
   path_view_t p4 = path_view_new("d000010");
 
@@ -776,6 +779,19 @@ TEST_CASE("binout_directory") {
     CHECK(file->size == 10);
     CHECK(file->file_index == 1);
     CHECK(file->file_pos == 150);
+  }
+
+  {
+    path_view_t p = path_view_new("/nodout/metadata");
+
+    size_t num_children;
+    const binout_folder_or_file_t *folder_or_file =
+        binout_directory_get_children(&dir, &p, &num_children);
+
+    REQUIRE(num_children == 2);
+    REQUIRE(folder_or_file->type == BINOUT_FILE);
+    CHECK(((binout_file_t *)folder_or_file)[0].name == "ids");
+    CHECK(((binout_file_t *)folder_or_file)[1].name == "time");
   }
 
   binout_directory_free(&dir);

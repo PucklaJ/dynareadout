@@ -71,7 +71,7 @@ Binout::get_children(const std::string &path) const noexcept {
 
   std::vector<String> children_vec;
   for (size_t i = 0; i < num_children; i++) {
-    children_vec.emplace_back(children[i], strlen(children[i]) + 1);
+    children_vec.emplace_back(children[i], strlen(children[i]) + 1, false);
   }
 
   free(children);
