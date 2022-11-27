@@ -52,7 +52,8 @@ path_view_t path_view_new(const char *string) {
 int path_view_advance(path_view_t *pv) {
   const int len = strlen(pv->string);
 
-  if (pv->end == len - 1) {
+  if (pv->end == len - 1 ||
+      (pv->end == len - 2 && pv->string[pv->end + 1] == PATH_SEP)) {
     return 0;
   }
 
@@ -64,16 +65,28 @@ int path_view_advance(path_view_t *pv) {
   pv->start = pv->end + 1 + (pv->end != 0);
   pv->end = i;
 
+  while (pv->string[pv->start] == PATH_SEP) {
+    pv->start++;
+  }
+
   return 1;
 }
 
 int path_view_strcmp(const path_view_t *pv, const char *str) {
-  return strncmp(&pv->string[pv->start], str, pv->end - pv->start + 1);
+  const int cmp_val =
+      strncmp(&pv->string[pv->start], str, pv->end - pv->start + 1);
+  /* We need to also consider the lengths of the strings, because by calling
+   * strncmp, "legend" and "legend_ids" also returns 0*/
+  if (cmp_val == 0) {
+    return (strlen(str) > (pv->end - pv->start + 1)) * -1;
+  }
+
+  return cmp_val;
 }
 
 char *path_view_stralloc(const path_view_t *pv) {
   char *str = malloc(pv->end - pv->start + 1 + 1);
-  memcpy(str, pv->string, pv->end - pv->start + 1);
+  memcpy(str, &pv->string[pv->start], pv->end - pv->start + 1);
   str[pv->end - pv->start + 1] = '\0';
   return str;
 }

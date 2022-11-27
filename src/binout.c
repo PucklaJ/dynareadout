@@ -195,10 +195,12 @@ binout_file binout_open(const char *file_name) {
         if (path_is_abs(path_buffer)) {
           memcpy(current_path_string, path_buffer, record_data_length + 1);
           current_path = path_view_new(current_path_string);
-          path_view_advance(&current_path);
-
-          current_folder = binout_directory_insert_folder_by_path_view(
-              &bin_file.directory, &current_path);
+          /* Only insert the current folder if the current path is not the root
+           * folder*/
+          if (path_view_advance(&current_path)) {
+            current_folder = binout_directory_insert_folder_by_path_view(
+                &bin_file.directory, &current_path);
+          }
         } else {
           path_view_t path = path_view_new(path_buffer);
 
@@ -374,7 +376,7 @@ void binout_close(binout_file *bin_file) {
       return NULL;                                                             \
     }                                                                          \
                                                                                \
-    if (file->type != binout_type) {                                           \
+    if (file->var_type != binout_type) {                                       \
       char buffer[50];                                                         \
       sprintf(buffer, "The data is of type %s instead of %s",                  \
               _binout_get_type_name(file->type),                               \
@@ -432,7 +434,7 @@ uint8_t binout_get_type_id(binout_file *bin_file,
   }
 
   END_PROFILE_FUNC();
-  return file->type;
+  return file->var_type;
 }
 
 int binout_variable_exists(binout_file *bin_file,

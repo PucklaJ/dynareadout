@@ -65,6 +65,8 @@ void binout_directory_insert_folder(binout_directory_t *dir, char *name) {
 binout_folder_t *
 binout_directory_insert_folder_by_path_view(binout_directory_t *dir,
                                             path_view_t *path) {
+  assert(path->string[path->start] != PATH_SEP);
+
   size_t index = 0;
   binout_folder_t *folder = NULL;
   if (dir->num_children != 0) {
