@@ -650,22 +650,22 @@ TEST_CASE("binout_directory") {
                 I--y_force
   */
 
-  binout_directory_insert_folder(&dir, stralloc("nodout"));
   binout_directory_insert_folder(&dir, stralloc("nodfor"));
+  binout_directory_insert_folder(&dir, stralloc("nodout"));
 
-  binout_folder_insert_folder(&dir.children[0], NULL, stralloc("metadata"));
-  binout_folder_insert_folder(&dir.children[0], NULL, stralloc("d000001"));
+  binout_folder_insert_folder(&dir.children[1], NULL, stralloc("d000001"));
+  binout_folder_insert_folder(&dir.children[1], NULL, stralloc("metadata"));
   binout_folder_insert_file(
-      &reinterpret_cast<binout_folder_t *>(dir.children[0].children)[0], NULL,
+      &reinterpret_cast<binout_folder_t *>(dir.children[1].children)[1], NULL,
       stralloc("ids"), BINOUT_TYPE_INT32, 10, 0, 200);
   binout_folder_insert_file(
-      &reinterpret_cast<binout_folder_t *>(dir.children[0].children)[0], NULL,
+      &reinterpret_cast<binout_folder_t *>(dir.children[1].children)[1], NULL,
       stralloc("time"), BINOUT_TYPE_FLOAT32, 1, 0, 180);
   binout_folder_insert_file(
-      &reinterpret_cast<binout_folder_t *>(dir.children[0].children)[1], NULL,
+      &reinterpret_cast<binout_folder_t *>(dir.children[1].children)[0], NULL,
       stralloc("x_displacement"), BINOUT_TYPE_FLOAT64, 10, 0, 300);
   binout_folder_insert_file(
-      &reinterpret_cast<binout_folder_t *>(dir.children[0].children)[1], NULL,
+      &reinterpret_cast<binout_folder_t *>(dir.children[1].children)[0], NULL,
       stralloc("y_displacement"), BINOUT_TYPE_FLOAT64, 10, 0, 380);
 
   path_view_t p1 = path_view_new("metadata");
@@ -673,13 +673,13 @@ TEST_CASE("binout_directory") {
   path_view_t p3 = path_view_new("d000010");
   path_view_t p4 = path_view_new("d000010");
 
-  binout_folder_insert_file(&dir.children[1], &p1, stralloc("ids"),
+  binout_folder_insert_file(&dir.children[0], &p1, stralloc("ids"),
                             BINOUT_TYPE_INT64, 10, 1, 10);
-  binout_folder_insert_file(&dir.children[1], &p2, stralloc("time"),
+  binout_folder_insert_file(&dir.children[0], &p2, stralloc("time"),
                             BINOUT_TYPE_FLOAT64, 1, 1, 20);
-  binout_folder_insert_file(&dir.children[1], &p3, stralloc("x_force"),
+  binout_folder_insert_file(&dir.children[0], &p3, stralloc("x_force"),
                             BINOUT_TYPE_FLOAT64, 10, 1, 100);
-  binout_folder_insert_file(&dir.children[1], &p4, stralloc("y_force"),
+  binout_folder_insert_file(&dir.children[0], &p4, stralloc("y_force"),
                             BINOUT_TYPE_FLOAT64, 10, 1, 150);
 
   {
