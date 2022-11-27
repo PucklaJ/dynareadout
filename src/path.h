@@ -73,8 +73,8 @@ void path_copy(path_t *dst, path_t *src);
 char *path_str(path_t *path);
 int path_cmp(const path_t *path1, const path_t *path2);
 
-/* Returns the index at which the new path string would end when moving up one
- * folder*/
+/* Returns the index at which the new path string would end (index of PATH_SEP)
+ * when moving up one folder*/
 size_t path_move_up(const char *path);
 
 #ifdef __cplusplus

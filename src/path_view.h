@@ -45,6 +45,8 @@ path_view_t path_view_new(const char *string);
 /* Advance to the next path element.
  * Returns 0 if it already is at the last element
  * and 1 otherwise.
+ * This supports multiple PATH_SEPs in the middle of the path,
+ * but multiple trailing or leading PATH_SEPs will lead to undefined behaviour.
  */
 int path_view_advance(path_view_t *pv);
 

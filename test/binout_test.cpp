@@ -798,6 +798,16 @@ TEST_CASE("binout_directory") {
   binout_directory_free(&dir);
 }
 
+TEST_CASE("path_move_up") {
+  CHECK(path_move_up("/nodout/metadata/ids") == 16);
+  CHECK(path_move_up("/nodout/metadata") == 7);
+  CHECK(path_move_up("/nodout") == 0);
+
+  CHECK(path_move_up("/nodout/////////metadata//////ids") == 24);
+  CHECK(path_move_up("////nodout/////metadata") == 10);
+  CHECK(path_move_up("/////nodout/////") == 0);
+}
+
 TEST_CASE("path_view") {
   {
     const char *str = "/nodout/metadata/ids";

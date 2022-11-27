@@ -223,8 +223,6 @@ binout_file binout_open(const char *file_name) {
                 assert(len < 1024);
               }
 
-              memcpy(&current_path_string[len], path_buffer,
-                     record_data_length + 1);
               path_view_cpy(&current_path_string[len], &path);
               current_path_string[len + path_len] = '\0';
             }

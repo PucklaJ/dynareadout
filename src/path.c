@@ -372,12 +372,18 @@ int path_cmp(const path_t *path1, const path_t *path2) {
 
 size_t path_move_up(const char *path) {
   const int len = strlen(path);
+  /* Only support absolute paths*/
   assert(len > 1 && path[0] == PATH_SEP);
 
-  size_t i = path[len - 1] == PATH_SEP ? len - 2 : len - 1;
-  while (i > 0 && path[i] != PATH_SEP) {
+  /* Support trailing PATH_SEPs*/
+  size_t i = len - 1;
+  while (i > 0 && path[i] == PATH_SEP) {
     i--;
   }
 
-  return i;
+  while (i > 1 && !(path[i] == PATH_SEP && path[i - 1] != PATH_SEP)) {
+    i--;
+  }
+
+  return i - (i == 1);
 }
