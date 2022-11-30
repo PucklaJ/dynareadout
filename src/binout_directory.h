@@ -88,9 +88,8 @@ const binout_folder_or_file_t *
 binout_folder_get_children(const binout_folder_t *folder, path_view_t *path,
                            size_t *num_children);
 
-const binout_file_t *
-binout_folder_get_file_by_path_view(const binout_folder_t *dir,
-                                    path_view_t *path);
+const binout_file_t *binout_folder_get_file(const binout_folder_t *dir,
+                                            path_view_t *path);
 
 void binout_directory_free(binout_directory_t *dir);
 

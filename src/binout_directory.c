@@ -242,12 +242,11 @@ const binout_file_t *binout_directory_get_file(const binout_directory_t *dir,
   }
 
   /* Recursively search for the file*/
-  return binout_folder_get_file_by_path_view(&dir->children[index], path);
+  return binout_folder_get_file(&dir->children[index], path);
 }
 
-const binout_file_t *
-binout_folder_get_file_by_path_view(const binout_folder_t *dir,
-                                    path_view_t *path) {
+const binout_file_t *binout_folder_get_file(const binout_folder_t *dir,
+                                            path_view_t *path) {
   if (dir->num_children == 0) {
     return NULL;
   }
@@ -277,8 +276,8 @@ binout_folder_get_file_by_path_view(const binout_folder_t *dir,
       return NULL;
     }
 
-    return binout_folder_get_file_by_path_view(
-        &((binout_folder_t *)dir->children)[index], path);
+    return binout_folder_get_file(&((binout_folder_t *)dir->children)[index],
+                                  path);
   }
 
   /* The file has not been found*/
