@@ -56,6 +56,16 @@ template <typename T> doctest::String toString(const Array<T> &str) {
 }
 } // namespace dro
 
+// Returns wether value can be found insed arr
+bool strarr_contains(char *const *arr, const size_t size, const char *value) {
+  for (size_t i = 0; i < size; i++) {
+    if (strcmp(arr[i], value) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
 TEST_CASE("binout0000") {
   {
     binout_file bin_file = binout_open("test_data/i_dont_exist");
@@ -267,336 +277,21 @@ TEST_CASE("Array") {
 }
 #endif
 
-TEST_CASE("path_join") {
-  char *p0 = (char *)malloc(2);
-  p0[0] = '/';
-  p0[1] = '\0';
-  char *p = (char *)malloc(5);
-  p[0] = 'a';
-  p[1] = 'b';
-  p[2] = 'c';
-  p[3] = 'd';
-  p[4] = '\0';
-  path_t path;
-  path.num_elements = 2;
-  path.elements = (char **)malloc(path.num_elements * sizeof(char *));
-  path.elements[0] = p0;
-  path.elements[1] = p;
-  path_join(&path, "nodout");
-  REQUIRE(path.num_elements == 3);
-  CHECK(path.elements[0] == "/");
-  CHECK(path.elements[1] == "abcd");
-  CHECK(path.elements[2] == "nodout");
-
-  path_free(&path);
-}
-
-TEST_CASE("path_parse") {
-  {
-    const char *p1 = "/nodout/metadata/../d000001";
-    path_t path;
-    path.elements = path_elements(p1, &path.num_elements);
-
-    path_parse(&path);
-
-    REQUIRE(path.num_elements == 3);
-    CHECK(path.elements[0] == "/");
-    CHECK(path.elements[1] == "nodout");
-    CHECK(path.elements[2] == "d000001");
-    path_free(&path);
-  }
-
-  {
-    const char *p1 = "/nodout/../d000001";
-    path_t path;
-    path.elements = path_elements(p1, &path.num_elements);
-
-    path_parse(&path);
-
-    REQUIRE(path.num_elements == 2);
-    CHECK(path.elements[0] == "/");
-    CHECK(path.elements[1] == "d000001");
-    path_free(&path);
-  }
-
-  {
-    const char *p1 = "/nodout/d000001/..";
-    path_t path;
-    path.elements = path_elements(p1, &path.num_elements);
-
-    path_parse(&path);
-
-    REQUIRE(path.num_elements == 2);
-    CHECK(path.elements[0] == "/");
-    CHECK(path.elements[1] == "nodout");
-    path_free(&path);
-  }
-
-  {
-    const char *p1 = "/nodout/d000001/../metadata/../d000002";
-    path_t path;
-    path.elements = path_elements(p1, &path.num_elements);
-
-    path_parse(&path);
-
-    REQUIRE(path.num_elements == 3);
-    CHECK(path.elements[0] == "/");
-    CHECK(path.elements[1] == "nodout");
-    CHECK(path.elements[2] == "d000002");
-    path_free(&path);
-  }
-
-  {
-    const char *p1 = "/ncforc/slave_100000/../master_100000/metadata";
-    path_t path;
-    path.elements = path_elements(p1, &path.num_elements);
-
-    path_parse(&path);
-
-    REQUIRE(path.num_elements == 4);
-    CHECK(path.elements[0] == "/");
-    CHECK(path.elements[1] == "ncforc");
-    CHECK(path.elements[2] == "master_100000");
-    CHECK(path.elements[3] == "metadata");
-    path_free(&path);
-  }
-
-  {
-    const char *p1 = "/ncforc/slave_100000/../../master_100000/metadata";
-    path_t path;
-    path.elements = path_elements(p1, &path.num_elements);
-
-    path_parse(&path);
-
-    REQUIRE(path.num_elements == 3);
-    CHECK(path.elements[0] == "/");
-    CHECK(path.elements[1] == "master_100000");
-    CHECK(path.elements[2] == "metadata");
-    path_free(&path);
-  }
-
-  {
-    const char *p1 = "../hello/world/../man/";
-    path_t path;
-    path.elements = path_elements(p1, &path.num_elements);
-
-    path_parse(&path);
-
-    REQUIRE(path.num_elements == 3);
-    CHECK(path.elements[0] == "..");
-    CHECK(path.elements[1] == "hello");
-    CHECK(path.elements[2] == "man");
-    path_free(&path);
-  }
-}
-
-TEST_CASE("path_elements") {
-  {
-    const char *p1 = "/ncforc/slave_100000/../../master_100000/metadata";
-
-    size_t num_elements;
-    char **p1_elements = path_elements(p1, &num_elements);
-    REQUIRE(num_elements == 7);
-    CHECK(p1_elements[0] == "/");
-    CHECK(p1_elements[1] == "ncforc");
-    CHECK(p1_elements[2] == "slave_100000");
-    CHECK(p1_elements[3] == "..");
-    CHECK(p1_elements[4] == "..");
-    CHECK(p1_elements[5] == "master_100000");
-    CHECK(p1_elements[6] == "metadata");
-    path_free_elements(p1_elements, num_elements);
-  }
-
-  {
-    const char *p1 = "/";
-
-    size_t num_elements;
-    char **p1_elements = path_elements(p1, &num_elements);
-    REQUIRE(num_elements == 1);
-    CHECK(p1_elements[0] == "/");
-    path_free_elements(p1_elements, num_elements);
-  }
-
-  {
-    const char *p1 = "/nodout";
-
-    size_t num_elements;
-    char **p1_elements = path_elements(p1, &num_elements);
-    REQUIRE(num_elements == 2);
-    CHECK(p1_elements[0] == "/");
-    CHECK(p1_elements[1] == "nodout");
-    path_free_elements(p1_elements, num_elements);
-  }
-
-  {
-    const char *p1 = "nodout";
-
-    size_t num_elements;
-    char **p1_elements = path_elements(p1, &num_elements);
-    REQUIRE(num_elements == 1);
-    CHECK(p1_elements[0] == "nodout");
-    path_free_elements(p1_elements, num_elements);
-  }
-
-  {
-    const char *p1 = "nodout/apple/two";
-
-    size_t num_elements;
-    char **p1_elements = path_elements(p1, &num_elements);
-    REQUIRE(num_elements == 3);
-    CHECK(p1_elements[0] == "nodout");
-    CHECK(p1_elements[1] == "apple");
-    CHECK(p1_elements[2] == "two");
-    path_free_elements(p1_elements, num_elements);
-  }
-
-  {
-    const char *p1 = "/nodout///////////////apple///two//three///";
-
-    size_t num_elements;
-    char **p1_elements = path_elements(p1, &num_elements);
-    REQUIRE(num_elements == 5);
-    CHECK(p1_elements[0] == "/");
-    CHECK(p1_elements[1] == "nodout");
-    CHECK(p1_elements[2] == "apple");
-    CHECK(p1_elements[3] == "two");
-    CHECK(p1_elements[4] == "three");
-    path_free_elements(p1_elements, num_elements);
-  }
-}
-
-TEST_CASE("path_compatible") {
-  {
-    const char *p1 = "/nodout/metadata/";
-    const char *p2 = "/nodout/metadata/";
-    path_t p1t, p2t;
-    p1t.elements = path_elements(p1, &p1t.num_elements);
-    p2t.elements = path_elements(p2, &p2t.num_elements);
-
-    CHECK(path_compatible(&p1t, &p2t));
-    path_free(&p1t);
-    path_free(&p2t);
-  }
-  {
-    const char *p1 = "/nodout/d000001/";
-    const char *p2 = "/nodout/d000002/";
-    path_t p1t, p2t;
-    p1t.elements = path_elements(p1, &p1t.num_elements);
-    p2t.elements = path_elements(p2, &p2t.num_elements);
-
-    CHECK(path_compatible(&p1t, &p2t));
-    path_free(&p1t);
-    path_free(&p2t);
-  }
-  {
-    const char *p1 = "/nodout/slave_100/metadata/";
-    const char *p2 = "/nodout/master_100/metadata/";
-    path_t p1t, p2t;
-    p1t.elements = path_elements(p1, &p1t.num_elements);
-    p2t.elements = path_elements(p2, &p2t.num_elements);
-
-    CHECK(!path_compatible(&p1t, &p2t));
-    path_free(&p1t);
-    path_free(&p2t);
-  }
-  {
-    const char *p1 = "/nodout/slave_100/metadata/";
-    const char *p2 = "/nodout/slave_100/d000001/";
-    path_t p1t, p2t;
-    p1t.elements = path_elements(p1, &p1t.num_elements);
-    p2t.elements = path_elements(p2, &p2t.num_elements);
-
-    CHECK(!path_compatible(&p1t, &p2t));
-    path_free(&p1t);
-    path_free(&p2t);
-  }
-  {
-    const char *p1 = "/nodout/slave_100/d000101/";
-    const char *p2 = "/nodout/slave_100/d000001/";
-    path_t p1t, p2t;
-    p1t.elements = path_elements(p1, &p1t.num_elements);
-    p2t.elements = path_elements(p2, &p2t.num_elements);
-
-    CHECK(path_compatible(&p1t, &p2t));
-    path_free(&p1t);
-    path_free(&p2t);
-  }
-  {
-    const char *p1 = "/nodout/d000101/";
-    const char *p2 = "/nodout/slave_100/d000101/";
-    path_t p1t, p2t;
-    p1t.elements = path_elements(p1, &p1t.num_elements);
-    p2t.elements = path_elements(p2, &p2t.num_elements);
-
-    CHECK(!path_compatible(&p1t, &p2t));
-    path_free(&p1t);
-    path_free(&p2t);
-  }
-}
-
-TEST_CASE("path_str") {
-  {
-    const char *p1 = "/nodout/master_10000/metadata/ids";
-    path_t p1t;
-    p1t.elements = path_elements(p1, &p1t.num_elements);
-    char *p1_str = path_str(&p1t);
-    CHECK(p1_str == p1);
-    free(p1_str);
-  }
-
-  {
-    const char *p1 = "/nodout";
-    path_t p1t;
-    p1t.elements = path_elements(p1, &p1t.num_elements);
-    char *p1_str = path_str(&p1t);
-    CHECK(p1_str == p1);
-    free(p1_str);
-  }
-
-  {
-    const char *p1 = "/nodout/master_10000////////metadata/ids";
-    path_t p1t;
-    p1t.elements = path_elements(p1, &p1t.num_elements);
-    char *p1_str = path_str(&p1t);
-    CHECK(p1_str == "/nodout/master_10000/metadata/ids");
-    free(p1_str);
-  }
-
-  {
-    const char *p1 = "/";
-    path_t p1t;
-    p1t.elements = path_elements(p1, &p1t.num_elements);
-    char *p1_str = path_str(&p1t);
-    CHECK(p1_str == p1);
-    free(p1_str);
-  }
-
-  {
-    const char *p1 = "../hello/world/../my/dudes";
-    path_t p1t;
-    p1t.elements = path_elements(p1, &p1t.num_elements);
-    char *p1_str = path_str(&p1t);
-    CHECK(p1_str == p1);
-    free(p1_str);
-  }
-}
-
 TEST_CASE("glob") {
   size_t num_files;
   char **globed_files = binout_glob("src/*.c", &num_files);
 
   CHECK(num_files == 10);
-  CHECK(path_elements_contain(globed_files, num_files, "src/binout_glob.c"));
-  CHECK(path_elements_contain(globed_files, num_files, "src/binout.c"));
-  CHECK(
-      path_elements_contain(globed_files, num_files, "src/binout_directory.c"));
-  CHECK(path_elements_contain(globed_files, num_files, "src/d3_buffer.c"));
-  CHECK(path_elements_contain(globed_files, num_files, "src/d3plot_data.c"));
-  CHECK(path_elements_contain(globed_files, num_files, "src/d3plot_state.c"));
-  CHECK(path_elements_contain(globed_files, num_files, "src/d3plot.c"));
-  CHECK(path_elements_contain(globed_files, num_files, "src/path.c"));
-  CHECK(path_elements_contain(globed_files, num_files, "src/path_view.c"));
-  CHECK(path_elements_contain(globed_files, num_files, "src/profiling.c"));
+  CHECK(strarr_contains(globed_files, num_files, "src/binout_glob.c"));
+  CHECK(strarr_contains(globed_files, num_files, "src/binout.c"));
+  CHECK(strarr_contains(globed_files, num_files, "src/binout_directory.c"));
+  CHECK(strarr_contains(globed_files, num_files, "src/d3_buffer.c"));
+  CHECK(strarr_contains(globed_files, num_files, "src/d3plot_data.c"));
+  CHECK(strarr_contains(globed_files, num_files, "src/d3plot_state.c"));
+  CHECK(strarr_contains(globed_files, num_files, "src/d3plot.c"));
+  CHECK(strarr_contains(globed_files, num_files, "src/path.c"));
+  CHECK(strarr_contains(globed_files, num_files, "src/path_view.c"));
+  CHECK(strarr_contains(globed_files, num_files, "src/profiling.c"));
   binout_free_glob(globed_files, num_files);
 }
 

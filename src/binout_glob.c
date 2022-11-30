@@ -116,5 +116,11 @@ char **binout_glob(const char *pattern, size_t *num_files) {
 #endif
 
 void binout_free_glob(char **globed_files, size_t num_files) {
-  path_free_elements(globed_files, num_files);
+  size_t i = 0;
+  while (i < num_files) {
+    free(globed_files[i]);
+
+    i++;
+  }
+  free(globed_files);
 }

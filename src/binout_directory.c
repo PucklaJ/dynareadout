@@ -24,6 +24,7 @@
  ************************************************************************************/
 
 #include "binout_directory.h"
+#include "path.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +34,7 @@ binout_folder_t *binout_directory_insert_folder(binout_directory_t *dir,
                                                 path_view_t *path) {
   /* Make sure the path is absolute, but is the first element after the root
    * folder*/
-  assert(path->string[0] == PATH_SEP && path->start == 1);
+  assert(PATH_VIEW_IS_ABS(path) && path->start == 1);
 
   /* Only insert the folder if it does not already exist*/
   size_t index = 0;
@@ -161,7 +162,7 @@ void binout_folder_insert_file(binout_folder_t *dir, char *name,
 const binout_folder_or_file_t *
 binout_directory_get_children(const binout_directory_t *dir, path_view_t *path,
                               size_t *num_children) {
-  assert(path_view_is_abs(path));
+  assert(PATH_VIEW_IS_ABS(path));
 
   if (dir->num_children == 0) {
     *num_children = 0;
@@ -223,7 +224,7 @@ binout_folder_get_children(const binout_folder_t *folder, path_view_t *path,
 
 const binout_file_t *binout_directory_get_file(const binout_directory_t *dir,
                                                path_view_t *path) {
-  assert(path != NULL && path_view_is_abs(path));
+  assert(PATH_VIEW_IS_ABS(path));
   assert(dir->num_children != 0);
 
   /* The path needs to have at least 3 elements.

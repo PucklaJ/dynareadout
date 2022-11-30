@@ -73,21 +73,20 @@ int path_view_advance(path_view_t *pv) {
 }
 
 int path_view_strcmp(const path_view_t *pv, const char *str) {
-  const int cmp_val =
-      strncmp(&pv->string[pv->start], str, pv->end - pv->start + 1);
+  const int cmp_val = strncmp(&pv->string[pv->start], str, PATH_VIEW_LEN(pv));
   /* We need to also consider the lengths of the strings, because by calling
    * strncmp, "legend" and "legend_ids" also returns 0*/
   if (cmp_val == 0) {
-    return (strlen(str) > (pv->end - pv->start + 1)) * -1;
+    return (strlen(str) > PATH_VIEW_LEN(pv)) * -1;
   }
 
   return cmp_val;
 }
 
 char *path_view_stralloc(const path_view_t *pv) {
-  char *str = malloc(pv->end - pv->start + 1 + 1);
-  memcpy(str, &pv->string[pv->start], pv->end - pv->start + 1);
-  str[pv->end - pv->start + 1] = '\0';
+  char *str = malloc(PATH_VIEW_LEN(pv) + 1);
+  PATH_VIEW_CPY(str, pv);
+  str[PATH_VIEW_LEN(pv)] = '\0';
   return str;
 }
 
@@ -105,16 +104,6 @@ int path_view_peek(const path_view_t *pv) {
   }
 
   return counter + (pv->string[len - 1] != PATH_SEP);
-}
-
-int path_view_is_abs(const path_view_t *pv) {
-  return pv->string[0] == PATH_SEP;
-}
-
-int path_view_len(const path_view_t *pv) { return pv->end - pv->start + 1; }
-
-void path_view_cpy(char *dst, const path_view_t *src) {
-  memcpy(dst, &src->string[src->start], src->end - src->start + 1);
 }
 
 void path_view_print(const path_view_t *pv) {

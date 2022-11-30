@@ -25,8 +25,12 @@
 
 #ifndef PATH_VIEW_H
 #define PATH_VIEW_H
+#include "path.h"
 
-#define PATH_SEP '/'
+#define PATH_VIEW_IS_ABS(pv) (PATH_IS_ABS(pv->string))
+#define PATH_VIEW_LEN(pv) (pv->end - pv->start + 1)
+#define PATH_VIEW_CPY(dst, src)                                                \
+  memcpy(dst, &src->string[src->start], PATH_VIEW_LEN(src))
 
 /* A view into a string that always views one path element at one time*/
 typedef struct {
@@ -58,13 +62,6 @@ char *path_view_stralloc(const path_view_t *pv);
 
 /* Returns the number of path elements that are ahead plus the current one*/
 int path_view_peek(const path_view_t *pv);
-
-/* Returns wether the string of the path view starts with the root folder*/
-int path_view_is_abs(const path_view_t *pv);
-
-int path_view_len(const path_view_t *pv);
-
-void path_view_cpy(char *dst, const path_view_t *src);
 
 void path_view_print(const path_view_t *pv);
 

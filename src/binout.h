@@ -26,7 +26,6 @@
 #ifndef BINOUT_H
 #define BINOUT_H
 #include "binout_directory.h"
-#include "binout_records.h"
 #include "path.h"
 #include <stdint.h>
 #include <stdio.h>

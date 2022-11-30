@@ -26,7 +26,6 @@
 #include "binout.h"
 #include "binout_defines.h"
 #include "binout_glob.h"
-#include "binout_records.h"
 #include "path.h"
 #include "profiling.h"
 #include <assert.h>
@@ -192,7 +191,7 @@ binout_file binout_open(const char *file_name) {
         BIN_FILE_READ(path_buffer, 1, record_data_length,
                       "Failed to read PATH of CD record");
 
-        if (path_is_abs(path_buffer)) {
+        if (PATH_IS_ABS(path_buffer)) {
           memcpy(current_path_string, path_buffer, record_data_length + 1);
           current_path = path_view_new(current_path_string);
           /* Only insert the current folder if the current path is not the root
@@ -212,7 +211,7 @@ binout_file binout_open(const char *file_name) {
               current_path_string[index] = '\0';
             } else {
               /* Join current_path_string with path*/
-              const int path_len = path_view_len(&path);
+              const int path_len = PATH_VIEW_LEN((&path));
               int len = strlen(current_path_string);
               assert((len + path_len + 1) < 1024);
 
@@ -223,7 +222,7 @@ binout_file binout_open(const char *file_name) {
                 assert(len < 1024);
               }
 
-              path_view_cpy(&current_path_string[len], &path);
+              PATH_VIEW_CPY(&current_path_string[len], (&path));
               current_path_string[len + path_len] = '\0';
             }
 
