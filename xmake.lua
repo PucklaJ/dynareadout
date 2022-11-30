@@ -24,7 +24,7 @@ if get_config("profiling") then
         set_kind("$(kind)")
         set_languages("ansi")
         if is_plat("linux") then
-            add_cxxflags("-fPIC")
+            add_cflags("-fPIC")
         end
         add_options("profiling")
         add_files("src/profiling.c")
@@ -37,7 +37,7 @@ target("binout")
     set_kind("$(kind)")
     set_languages("ansi")
     if is_plat("linux") then
-        add_cxxflags("-fPIC")
+        add_cflags("-fPIC")
     end
     if get_config("profiling") then
         add_deps("profiling")
@@ -53,7 +53,7 @@ target("d3plot")
     set_kind("$(kind)")
     set_languages("ansi")
     if is_plat("linux") then
-        add_cxxflags("-fPIC")
+        add_cflags("-fPIC")
     end
     if get_config("profiling") then
         add_deps("profiling")
@@ -103,6 +103,9 @@ if get_config("build_test") then
         set_kind("binary")
         set_languages("cxx17")
         add_deps("binout")
+        if is_plat("linux") then
+            add_cxxflags("-fPIC")
+        end
         if get_config("build_cpp") then
             add_deps("binout_cpp")
             add_defines("BINOUT_CPP")
@@ -117,6 +120,9 @@ if get_config("build_test") then
         set_kind("binary")
         set_languages("cxx17")
         add_deps("d3plot")
+        if is_plat("linux") then
+            add_cxxflags("-fPIC")
+        end
         if get_config("build_cpp") then
             add_deps("d3plot_cpp")
             add_defines("D3PLOT_CPP")
@@ -134,6 +140,9 @@ if get_config("build_test") then
             set_languages("cxx17")
             add_options("profiling")
             add_deps("profiling")
+            if is_plat("linux") then
+                add_cxxflags("-fPIC")
+            end
             add_packages("doctest")
             add_includedirs("src")
             add_files("test/profiling_test.cpp")
