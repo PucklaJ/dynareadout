@@ -68,52 +68,101 @@ typedef struct {
 extern "C" {
 #endif
 
+/* Inserts a folder with the absolute path of path into dir.
+ * path needs to be an absolute path (start with '/') and have its current
+ * element one after the root folder (start == 1). The folder will only be
+ * inserted if it does not already exist. Returns the newly created (or found)
+ * folder.
+ */
 binout_folder_t *binout_directory_insert_folder(binout_directory_t *dir,
                                                 path_view_t *path);
 
+/* Same as binout_directory_insert_folder, but for binout_folder_t. Without the
+ * requirement of an absolute path. Used for recursion.
+ */
 binout_folder_t *binout_folder_insert_folder(binout_folder_t *dir,
                                              path_view_t *path);
 
+/* Insert a file with the given name and parameters into the folder specified by
+ * dir. If a file with the same name already exists, it will be overwritten.
+ * This function takes ownership of name, which means that name needs to be
+ * allocated by malloc, etc. and that you do not need to deallocate it.
+ */
 void binout_folder_insert_file(binout_folder_t *dir, char *name,
                                uint8_t var_type, size_t size,
                                uint8_t file_index, long file_pos);
 
+/* Returns the file at the given path if it does exist and NULL otherwise.
+ * path needs to be absolute and start at the root folder (start == 0) and
+ * have at least three elements.
+ */
 const binout_file_t *binout_directory_get_file(const binout_directory_t *dir,
                                                path_view_t *path);
 
+/* Same as binout_directory_get_file. Used for recursion.*/
+const binout_file_t *binout_folder_get_file(const binout_folder_t *dir,
+                                            path_view_t *path);
+
+/* Returns an pointer to children of an folder.
+ * If the given path is a file this returns NULL and sets num_children to 0.
+ * If the given path does not exist this returns NULL and sets num_children to
+ * 0. The path needs to be absolute and start at the root folder (start == 0).
+ */
 const binout_folder_or_file_t *
 binout_directory_get_children(const binout_directory_t *dir, path_view_t *path,
                               size_t *num_children);
+
+/* Same as binout_directory_get_children. Used for recursion.*/
 const binout_folder_or_file_t *
 binout_folder_get_children(const binout_folder_t *folder, path_view_t *path,
                            size_t *num_children);
 
-const binout_file_t *binout_folder_get_file(const binout_folder_t *dir,
-                                            path_view_t *path);
-
+/* Deallocates all memory of a binout_directory_t.
+ * You need to call this if you use any of the insert functions
+ * to avoid memory leaks.
+ */
 void binout_directory_free(binout_directory_t *dir);
 
+/* Deallocates all memory of a binout_folder_t. Used for recursion.*/
 void binout_folder_free(binout_folder_t *folder);
 
-size_t binout_directory_binary_search_folder_by_path_view(
-    binout_folder_t *folders, size_t start_index, size_t end_index,
-    const path_view_t *name);
-size_t binout_directory_binary_search_folder_by_path_view_insert(
-    binout_folder_t *folders, size_t start_index, size_t end_index,
-    const path_view_t *name, int *found);
-size_t binout_directory_binary_search_folder_by_name(binout_folder_t *folders,
-                                                     size_t start_index,
-                                                     size_t end_index,
-                                                     const char *name,
-                                                     int *found);
-size_t binout_directory_binary_search_file_by_path_view(
-    binout_file_t *files, size_t start_index, size_t end_index,
-    const path_view_t *name);
-size_t binout_directory_binary_search_file_by_name(binout_file_t *files,
-                                                   size_t start_index,
-                                                   size_t end_index,
-                                                   const char *name,
-                                                   int *found);
+/* Binary Search of the sorted children (folders are the children!) of some
+ * folder or directory. Search for the current element of name. Returns the
+ * index at which name can be found or ~0 if it can not be found.
+ */
+size_t binout_directory_binary_search_folder(binout_folder_t *folders,
+                                             size_t start_index,
+                                             size_t end_index,
+                                             const path_view_t *name);
+
+/* Same as binout_directory_binary_search_folder, but
+ * this returns the index at which to insert a new folder if it can not be
+ * found. If name has been found found is set to 1 and to 0 otherwise.
+ */
+size_t binout_directory_binary_search_folder_insert(binout_folder_t *folders,
+                                                    size_t start_index,
+                                                    size_t end_index,
+                                                    const path_view_t *name,
+                                                    int *found);
+
+/* Binary Searches for a given file inside of the sorted files of a folder.
+ * Searches for a file by comparing the current element of name with the names
+ * of the files. Returns the index at which a file has been found or ~0 if it
+ * has not been found.
+ */
+size_t binout_directory_binary_search_file(binout_file_t *files,
+                                           size_t start_index, size_t end_index,
+                                           const path_view_t *name);
+
+/* Same as binout_directory_binary_search_file, but uses a string instead of a
+ * path view. If the given file has not been found an index at which to insert
+ * the new file is returned. If the file has been found, found will be set to 1
+ * and to 0 otherwise.
+ */
+size_t binout_directory_binary_search_file_insert(binout_file_t *files,
+                                                  size_t start_index,
+                                                  size_t end_index,
+                                                  const char *name, int *found);
 
 #ifdef __cplusplus
 }
