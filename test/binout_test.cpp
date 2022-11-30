@@ -651,13 +651,19 @@ TEST_CASE("binout_directory") {
                 I--y_force
   */
 
-  // Insert '/nodfor'
-  binout_directory_insert_folder(&dir, stralloc("nodfor"));
-  // Insert '/nodout'
-  binout_directory_insert_folder(&dir, stralloc("nodout"));
+  path_view_t p1 = path_view_new("/nodfor");
+  path_view_t p2 = path_view_new("/nodout");
 
-  path_view_t p1 = path_view_new("d000001");
-  path_view_t p2 = path_view_new("metadata");
+  path_view_advance(&p1);
+  path_view_advance(&p2);
+
+  // Insert '/nodfor'
+  binout_directory_insert_folder(&dir, &p1);
+  // Insert '/nodout'
+  binout_directory_insert_folder(&dir, &p2);
+
+  p1 = path_view_new("d000001");
+  p2 = path_view_new("metadata");
 
   // Insert 'd000001' into '/nodout'
   binout_folder_insert_folder(&dir.children[1], &p1);

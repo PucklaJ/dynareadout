@@ -198,8 +198,8 @@ binout_file binout_open(const char *file_name) {
           /* Only insert the current folder if the current path is not the root
            * folder*/
           if (path_view_advance(&current_path)) {
-            current_folder = binout_directory_insert_folder_by_path_view(
-                &bin_file.directory, &current_path);
+            current_folder = binout_directory_insert_folder(&bin_file.directory,
+                                                            &current_path);
           }
         } else {
           path_view_t path = path_view_new(path_buffer);
@@ -235,8 +235,8 @@ binout_file binout_open(const char *file_name) {
           current_path = path_view_new(current_path_string);
           path_view_advance(&current_path);
 
-          current_folder = binout_directory_insert_folder_by_path_view(
-              &bin_file.directory, &current_path);
+          current_folder = binout_directory_insert_folder(&bin_file.directory,
+                                                          &current_path);
         }
       } else if (record_command == BINOUT_COMMAND_DATA) {
         uint64_t type_id = 0;

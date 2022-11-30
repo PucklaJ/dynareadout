@@ -68,11 +68,8 @@ typedef struct {
 extern "C" {
 #endif
 
-void binout_directory_insert_folder(binout_directory_t *dir, char *name);
-
-binout_folder_t *
-binout_directory_insert_folder_by_path_view(binout_directory_t *dir,
-                                            path_view_t *path);
+binout_folder_t *binout_directory_insert_folder(binout_directory_t *dir,
+                                                path_view_t *path);
 
 binout_folder_t *binout_folder_insert_folder(binout_folder_t *dir,
                                              path_view_t *path);

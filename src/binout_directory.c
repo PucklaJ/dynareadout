@@ -29,44 +29,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-void binout_directory_insert_folder(binout_directory_t *dir, char *name) {
+binout_folder_t *binout_directory_insert_folder(binout_directory_t *dir,
+                                                path_view_t *path) {
+  /* Make sure the path is absolute, but is the first element after the root
+   * folder*/
+  assert(path->string[0] == PATH_SEP && path->start == 1);
+
   /* Only insert the folder if it does not already exist*/
-  size_t index = 0;
-  if (dir->num_children != 0) {
-    int found;
-    index = binout_directory_binary_search_folder_by_name(
-        dir->children, 0, dir->num_children - 1, name, &found);
-    if (found) {
-      return;
-    }
-  }
-
-  dir->num_children++;
-  dir->children =
-      realloc(dir->children, dir->num_children * sizeof(binout_folder_t));
-
-  binout_folder_t folder;
-  folder.type = BINOUT_FOLDER;
-  folder.name = name;
-  folder.children = NULL;
-  folder.num_children = 0;
-
-  /* Move everything to the right*/
-  size_t i = dir->num_children - 1;
-  while (i > index) {
-    dir->children[i] = dir->children[i - 1];
-
-    i--;
-  }
-
-  dir->children[index] = folder;
-}
-
-binout_folder_t *
-binout_directory_insert_folder_by_path_view(binout_directory_t *dir,
-                                            path_view_t *path) {
-  assert(path->string[path->start] != PATH_SEP);
-
   size_t index = 0;
   binout_folder_t *folder = NULL;
   if (dir->num_children != 0) {
