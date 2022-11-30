@@ -126,44 +126,6 @@ void binout_directory_free(binout_directory_t *dir);
 /* Deallocates all memory of a binout_folder_t. Used for recursion.*/
 void binout_folder_free(binout_folder_t *folder);
 
-/* Binary Search of the sorted children (folders are the children!) of some
- * folder or directory. Search for the current element of name. Returns the
- * index at which name can be found or ~0 if it can not be found.
- */
-size_t binout_directory_binary_search_folder(binout_folder_t *folders,
-                                             size_t start_index,
-                                             size_t end_index,
-                                             const path_view_t *name);
-
-/* Same as binout_directory_binary_search_folder, but
- * this returns the index at which to insert a new folder if it can not be
- * found. If name has been found found is set to 1 and to 0 otherwise.
- */
-size_t binout_directory_binary_search_folder_insert(binout_folder_t *folders,
-                                                    size_t start_index,
-                                                    size_t end_index,
-                                                    const path_view_t *name,
-                                                    int *found);
-
-/* Binary Searches for a given file inside of the sorted files of a folder.
- * Searches for a file by comparing the current element of name with the names
- * of the files. Returns the index at which a file has been found or ~0 if it
- * has not been found.
- */
-size_t binout_directory_binary_search_file(binout_file_t *files,
-                                           size_t start_index, size_t end_index,
-                                           const path_view_t *name);
-
-/* Same as binout_directory_binary_search_file, but uses a string instead of a
- * path view. If the given file has not been found an index at which to insert
- * the new file is returned. If the file has been found, found will be set to 1
- * and to 0 otherwise.
- */
-size_t binout_directory_binary_search_file_insert(binout_file_t *files,
-                                                  size_t start_index,
-                                                  size_t end_index,
-                                                  const char *name, int *found);
-
 #ifdef __cplusplus
 }
 #endif
