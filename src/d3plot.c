@@ -24,6 +24,7 @@
  ************************************************************************************/
 
 #include "d3plot.h"
+#include "binary_search.h"
 #include "profiling.h"
 #include <stdlib.h>
 #include <string.h>
@@ -1680,7 +1681,7 @@ d3plot_part d3plot_read_part(d3plot_file *plot_file, size_t part_index) {
 size_t d3plot_index_for_id(d3_word id, const d3_word *ids, size_t num_ids) {
   BEGIN_PROFILE_FUNC();
 
-  const size_t index = _binary_search(ids, id, 0, num_ids - 1);
+  const size_t index = d3_word_binary_search(ids, 0, num_ids - 1, id);
 
   END_PROFILE_FUNC();
   return index;
@@ -1927,22 +1928,6 @@ d3_word *_insert_sorted(d3_word *dst, size_t dst_size, const d3_word *src,
 
   END_PROFILE_FUNC();
   return dst;
-}
-
-size_t _binary_search(const d3_word *arr, d3_word value, size_t start_index,
-                      size_t end_index) {
-  if (start_index == end_index && arr[start_index] != value) {
-    return UINT64_MAX;
-  }
-
-  const size_t mid_index = start_index + (end_index - start_index) / 2;
-  if (arr[mid_index] == value) {
-    return mid_index;
-  } else if (arr[mid_index] > value) {
-    return _binary_search(arr, value, start_index, mid_index - 1);
-  } else {
-    return _binary_search(arr, value, mid_index + 1, end_index);
-  }
 }
 
 void d3plot_free_part(d3plot_part *part) {

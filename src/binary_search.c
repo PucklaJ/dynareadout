@@ -113,18 +113,28 @@
     return half_index;                                                         \
   }
 
+#define INTCMP(a, b) (a == b ? 0 : (a > b ? 1 : -1))
+
 DEFINE_BINARY_SEARCH_FUNCTION(binout_directory_binary_search_folder,
-                              binout_folder_t, const path_view_t *,
+                              const binout_folder_t *, const path_view_t *,
                               path_view_strcmp, .name)
 
 DEFINE_BINARY_SEARCH_INSERT_FUNCTION(
-    binout_directory_binary_search_folder_insert, binout_folder_t,
+    binout_directory_binary_search_folder_insert, const binout_folder_t *,
     const path_view_t *, path_view_strcmp, .name)
 
 DEFINE_BINARY_SEARCH_FUNCTION(binout_directory_binary_search_file,
-                              binout_file_t, const path_view_t *,
+                              const binout_file_t *, const path_view_t *,
                               path_view_strcmp, .name)
 
 DEFINE_BINARY_SEARCH_INSERT_FUNCTION(binout_directory_binary_search_file_insert,
-                                     binout_file_t, const path_view_t *,
-                                     path_view_strcmp, .name)
+                                     const binout_file_t *, const char *,
+                                     strcmp, .name)
+
+DEFINE_BINARY_SEARCH_FUNCTION(d3_word_binary_search, const d3_word *, d3_word,
+                              INTCMP, )
+
+#ifdef PROFILING
+DEFINE_BINARY_SEARCH_INSERT_FUNCTION(string_binary_search_insert, char const **,
+                                     const char *, strcmp, )
+#endif

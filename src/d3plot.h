@@ -211,8 +211,6 @@ d3_word *_d3plot_read_ids(d3plot_file *plot_file, size_t *num_ids,
 /* Insert a sorted (ascending) array (src) into a sorted array (dst)*/
 d3_word *_insert_sorted(d3_word *dst, size_t dst_size, const d3_word *src,
                         size_t src_size);
-size_t _binary_search(const d3_word *arr, d3_word value, size_t start_index,
-                      size_t end_index);
 /* Deallocates all memory of a d3plot_part*/
 void d3plot_free_part(d3plot_part *part);
 /********************************/

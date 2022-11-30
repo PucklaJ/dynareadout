@@ -26,23 +26,39 @@
 #ifndef BINARY_SEARCH_H
 #define BINARY_SEARCH_H
 #include "binout_directory.h"
+#include "d3_defines.h"
 #include <stddef.h>
 
 #define DEFINE_BINARY_SEARCH_PROTO(func_name, arr_type, search_type)           \
-  size_t func_name(const arr_type *arr, size_t start_index, size_t end_index,  \
+  size_t func_name(arr_type arr, size_t start_index, size_t end_index,         \
                    search_type value)
 #define DEFINE_BINARY_SEARCH_INSERT_PROTO(func_name, arr_type, search_type)    \
-  size_t func_name(const arr_type *arr, size_t start_index, size_t end_index,  \
+  size_t func_name(arr_type arr, size_t start_index, size_t end_index,         \
                    search_type value, int *found)
 
-DEFINE_BINARY_SEARCH_PROTO(binout_directory_binary_search_folder,
-                           binout_folder_t, const path_view_t *);
-DEFINE_BINARY_SEARCH_INSERT_PROTO(binout_directory_binary_search_folder_insert,
-                                  binout_folder_t, const path_view_t *);
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-DEFINE_BINARY_SEARCH_PROTO(binout_directory_binary_search_file, binout_file_t,
-                           const path_view_t *);
+DEFINE_BINARY_SEARCH_PROTO(binout_directory_binary_search_folder,
+                           const binout_folder_t *, const path_view_t *);
+DEFINE_BINARY_SEARCH_INSERT_PROTO(binout_directory_binary_search_folder_insert,
+                                  const binout_folder_t *, const path_view_t *);
+
+DEFINE_BINARY_SEARCH_PROTO(binout_directory_binary_search_file,
+                           const binout_file_t *, const path_view_t *);
 DEFINE_BINARY_SEARCH_INSERT_PROTO(binout_directory_binary_search_file_insert,
-                                  binout_file_t, const path_view_t *);
+                                  const binout_file_t *, const char *);
+
+DEFINE_BINARY_SEARCH_PROTO(d3_word_binary_search, const d3_word *, d3_word);
+
+#ifdef PROFILING
+DEFINE_BINARY_SEARCH_INSERT_PROTO(string_binary_search_insert, char const **,
+                                  const char *);
+#endif
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

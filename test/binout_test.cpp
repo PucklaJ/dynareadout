@@ -267,7 +267,8 @@ TEST_CASE("glob") {
   size_t num_files;
   char **globed_files = binout_glob("src/*.c", &num_files);
 
-  CHECK(num_files == 10);
+  CHECK(num_files == 11);
+  CHECK(strarr_contains(globed_files, num_files, "src/binary_search.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/binout_glob.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/binout.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/binout_directory.c"));

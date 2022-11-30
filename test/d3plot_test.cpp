@@ -24,6 +24,7 @@
  ************************************************************************************/
 
 #define DOCTEST_CONFIG_TREAT_CHAR_STAR_AS_STRING
+#include <binary_search.h>
 #include <cmath>
 #include <cstdint>
 #include <ctime>
@@ -850,22 +851,22 @@ TEST_CASE("_insert_sorted") {
   }
 }
 
-TEST_CASE("_binary_search") {
+TEST_CASE("binary_search") {
   constexpr d3_word arr[] = {1, 2, 3, 4, 6, 7, 8, 9, 10, 11};
   constexpr size_t arr_size = sizeof(arr) / sizeof(*arr);
-  size_t idx = _binary_search(arr, 6, 0, arr_size - 1);
+  size_t idx = d3_word_binary_search(arr, 0, arr_size - 1, 6);
   CHECK(idx == 4);
-  idx = _binary_search(arr, 1, 0, arr_size - 1);
+  idx = d3_word_binary_search(arr, 0, arr_size - 1, 1);
   CHECK(idx == 0);
-  idx = _binary_search(arr, 10, 0, arr_size - 1);
+  idx = d3_word_binary_search(arr, 0, arr_size - 1, 10);
   CHECK(idx == 8);
-  idx = _binary_search(arr, 11, 0, arr_size - 1);
+  idx = d3_word_binary_search(arr, 0, arr_size - 1, 11);
   CHECK(idx == 9);
-  idx = _binary_search(arr, 12, 0, arr_size - 1);
+  idx = d3_word_binary_search(arr, 0, arr_size - 1, 12);
   CHECK(idx == UINT64_MAX);
-  idx = _binary_search(arr, 0, 0, arr_size - 1);
+  idx = d3_word_binary_search(arr, 0, arr_size - 1, 0);
   CHECK(idx == UINT64_MAX);
-  idx = _binary_search(arr, 5, 0, arr_size - 1);
+  idx = d3_word_binary_search(arr, 0, arr_size - 1, 5);
   CHECK(idx == UINT64_MAX);
 }
 
