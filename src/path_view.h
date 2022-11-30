@@ -32,7 +32,29 @@
 #define PATH_VIEW_CPY(dst, src)                                                \
   memcpy(dst, &src->string[src->start], PATH_VIEW_LEN(src))
 
-/* A view into a string that always views one path element at one time*/
+/* A view into a string that always views one path element at one time.
+ * Example:
+ * path_view_new("/nodout/metadata/ids") -> path_view_t;
+ * string: "/nodout/metadata/ids"
+ * start: 0-^
+ * end: 0---^
+ * path_view_advance(...) -> 1;
+ * string: "/nodout/metadata/ids"
+ * start: 1--^
+ * end: 6---------^
+ * path_view_advance(...) -> 1:
+ * string: "/nodout/metadata/ids"
+ * start: 8---------^
+ * end: 15-----------------^
+ * path_view_advance(...) -> 1:
+ * string: "/nodout/metadata/ids"
+ * start: 17-----------------^
+ * end: 19---------------------^
+ * path_view_advance(...) -> 0:
+ * string: "/nodout/metadata/ids"
+ * start: 17-----------------^
+ * end: 19---------------------^
+ */
 typedef struct {
   const char *string;
   int start;
@@ -43,7 +65,7 @@ typedef struct {
 extern "C" {
 #endif
 
-/* Create a new path view and start to view the first path element*/
+/* Create a new path view and start to view the first path element.*/
 path_view_t path_view_new(const char *string);
 
 /* Advance to the next path element.
@@ -54,15 +76,15 @@ path_view_t path_view_new(const char *string);
  */
 int path_view_advance(path_view_t *pv);
 
-/* Like strcmp but with a path view and a string*/
+/* Like strcmp but with the current element of the path view and a string*/
 int path_view_strcmp(const path_view_t *pv, const char *str);
 
-/* Allocate memory and copy the current path view into it*/
+/* Allocate memory and copy the current path view into it. Insert a '\0' at the
+ * end. Needs to be deallocated by free.
+ */
 char *path_view_stralloc(const path_view_t *pv);
 
-/* Returns the number of path elements that are ahead plus the current one*/
-int path_view_peek(const path_view_t *pv);
-
+/* Print the current element of the path view and the start and end indices.*/
 void path_view_print(const path_view_t *pv);
 
 #ifdef __cplusplus

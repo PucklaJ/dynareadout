@@ -24,12 +24,15 @@
  ************************************************************************************/
 
 #include "path_view.h"
+#include "profiling.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 path_view_t path_view_new(const char *string) {
+  BEGIN_PROFILE_FUNC();
+
   assert(string != NULL && strlen(string) > 0);
 
   path_view_t pv;
@@ -46,17 +49,24 @@ path_view_t path_view_new(const char *string) {
     }
   }
 
+  END_PROFILE_FUNC();
   return pv;
 }
 
 int path_view_advance(path_view_t *pv) {
+  BEGIN_PROFILE_FUNC();
+
   const int len = strlen(pv->string);
 
+  /* Check if we are already at the end. This also supports trailing PATH_SEP.
+   * ONLY ONE!*/
   if (pv->end == len - 1 ||
       (pv->end == len - 2 && pv->string[pv->end + 1] == PATH_SEP)) {
+    END_PROFILE_FUNC();
     return 0;
   }
 
+  /* Loop until a PATH_SEP has been found or the end has been reached*/
   int i = pv->end + 1 + (pv->end != 0);
   while (i < len - 1 && pv->string[i + 1] != PATH_SEP) {
     i++;
@@ -65,48 +75,46 @@ int path_view_advance(path_view_t *pv) {
   pv->start = pv->end + 1 + (pv->end != 0);
   pv->end = i;
 
+  /* Handle multiple PATH_SEPs in the middle of the path*/
   while (pv->string[pv->start] == PATH_SEP) {
     pv->start++;
   }
 
+  END_PROFILE_FUNC();
   return 1;
 }
 
 int path_view_strcmp(const path_view_t *pv, const char *str) {
-  const int cmp_val = strncmp(&pv->string[pv->start], str, PATH_VIEW_LEN(pv));
+  BEGIN_PROFILE_FUNC();
+
+  int cmp_val = strncmp(&pv->string[pv->start], str, PATH_VIEW_LEN(pv));
   /* We need to also consider the lengths of the strings, because by calling
    * strncmp, "legend" and "legend_ids" also returns 0*/
   if (cmp_val == 0) {
-    return (strlen(str) > PATH_VIEW_LEN(pv)) * -1;
+    cmp_val = (strlen(str) > PATH_VIEW_LEN(pv)) * -1;
+
+    END_PROFILE_FUNC();
+    return cmp_val;
   }
 
+  END_PROFILE_FUNC();
   return cmp_val;
 }
 
 char *path_view_stralloc(const path_view_t *pv) {
+  BEGIN_PROFILE_FUNC();
+
   char *str = malloc(PATH_VIEW_LEN(pv) + 1);
   PATH_VIEW_CPY(str, pv);
   str[PATH_VIEW_LEN(pv)] = '\0';
+
+  END_PROFILE_FUNC();
   return str;
 }
 
-int path_view_peek(const path_view_t *pv) {
-  int counter = 1;
-  const int len = strlen(pv->string);
-
-  int i = pv->end + 2;
-  while (i < len) {
-    if (pv->string[i] == PATH_SEP) {
-      counter++;
-    }
-
-    i++;
-  }
-
-  return counter + (pv->string[len - 1] != PATH_SEP);
-}
-
 void path_view_print(const path_view_t *pv) {
+  BEGIN_PROFILE_FUNC();
+
   printf("%s (%d - %d): ", pv->string, pv->start, pv->end);
   int i = pv->start;
   while (i <= pv->end) {
@@ -115,4 +123,6 @@ void path_view_print(const path_view_t *pv) {
     i++;
   }
   putchar('\n');
+
+  END_PROFILE_FUNC();
 }

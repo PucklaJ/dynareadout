@@ -25,6 +25,7 @@
 
 #include "binout_directory.h"
 #include "path.h"
+#include "profiling.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,6 +33,8 @@
 
 binout_folder_t *binout_directory_insert_folder(binout_directory_t *dir,
                                                 path_view_t *path) {
+  BEGIN_PROFILE_FUNC();
+
   /* Make sure the path is absolute, but is the first element after the root
    * folder*/
   assert(PATH_VIEW_IS_ABS(path) && path->start == 1);
@@ -68,14 +71,20 @@ binout_folder_t *binout_directory_insert_folder(binout_directory_t *dir,
   }
 
   if (!path_view_advance(path)) {
+    END_PROFILE_FUNC();
     return folder;
   }
 
-  return binout_folder_insert_folder(folder, path);
+  folder = binout_folder_insert_folder(folder, path);
+
+  END_PROFILE_FUNC();
+  return folder;
 }
 
 binout_folder_t *binout_folder_insert_folder(binout_folder_t *dir,
                                              path_view_t *path) {
+  BEGIN_PROFILE_FUNC();
+
   size_t index = 0;
   binout_folder_t *folder = NULL;
   if (dir->num_children != 0) {
@@ -109,15 +118,21 @@ binout_folder_t *binout_folder_insert_folder(binout_folder_t *dir,
   }
 
   if (!path_view_advance(path)) {
+    END_PROFILE_FUNC();
     return folder;
   }
 
-  return binout_folder_insert_folder(folder, path);
+  folder = binout_folder_insert_folder(folder, path);
+
+  END_PROFILE_FUNC();
+  return folder;
 }
 
 void binout_folder_insert_file(binout_folder_t *dir, char *name,
                                uint8_t var_type, size_t size,
                                uint8_t file_index, long file_pos) {
+  BEGIN_PROFILE_FUNC();
+
   /* If the file already exists, overwrite it.
    * Apparently files with the exact same path and name
    * can exist (or this was just a bug -_(`_`)_-).
@@ -157,20 +172,26 @@ void binout_folder_insert_file(binout_folder_t *dir, char *name,
   file->size = size;
   file->file_index = file_index;
   file->file_pos = file_pos;
+
+  END_PROFILE_FUNC();
 }
 
 const binout_folder_or_file_t *
 binout_directory_get_children(const binout_directory_t *dir, path_view_t *path,
                               size_t *num_children) {
+  BEGIN_PROFILE_FUNC();
+
   assert(PATH_VIEW_IS_ABS(path));
 
   if (dir->num_children == 0) {
     *num_children = 0;
+    END_PROFILE_FUNC();
     return NULL;
   }
 
   if (!path_view_advance(path)) {
     *num_children = dir->num_children;
+    END_PROFILE_FUNC();
     return (const binout_folder_or_file_t *)dir->children;
   }
 
@@ -178,6 +199,7 @@ binout_directory_get_children(const binout_directory_t *dir, path_view_t *path,
       dir->children, 0, dir->num_children - 1, path);
   if (index == (size_t)~0) {
     *num_children = 0;
+    END_PROFILE_FUNC();
     return NULL;
   }
 
@@ -185,22 +207,31 @@ binout_directory_get_children(const binout_directory_t *dir, path_view_t *path,
 
   if (!path_view_advance(path)) {
     *num_children = folder->num_children;
+    END_PROFILE_FUNC();
     return (const binout_folder_or_file_t *)folder->children;
   }
 
-  return binout_folder_get_children(folder, path, num_children);
+  const binout_folder_or_file_t *folder_or_file =
+      binout_folder_get_children(folder, path, num_children);
+
+  END_PROFILE_FUNC();
+  return folder_or_file;
 }
 
 const binout_folder_or_file_t *
 binout_folder_get_children(const binout_folder_t *folder, path_view_t *path,
                            size_t *num_children) {
+  BEGIN_PROFILE_FUNC();
+
   if (folder->num_children == 0) {
     *num_children = 0;
+    END_PROFILE_FUNC();
     return NULL;
   }
 
   if (((binout_folder_or_file_t *)folder->children)[0].type == BINOUT_FILE) {
     *num_children = 0;
+    END_PROFILE_FUNC();
     return NULL;
   }
 
@@ -208,6 +239,7 @@ binout_folder_get_children(const binout_folder_t *folder, path_view_t *path,
       (binout_folder_t *)folder->children, 0, folder->num_children - 1, path);
   if (index == (size_t)~0) {
     *num_children = 0;
+    END_PROFILE_FUNC();
     return NULL;
   }
 
@@ -216,47 +248,63 @@ binout_folder_get_children(const binout_folder_t *folder, path_view_t *path,
 
   if (!path_view_advance(path)) {
     *num_children = child->num_children;
+    END_PROFILE_FUNC();
     return (const binout_folder_or_file_t *)child->children;
   }
 
-  return binout_folder_get_children(child, path, num_children);
+  const binout_folder_or_file_t *folder_or_file =
+      binout_folder_get_children(child, path, num_children);
+
+  END_PROFILE_FUNC();
+  return folder_or_file;
 }
 
 const binout_file_t *binout_directory_get_file(const binout_directory_t *dir,
                                                path_view_t *path) {
-  assert(PATH_VIEW_IS_ABS(path));
-  assert(dir->num_children != 0);
+  BEGIN_PROFILE_FUNC();
 
-  /* The path needs to have at least 3 elements.
-   * 1. The root folder
-   * 2. The folder containing the file
-   * 3. The file itself
-   */
-  assert(path_view_peek(path) > 2);
+  if (dir->num_children == 0) {
+    return NULL;
+  }
+
+  assert(PATH_VIEW_IS_ABS(path));
 
   /* Advance over the root folder*/
-  path_view_advance(path);
+  if (!path_view_advance(path)) {
+    /* This means that the path only consists of the root folder.*/
+    END_PROFILE_FUNC();
+    return NULL;
+  }
 
   /* Search for the folder*/
   const size_t index = binout_directory_binary_search_folder(
       dir->children, 0, dir->num_children - 1, path);
   if (index == (size_t)~0) {
     /* The folder has not been found*/
+    END_PROFILE_FUNC();
     return NULL;
   }
 
   /* If we are already at the end*/
   if (!path_view_advance(path)) {
+    END_PROFILE_FUNC();
     return NULL;
   }
 
   /* Recursively search for the file*/
-  return binout_folder_get_file(&dir->children[index], path);
+  const binout_file_t *file =
+      binout_folder_get_file(&dir->children[index], path);
+
+  END_PROFILE_FUNC();
+  return file;
 }
 
 const binout_file_t *binout_folder_get_file(const binout_folder_t *dir,
                                             path_view_t *path) {
+  BEGIN_PROFILE_FUNC();
+
   if (dir->num_children == 0) {
+    END_PROFILE_FUNC();
     return NULL;
   }
 
@@ -267,9 +315,11 @@ const binout_file_t *binout_folder_get_file(const binout_folder_t *dir,
         (binout_file_t *)dir->children, 0, dir->num_children - 1, path);
     if (index == (size_t)~0) {
       /* The file has not been found*/
+      END_PROFILE_FUNC();
       return NULL;
     }
 
+    END_PROFILE_FUNC();
     return &((binout_file_t *)dir->children)[index];
   } else {
     /* Search for the correct folder*/
@@ -277,23 +327,31 @@ const binout_file_t *binout_folder_get_file(const binout_folder_t *dir,
         (binout_folder_t *)dir->children, 0, dir->num_children - 1, path);
     if (index == (size_t)~0) {
       /* The folder has not been found*/
+      END_PROFILE_FUNC();
       return NULL;
     }
 
     /* Advance the path and check if we were already at the end*/
     if (!path_view_advance(path)) {
+      END_PROFILE_FUNC();
       return NULL;
     }
 
-    return binout_folder_get_file(&((binout_folder_t *)dir->children)[index],
-                                  path);
+    const binout_file_t *file = binout_folder_get_file(
+        &((binout_folder_t *)dir->children)[index], path);
+
+    END_PROFILE_FUNC();
+    return file;
   }
 
   /* The file has not been found*/
+  END_PROFILE_FUNC();
   return NULL;
 }
 
 void binout_directory_free(binout_directory_t *dir) {
+  BEGIN_PROFILE_FUNC();
+
   size_t i = 0;
   while (i < dir->num_children) {
     binout_folder_free(&dir->children[i]);
@@ -304,13 +362,18 @@ void binout_directory_free(binout_directory_t *dir) {
   free(dir->children);
   dir->children = NULL;
   dir->num_children = 0;
+
+  END_PROFILE_FUNC();
 }
 
 void binout_folder_free(binout_folder_t *folder) {
+  BEGIN_PROFILE_FUNC();
+
   free(folder->name);
   folder->name = NULL;
 
   if (folder->num_children == 0) {
+    END_PROFILE_FUNC();
     return;
   }
 
@@ -335,16 +398,22 @@ void binout_folder_free(binout_folder_t *folder) {
   free(folder->children);
   folder->children = NULL;
   folder->num_children = 0;
+
+  END_PROFILE_FUNC();
 }
 
 size_t binout_directory_binary_search_folder(binout_folder_t *folders,
                                              size_t start_index,
                                              size_t end_index,
                                              const path_view_t *name) {
+  BEGIN_PROFILE_FUNC();
+
   if (start_index == end_index) {
     if (path_view_strcmp(name, folders[start_index].name) == 0) {
+      END_PROFILE_FUNC();
       return start_index;
     }
+    END_PROFILE_FUNC();
     return ~0;
   }
 
@@ -354,18 +423,22 @@ size_t binout_directory_binary_search_folder(binout_folder_t *folders,
   if (cmp_val < 0) {
     const size_t index = binout_directory_binary_search_folder(
         folders, start_index, half_index, name);
+    END_PROFILE_FUNC();
     return index;
   } else if (cmp_val > 0) {
     if (half_index == end_index - 1) {
       const size_t index = binout_directory_binary_search_folder(
           folders, end_index, end_index, name);
+      END_PROFILE_FUNC();
       return index;
     }
     const size_t index = binout_directory_binary_search_folder(
         folders, half_index, end_index, name);
+    END_PROFILE_FUNC();
     return index;
   }
 
+  END_PROFILE_FUNC();
   return half_index;
 }
 
@@ -374,19 +447,24 @@ size_t binout_directory_binary_search_folder_insert(binout_folder_t *folders,
                                                     size_t end_index,
                                                     const path_view_t *name,
                                                     int *found) {
+  BEGIN_PROFILE_FUNC();
+
   if (start_index == end_index) {
     const int cmp_value = path_view_strcmp(name, folders[start_index].name);
 
     if (cmp_value == 0) {
       *found = 1;
+      END_PROFILE_FUNC();
       return start_index;
     }
     if (cmp_value > 0) {
       *found = 0;
+      END_PROFILE_FUNC();
       return start_index + 1;
     }
 
     *found = 0;
+    END_PROFILE_FUNC();
     return start_index;
   }
 
@@ -396,29 +474,37 @@ size_t binout_directory_binary_search_folder_insert(binout_folder_t *folders,
   if (cmp_val < 0) {
     const size_t index = binout_directory_binary_search_folder_insert(
         folders, start_index, half_index, name, found);
+    END_PROFILE_FUNC();
     return index;
   } else if (cmp_val > 0) {
     if (half_index == end_index - 1) {
       const size_t index = binout_directory_binary_search_folder_insert(
           folders, end_index, end_index, name, found);
+      END_PROFILE_FUNC();
       return index;
     }
     const size_t index = binout_directory_binary_search_folder_insert(
         folders, half_index, end_index, name, found);
+    END_PROFILE_FUNC();
     return index;
   }
 
   *found = 1;
+  END_PROFILE_FUNC();
   return half_index;
 }
 
 size_t binout_directory_binary_search_file(binout_file_t *files,
                                            size_t start_index, size_t end_index,
                                            const path_view_t *name) {
+  BEGIN_PROFILE_FUNC();
+
   if (start_index == end_index) {
     if (path_view_strcmp(name, files[start_index].name) == 0) {
+      END_PROFILE_FUNC();
       return start_index;
     }
+    END_PROFILE_FUNC();
     return ~0;
   }
 
@@ -428,18 +514,22 @@ size_t binout_directory_binary_search_file(binout_file_t *files,
   if (cmp_val < 0) {
     const size_t index = binout_directory_binary_search_file(files, start_index,
                                                              half_index, name);
+    END_PROFILE_FUNC();
     return index;
   } else if (cmp_val > 0) {
     if (half_index == end_index - 1) {
       const size_t index = binout_directory_binary_search_file(files, end_index,
                                                                end_index, name);
+      END_PROFILE_FUNC();
       return index;
     }
     const size_t index =
         binout_directory_binary_search_file(files, half_index, end_index, name);
+    END_PROFILE_FUNC();
     return index;
   }
 
+  END_PROFILE_FUNC();
   return half_index;
 }
 
@@ -448,19 +538,24 @@ size_t binout_directory_binary_search_file_insert(binout_file_t *files,
                                                   size_t end_index,
                                                   const char *name,
                                                   int *found) {
+  BEGIN_PROFILE_FUNC();
+
   if (start_index == end_index) {
     const int cmp_value = strcmp(name, files[start_index].name);
 
     if (cmp_value == 0) {
       *found = 1;
+      END_PROFILE_FUNC();
       return start_index;
     }
     if (cmp_value > 0) {
       *found = 0;
+      END_PROFILE_FUNC();
       return start_index + 1;
     }
 
     *found = 0;
+    END_PROFILE_FUNC();
     return start_index;
   }
 
@@ -470,18 +565,22 @@ size_t binout_directory_binary_search_file_insert(binout_file_t *files,
   if (cmp_val < 0) {
     const size_t index = binout_directory_binary_search_file_insert(
         files, start_index, half_index, name, found);
+    END_PROFILE_FUNC();
     return index;
   } else if (cmp_val > 0) {
     if (half_index == end_index - 1) {
       const size_t index = binout_directory_binary_search_file_insert(
           files, end_index, end_index, name, found);
+      END_PROFILE_FUNC();
       return index;
     }
     const size_t index = binout_directory_binary_search_file_insert(
         files, half_index, end_index, name, found);
+    END_PROFILE_FUNC();
     return index;
   }
 
   *found = 1;
+  END_PROFILE_FUNC();
   return half_index;
 }

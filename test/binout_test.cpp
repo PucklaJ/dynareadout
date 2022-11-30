@@ -534,7 +534,6 @@ TEST_CASE("path_view") {
 
     path_view_t pv = path_view_new(str);
     CHECK(path_view_strcmp(&pv, "/") == 0);
-    CHECK(path_view_peek(&pv) == 4);
 
     CHECK(path_view_advance(&pv) == 1);
     CHECK(path_view_strcmp(&pv, "nodout") == 0);
