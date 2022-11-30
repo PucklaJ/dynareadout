@@ -77,8 +77,8 @@ binout_directory_insert_folder_by_path_view(binout_directory_t *dir,
 binout_folder_t *binout_folder_insert_folder(binout_folder_t *dir,
                                              path_view_t *path);
 
-void binout_folder_insert_file(binout_folder_t *dir, path_view_t *path,
-                               char *name, uint8_t var_type, size_t size,
+void binout_folder_insert_file(binout_folder_t *dir, char *name,
+                               uint8_t var_type, size_t size,
                                uint8_t file_index, long file_pos);
 
 const binout_file_t *binout_directory_get_file(const binout_directory_t *dir,

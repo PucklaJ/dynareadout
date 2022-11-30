@@ -275,7 +275,7 @@ binout_file binout_open(const char *file_name) {
 
         char *variable_name = malloc(variable_name_length + 1);
         memcpy(variable_name, variable_name_buffer, variable_name_length + 1);
-        binout_folder_insert_file(current_folder, NULL, variable_name,
+        binout_folder_insert_file(current_folder, variable_name,
                                   (uint8_t)type_id, data_length,
                                   (uint8_t)cur_file_index, file_pos);
       } else {

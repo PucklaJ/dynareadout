@@ -145,51 +145,42 @@ binout_folder_t *binout_folder_insert_folder(binout_folder_t *dir,
   return binout_folder_insert_folder(folder, path);
 }
 
-void binout_folder_insert_file(binout_folder_t *dir, path_view_t *path,
-                               char *name, uint8_t var_type, size_t size,
+void binout_folder_insert_file(binout_folder_t *dir, char *name,
+                               uint8_t var_type, size_t size,
                                uint8_t file_index, long file_pos) {
-  if (path == NULL) {
-    /* Only add the file if it not already exists*/
-    size_t index = 0;
-    if (dir->num_children != 0) {
-      int found;
-      index = binout_directory_binary_search_file_by_name(
-          (binout_file_t *)dir->children, 0, dir->num_children - 1, name,
-          &found);
-      if (found) {
-        free(name);
-        return;
-      }
+  /* Only add the file if it not already exists*/
+  size_t index = 0;
+  if (dir->num_children != 0) {
+    int found;
+    index = binout_directory_binary_search_file_by_name(
+        (binout_file_t *)dir->children, 0, dir->num_children - 1, name, &found);
+    if (found) {
+      free(name);
+      return;
     }
-
-    /* Allocate memory for the new child. In this case files*/
-    dir->num_children++;
-    dir->children =
-        realloc(dir->children, dir->num_children * sizeof(binout_file_t));
-
-    /* Move everything to the right*/
-    size_t i = dir->num_children - 1;
-    while (i > index) {
-      ((binout_file_t *)dir->children)[i] =
-          ((binout_file_t *)dir->children)[i - 1];
-      i--;
-    }
-
-    binout_file_t *file = &((binout_file_t *)dir->children)[index];
-
-    file->type = BINOUT_FILE;
-    file->name = name;
-    file->var_type = var_type;
-    file->size = size;
-    file->file_index = file_index;
-    file->file_pos = file_pos;
-  } else {
-    /* Insert the parent folder before inserting the file*/
-    binout_folder_t *parent_folder = binout_folder_insert_folder(dir, path);
-
-    binout_folder_insert_file(parent_folder, NULL, name, var_type, size,
-                              file_index, file_pos);
   }
+
+  /* Allocate memory for the new child. In this case files*/
+  dir->num_children++;
+  dir->children =
+      realloc(dir->children, dir->num_children * sizeof(binout_file_t));
+
+  /* Move everything to the right*/
+  size_t i = dir->num_children - 1;
+  while (i > index) {
+    ((binout_file_t *)dir->children)[i] =
+        ((binout_file_t *)dir->children)[i - 1];
+    i--;
+  }
+
+  binout_file_t *file = &((binout_file_t *)dir->children)[index];
+
+  file->type = BINOUT_FILE;
+  file->name = name;
+  file->var_type = var_type;
+  file->size = size;
+  file->file_index = file_index;
+  file->file_pos = file_pos;
 }
 
 const binout_folder_or_file_t *
