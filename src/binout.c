@@ -158,8 +158,6 @@ binout_file binout_open(const char *file_name) {
 
     int cur_file_failed = 0;
 
-    /* A buffer for the variable name of the DATA command*/
-    char variable_name_buffer[255];
     /* A buffer for the path of the CD command*/
     char path_buffer[1024];
 
@@ -238,6 +236,11 @@ binout_file binout_open(const char *file_name) {
                                                           &current_path);
         }
       } else if (record_command == BINOUT_COMMAND_DATA) {
+        /* If current_folder is NULL, this means that there are files inside
+         * '/', which we do not support. And LS Dyna does also not do this.
+         */
+        assert(current_folder != NULL);
+
         uint64_t type_id = 0;
         uint8_t variable_name_length;
 
@@ -246,17 +249,11 @@ binout_file binout_open(const char *file_name) {
         BIN_FILE_READ(variable_name_length, BINOUT_DATA_NAME_LENGTH, 1,
                       "Failed to read Name length of DATA record");
 
-        assert(variable_name_length + 1 <
-               (uint8_t)sizeof(variable_name_buffer));
+        char *variable_name = malloc(variable_name_length + 1);
+        variable_name[variable_name_length] = '\0';
 
-        variable_name_buffer[variable_name_length] = '\0';
-        BIN_FILE_READ(variable_name_buffer, 1, variable_name_length,
-                      "Failed to read Name of DATA record");
-
-        /* If current_folder is NULL, this means that there are files inside
-         * '/', which we do not support. And LS Dyna does also not do this.
-         */
-        assert(current_folder != NULL);
+        BIN_FILE_READ_FREE(variable_name, 1, variable_name_length,
+                           variable_name, "Failed to read Name of DATA record");
 
         /* How large the data segment of the data record is*/
         const uint64_t data_length =
@@ -266,14 +263,13 @@ binout_file binout_open(const char *file_name) {
         /* Skip the data since we will read it at a later point, if it is
          * requested by the programmer*/
         if (fseek(file_handle, data_length, SEEK_CUR) != 0) {
+          free(variable_name);
           cur_file_failed = 1;
           _binout_add_file_error(&bin_file, file_names[cur_file_index],
                                  "Failed to skip Data of DATA record");
           break;
         }
 
-        char *variable_name = malloc(variable_name_length + 1);
-        memcpy(variable_name, variable_name_buffer, variable_name_length + 1);
         binout_folder_insert_file(current_folder, variable_name,
                                   (uint8_t)type_id, data_length,
                                   (uint8_t)cur_file_index, file_pos);
