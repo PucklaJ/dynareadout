@@ -23,18 +23,14 @@
  * 3. This notice may not be removed or altered from any source distribution.
  ************************************************************************************/
 
-#ifdef PROFILING
-#define DOCTEST_CONFIG_IMPLEMENT
-#include <profiling.h>
-#else
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#endif
 #define DOCTEST_CONFIG_TREAT_CHAR_STAR_AS_STRING
+#include <cmath>
 #include <cstdint>
 #include <ctime>
 #include <d3plot.h>
 #include <doctest/doctest.h>
 #ifdef D3PLOT_CPP
+#include "main_test.hpp"
 #include <d3plot.hpp>
 #endif
 
@@ -873,19 +869,19 @@ TEST_CASE("_binary_search") {
   CHECK(idx == UINT64_MAX);
 }
 
-#ifdef PROFILING
-int main(int args, char *argv[]) {
-  doctest::Context ctx;
-
-  ctx.addFilter("test-case", "d3plot");
-  ctx.applyCommandLine(args, argv);
-
-  const int res = ctx.run();
-
-  if (ctx.shouldExit()) {
-    return res;
-  }
-
-  END_PROFILING("test_data/d3plot_profiling.txt");
-}
-#endif
+// #ifdef PROFILING
+// int main(int args, char *argv[]) {
+// doctest::Context ctx;
+//
+// ctx.addFilter("test-case", "d3plot");
+// ctx.applyCommandLine(args, argv);
+//
+// const int res = ctx.run();
+//
+// if (ctx.shouldExit()) {
+// return res;
+// }
+//
+// END_PROFILING("test_data/d3plot_profiling.txt");
+// }
+// #endif

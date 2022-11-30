@@ -23,13 +23,8 @@
  * 3. This notice may not be removed or altered from any source distribution.
  ************************************************************************************/
 
-#ifdef PROFILING
-#define DOCTEST_CONFIG_IMPLEMENT
-#include <profiling.h>
-#else
-#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
-#endif
 #define DOCTEST_CONFIG_TREAT_CHAR_STAR_AS_STRING
+#include <algorithm>
 #include <binout.h>
 #include <binout_defines.h>
 #include <binout_directory.h>
@@ -43,18 +38,9 @@
 #include <sstream>
 #include <string>
 #ifdef BINOUT_CPP
+#include "main_test.hpp"
 #include <binout.hpp>
 #endif
-
-namespace dro {
-template <typename T> doctest::String toString(const Array<T> &str) {
-  static_assert(std::is_same_v<T, char> || std::is_same_v<T, int8_t> ||
-                std::is_same_v<T, uint8_t>);
-
-  return doctest::String(reinterpret_cast<const char *>(str.data()),
-                         str.size());
-}
-} // namespace dro
 
 // Returns wether value can be found insed arr
 bool strarr_contains(char *const *arr, const size_t size, const char *value) {
@@ -583,21 +569,21 @@ TEST_CASE("path_view") {
   }
 }
 
-#ifdef PROFILING
-int main(int args, char *argv[]) {
-  doctest::Context ctx;
-
-  ctx.addFilter("test-case", "binout0000");
-  ctx.applyCommandLine(args, argv);
-
-  const int res = ctx.run();
-
-  if (ctx.shouldExit()) {
-    return res;
-  }
-
-  END_PROFILING("test_data/binout_profiling.txt");
-
-  return res;
-}
-#endif
+// #ifdef PROFILING
+// int main(int args, char *argv[]) {
+// doctest::Context ctx;
+//
+// ctx.addFilter("test-case", "binout0000");
+// ctx.applyCommandLine(args, argv);
+//
+// const int res = ctx.run();
+//
+// if (ctx.shouldExit()) {
+// return res;
+// }
+//
+// END_PROFILING("test_data/binout_profiling.txt");
+//
+// return res;
+// }
+// #endif

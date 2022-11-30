@@ -19,78 +19,34 @@ option("profiling")
 option_end()
 
 add_rules("mode.debug", "mode.release")
-if get_config("profiling") then
-    target("profiling")
-        set_kind("$(kind)")
-        set_languages("ansi")
-        if is_plat("linux") then
-            add_cflags("-fPIC")
-        end
-        add_options("profiling")
-        add_files("src/profiling.c")
-        add_headerfiles("src/profiling.h")
-        if is_kind("shared") then
-            add_rules("utils.symbols.export_all")
-        end
-end
-target("binout")
+target("dynareadout")
     set_kind("$(kind)")
     set_languages("ansi")
     if is_plat("linux") then
         add_cflags("-fPIC")
     end
-    if get_config("profiling") then
-        add_deps("profiling")
-    end
     add_options("profiling")
-    add_files("src/binout*.c", "src/path.c", "src/path_view.c")
-    add_headerfiles("src/binout*.h", "src/path.h", "src/path_view.h")
-    if is_kind("shared") then
-        add_rules("utils.symbols.export_all")
+    add_files("src/*.c")
+    if not get_config("profiling") then
+        remove_files("src/profiling.c")
     end
-
-target("d3plot")
-    set_kind("$(kind)")
-    set_languages("ansi")
-    if is_plat("linux") then
-        add_cflags("-fPIC")
-    end
-    if get_config("profiling") then
-        add_deps("profiling")
-    end
-    add_options("profiling")
-    add_files("src/d3*.c")
-    add_headerfiles("src/d3*.h")
+    add_headerfiles("src/*.h")
     if is_kind("shared") then
         add_rules("utils.symbols.export_all")
     end
 target_end()
 
 if get_config("build_cpp") or get_config("build_python") then
-    target("binout_cpp")
+    target("dynareadout_cpp")
         set_kind("$(kind)")
         set_languages("cxx17")
         if is_plat("linux") then
             add_cxxflags("-fPIC")
         end
-        add_deps("binout")
+        add_deps("dynareadout")
         add_includedirs("src")
-        add_files("src/cpp/binout*.cpp")
-        add_headerfiles("src/cpp/binout*.hpp", "src/cpp/array.hpp", "src/cpp/vec.hpp")
-        if is_kind("shared") then
-            add_rules("utils.symbols.export_all", {export_classes = true})
-        end
-
-    target("d3plot_cpp")
-        set_kind("$(kind)")
-        set_languages("cxx17")
-        if is_plat("linux") then
-            add_cxxflags("-fPIC")
-        end
-        add_deps("d3plot")
-        add_includedirs("src")
-        add_files("src/cpp/d3*.cpp")
-        add_headerfiles("src/cpp/d3*.hpp", "src/cpp/array.hpp")
+        add_files("src/cpp/*.cpp")
+        add_headerfiles("src/cpp/*.hpp")
         if is_kind("shared") then
             add_rules("utils.symbols.export_all", {export_classes = true})
         end
@@ -99,54 +55,23 @@ end
 
 if get_config("build_test") then
     add_requires("doctest 2.4.8")
-    target("binout_test")
+    target("dynareadout_test")
         set_kind("binary")
         set_languages("cxx17")
-        add_deps("binout")
+        add_deps("dynareadout")
         if is_plat("linux") then
             add_cxxflags("-fPIC")
         end
         if get_config("build_cpp") then
-            add_deps("binout_cpp")
-            add_defines("BINOUT_CPP")
+            add_deps("dynareadout_cpp")
+            add_defines("BINOUT_CPP", "D3PLOT_CPP")
             add_includedirs("src/cpp")
         end
         add_packages("doctest")
         add_includedirs("src")
         add_options("profiling")
-        add_files("test/binout_test.cpp")
-
-    target("d3plot_test")
-        set_kind("binary")
-        set_languages("cxx17")
-        add_deps("d3plot")
-        if is_plat("linux") then
-            add_cxxflags("-fPIC")
-        end
-        if get_config("build_cpp") then
-            add_deps("d3plot_cpp")
-            add_defines("D3PLOT_CPP")
-            add_includedirs("src/cpp")
-        end
-        add_packages("doctest")
-        add_includedirs("src")
-        add_options("profiling")
-        add_files("test/d3plot_test.cpp")
+        add_files("test/*.cpp")
     target_end()
-    
-    if get_config("profiling") then
-        target("profiling_test")
-            set_kind("binary")
-            set_languages("cxx17")
-            add_options("profiling")
-            add_deps("profiling")
-            if is_plat("linux") then
-                add_cxxflags("-fPIC")
-            end
-            add_packages("doctest")
-            add_includedirs("src")
-            add_files("test/profiling_test.cpp")
-    end
 end
 
 if get_config("build_python") then
@@ -157,7 +82,7 @@ if get_config("build_python") then
         if is_plat("linux") then
             add_cxxflags("-fPIC")
         end
-        add_deps("d3plot_cpp", "binout_cpp")
+        add_deps("dynareadout_cpp")
         add_packages("pybind11")
         add_options("profiling")
         add_files("src/python/*.cpp")

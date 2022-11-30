@@ -23,57 +23,30 @@
  * 3. This notice may not be removed or altered from any source distribution.
  ************************************************************************************/
 
-#include <cmath>
+#ifdef PROFILING
+#define DOCTEST_CONFIG_IMPLEMENT
+#include <profiling.h>
+#else
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#endif
+#define DOCTEST_CONFIG_TREAT_CHAR_STAR_AS_STRING
 #include <doctest/doctest.h>
 #include <iostream>
-#include <profiling.h>
 
-void profile_test_func1() {
-  BEGIN_PROFILE_FUNC();
+#ifdef PROFILING
+int main(int args, char *argv[]) {
+  std::cout << "Running with Profiling" << std::endl;
+  doctest::Context ctx;
 
-  for (size_t i = 0; i < 204987298347;) {
-    if (i < 10) {
-      i++;
-    } else {
-      i += (i * i) / (i / 2);
-    }
+  ctx.applyCommandLine(args, argv);
+
+  const int res = ctx.run();
+
+  if (ctx.shouldExit()) {
+    return res;
   }
 
-  END_PROFILE_FUNC();
+  END_PROFILING("test_data/profiling_data.txt");
+  return res;
 }
-
-void profile_test_func2() {
-  BEGIN_PROFILE_FUNC();
-
-  std::cout << "Hello World" << std::endl;
-  std::cout << "I am a function" << std::endl;
-  std::cout << "I just want to help you :-)" << std::endl;
-
-  END_PROFILE_FUNC();
-}
-
-void profile_test_func3(int i = 0) {
-  BEGIN_PROFILE_FUNC();
-
-  if (i == 10000) {
-    END_PROFILE_FUNC();
-    return;
-  }
-
-  profile_test_func3(i + 1);
-
-  END_PROFILE_FUNC();
-}
-
-TEST_CASE("profiling") {
-  BEGIN_PROFILE_SECTION(math_equation);
-  float math_value = sin(cos(sin(tan(5.0f + tan(5.0f)))));
-  math_value += sin(cos(sin(tan(math_value + tan(math_value)))));
-  END_PROFILE_SECTION(math_equation);
-
-  profile_test_func1();
-  profile_test_func2();
-  profile_test_func3();
-
-  END_PROFILING("test_data/profiling_test.txt");
-}
+#endif
