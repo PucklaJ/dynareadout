@@ -22,6 +22,8 @@ You just need any C compiler and [xmake](https://xmake.io) as the build system. 
 | Python   | `--build_python=y` |    ❌    |
 | Go       | -                  |    ❌    |
 
+The repository also contains a Makefile. This file can be used to build the C and C++ libraries of dynareadout. By default calling `make` will only compile the C library with **gcc** for **x86_64**, but when executing `make all` it will also build the C++ library. Note that the C++ library requires a gcc installation supporting C++17. The built binaries can be found inside the `build/linux/x86_64/release` folder.
+
 ## xmake repo
 
 This library has been added to the [xmake repo](https://github.com/xmake-io/xmake-repo). Therefore it can be installed using `xrepo install dynareadout`. To use it inside an xmake project use the following code inside your xmake.lua.
