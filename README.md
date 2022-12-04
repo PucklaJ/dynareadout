@@ -6,11 +6,11 @@ An Ansi C library for parsing binary output files of LS Dyna (d3plot, binout)
 
 This library also supports bindings to other languages
 
-| Language | Implemented |
-| -------- | :---------: |
-| C++      |      ✅      |
-| Python   |      ✅      |
-| Go       |      ❌      |
+| Language | Implemented | Repository                                                           |
+| -------- | :---------: | -------------------------------------------------------------------- |
+| C++      |      ✅      | [dynareadout](https://github.com/PucklaJ/dynareadout)               |
+| Python   |      ✅      | [dynareadout_python](https://github.com/PucklaJ/dynareadout_python) |
+| Go       |      ❌      |                                                                     |
 
 ## Build
 
@@ -40,6 +40,17 @@ target("example")
   add_packages("dynareadout")
   add_files("src/example.c")
 ```
+
+## Python
+
+The python version of this library can by installed using pip:
+
+*The library has currently not been uploaded to PyPI*
+```console
+python -m pip install dynareadout
+```
+
+Examples for the python version can be found on the [repository](https://github.com/PucklaJ/dynareadout_python)
 
 ## Examples
 
@@ -71,7 +82,7 @@ int main(int args, char* argv[]) {
 
     i++;
   }
-  binout_free_children(children, num_children);
+  binout_free_children(children);
 
   /* Read some data. The library implements read functions for multiple types*/
   size_t num_node_ids;
