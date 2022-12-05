@@ -28,7 +28,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef CDP
 #define CDP plot_file->control_data
+#endif
+#ifdef DT_PTR_SET
+#undef DT_PTR_SET
+#endif
 #define DT_PTR_SET(index)                                                      \
   plot_file->data_pointers[index] = plot_file->buffer.cur_word
 

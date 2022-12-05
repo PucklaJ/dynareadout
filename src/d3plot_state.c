@@ -27,7 +27,12 @@
 #include "profiling.h"
 #include <stdlib.h>
 
+#ifndef CDP
 #define CDP plot_file->control_data
+#endif
+#ifdef DT_PTR_SET
+#undef DT_PTR_SET
+#endif
 #define DT_PTR_SET(value)                                                      \
   if (plot_file->num_states == 1)                                              \
   plot_file->data_pointers[value] = plot_file->buffer.cur_word - state_start

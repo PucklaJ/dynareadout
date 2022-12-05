@@ -36,33 +36,33 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define ERROR_AND_RETURN(msg)                                                  \
+#define ERROR_AND_RETURN_BUFFER(msg)                                           \
   if (buffer.error_string)                                                     \
     free(buffer.error_string);                                                 \
   buffer.error_string = malloc(strlen(msg) + 1);                               \
   sprintf(buffer.error_string, "%s", msg);                                     \
   END_PROFILE_FUNC();                                                          \
   return buffer;
-#define ERROR_AND_RETURN_F(format_str, ...)                                    \
+#define ERROR_AND_RETURN_BUFFER_F(format_str, ...)                             \
   {                                                                            \
     char format_buffer[1024];                                                  \
     sprintf(format_buffer, format_str, __VA_ARGS__);                           \
-    ERROR_AND_RETURN(format_buffer);                                           \
+    ERROR_AND_RETURN_BUFFER(format_buffer);                                    \
   }
 #define ERROR_AND_NO_RETURN_PTR(msg)                                           \
   if (buffer->error_string)                                                    \
     free(buffer->error_string);                                                \
   buffer->error_string = malloc(strlen(msg) + 1);                              \
   sprintf(buffer->error_string, "%s", msg);
-#define ERROR_AND_RETURN_PTR(msg)                                              \
+#define ERROR_AND_RETURN_BUFFER_PTR(msg)                                       \
   ERROR_AND_NO_RETURN_PTR(msg);                                                \
   END_PROFILE_FUNC();                                                          \
   return;
-#define ERROR_AND_RETURN_F_PTR(format_str, ...)                                \
+#define ERROR_AND_RETURN_BUFFER_F_PTR(format_str, ...)                         \
   {                                                                            \
     char format_buffer[1024];                                                  \
     sprintf(format_buffer, format_str, __VA_ARGS__);                           \
-    ERROR_AND_RETURN_PTR(format_buffer);                                       \
+    ERROR_AND_RETURN_BUFFER_PTR(format_buffer);                                \
   }
 
 d3_buffer d3_buffer_open(const char *root_file_name) {
@@ -108,11 +108,11 @@ d3_buffer d3_buffer_open(const char *root_file_name) {
 
     /* Calculate the file size*/
     if (fseek(file, 0, SEEK_END) != 0) {
-      ERROR_AND_RETURN("Failed to calculate file size. SEEK_END");
+      ERROR_AND_RETURN_BUFFER("Failed to calculate file size. SEEK_END");
     }
     const size_t file_size = ftell(file);
     if (fseek(file, 0, SEEK_SET) != 0) {
-      ERROR_AND_RETURN("Failed to calculate file size. SEEK_SET");
+      ERROR_AND_RETURN_BUFFER("Failed to calculate file size. SEEK_SET");
     }
 
     buffer.num_file_handles++;
@@ -133,7 +133,8 @@ d3_buffer d3_buffer_open(const char *root_file_name) {
   free(file_name_buffer);
 
   if (buffer.num_file_handles == 0) {
-    ERROR_AND_RETURN_F("No files with the name %s do exist", root_file_name);
+    ERROR_AND_RETURN_BUFFER_F("No files with the name %s do exist",
+                              root_file_name);
   }
 
   /* Determine word_size by reading NDIM*/
@@ -149,7 +150,7 @@ d3_buffer d3_buffer_open(const char *root_file_name) {
   const int makes_sense64 = ndim64 >= 2 && ndim64 <= 7;
 
   if ((!makes_sense32 && !makes_sense64) || (makes_sense32 && makes_sense64)) {
-    ERROR_AND_RETURN("The d3plot files are broken");
+    ERROR_AND_RETURN_BUFFER("The d3plot files are broken");
   }
 
   /* The word size could be determined*/
@@ -157,7 +158,7 @@ d3_buffer d3_buffer_open(const char *root_file_name) {
 
   /* Seek back to the beginning. We know that NDIM is inside the first file*/
   if (fseek(buffer.file_handles[0], 0, SEEK_SET) != 0) {
-    ERROR_AND_RETURN("Failed to seek back after determining word size");
+    ERROR_AND_RETURN_BUFFER("Failed to seek back after determining word size");
   }
   buffer.cur_word = 0;
 
@@ -199,7 +200,7 @@ void d3_buffer_read_words(d3_buffer *buffer, void *words, size_t num_words) {
     /* We can read everything from the current file*/
     if (fread(words, buffer->word_size, num_words,
               buffer->file_handles[buffer->cur_file_handle]) < num_words) {
-      ERROR_AND_RETURN_PTR("Read Error");
+      ERROR_AND_RETURN_BUFFER_PTR("Read Error");
     }
     buffer->cur_word += num_words;
 
@@ -217,7 +218,7 @@ void d3_buffer_read_words(d3_buffer *buffer, void *words, size_t num_words) {
                   num_words - words_read,
                   buffer->file_handles[buffer->cur_file_handle]) <
             num_words - words_read) {
-          ERROR_AND_RETURN_PTR("Read Error");
+          ERROR_AND_RETURN_BUFFER_PTR("Read Error");
         }
 
         buffer->cur_word += num_words - words_read;
@@ -227,7 +228,7 @@ void d3_buffer_read_words(d3_buffer *buffer, void *words, size_t num_words) {
                   words_from_cur_file,
                   buffer->file_handles[buffer->cur_file_handle]) <
             words_from_cur_file) {
-          ERROR_AND_RETURN_PTR("Read Error");
+          ERROR_AND_RETURN_BUFFER_PTR("Read Error");
         }
 
         buffer->cur_word += words_from_cur_file;
@@ -237,7 +238,7 @@ void d3_buffer_read_words(d3_buffer *buffer, void *words, size_t num_words) {
         cur_file_pos = 0;
         if (fseek(buffer->file_handles[buffer->cur_file_handle], 0, SEEK_SET) !=
             0) {
-          ERROR_AND_RETURN_PTR("Seek Error");
+          ERROR_AND_RETURN_BUFFER_PTR("Seek Error");
         }
       }
     }
@@ -254,7 +255,7 @@ void d3_buffer_read_words_at(d3_buffer *buffer, void *words, size_t num_words,
     buffer->cur_word = 0;
     buffer->cur_file_handle = 0;
     if (fseek(buffer->file_handles[0], 0, SEEK_SET) != 0) {
-      ERROR_AND_RETURN_PTR("Seek Error");
+      ERROR_AND_RETURN_BUFFER_PTR("Seek Error");
     }
 
     d3_buffer_read_words(buffer, words, num_words);
@@ -272,7 +273,7 @@ void d3_buffer_read_words_at(d3_buffer *buffer, void *words, size_t num_words,
     if (file_size > pos_in_bytes) {
       if (fseek(buffer->file_handles[buffer->cur_file_handle], pos_in_bytes,
                 SEEK_SET) != 0) {
-        ERROR_AND_RETURN_PTR("Seek Error");
+        ERROR_AND_RETURN_BUFFER_PTR("Seek Error");
       }
       pos_in_bytes = 0;
     } else {
@@ -283,7 +284,7 @@ void d3_buffer_read_words_at(d3_buffer *buffer, void *words, size_t num_words,
       if (pos_in_bytes == 0) {
         if (fseek(buffer->file_handles[buffer->cur_file_handle], 0, SEEK_SET) !=
             0) {
-          ERROR_AND_RETURN_PTR("Seek Error");
+          ERROR_AND_RETURN_BUFFER_PTR("Seek Error");
         }
       }
     }
@@ -338,11 +339,11 @@ void d3_buffer_skip_bytes(d3_buffer *buffer, size_t num_bytes) {
   if (cur_file_pos + num_bytes < buffer->file_sizes[buffer->cur_file_handle]) {
     if (fseek(buffer->file_handles[buffer->cur_file_handle], num_bytes,
               SEEK_CUR) != 0) {
-      ERROR_AND_RETURN_PTR("Seek Error");
+      ERROR_AND_RETURN_BUFFER_PTR("Seek Error");
     }
     const size_t advanced = num_bytes / buffer->word_size;
     if (advanced * buffer->word_size != num_bytes) {
-      ERROR_AND_RETURN_F_PTR(
+      ERROR_AND_RETURN_BUFFER_F_PTR(
           "The number of bytes %lu is not divisible by the word size %d",
           num_bytes, buffer->word_size);
     }
@@ -353,11 +354,11 @@ void d3_buffer_skip_bytes(d3_buffer *buffer, size_t num_bytes) {
     buffer->cur_file_handle++;
     if (fseek(buffer->file_handles[buffer->cur_file_handle], 0, SEEK_SET) !=
         0) {
-      ERROR_AND_RETURN_PTR("Seek Error");
+      ERROR_AND_RETURN_BUFFER_PTR("Seek Error");
     }
     const size_t advanced = bytes_skipped / buffer->word_size;
     if (advanced * buffer->word_size != bytes_skipped) {
-      ERROR_AND_RETURN_F_PTR(
+      ERROR_AND_RETURN_BUFFER_F_PTR(
           "The number of bytes %lu is not divisible by the word size %d",
           bytes_skipped, buffer->word_size);
     }
