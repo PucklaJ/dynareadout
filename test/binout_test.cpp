@@ -182,6 +182,22 @@ TEST_CASE("binout0000 C++") {
 
   CHECK(bin_file.get_num_timesteps("/nodout") == 601);
 
+  try {
+    bin_file.get_num_timesteps("/schinken");
+    FAIL("Binout::get_num_timesteps should throw an exception if an invalid "
+         "path is supplied");
+  } catch (const dro::Binout::Exception &e) {
+    CHECK(e.what() == "The path does not exist or has files as children");
+  }
+
+  try {
+    bin_file.get_num_timesteps("/nodout/schinken");
+    FAIL("Binout::get_num_timesteps should throw an exception if an invalid "
+         "path is supplied");
+  } catch (const dro::Binout::Exception &e) {
+    CHECK(e.what() == "The path does not exist or has files as children");
+  }
+
   {
     const auto children = bin_file.get_children("/nodout/metadata/");
     REQUIRE(children.size() == 7);

@@ -199,7 +199,7 @@ binout_directory_get_children(const binout_directory_t *dir, path_view_t *path,
   size_t index = binout_directory_binary_search_folder(
       dir->children, 0, dir->num_children - 1, path);
   if (index == (size_t)~0) {
-    *num_children = 0;
+    *num_children = ~0;
     END_PROFILE_FUNC();
     return NULL;
   }
