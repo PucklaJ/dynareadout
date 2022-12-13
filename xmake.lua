@@ -91,9 +91,10 @@ if get_config("build_python") then
         add_rpathdirs("@executable_path")
 
         on_load(function (target)
-            os.execv("python3-config", {"--extension-suffix"}, {stdout="/tmp/python_config_name.txt"})
-            ext_name = io.readfile("/tmp/python_config_name.txt")
+            local ext_file = os.tmpfile()
+            os.execv("python3-config", {"--extension-suffix"}, {stdout=ext_file})
+            ext_name = io.readfile(ext_file)
             ext_name = ext_name:gsub("%s+", "")
-            target:set("filename", "dynareadout" .. ext_name)
+            target:set("filename", "dynareadout" .. (is_mode("debug") and "_d" or "") .. ext_name)
         end)
 end

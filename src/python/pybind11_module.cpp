@@ -31,7 +31,11 @@ namespace py = pybind11;
 void add_binout_library_to_module(py::module_ &m);
 void add_d3plot_library_to_module(py::module_ &m);
 
+#ifdef NDEBUG
 PYBIND11_MODULE(dynareadout, m) {
+#else
+PYBIND11_MODULE(dynareadout_d, m) {
+#endif
   dro::add_array_to_module(m);
   add_binout_library_to_module(m);
   add_d3plot_library_to_module(m);

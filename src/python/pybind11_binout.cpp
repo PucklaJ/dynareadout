@@ -102,6 +102,7 @@ void add_binout_library_to_module(py::module_ &m) {
       .def("get_type_id", &dro::Binout::get_type_id)
       .def("variable_exists", &dro::Binout::variable_exists)
       .def("get_children", &dro::Binout::get_children)
+      .def("get_num_timesteps", &dro::Binout::get_num_timesteps)
 
       ;
 }
