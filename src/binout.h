@@ -106,8 +106,13 @@ void binout_free_children(char **children);
 /* Returns all file errors as one string. This gives information about files
  * that failed in binout_open. These errors are not fatal. If the return value
  * is NULL, no error occurred. The return value needs to be deallocated by
- * free.*/
+ * free. The given path needs to be absolute.*/
 char *binout_open_error(binout_file *bin_file);
+
+/* A utility function that returns the number of dxxxxxx entries under a certain
+ * path. Returns 0 if the path exists and no dxxxxxx entries have been found and
+ * returns ~0 if the path does not exist or if the path points to files.*/
+size_t binout_get_num_timesteps(const binout_file *bin_file, const char *path);
 
 /* ----------------------------- */
 
@@ -123,6 +128,9 @@ const char *_binout_get_type_name(const uint64_t type_id);
  * Example: "test_data/binout0000: Failed to open file"*/
 void _binout_add_file_error(binout_file *bin_file, const char *file_name,
                             const char *message);
+/* Returns 1 if the given folder_name is a dxxxxxx folder and 0 otherwise. The
+ * string can not be empty and must be null-terminated.*/
+int _binout_is_d_string(const char *folder_name);
 /* ----------------------------- */
 #ifdef __cplusplus
 }

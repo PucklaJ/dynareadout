@@ -73,6 +73,8 @@ public:
   bool variable_exists(const std::string &path_to_variable) const noexcept;
   // Returns the entries under a given path
   std::vector<String> get_children(const std::string &path) const noexcept;
+  // Returns the number of dxxxxxx folders inside of a given path
+  size_t get_num_timesteps(const std::string &path) const;
 
   binout_file &get_handle() noexcept { return m_handle; }
   const binout_file &get_handle() const noexcept { return m_handle; }

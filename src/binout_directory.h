@@ -106,7 +106,7 @@ const binout_file_t *binout_folder_get_file(const binout_folder_t *dir,
 /* Returns an pointer to children of an folder.
  * If the given path is a file this returns NULL and sets num_children to 0.
  * If the given path does not exist this returns NULL and sets num_children to
- * 0. The path needs to be absolute and start at the root folder (start == 0).
+ * ~0. The path needs to be absolute and start at the root folder (start == 0).
  */
 const binout_folder_or_file_t *
 binout_directory_get_children(const binout_directory_t *dir, path_view_t *path,

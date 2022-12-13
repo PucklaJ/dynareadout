@@ -507,6 +507,52 @@ char *binout_open_error(binout_file *bin_file) {
   return file_error;
 }
 
+size_t binout_get_num_timesteps(const binout_file *bin_file, const char *path) {
+  BEGIN_PROFILE_FUNC();
+
+  path_view_t pv = path_view_new(path);
+
+  size_t num_children;
+  const binout_folder_or_file_t *folder_or_file =
+      binout_directory_get_children(&bin_file->directory, &pv, &num_children);
+
+  if (num_children == 0) {
+    END_PROFILE_FUNC();
+    return 0;
+  }
+  if (num_children == (size_t)~0 || folder_or_file->type == BINOUT_FILE) {
+    END_PROFILE_FUNC();
+    return ~0;
+  }
+
+  const binout_folder_t *folders = (const binout_folder_t *)folder_or_file;
+
+  /* Loop until the first dxxxxxx string has been found. It's probably the first
+   * one.*/
+  size_t start_index = 0;
+  while (start_index < num_children &&
+         !_binout_is_d_string(folders[start_index].name)) {
+    start_index++;
+  }
+
+  /* If no dxxxxxx folders are found*/
+  if (start_index == num_children) {
+    END_PROFILE_FUNC();
+    return 0;
+  }
+
+  /* Loop until the last dxxxxxx string has been found. It's probably the
+   * penultimate one, after "metadata"*/
+  size_t end_index = num_children - 1;
+  while (end_index > start_index &&
+         !_binout_is_d_string(folders[end_index].name)) {
+    end_index--;
+  }
+
+  END_PROFILE_FUNC();
+  return end_index - start_index + 1;
+}
+
 const char *_binout_get_command_name(const uint64_t command) {
   switch (command) {
   case BINOUT_COMMAND_NULL:
@@ -614,4 +660,25 @@ void _binout_add_file_error(binout_file *bin_file, const char *file_name,
   bin_file->file_errors[bin_file->num_file_errors - 1]
                        [file_name_length + middle_length + message_length] =
       '\0';
+}
+
+int _binout_is_d_string(const char *folder_name) {
+  if (folder_name[0] != 'd') {
+    return 0;
+  }
+
+  size_t i = 1;
+  while (1) {
+    if (folder_name[i] == '\0') {
+      break;
+    }
+    /* If the character is not a number*/
+    if (!(folder_name[i] >= 48 && folder_name[i] <= 57)) {
+      return 0;
+    }
+    i++;
+  }
+
+  /* So that the string can not just be "d"*/
+  return i != 1;
 }

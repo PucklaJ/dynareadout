@@ -78,6 +78,18 @@ Binout::get_children(const std::string &path) const noexcept {
   return children_vec;
 }
 
+size_t Binout::get_num_timesteps(const std::string &path) const {
+  const size_t num_timesteps{binout_get_num_timesteps(&m_handle, path.c_str())};
+
+  if (num_timesteps == ~0) {
+    throw Exception(String(
+        const_cast<char *>("The path does not exist or has files as children"),
+        false));
+  }
+
+  return num_timesteps;
+}
+
 template <> Array<int8_t> Binout::read(const std::string &path_to_variable) {
   size_t data_size;
   int8_t *data =

@@ -86,6 +86,8 @@ TEST_CASE("binout0000") {
 
   binout_free_children(binout_children);
 
+  CHECK(binout_get_num_timesteps(&bin_file, "/nodout") == 601);
+
   binout_children =
       binout_get_children(&bin_file, "/nodout", &num_binout_children);
   REQUIRE(num_binout_children == 602);
@@ -177,6 +179,8 @@ TEST_CASE("binout0000 C++") {
     CHECK(children[0] == "nodout");
     CHECK(children[1] == "rcforc");
   }
+
+  CHECK(bin_file.get_num_timesteps("/nodout") == 601);
 
   {
     const auto children = bin_file.get_children("/nodout/metadata/");

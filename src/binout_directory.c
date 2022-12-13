@@ -239,7 +239,7 @@ binout_folder_get_children(const binout_folder_t *folder, path_view_t *path,
   size_t index = binout_directory_binary_search_folder(
       (binout_folder_t *)folder->children, 0, folder->num_children - 1, path);
   if (index == (size_t)~0) {
-    *num_children = 0;
+    *num_children = ~0;
     END_PROFILE_FUNC();
     return NULL;
   }
