@@ -44,7 +44,6 @@ target("example")
 
 The python version of this library can by installed using pip:
 
-*The library has currently not been uploaded to PyPI*
 ```console
 python -m pip install dynareadout
 ```
