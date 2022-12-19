@@ -640,6 +640,24 @@ TEST_CASE("d3plot C++") {
   part = plot_file.read_part(4);
   CHECK(part.get_shell_elements().size() == 7368);
 
+  {
+    auto shell_ids = plot_file.read_shell_element_ids();
+    auto shell_cons = plot_file.read_shell_elements();
+
+    dro::Array<d3_word> node_ids;
+
+    const auto part_node_ids =
+        part.get_node_ids(plot_file, nullptr, nullptr, &shell_ids, nullptr,
+                          &node_ids, nullptr, nullptr, &shell_cons);
+
+    CHECK(part_node_ids.size() == 7370);
+    REQUIRE(node_ids.size() == 114893);
+    CHECK(node_ids[59530] == 84285019);
+    CHECK(node_ids[0] == 10);
+    CHECK(node_ids[114892] == 84340381);
+    CHECK(node_ids[2458] == 2852);
+  }
+
   part = plot_file.read_part(5);
   CHECK(part.get_shell_elements().size() == 828);
 

@@ -29,6 +29,8 @@
 
 namespace dro {
 
+class D3plot;
+
 class D3plotPart {
 public:
   D3plotPart(const d3plot_part &part);
@@ -41,6 +43,17 @@ public:
   Array<d3_word> get_thick_shell_elements();
   Array<d3_word> get_beam_elements();
   Array<d3_word> get_shell_elements();
+
+  Array<d3_word>
+  get_node_ids(D3plot &plot_file, Array<d3_word> *solid_ids = nullptr,
+               Array<d3_word> *beam_ids = nullptr,
+               Array<d3_word> *shell_ids = nullptr,
+               Array<d3_word> *thick_shell_ids = nullptr,
+               Array<d3_word> *node_ids = nullptr,
+               Array<d3plot_solid_con> *solid_cons = nullptr,
+               Array<d3plot_beam_con> *beam_cons = nullptr,
+               Array<d3plot_shell_con> *shell_cons = nullptr,
+               Array<d3plot_thick_shell_con> *thick_shell_cons = nullptr) const;
 
 private:
   d3plot_part m_part;
