@@ -135,6 +135,9 @@ DEFINE_BINARY_SEARCH_INSERT_FUNCTION(binout_directory_binary_search_file_insert,
 DEFINE_BINARY_SEARCH_FUNCTION(d3_word_binary_search, const d3_word *, d3_word,
                               INTCMP, )
 
+DEFINE_BINARY_SEARCH_INSERT_FUNCTION(d3_word_binary_search_insert,
+                                     const d3_word *, d3_word, INTCMP, )
+
 #ifdef PROFILING
 DEFINE_BINARY_SEARCH_INSERT_FUNCTION(string_binary_search_insert, char const **,
                                      const char *, strcmp, )

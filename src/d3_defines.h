@@ -163,6 +163,25 @@ typedef struct {
   double internal_energy;
 } d3plot_shell;
 
+typedef struct {
+  d3_word **solid_ids;
+  d3_word **beam_ids;
+  d3_word **shell_ids;
+  d3_word **thick_shell_ids;
+  d3_word **node_ids;
+
+  d3plot_solid_con **solid_cons;
+  d3plot_beam_con **beam_cons;
+  d3plot_shell_con **shell_cons;
+  d3plot_thick_shell_con **thick_shell_cons;
+
+  size_t *num_solids;
+  size_t *num_beams;
+  size_t *num_shells;
+  size_t *num_thick_shells;
+  size_t *num_node_ids;
+} d3plot_part_get_node_ids_params;
+
 #define D3_FILE_TYPE_D3PLOT 1
 #define D3_FILE_TYPE_D3DRLF 2
 #define D3_FILE_TYPE_D3THDT 3

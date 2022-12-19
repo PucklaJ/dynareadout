@@ -1949,3 +1949,145 @@ void d3plot_free_part(d3plot_part *part) {
 
   END_PROFILE_FUNC();
 }
+
+#define PGNI_LOAD(member, num, func)                                           \
+  if (!p->member) {                                                            \
+    p->member = &pointer_buffer[current_pointer++];                            \
+    *p->member = NULL;                                                         \
+  }                                                                            \
+  if (!*p->member) {                                                           \
+    if (!p->num) {                                                             \
+      p->num = &size_buffer[current_size++];                                   \
+    }                                                                          \
+    *p->member = func(plot_file, p->num);                                      \
+    /* TODO: Check for errors*/                                                \
+  }
+
+#define PGNI_UNLOAD(member)                                                    \
+  if (!params || !params->member)                                              \
+    free(*p->member);
+
+#define PGNI_PUSH()                                                            \
+  if (*num_part_node_ids == 0) {                                               \
+    *num_part_node_ids = 1;                                                    \
+    part_node_ids[0] = node_id;                                                \
+  } else {                                                                     \
+    int found;                                                                 \
+    const size_t insert_index = d3_word_binary_search_insert(                  \
+        part_node_ids, 0, *num_part_node_ids - 1, node_id, &found);            \
+    if (!found) {                                                              \
+      (*num_part_node_ids)++;                                                  \
+      /* Move everything to the right*/                                        \
+      size_t i = *num_part_node_ids - 1;                                       \
+      while (i > insert_index) {                                               \
+        part_node_ids[i] = part_node_ids[i - 1];                               \
+        i--;                                                                   \
+      }                                                                        \
+      part_node_ids[insert_index] = node_id;                                   \
+    }                                                                          \
+  }
+
+#define PGNI_ADD_ELEMENT(el_ids, el_cons, num_els, ids_func, cons_func,        \
+                         con_type)                                             \
+  if (part->num_els != 0) {                                                    \
+    PGNI_LOAD(el_ids, num_els, ids_func);                                      \
+    PGNI_LOAD(el_cons, num_els, cons_func);                                    \
+                                                                               \
+    size_t i = 0;                                                              \
+    while (i < part->num_els) {                                                \
+      const size_t el_index =                                                  \
+          d3plot_index_for_id(part->el_ids[i], *p->el_ids, *p->num_els);       \
+                                                                               \
+      const con_type *el_con = &(*p->el_cons)[el_index];                       \
+                                                                               \
+      size_t j = 0;                                                            \
+      while (j <                                                               \
+             (sizeof(el_con->node_indices) / sizeof(*el_con->node_indices))) { \
+        const d3_word node_index = el_con->node_indices[j];                    \
+        const d3_word node_id = (*p->node_ids)[node_index];                    \
+                                                                               \
+        PGNI_PUSH();                                                           \
+                                                                               \
+        j++;                                                                   \
+      }                                                                        \
+                                                                               \
+      i++;                                                                     \
+    }                                                                          \
+                                                                               \
+    PGNI_UNLOAD(el_cons);                                                      \
+    PGNI_UNLOAD(el_ids);                                                       \
+  }
+
+d3_word *d3plot_part_get_node_ids(d3plot_file *plot_file,
+                                  const d3plot_part *part,
+                                  size_t *num_part_node_ids,
+                                  d3plot_part_get_node_ids_params *params) {
+  BEGIN_PROFILE_FUNC();
+
+  d3plot_part_get_node_ids_params _param_buffer;
+  /* To allocate pointers*/
+  void *pointer_buffer[9];
+  size_t current_pointer = 0;
+  size_t size_buffer[5];
+  size_t current_size = 0;
+
+  d3plot_part_get_node_ids_params *p;
+  p = &_param_buffer;
+  if (params) {
+    memcpy(p, params, sizeof(*p));
+  } else {
+    /* Set all pointers to NULL*/
+    memset(p, 0, sizeof(*p));
+    p->num_solids = &size_buffer[current_size++];
+    p->num_beams = &size_buffer[current_size++];
+    p->num_shells = &size_buffer[current_size++];
+    p->num_thick_shells = &size_buffer[current_size++];
+    p->num_node_ids = &size_buffer[current_size++];
+  }
+
+  PGNI_LOAD(node_ids, num_node_ids, d3plot_read_node_ids);
+
+  const size_t part_node_ids_cap = part->num_solids * 8 + part->num_beams * 2 +
+                                   part->num_shells * 4 +
+                                   part->num_thick_shells * 8;
+  *num_part_node_ids = 0;
+  d3_word *part_node_ids = malloc(part_node_ids_cap * sizeof(d3_word));
+
+  /* Add solids*/
+  PGNI_ADD_ELEMENT(solid_ids, solid_cons, num_solids,
+                   d3plot_read_solid_element_ids, d3plot_read_solid_elements,
+                   d3plot_solid_con);
+  /* Add beams*/
+  PGNI_ADD_ELEMENT(beam_ids, beam_cons, num_beams, d3plot_read_beam_element_ids,
+                   d3plot_read_beam_elements, d3plot_beam_con);
+  /* Add shells*/
+  PGNI_ADD_ELEMENT(shell_ids, shell_cons, num_shells,
+                   d3plot_read_shell_element_ids, d3plot_read_shell_elements,
+                   d3plot_shell_con);
+  /* Add thick shells*/
+  PGNI_ADD_ELEMENT(thick_shell_ids, thick_shell_cons, num_thick_shells,
+                   d3plot_read_thick_shell_element_ids,
+                   d3plot_read_thick_shell_elements, d3plot_thick_shell_con);
+
+  PGNI_UNLOAD(node_ids);
+
+  {
+    const d3_word node_id = 23497;
+
+    int found;
+    const size_t insert_index = d3_word_binary_search_insert(
+        part_node_ids, 0, *num_part_node_ids - 1, node_id, &found);
+    if (!found) {
+      part_node_ids[insert_index] = node_id;
+    }
+  }
+
+  /* Shrink to fit*/
+  if (part_node_ids_cap != *num_part_node_ids) {
+    part_node_ids =
+        realloc(part_node_ids, *num_part_node_ids * sizeof(d3_word));
+  }
+
+  END_PROFILE_FUNC();
+  return part_node_ids;
+}

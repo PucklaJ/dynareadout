@@ -51,6 +51,8 @@ DEFINE_BINARY_SEARCH_INSERT_PROTO(binout_directory_binary_search_file_insert,
                                   const binout_file_t *, const char *);
 
 DEFINE_BINARY_SEARCH_PROTO(d3_word_binary_search, const d3_word *, d3_word);
+DEFINE_BINARY_SEARCH_INSERT_PROTO(d3_word_binary_search_insert, const d3_word *,
+                                  d3_word);
 
 #ifdef PROFILING
 DEFINE_BINARY_SEARCH_INSERT_PROTO(string_binary_search_insert, char const **,

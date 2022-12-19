@@ -27,6 +27,7 @@
 #include <binary_search.h>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <ctime>
 #include <d3plot.h>
 #include <doctest/doctest.h>
@@ -338,6 +339,39 @@ TEST_CASE("d3plot") {
 
   part = d3plot_read_part(&plot_file, 4);
   CHECK(part.num_shells == 7368);
+
+  size_t num_shell_ids;
+  d3_word *shell_ids =
+      d3plot_read_shell_element_ids(&plot_file, &num_shell_ids);
+  d3plot_shell_con *shell_cons =
+      d3plot_read_shell_elements(&plot_file, &num_shell_ids);
+
+  d3plot_part_get_node_ids_params pgni_params;
+  pgni_params.solid_ids = NULL;
+  pgni_params.beam_ids = NULL;
+  pgni_params.shell_ids = &shell_ids;
+  pgni_params.thick_shell_ids = NULL;
+  pgni_params.node_ids = NULL;
+  pgni_params.solid_cons = NULL;
+  pgni_params.beam_cons = NULL;
+  pgni_params.shell_cons = &shell_cons;
+  pgni_params.thick_shell_cons = NULL;
+  pgni_params.num_solids = NULL;
+  pgni_params.num_beams = NULL;
+  pgni_params.num_shells = &num_shell_ids;
+  pgni_params.num_thick_shells = NULL;
+  pgni_params.num_node_ids = NULL;
+
+  size_t num_part_node_ids;
+  d3_word *part_node_ids = d3plot_part_get_node_ids(
+      &plot_file, &part, &num_part_node_ids, &pgni_params);
+
+  free(shell_ids);
+  free(shell_cons);
+
+  CHECK(num_part_node_ids == 7370);
+
+  free(part_node_ids);
   d3plot_free_part(&part);
 
   part = d3plot_read_part(&plot_file, 5);

@@ -30,6 +30,7 @@
 #include <binout_directory.h>
 #include <binout_glob.h>
 #include <cstdint>
+#include <cstring>
 #include <doctest/doctest.h>
 #include <iomanip>
 #include <iostream>
@@ -302,6 +303,7 @@ TEST_CASE("glob") {
   binout_free_glob(globed_files, num_files);
 }
 
+#ifdef BINOUT_CPP
 TEST_CASE("Array::New") {
   auto arr = dro::Array<int>::New(5);
   arr[0] = 1;
@@ -322,6 +324,7 @@ TEST_CASE("Array::New") {
   }
   FAIL("arr[5] should have thrown an exception");
 }
+#endif
 
 char *stralloc(const char *str) {
   const int len = strlen(str);
