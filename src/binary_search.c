@@ -25,6 +25,7 @@
 
 #include "binary_search.h"
 #include "profiling.h"
+#include <string.h>
 
 #define DEFINE_BINARY_SEARCH_FUNCTION(func_name, arr_type, search_type,        \
                                       cmp_func, cmp_suf)                       \
