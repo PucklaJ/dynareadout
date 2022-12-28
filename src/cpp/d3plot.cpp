@@ -327,4 +327,14 @@ D3plotPart D3plot::read_part(size_t part_index) {
   return D3plotPart(part);
 }
 
+D3plotPart D3plot::read_part_by_id(size_t part_id,
+                                   const Array<d3_word> &part_ids) {
+  d3plot_part part = d3plot_read_part_by_id(&m_handle, part_id, part_ids.data(),
+                                            part_ids.size());
+  if (m_handle.error_string) {
+    throw Exception(String(m_handle.error_string, false));
+  }
+  return D3plotPart(part);
+}
+
 } // namespace dro

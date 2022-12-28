@@ -116,6 +116,13 @@ public:
   // Returns all elements of a part. The part_index can retrieved by iterating
   // over the array returned by read_part_ids
   D3plotPart read_part(size_t part_index);
+  // The same as read_part, but instead of an index into the parts, this
+  // functions takes an id. You can supply this function with the part ids
+  // returned by read_part_ids. If you do not do this, they will be read in this
+  // function call. Which means that if you intend to call this function
+  // multiple times, it is best to preload the part ids.
+  D3plotPart read_part_by_id(size_t part_id,
+                             const Array<d3_word> &part_ids = Array<d3_word>());
 
   // Returns the number of states (time steps)
   inline size_t num_time_steps() const { return m_handle.num_states; }

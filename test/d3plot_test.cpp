@@ -337,7 +337,7 @@ TEST_CASE("d3plot") {
   CHECK(part.num_shells == 12);
   d3plot_free_part(&part);
 
-  part = d3plot_read_part(&plot_file, 4);
+  part = d3plot_read_part_by_id(&plot_file, 71000063, NULL, 0);
   CHECK(part.num_shells == 7368);
 
   size_t num_shell_ids;
@@ -637,7 +637,7 @@ TEST_CASE("d3plot C++") {
   part = plot_file.read_part(3);
   CHECK(part.get_shell_elements().size() == 12);
 
-  part = plot_file.read_part(4);
+  part = plot_file.read_part_by_id(71000063);
   CHECK(part.get_shell_elements().size() == 7368);
 
   {
@@ -656,6 +656,13 @@ TEST_CASE("d3plot C++") {
     CHECK(node_ids[0] == 10);
     CHECK(node_ids[114892] == 84340381);
     CHECK(node_ids[2458] == 2852);
+  }
+
+  try {
+    part = plot_file.read_part_by_id(1234);
+    FAIL("plot_file.read_part_by_id(1234) should have thrown an exception");
+  } catch (const dro::D3plot::Exception &e) {
+    CHECK(e.what() == "The part id 1234 has not been found");
   }
 
   part = plot_file.read_part(5);

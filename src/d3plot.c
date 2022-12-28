@@ -1648,6 +1648,7 @@ struct tm *d3plot_read_run_time(d3plot_file *plot_file) {
 
 d3plot_part d3plot_read_part(d3plot_file *plot_file, size_t part_index) {
   BEGIN_PROFILE_FUNC();
+  CLEAR_ERROR_STRING();
 
   d3plot_part part;
   part.solid_ids = NULL;
@@ -1673,6 +1674,44 @@ d3plot_part d3plot_read_part(d3plot_file *plot_file, size_t part_index) {
   ADD_ELEMENTS_TO_PART(d3plot_read_shell_element_ids,
                        d3plot_read_shell_elements, d3plot_shell_con, num_shells,
                        shell_ids);
+
+  END_PROFILE_FUNC();
+  return part;
+}
+
+d3plot_part d3plot_read_part_by_id(d3plot_file *plot_file, d3_word part_id,
+                                   const d3_word *part_ids, size_t num_parts) {
+  BEGIN_PROFILE_FUNC();
+  CLEAR_ERROR_STRING();
+
+  d3plot_part part;
+
+  d3_word *p_part_ids =
+      part_ids ? part_ids : d3plot_read_part_ids(plot_file, &num_parts);
+  if (plot_file->error_string) {
+    END_PROFILE_FUNC();
+    return part;
+  }
+
+  if (num_parts == 0) {
+    ERROR_AND_NO_RETURN_PTR("This d3plot does not have any parts");
+    END_PROFILE_FUNC();
+    return part;
+  }
+
+  const size_t index =
+      d3_word_binary_search(p_part_ids, 0, num_parts - 1, part_id);
+  if (!part_ids) {
+    free(p_part_ids);
+  }
+
+  if (index == ~0) {
+    ERROR_AND_NO_RETURN_F_PTR("The part id %lu has not been found", part_id);
+    END_PROFILE_FUNC();
+    return part;
+  }
+
+  part = d3plot_read_part(plot_file, index);
 
   END_PROFILE_FUNC();
   return part;

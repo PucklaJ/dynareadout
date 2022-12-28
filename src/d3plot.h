@@ -167,6 +167,14 @@ struct tm *d3plot_read_run_time(d3plot_file *plot_file);
  * over the array returned by d3plot_read_part_ids. The return value needs to be
  * deallocated by _d3plot_free_part*/
 d3plot_part d3plot_read_part(d3plot_file *plot_file, size_t part_index);
+/* The same as d3plot_read_part, but instead of an index into the parts, this
+ * function takes an id. You can supply this function with the part ids returned
+ * by d3plot_read_part_ids. If you set part_ids to NULL they will be read in
+ * this function call. Which means that if you intend to call this function
+ * multiple times, it is best to preload the part ids. The return value needs to
+ * be deallocated by _d3plot_free_part.*/
+d3plot_part d3plot_read_part_by_id(d3plot_file *plot_file, d3_word part_id,
+                                   const d3_word *part_ids, size_t num_parts);
 
 /***** Data sections *******/
 /* GEOMETRY DATA pg. 17*/

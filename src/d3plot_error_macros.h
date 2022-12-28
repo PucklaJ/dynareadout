@@ -65,5 +65,8 @@
     sprintf(format_buffer, format_str, __VA_ARGS__);                           \
     ERROR_AND_RETURN_PTR(format_buffer);                                       \
   }
+#define CLEAR_ERROR_STRING()                                                   \
+  free(plot_file->error_string);                                               \
+  plot_file->error_string = NULL;
 
 #endif

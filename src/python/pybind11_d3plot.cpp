@@ -168,6 +168,8 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def("read_title", &dro::D3plot::read_title)
       /*TODO: read_run_time*/
       .def("read_part", &dro::D3plot::read_part)
+      .def("read_part_by_id", &dro::D3plot::read_part_by_id, py::arg("part_id"),
+           py::arg("part_ids") = dro::Array<d3_word>())
 
       .def("num_time_steps", &dro::D3plot::num_time_steps)
 
