@@ -379,6 +379,7 @@ void d3plot_close(d3plot_file *plot_file) {
   free(plot_file->error_string);
 
   plot_file->num_states = 0;
+  plot_file->error_string = NULL;
 
   END_PROFILE_FUNC();
 }
@@ -445,6 +446,8 @@ d3_word *d3plot_read_all_element_ids(d3plot_file *plot_file, size_t *num_ids) {
   size_t num_ids_buffer;
   d3_word *ids_buffer =
       d3plot_read_solid_element_ids(plot_file, &num_ids_buffer);
+  /* If an error occurs when trying to read the element ids, those specific
+   * elements will be ignored*/
   if (num_ids_buffer > 0) {
     all_ids = _insert_sorted(all_ids, *num_ids, ids_buffer, num_ids_buffer);
     *num_ids += num_ids_buffer;
@@ -478,6 +481,7 @@ d3_word *d3plot_read_all_element_ids(d3plot_file *plot_file, size_t *num_ids) {
 
 d3_word *d3plot_read_part_ids(d3plot_file *plot_file, size_t *num_parts) {
   BEGIN_PROFILE_FUNC();
+  CLEAR_ERROR_STRING();
 
   if (plot_file->data_pointers[D3PLT_PTR_PART_IDS] == 0) {
     if (plot_file->data_pointers[D3PLT_PTR_PART_TITLES] == 0) {
@@ -521,6 +525,7 @@ d3_word *d3plot_read_part_ids(d3plot_file *plot_file, size_t *num_parts) {
 
 char **d3plot_read_part_titles(d3plot_file *plot_file, size_t *num_parts) {
   BEGIN_PROFILE_FUNC();
+  CLEAR_ERROR_STRING();
 
   *num_parts = plot_file->control_data.nmmat;
   char **part_titles = malloc(*num_parts * sizeof(char *));
@@ -633,6 +638,7 @@ float *d3plot_read_node_acceleration_32(d3plot_file *plot_file, size_t state,
 
 double d3plot_read_time(d3plot_file *plot_file, size_t state) {
   BEGIN_PROFILE_FUNC();
+  CLEAR_ERROR_STRING();
 
   if (state >= plot_file->num_states) {
     ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
@@ -669,6 +675,7 @@ double d3plot_read_time(d3plot_file *plot_file, size_t state) {
 d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
                                        size_t *num_solids) {
   BEGIN_PROFILE_FUNC();
+  CLEAR_ERROR_STRING();
 
   *num_solids = plot_file->control_data.nel8;
   if (*num_solids == 0) {
@@ -816,6 +823,7 @@ d3plot_thick_shell *d3plot_read_thick_shells_state(d3plot_file *plot_file,
                                                    size_t state,
                                                    size_t *num_thick_shells) {
   BEGIN_PROFILE_FUNC();
+  CLEAR_ERROR_STRING();
 
   *num_thick_shells = plot_file->control_data.nelt;
   if (*num_thick_shells == 0) {
@@ -980,6 +988,7 @@ d3plot_thick_shell *d3plot_read_thick_shells_state(d3plot_file *plot_file,
 d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
                                      size_t *num_beams) {
   BEGIN_PROFILE_FUNC();
+  CLEAR_ERROR_STRING();
 
   *num_beams = plot_file->control_data.nel2;
   if (*num_beams == 0) {
@@ -1079,6 +1088,7 @@ d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
 d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
                                        size_t *num_shells) {
   BEGIN_PROFILE_FUNC();
+  CLEAR_ERROR_STRING();
 
   *num_shells = plot_file->control_data.nel4;
   if (*num_shells == 0) {
@@ -1282,6 +1292,7 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
 d3plot_solid_con *d3plot_read_solid_elements(d3plot_file *plot_file,
                                              size_t *num_solids) {
   BEGIN_PROFILE_FUNC();
+  CLEAR_ERROR_STRING();
 
   if (plot_file->control_data.nel8 <= 0) {
     /* nel8 represents the number of extra nodes for ten node solids*/
@@ -1364,6 +1375,7 @@ d3plot_thick_shell_con *
 d3plot_read_thick_shell_elements(d3plot_file *plot_file,
                                  size_t *num_thick_shells) {
   BEGIN_PROFILE_FUNC();
+  CLEAR_ERROR_STRING();
 
   if (plot_file->control_data.nelt == 0) {
     *num_thick_shells = 0;
@@ -1447,6 +1459,7 @@ d3plot_read_thick_shell_elements(d3plot_file *plot_file,
 d3plot_beam_con *d3plot_read_beam_elements(d3plot_file *plot_file,
                                            size_t *num_beams) {
   BEGIN_PROFILE_FUNC();
+  CLEAR_ERROR_STRING();
 
   if (plot_file->control_data.nel2 == 0) {
     *num_beams = 0;
@@ -1517,6 +1530,7 @@ d3plot_beam_con *d3plot_read_beam_elements(d3plot_file *plot_file,
 d3plot_shell_con *d3plot_read_shell_elements(d3plot_file *plot_file,
                                              size_t *num_shells) {
   BEGIN_PROFILE_FUNC();
+  CLEAR_ERROR_STRING();
 
   if (plot_file->control_data.nel4 == 0) {
     *num_shells = 0;
@@ -1586,6 +1600,7 @@ d3plot_shell_con *d3plot_read_shell_elements(d3plot_file *plot_file,
 
 char *d3plot_read_title(d3plot_file *plot_file) {
   BEGIN_PROFILE_FUNC();
+  CLEAR_ERROR_STRING();
 
   char *title = malloc(10 * plot_file->buffer.word_size + 1);
   /* We never set D3PLT_PTR_TITLE, but because the Title is at position 0 we
@@ -1608,6 +1623,7 @@ char *d3plot_read_title(d3plot_file *plot_file) {
 
 struct tm *d3plot_read_run_time(d3plot_file *plot_file) {
   BEGIN_PROFILE_FUNC();
+  CLEAR_ERROR_STRING();
 
   d3_word run_time = 0;
   d3_buffer_read_words_at(&plot_file->buffer, &run_time, 1,
@@ -1626,20 +1642,28 @@ struct tm *d3plot_read_run_time(d3plot_file *plot_file) {
 
 #define ADD_ELEMENTS_TO_PART(id_func, el_func, el_type, part_num, part_ids)    \
   ids = id_func(plot_file, &num_elements);                                     \
-  if (num_elements > 0) {                                                      \
+  if (plot_file->error_string) {                                               \
+    /* Just ignore those elements*/                                            \
+    CLEAR_ERROR_STRING();                                                      \
+  } else if (num_elements > 0) {                                               \
     el_type *els = el_func(plot_file, &num_elements);                          \
+    if (plot_file->error_string) {                                             \
+      /* Just ignore those elements*/                                          \
+      CLEAR_ERROR_STRING();                                                    \
+    } else {                                                                   \
+      size_t i = 0;                                                            \
+      while (i < num_elements) {                                               \
+        /* For some reason materials in d3plot are parts -_('_')_-*/           \
+        if (els[i].material_index == part_index) {                             \
+          /* TODO: Insert these element ids sorted*/                           \
+          part.part_num++;                                                     \
+          part.part_ids =                                                      \
+              realloc(part.part_ids, part.part_num * sizeof(d3_word));         \
+          part.part_ids[part.part_num - 1] = ids[i];                           \
+        }                                                                      \
                                                                                \
-    size_t i = 0;                                                              \
-    while (i < num_elements) {                                                 \
-      /* For some reason materials in d3plot are parts -_('_')_-*/             \
-      if (els[i].material_index == part_index) {                               \
-        part.part_num++;                                                       \
-        part.part_ids =                                                        \
-            realloc(part.part_ids, part.part_num * sizeof(d3_word));           \
-        part.part_ids[part.part_num - 1] = ids[i];                             \
+        i++;                                                                   \
       }                                                                        \
-                                                                               \
-      i++;                                                                     \
     }                                                                          \
                                                                                \
     free(ids);                                                                 \
@@ -1674,6 +1698,16 @@ d3plot_part d3plot_read_part(d3plot_file *plot_file, size_t part_index) {
   ADD_ELEMENTS_TO_PART(d3plot_read_shell_element_ids,
                        d3plot_read_shell_elements, d3plot_shell_con, num_shells,
                        shell_ids);
+
+  /* If no elements have been found, this means that the part with the given
+   * index does not exist*/
+  if (part.num_solids == 0 && part.num_thick_shells == 0 &&
+      part.num_beams == 0 && part.num_shells == 0) {
+    ERROR_AND_NO_RETURN_F_PTR("The part with index %lu does not exist",
+                              part_index);
+    END_PROFILE_FUNC();
+    return part;
+  }
 
   END_PROFILE_FUNC();
   return part;
@@ -1787,6 +1821,8 @@ int _get_nth_digit(d3_word value, int n) {
 
 double *_d3plot_read_node_data(d3plot_file *plot_file, size_t state,
                                size_t *num_nodes, size_t data_type) {
+  CLEAR_ERROR_STRING();
+
   if (plot_file->buffer.word_size == 4) {
     float *coords32 =
         _d3plot_read_node_data_32(plot_file, state, num_nodes, data_type);
@@ -1833,6 +1869,8 @@ double *_d3plot_read_node_data(d3plot_file *plot_file, size_t state,
 
 float *_d3plot_read_node_data_32(d3plot_file *plot_file, size_t state,
                                  size_t *num_nodes, size_t data_type) {
+  CLEAR_ERROR_STRING();
+
   if (plot_file->buffer.word_size == 8) {
     double *coords64 =
         _d3plot_read_node_data(plot_file, state, num_nodes, data_type);
@@ -1879,6 +1917,8 @@ float *_d3plot_read_node_data_32(d3plot_file *plot_file, size_t state,
 
 d3_word *_d3plot_read_ids(d3plot_file *plot_file, size_t *num_ids,
                           size_t data_type, size_t num_ids_value) {
+  CLEAR_ERROR_STRING();
+
   *num_ids = num_ids_value;
   if (num_ids_value == 0) {
     return NULL;
@@ -1989,18 +2029,30 @@ void d3plot_free_part(d3plot_part *part) {
   END_PROFILE_FUNC();
 }
 
-#define PGNI_LOAD(member, num, func)                                           \
-  if (!p->member) {                                                            \
-    p->member = &pointer_buffer[current_pointer++];                            \
-    *p->member = NULL;                                                         \
-  }                                                                            \
-  if (!*p->member) {                                                           \
-    if (!p->num) {                                                             \
-      p->num = &size_buffer[current_size++];                                   \
-    }                                                                          \
-    *p->member = func(plot_file, p->num);                                      \
-    /* TODO: Check for errors*/                                                \
+int _PGNI_LOAD(void ***member, size_t **num,
+               void *(func)(d3plot_file *, size_t *), void **pointer_buffer,
+               size_t *current_pointer, size_t *size_buffer,
+               size_t *current_size, d3plot_file *plot_file) {
+  if (!*member) {
+    *member = &pointer_buffer[(*current_pointer)++];
+    **member = NULL;
   }
+  if (!**member) {
+    if (!*num) {
+      *num = &size_buffer[(*current_size)++];
+    }
+    **member = func(plot_file, *num);
+    if (plot_file->error_string) {
+      return 0;
+    }
+  }
+
+  return 1;
+}
+
+#define PGNI_LOAD(member, num, func)                                           \
+  _PGNI_LOAD((void ***)&p->member, &p->num, func, pointer_buffer,              \
+             &current_pointer, size_buffer, &current_size, plot_file)
 
 #define PGNI_UNLOAD(member)                                                    \
   if (!params || !params->member)                                              \
@@ -2029,32 +2081,40 @@ void d3plot_free_part(d3plot_part *part) {
 #define PGNI_ADD_ELEMENT(el_ids, el_cons, num_els, ids_func, cons_func,        \
                          con_type)                                             \
   if (part->num_els != 0) {                                                    \
-    PGNI_LOAD(el_ids, num_els, ids_func);                                      \
-    PGNI_LOAD(el_cons, num_els, cons_func);                                    \
+    if (!PGNI_LOAD(el_ids, num_els, ids_func)) {                               \
+      /* Ignore these elements*/                                               \
+      CLEAR_ERROR_STRING();                                                    \
+    } else {                                                                   \
+      if (!PGNI_LOAD(el_cons, num_els, cons_func)) {                           \
+        /* Ignore these elements*/                                             \
+        PGNI_UNLOAD(el_ids);                                                   \
+        CLEAR_ERROR_STRING();                                                  \
+      } else {                                                                 \
+        size_t i = 0;                                                          \
+        while (i < part->num_els) {                                            \
+          const size_t el_index =                                              \
+              d3plot_index_for_id(part->el_ids[i], *p->el_ids, *p->num_els);   \
                                                                                \
-    size_t i = 0;                                                              \
-    while (i < part->num_els) {                                                \
-      const size_t el_index =                                                  \
-          d3plot_index_for_id(part->el_ids[i], *p->el_ids, *p->num_els);       \
+          const con_type *el_con = &(*p->el_cons)[el_index];                   \
                                                                                \
-      const con_type *el_con = &(*p->el_cons)[el_index];                       \
+          size_t j = 0;                                                        \
+          while (j < (sizeof(el_con->node_indices) /                           \
+                      sizeof(*el_con->node_indices))) {                        \
+            const d3_word node_index = el_con->node_indices[j];                \
+            const d3_word node_id = (*p->node_ids)[node_index];                \
                                                                                \
-      size_t j = 0;                                                            \
-      while (j <                                                               \
-             (sizeof(el_con->node_indices) / sizeof(*el_con->node_indices))) { \
-        const d3_word node_index = el_con->node_indices[j];                    \
-        const d3_word node_id = (*p->node_ids)[node_index];                    \
+            PGNI_PUSH();                                                       \
                                                                                \
-        PGNI_PUSH();                                                           \
+            j++;                                                               \
+          }                                                                    \
                                                                                \
-        j++;                                                                   \
+          i++;                                                                 \
+        }                                                                      \
+                                                                               \
+        PGNI_UNLOAD(el_cons);                                                  \
+        PGNI_UNLOAD(el_ids);                                                   \
       }                                                                        \
-                                                                               \
-      i++;                                                                     \
     }                                                                          \
-                                                                               \
-    PGNI_UNLOAD(el_cons);                                                      \
-    PGNI_UNLOAD(el_ids);                                                       \
   }
 
 d3_word *d3plot_part_get_node_ids(d3plot_file *plot_file,
@@ -2062,6 +2122,7 @@ d3_word *d3plot_part_get_node_ids(d3plot_file *plot_file,
                                   size_t *num_part_node_ids,
                                   d3plot_part_get_node_ids_params *params) {
   BEGIN_PROFILE_FUNC();
+  CLEAR_ERROR_STRING();
 
   d3plot_part_get_node_ids_params _param_buffer;
   /* To allocate pointers*/
@@ -2084,7 +2145,12 @@ d3_word *d3plot_part_get_node_ids(d3plot_file *plot_file,
     p->num_node_ids = &size_buffer[current_size++];
   }
 
-  PGNI_LOAD(node_ids, num_node_ids, d3plot_read_node_ids);
+  if (!PGNI_LOAD(node_ids, num_node_ids, d3plot_read_node_ids)) {
+    ERROR_AND_NO_RETURN_F_PTR("Failed to load node ids: %s",
+                              plot_file->error_string);
+    END_PROFILE_FUNC();
+    return NULL;
+  }
 
   const size_t part_node_ids_cap = part->num_solids * 8 + part->num_beams * 2 +
                                    part->num_shells * 4 +
@@ -2109,17 +2175,6 @@ d3_word *d3plot_part_get_node_ids(d3plot_file *plot_file,
                    d3plot_read_thick_shell_elements, d3plot_thick_shell_con);
 
   PGNI_UNLOAD(node_ids);
-
-  {
-    const d3_word node_id = 23497;
-
-    int found;
-    const size_t insert_index = d3_word_binary_search_insert(
-        part_node_ids, 0, *num_part_node_ids - 1, node_id, &found);
-    if (!found) {
-      part_node_ids[insert_index] = node_id;
-    }
-  }
 
   /* Shrink to fit*/
   if (part_node_ids_cap != *num_part_node_ids) {
