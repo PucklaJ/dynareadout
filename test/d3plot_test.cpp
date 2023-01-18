@@ -346,12 +346,14 @@ TEST_CASE("d3plot") {
   d3plot_shell_con *shell_cons =
       d3plot_read_shell_elements(&plot_file, &num_shell_ids);
 
+  node_ids = NULL;
+
   d3plot_part_get_node_ids_params pgni_params;
   pgni_params.solid_ids = NULL;
   pgni_params.beam_ids = NULL;
   pgni_params.shell_ids = &shell_ids;
   pgni_params.thick_shell_ids = NULL;
-  pgni_params.node_ids = NULL;
+  pgni_params.node_ids = &node_ids;
   pgni_params.solid_cons = NULL;
   pgni_params.beam_cons = NULL;
   pgni_params.shell_cons = &shell_cons;
@@ -360,18 +362,28 @@ TEST_CASE("d3plot") {
   pgni_params.num_beams = NULL;
   pgni_params.num_shells = &num_shell_ids;
   pgni_params.num_thick_shells = NULL;
-  pgni_params.num_node_ids = NULL;
+  pgni_params.num_node_ids = &num_nodes;
 
-  size_t num_part_node_ids;
+  size_t num_part_node_ids, num_part_node_indices;
   d3_word *part_node_ids = d3plot_part_get_node_ids(
       &plot_file, &part, &num_part_node_ids, &pgni_params);
+  d3_word *part_node_indices = d3plot_part_get_node_indices(
+      &plot_file, &part, &num_part_node_indices, &pgni_params);
 
   free(shell_ids);
   free(shell_cons);
 
   CHECK(num_part_node_ids == 7370);
 
+  CHECK(num_part_node_ids == num_part_node_indices);
+  REQUIRE(node_ids != NULL);
+  for (size_t i = 0; i < num_part_node_ids; i++) {
+    CHECK(part_node_ids[i] == node_ids[part_node_indices[i]]);
+  }
+
   free(part_node_ids);
+  free(part_node_indices);
+  free(node_ids);
   d3plot_free_part(&part);
 
   part = d3plot_read_part(&plot_file, 5);
@@ -649,6 +661,9 @@ TEST_CASE("d3plot C++") {
     const auto part_node_ids =
         part.get_node_ids(plot_file, nullptr, nullptr, &shell_ids, nullptr,
                           &node_ids, nullptr, nullptr, &shell_cons);
+    const auto part_node_indices =
+        part.get_node_indices(plot_file, nullptr, nullptr, &shell_ids, nullptr,
+                              nullptr, nullptr, &shell_cons);
 
     CHECK(part_node_ids.size() == 7370);
     REQUIRE(node_ids.size() == 114893);
@@ -656,6 +671,11 @@ TEST_CASE("d3plot C++") {
     CHECK(node_ids[0] == 10);
     CHECK(node_ids[114892] == 84340381);
     CHECK(node_ids[2458] == 2852);
+
+    CHECK(part_node_ids.size() == part_node_indices.size());
+    for (size_t i = 0; i < part_node_ids.size(); i++) {
+      CHECK(part_node_ids[i] == node_ids[part_node_indices[i]]);
+    }
   }
 
   try {

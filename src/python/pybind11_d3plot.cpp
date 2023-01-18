@@ -196,6 +196,21 @@ void add_d3plot_library_to_module(py::module_ &m) {
                static_cast<dro::Array<d3plot_shell_con> *>(nullptr),
            py::arg("thick_shell_cons") =
                static_cast<dro::Array<d3plot_thick_shell_con> *>(nullptr))
+      .def("get_node_indices", &dro::D3plotPart::get_node_indices,
+           py::arg("plot_file"),
+           py::arg("solid_ids") = static_cast<dro::Array<d3_word> *>(nullptr),
+           py::arg("beam_ids") = static_cast<dro::Array<d3_word> *>(nullptr),
+           py::arg("shell_ids") = static_cast<dro::Array<d3_word> *>(nullptr),
+           py::arg("thick_shell_ids") =
+               static_cast<dro::Array<d3_word> *>(nullptr),
+           py::arg("solid_cons") =
+               static_cast<dro::Array<d3plot_solid_con> *>(nullptr),
+           py::arg("beam_cons") =
+               static_cast<dro::Array<d3plot_beam_con> *>(nullptr),
+           py::arg("shell_cons") =
+               static_cast<dro::Array<d3plot_shell_con> *>(nullptr),
+           py::arg("thick_shell_cons") =
+               static_cast<dro::Array<d3plot_thick_shell_con> *>(nullptr))
 
       ;
 }
