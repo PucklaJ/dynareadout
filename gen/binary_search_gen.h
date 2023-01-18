@@ -23,8 +23,8 @@
  * 3. This notice may not be removed or altered from any source distribution.
  ************************************************************************************/
 
-#ifndef BINARY_SEARCH_H
-#define BINARY_SEARCH_H
+#ifndef BINARY_SEARCH_GEN_H
+#define BINARY_SEARCH_GEN_H
 
 #include <stdio.h>
 

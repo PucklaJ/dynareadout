@@ -1,0 +1,75 @@
+/***********************************************************************************
+ *                         This file is part of dynareadout
+ *                    https://github.com/PucklaJ/dynareadout
+ ***********************************************************************************
+ * Copyright (c) 2022 Jonas Pucher
+ *
+ * This software is provided 'as-is', without any express or implied warranty.
+ * In no event will the authors be held liable for any damages arising from the
+ * use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ * 1. The origin of this software must not be misrepresented; you must not claim
+ * that you wrote the original software. If you use this software in a product,
+ * an acknowledgment in the product documentation would be appreciated but is
+ * not required.
+ *
+ * 2. Altered source versions must be plainly marked as such, and must not be
+ * misrepresented as being the original software.
+ *
+ * 3. This notice may not be removed or altered from any source distribution.
+ ************************************************************************************/
+
+#ifndef BINOUT_READ_H
+#define BINOUT_READ_H
+
+#include <stddef.h>
+#include <stdint.h>
+
+#ifndef BINOUT_H
+struct binout_file;
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Read data from the file as int8_t. The type id of the data has to match*/
+int8_t *binout_read_i8(binout_file *bin_file, const char *path_to_variable,
+                       size_t *data_size);
+/* Read data from the file as int16_t. The type id of the data has to match*/
+int16_t *binout_read_i16(binout_file *bin_file, const char *path_to_variable,
+                         size_t *data_size);
+/* Read data from the file as int32_t. The type id of the data has to match*/
+int32_t *binout_read_i32(binout_file *bin_file, const char *path_to_variable,
+                         size_t *data_size);
+/* Read data from the file as int64_t. The type id of the data has to match*/
+int64_t *binout_read_i64(binout_file *bin_file, const char *path_to_variable,
+                         size_t *data_size);
+/* Read data from the file as uint8_t. The type id of the data has to match*/
+uint8_t *binout_read_u8(binout_file *bin_file, const char *path_to_variable,
+                        size_t *data_size);
+/* Read data from the file as uint16_t. The type id of the data has to match*/
+uint16_t *binout_read_u16(binout_file *bin_file, const char *path_to_variable,
+                          size_t *data_size);
+/* Read data from the file as uint32_t. The type id of the data has to match*/
+uint32_t *binout_read_u32(binout_file *bin_file, const char *path_to_variable,
+                          size_t *data_size);
+/* Read data from the file as uint64_t. The type id of the data has to match*/
+uint64_t *binout_read_u64(binout_file *bin_file, const char *path_to_variable,
+                          size_t *data_size);
+/* Read data from the file as float. The type id of the data has to match*/
+float *binout_read_f32(binout_file *bin_file, const char *path_to_variable,
+                       size_t *data_size);
+/* Read data from the file as double. The type id of the data has to match*/
+double *binout_read_f64(binout_file *bin_file, const char *path_to_variable,
+                        size_t *data_size);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif

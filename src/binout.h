@@ -58,6 +58,8 @@ typedef struct {
   char *error_string;
 } binout_file;
 
+#include "binout_read.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -69,29 +71,6 @@ extern "C" {
 binout_file binout_open(const char *file_name);
 /* Closes the binout file and deallocates all memory*/
 void binout_close(binout_file *bin_file);
-#define DEFINE_BINOUT_READ_TYPE_PROTO(c_type)                                  \
-  c_type *binout_read_##c_type(                                                \
-      binout_file *bin_file, const char *path_to_variable, size_t *data_size);
-/* Read data from the file as int8_t. The type id of the data has to match*/
-DEFINE_BINOUT_READ_TYPE_PROTO(int8_t)
-/* Read data from the file as int16_t. The type id of the data has to match*/
-DEFINE_BINOUT_READ_TYPE_PROTO(int16_t)
-/* Read data from the file as int32_t. The type id of the data has to match*/
-DEFINE_BINOUT_READ_TYPE_PROTO(int32_t)
-/* Read data from the file as int64_t. The type id of the data has to match*/
-DEFINE_BINOUT_READ_TYPE_PROTO(int64_t)
-/* Read data from the file as uint8_t. The type id of the data has to match*/
-DEFINE_BINOUT_READ_TYPE_PROTO(uint8_t)
-/* Read data from the file as uint16_t. The type id of the data has to match*/
-DEFINE_BINOUT_READ_TYPE_PROTO(uint16_t)
-/* Read data from the file as uint32_t. The type id of the data has to match*/
-DEFINE_BINOUT_READ_TYPE_PROTO(uint32_t)
-/* Read data from the file as uint64_t. The type id of the data has to match*/
-DEFINE_BINOUT_READ_TYPE_PROTO(uint64_t)
-/* Read data from the file as float. The type id of the data has to match*/
-DEFINE_BINOUT_READ_TYPE_PROTO(float)
-/* Read data from the file as double. The type id of the data has to match*/
-DEFINE_BINOUT_READ_TYPE_PROTO(double)
 /* Returns the type id of the given variable. The type ids can be found in
  * binout_defines.h*/
 uint8_t binout_get_type_id(binout_file *bin_file, const char *path_to_variable);

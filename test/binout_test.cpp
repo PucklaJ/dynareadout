@@ -122,7 +122,7 @@ TEST_CASE("binout0000") {
 
   size_t legend_size;
   int8_t *legend =
-      binout_read_int8_t(&bin_file, "/nodout/metadata/legend", &legend_size);
+      binout_read_i8(&bin_file, "/nodout/metadata/legend", &legend_size);
   REQUIRE(legend);
   CHECK(legend_size == 80);
   legend = (int8_t *)realloc(legend, legend_size + 1);
@@ -138,7 +138,7 @@ TEST_CASE("binout0000") {
 
   size_t node_ids_size;
   int64_t *node_ids =
-      binout_read_int64_t(&bin_file, "/nodout/metadata/ids", &node_ids_size);
+      binout_read_i64(&bin_file, "/nodout/metadata/ids", &node_ids_size);
   REQUIRE(node_ids);
   CHECK(node_ids_size == 1);
   free(node_ids);
@@ -149,7 +149,7 @@ TEST_CASE("binout0000") {
 
   size_t title_size;
   int8_t *title =
-      binout_read_int8_t(&bin_file, "/rcforc/metadata/title", &title_size);
+      binout_read_i8(&bin_file, "/rcforc/metadata/title", &title_size);
   REQUIRE(title);
   CHECK(title_size == 80);
   title = (int8_t *)realloc(title, title_size + 1);
@@ -288,9 +288,10 @@ TEST_CASE("glob") {
   size_t num_files;
   char **globed_files = binout_glob("src/*.c", &num_files);
 
-  CHECK(num_files == 11);
+  CHECK(num_files == 12);
   CHECK(strarr_contains(globed_files, num_files, "src/binary_search.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/binout_glob.c"));
+  CHECK(strarr_contains(globed_files, num_files, "src/binout_read.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/binout.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/binout_directory.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/d3_buffer.c"));

@@ -56,17 +56,6 @@
     break;                                                                     \
   }
 
-#define NEW_ERROR_STRING(message)                                              \
-  if (bin_file->error_string)                                                  \
-    free(bin_file->error_string);                                              \
-  const size_t message_length = strlen(message);                               \
-  bin_file->error_string = malloc(message_length + 1);                         \
-  memcpy(bin_file->error_string, message, message_length + 1);
-
-#define CLEAR_ERROR_STRING()                                                   \
-  free(bin_file->error_string);                                                \
-  bin_file->error_string = NULL;
-
 binout_file binout_open(const char *file_name) {
   BEGIN_PROFILE_FUNC();
 
@@ -352,65 +341,6 @@ void binout_close(binout_file *bin_file) {
 
   END_PROFILE_FUNC();
 }
-
-#define DEFINE_BINOUT_READ_TYPE(c_type, binout_type)                           \
-  c_type *binout_read_##c_type(binout_file *bin_file,                          \
-                               const char *path_to_variable,                   \
-                               size_t *data_size) {                            \
-    BEGIN_PROFILE_FUNC();                                                      \
-    CLEAR_ERROR_STRING();                                                      \
-                                                                               \
-    path_view_t path = path_view_new(path_to_variable);                        \
-    const binout_file_t *file =                                                \
-        binout_directory_get_file(&bin_file->directory, &path);                \
-    if (!file) {                                                               \
-      NEW_ERROR_STRING("The given variable has not been found");               \
-      END_PROFILE_FUNC();                                                      \
-      return NULL;                                                             \
-    }                                                                          \
-                                                                               \
-    if (file->var_type != binout_type) {                                       \
-      char buffer[50];                                                         \
-      sprintf(buffer, "The data is of type %s instead of %s",                  \
-              _binout_get_type_name(file->type),                               \
-              _binout_get_type_name(binout_type));                             \
-      NEW_ERROR_STRING(buffer);                                                \
-      END_PROFILE_FUNC();                                                      \
-      return NULL;                                                             \
-    }                                                                          \
-                                                                               \
-    const size_t type_size = _binout_get_type_size(binout_type);               \
-    FILE *file_handle = bin_file->file_handles[file->file_index];              \
-                                                                               \
-    if (fseek(file_handle, file->file_pos, SEEK_SET) != 0) {                   \
-      NEW_ERROR_STRING("Failed to seek to the position of the data");          \
-      END_PROFILE_FUNC();                                                      \
-      return NULL;                                                             \
-    }                                                                          \
-                                                                               \
-    c_type *data = malloc(file->size);                                         \
-    if (fread(data, file->size, 1, file_handle) != 1) {                        \
-      free(data);                                                              \
-      NEW_ERROR_STRING("Failed to read the data");                             \
-      END_PROFILE_FUNC();                                                      \
-      return NULL;                                                             \
-    }                                                                          \
-                                                                               \
-    *data_size = file->size / type_size;                                       \
-    END_PROFILE_FUNC();                                                        \
-    return data;                                                               \
-  }
-
-DEFINE_BINOUT_READ_TYPE(int8_t, BINOUT_TYPE_INT8)
-DEFINE_BINOUT_READ_TYPE(int16_t, BINOUT_TYPE_INT16)
-DEFINE_BINOUT_READ_TYPE(int32_t, BINOUT_TYPE_INT32)
-DEFINE_BINOUT_READ_TYPE(int64_t, BINOUT_TYPE_INT64)
-DEFINE_BINOUT_READ_TYPE(uint8_t, BINOUT_TYPE_UINT8)
-DEFINE_BINOUT_READ_TYPE(uint16_t, BINOUT_TYPE_UINT16)
-DEFINE_BINOUT_READ_TYPE(uint32_t, BINOUT_TYPE_UINT32)
-DEFINE_BINOUT_READ_TYPE(uint64_t, BINOUT_TYPE_UINT64)
-DEFINE_BINOUT_READ_TYPE(float, BINOUT_TYPE_FLOAT32)
-DEFINE_BINOUT_READ_TYPE(double, BINOUT_TYPE_FLOAT64)
 
 uint8_t binout_get_type_id(binout_file *bin_file,
                            const char *path_to_variable) {

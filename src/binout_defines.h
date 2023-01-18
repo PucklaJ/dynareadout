@@ -57,4 +57,15 @@
 #define BINOUT_DATA_RECORD_PREALLOC 1000
 #define BINOUT_DATA_RECORD_ALLOC_ADV 100
 
+#define NEW_ERROR_STRING(message)                                              \
+  if (bin_file->error_string)                                                  \
+    free(bin_file->error_string);                                              \
+  const size_t message_length = strlen(message);                               \
+  bin_file->error_string = malloc(message_length + 1);                         \
+  memcpy(bin_file->error_string, message, message_length + 1);
+
+#define CLEAR_ERROR_STRING()                                                   \
+  free(bin_file->error_string);                                                \
+  bin_file->error_string = NULL;
+
 #endif

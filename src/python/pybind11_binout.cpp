@@ -61,10 +61,7 @@ py::object binout_read_wrapper(dro::Binout &bin_file,
   case Float64:
     return array_to_python_list(bin_file.read<double>(path_to_variable));
   default:
-    const char *msg = "Variable not found";
-    char *_msg = (char *)malloc(19);
-    memcpy(_msg, msg, 19);
-    throw Binout::Exception(String(_msg));
+    throw Binout::Exception(String("Variable not found", false));
   }
 }
 
