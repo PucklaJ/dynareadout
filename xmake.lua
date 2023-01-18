@@ -16,9 +16,28 @@ option("profiling")
     set_default(false)
     set_showmenu(true)
     add_defines("PROFILING")
+
+option("build_gen")
+    set_default(false)
+    set_showmenu(true)
 option_end()
 
 add_rules("mode.debug", "mode.release")
+if get_config("build_gen") then
+    target("generator")
+        set_kind("binary")
+        set_languages("ansi")
+        if is_plat("linux") then
+            add_cflags("-fPIC")
+        end
+        add_files("gen/*.c")
+        add_headerfiles("gen/*.h")
+
+        after_build(function (target)
+            os.run(target:targetfile())
+        end)
+end
+
 target("dynareadout")
     set_kind("$(kind)")
     set_languages("ansi")
