@@ -143,7 +143,8 @@ void binout_folder_insert_file(binout_folder_t *dir, char *name,
   if (dir->num_children != 0) {
     int found;
     index = binout_directory_binary_search_file_insert(
-        (binout_file_t *)dir->children, 0, dir->num_children - 1, name, &found);
+        (const binout_file_t *)dir->children, 0, dir->num_children - 1, name,
+        &found);
     if (found) {
       free(name);
       file = &((binout_file_t *)dir->children)[index];

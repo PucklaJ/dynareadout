@@ -23,40 +23,50 @@
  * 3. This notice may not be removed or altered from any source distribution.
  ************************************************************************************/
 
+/* This file has been automatically generated*/
+
 #ifndef BINARY_SEARCH_H
 #define BINARY_SEARCH_H
 #include "binout_directory.h"
 #include "d3_defines.h"
 #include <stddef.h>
 
-#define DEFINE_BINARY_SEARCH_PROTO(func_name, arr_type, search_type)           \
-  size_t func_name(arr_type arr, size_t start_index, size_t end_index,         \
-                   search_type value)
-#define DEFINE_BINARY_SEARCH_INSERT_PROTO(func_name, arr_type, search_type)    \
-  size_t func_name(arr_type arr, size_t start_index, size_t end_index,         \
-                   search_type value, int *found)
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-DEFINE_BINARY_SEARCH_PROTO(binout_directory_binary_search_folder,
-                           const binout_folder_t *, const path_view_t *);
-DEFINE_BINARY_SEARCH_INSERT_PROTO(binout_directory_binary_search_folder_insert,
-                                  const binout_folder_t *, const path_view_t *);
+size_t binout_directory_binary_search_folder(const binout_folder_t *arr,
+                                             size_t start_index,
+                                             size_t end_index,
+                                             const path_view_t *value);
 
-DEFINE_BINARY_SEARCH_PROTO(binout_directory_binary_search_file,
-                           const binout_file_t *, const path_view_t *);
-DEFINE_BINARY_SEARCH_INSERT_PROTO(binout_directory_binary_search_file_insert,
-                                  const binout_file_t *, const char *);
+size_t binout_directory_binary_search_folder_insert(const binout_folder_t *arr,
+                                                    size_t start_index,
+                                                    size_t end_index,
+                                                    const path_view_t *value,
+                                                    int *found);
 
-DEFINE_BINARY_SEARCH_PROTO(d3_word_binary_search, const d3_word *, d3_word);
-DEFINE_BINARY_SEARCH_INSERT_PROTO(d3_word_binary_search_insert, const d3_word *,
-                                  d3_word);
+size_t binout_directory_binary_search_file(const binout_file_t *arr,
+                                           size_t start_index, size_t end_index,
+                                           const path_view_t *value);
+
+size_t binout_directory_binary_search_file_insert(const binout_file_t *arr,
+                                                  size_t start_index,
+                                                  size_t end_index,
+                                                  const char *value,
+                                                  int *found);
+
+size_t d3_word_binary_search(const d3_word *arr, size_t start_index,
+                             size_t end_index, d3_word value);
+
+size_t d3_word_binary_search_insert(const d3_word *arr, size_t start_index,
+                                    size_t end_index, d3_word value,
+                                    int *found);
 
 #ifdef PROFILING
-DEFINE_BINARY_SEARCH_INSERT_PROTO(string_binary_search_insert, char const **,
-                                  const char *);
+size_t string_binary_search_insert(char const **arr, size_t start_index,
+                                   size_t end_index, const char *value,
+                                   int *found);
 #endif
 
 #ifdef __cplusplus
