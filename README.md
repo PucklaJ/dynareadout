@@ -6,8 +6,8 @@ An Ansi C library for parsing binary output files of LS Dyna (d3plot, binout)
 
 This library also supports bindings to other languages
 
-| Language | Implemented | Repository                                                           |
-| -------- | :---------: | -------------------------------------------------------------------- |
+| Language | Implemented | Repository                                                          |
+| -------- | :---------: | ------------------------------------------------------------------- |
 | C++      |      ✅      | [dynareadout](https://github.com/PucklaJ/dynareadout)               |
 | Python   |      ✅      | [dynareadout_python](https://github.com/PucklaJ/dynareadout_python) |
 | Go       |      ✅      | [dynareadout_go](https://github.com/PucklaJ/dynareadout_go)         |
@@ -84,7 +84,7 @@ int main(int args, char* argv[]) {
 
   /* Read some data. The library implements read functions for multiple types*/
   size_t num_node_ids;
-  int32_t* node_ids = binout_read_int32_t(&bin_file, "/nodout/metadata/ids", &num_node_ids);
+  int32_t* node_ids = binout_read_i32(&bin_file, "/nodout/metadata/ids", &num_node_ids);
   /* After any read you should check error_string*/
   if (bin_file.error_string) {
     fprintf(stderr, "Failed to read node ids: %s\n", bin_file.error_string);
