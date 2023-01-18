@@ -196,4 +196,42 @@ template <> Array<double> Binout::read(const std::string &path_to_variable) {
   return Array<double>(data, data_size);
 }
 
+template <>
+std::vector<Array<float>> Binout::read_timed(const std::string &variable) {
+  size_t num_values, num_timesteps;
+  float *data = binout_read_timed_f32(&m_handle, variable.c_str(), &num_values,
+                                      &num_timesteps);
+  if (m_handle.error_string) {
+    throw Exception(String(m_handle.error_string, false));
+  }
+
+  std::vector<Array<float>> vec;
+  vec.resize(num_timesteps);
+
+  for (size_t t = 0; t < num_timesteps; t++) {
+    vec[t] = Array<float>(&data[t * num_values], num_values, t == 0);
+  }
+
+  return vec;
+}
+
+template <>
+std::vector<Array<double>> Binout::read_timed(const std::string &variable) {
+  size_t num_values, num_timesteps;
+  double *data = binout_read_timed_f64(&m_handle, variable.c_str(), &num_values,
+                                       &num_timesteps);
+  if (m_handle.error_string) {
+    throw Exception(String(m_handle.error_string, false));
+  }
+
+  std::vector<Array<double>> vec;
+  vec.resize(num_timesteps);
+
+  for (size_t t = 0; t < num_timesteps; t++) {
+    vec[t] = Array<double>(&data[t * num_values], num_values, t == 0);
+  }
+
+  return vec;
+}
+
 } // namespace dro

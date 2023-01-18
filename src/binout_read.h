@@ -68,6 +68,17 @@ float *binout_read_f32(binout_file *bin_file, const char *path_to_variable,
 double *binout_read_f64(binout_file *bin_file, const char *path_to_variable,
                         size_t *data_size);
 
+/* Read a variable under the dxxxxxx folders. This functions reads all timesteps
+ * of a variable at once. If the actual variable is something like
+ * "/nodout/d000000/x_displacement" then variable has to be
+ * "/nodout/x_displacement". The shape of the array is num_timesteps *
+ * num_values which means get a value you need to index like [timestep *
+ * num_values + value]*/
+float *binout_read_timed_f32(binout_file *bin_file, const char *variable,
+                             size_t *num_values, size_t *num_timesteps);
+double *binout_read_timed_f64(binout_file *bin_file, const char *variable,
+                              size_t *num_values, size_t *num_timesteps);
+
 #ifdef __cplusplus
 }
 #endif

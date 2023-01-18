@@ -67,6 +67,8 @@ public:
 
   // Read data from the file. The type id of the data has to match T
   template <typename T> Array<T> read(const std::string &path_to_variable);
+  template <typename T>
+  std::vector<Array<T>> read_timed(const std::string &variable);
   // Returns the type id of the given variable. The type id is one of BinoutType
   BinoutType get_type_id(const std::string &path_to_variable) const;
   // Returns whether a record with the given path and variable name exists

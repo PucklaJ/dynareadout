@@ -23,6 +23,7 @@
  * 3. This notice may not be removed or altered from any source distribution.
  ************************************************************************************/
 
+#include "binary_search.h"
 #include "binout.h"
 #include "binout_defines.h"
 #include "profiling.h"
@@ -66,6 +67,100 @@ void *_binout_read(binout_file *bin_file, const char *path_to_variable,
   }
 
   *data_size = file->size / type_size;
+  return data;
+}
+
+void *_binout_read_timed(binout_file *bin_file, const char *variable,
+                         size_t *num_values, size_t *num_timesteps,
+                         const uint8_t binout_type) {
+  CLEAR_ERROR_STRING();
+
+  path_view_t path = path_view_new(variable);
+  if (!path_view_advance(&path)) {
+    NEW_ERROR_STRING("The variable path is too short");
+    return NULL;
+  }
+
+  if (bin_file->directory.num_children == 0) {
+    NEW_ERROR_STRING("The binout directory is empty");
+    return NULL;
+  }
+
+  const size_t folder_index = binout_directory_binary_search_folder(
+      bin_file->directory.children, 0, bin_file->directory.num_children - 1,
+      &path);
+
+  if (folder_index == (size_t)~0) {
+    NEW_ERROR_STRING("The folder of the variable does not exist");
+    return NULL;
+  }
+
+  if (!path_view_advance(&path)) {
+    NEW_ERROR_STRING("The variable path is too short");
+    return NULL;
+  }
+
+  const binout_folder_t *d_folders =
+      (const binout_folder_t *)bin_file->directory.children[folder_index]
+          .children;
+  const size_t num_folders =
+      bin_file->directory.children[folder_index].num_children;
+
+  size_t i = 0;
+  *num_timesteps = 0;
+
+  void *data = NULL;
+  size_t data_size = 0;
+
+  while (i < num_folders) {
+    if (_binout_is_d_string(d_folders[i].name)) {
+      if (d_folders[i].num_children == 0) {
+        i++;
+        continue;
+      }
+
+      const binout_file_t *files = (const binout_file_t *)d_folders[i].children;
+      const size_t file_index = binout_directory_binary_search_file(
+          files, 0, d_folders[i].num_children - 1, &path);
+
+      if (file_index == (size_t)~0) {
+        free(data);
+        NEW_ERROR_STRING("The file of the variable does not exist");
+        return NULL;
+      }
+
+      (*num_timesteps)++;
+
+      const binout_file_t *file = &files[file_index];
+      FILE *file_handle = bin_file->file_handles[file->file_index];
+
+      if (file->var_type != binout_type) {
+        free(data);
+        NEW_ERROR_STRING("The variable is of the wrong type");
+        return NULL;
+      }
+
+      if (fseek(file_handle, file->file_pos, SEEK_SET) != 0) {
+        free(data);
+        NEW_ERROR_STRING("Failed to seek to the position of the data");
+        return NULL;
+      }
+
+      data_size += file->size;
+      *num_values = file->size / (size_t)_binout_get_type_size(binout_type);
+
+      data = realloc(data, data_size);
+      if (fread(data + (data_size - file->size), file->size, 1, file_handle) !=
+          1) {
+        free(data);
+        NEW_ERROR_STRING("Failed to read the data");
+        return NULL;
+      }
+    }
+
+    i++;
+  }
+
   return data;
 }
 
@@ -174,6 +269,28 @@ double *binout_read_f64(binout_file *bin_file, const char *path_to_variable,
 
   double *data = (double *)_binout_read(bin_file, path_to_variable, data_size,
                                         BINOUT_TYPE_FLOAT64);
+
+  END_PROFILE_FUNC();
+  return data;
+}
+
+float *binout_read_timed_f32(binout_file *bin_file, const char *variable,
+                             size_t *num_values, size_t *num_timesteps) {
+  BEGIN_PROFILE_FUNC();
+
+  float *data = (float *)_binout_read_timed(bin_file, variable, num_values,
+                                            num_timesteps, BINOUT_TYPE_FLOAT32);
+
+  END_PROFILE_FUNC();
+  return data;
+}
+
+double *binout_read_timed_f64(binout_file *bin_file, const char *variable,
+                              size_t *num_values, size_t *num_timesteps) {
+  BEGIN_PROFILE_FUNC();
+
+  double *data = (double *)_binout_read_timed(
+      bin_file, variable, num_values, num_timesteps, BINOUT_TYPE_FLOAT64);
 
   END_PROFILE_FUNC();
   return data;

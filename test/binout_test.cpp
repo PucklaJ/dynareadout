@@ -159,6 +159,25 @@ TEST_CASE("binout0000") {
         "               ");
   free(title);
 
+  size_t num_nodes, num_timesteps;
+  float *y_displacement = binout_read_timed_f32(
+      &bin_file, "/nodout/y_displacement", &num_nodes, &num_timesteps);
+  REQUIRE(y_displacement);
+  CHECK(num_nodes == 1);
+  CHECK(num_timesteps == 601);
+
+  for (size_t t = 0; t < num_timesteps; t++) {
+    for (size_t i = 0; i < num_nodes; i++) {
+      if (t == 0) {
+        CHECK(y_displacement[t * num_nodes + i] == 0.0f);
+      } else {
+        CHECK(y_displacement[t * num_nodes + i] != 0.0f);
+      }
+    }
+  }
+
+  free(y_displacement);
+
   binout_close(&bin_file);
 }
 
@@ -242,6 +261,23 @@ TEST_CASE("binout0000 C++") {
     CHECK(title ==
           "Pouch_macro_37Ah                                                 "
           "               ");
+  }
+
+  {
+    const auto y_displacement =
+        bin_file.read_timed<float>("/nodout/y_displacement");
+    CHECK(y_displacement.size() == 601);
+    CHECK(y_displacement[0].size() == 1);
+
+    for (size_t t = 0; t < y_displacement.size(); t++) {
+      for (size_t i = 0; i < y_displacement[t].size(); i++) {
+        if (t == 0) {
+          CHECK(y_displacement[t][i] == 0.0f);
+        } else {
+          CHECK(y_displacement[t][i] != 0.0f);
+        }
+      }
+    }
   }
 }
 
