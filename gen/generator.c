@@ -24,6 +24,7 @@
  ************************************************************************************/
 
 #include "binary_search_gen.h"
+#include "d3plot_part_nodes_gen.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -99,9 +100,11 @@ void ifdef_end(FILE *file) { fprintf(file, "#endif\n"); }
 int main(int args, char *argv[]) {
   FILE *binary_search_h = fopen("src/binary_search.h", "w");
   FILE *binary_search_c = fopen("src/binary_search.c", "w");
+  FILE *pgni_h = fopen("src/pgni.h", "w");
 
   assert(binary_search_h != NULL);
   assert(binary_search_c != NULL);
+  assert(pgni_h != NULL);
 
   license(binary_search_h);
   generated_notice(binary_search_h);
@@ -210,11 +213,71 @@ int main(int args, char *argv[]) {
                             "strcmp", "");
   ifdef_end(binary_search_c);
 
+  license(pgni_h);
+  generated_notice(pgni_h);
+  newline(pgni_h);
+  header_begin(pgni_h, "PGNI_H");
+  include_rel(pgni_h, "d3plot.h");
+  include_rel(pgni_h, "d3plot_error_macros.h");
+  include_rel(pgni_h, "profiling.h");
+  include_abs(pgni_h, "stdlib.h");
+  include_abs(pgni_h, "string.h");
+  newline(pgni_h);
+  pgni_load_function_and_macro(pgni_h);
+  newline(pgni_h);
+  pgni_add_element_function(pgni_h, "solids", "solid_ids", "solid_cons",
+                            "num_solids", "d3plot_read_solid_element_ids",
+                            "d3plot_read_solid_elements", "d3plot_solid_con");
+  newline(pgni_h);
+  pgni_add_element_function(pgni_h, "beams", "beam_ids", "beam_cons",
+                            "num_beams", "d3plot_read_beam_element_ids",
+                            "d3plot_read_beam_elements", "d3plot_beam_con");
+  newline(pgni_h);
+  pgni_add_element_function(pgni_h, "shells", "shell_ids", "shell_cons",
+                            "num_shells", "d3plot_read_shell_element_ids",
+                            "d3plot_read_shell_elements", "d3plot_shell_con");
+  newline(pgni_h);
+  pgni_add_element_function(
+      pgni_h, "thick_shells", "thick_shell_ids", "thick_shell_cons",
+      "num_thick_shells", "d3plot_read_thick_shell_element_ids",
+      "d3plot_read_thick_shell_elements", "d3plot_thick_shell_con");
+  newline(pgni_h);
+  pgnind_add_element_function(pgni_h, "solids", "solid_ids", "solid_cons",
+                              "num_solids", "d3plot_read_solid_element_ids",
+                              "d3plot_read_solid_elements", "d3plot_solid_con");
+  newline(pgni_h);
+  pgnind_add_element_function(pgni_h, "beams", "beam_ids", "beam_cons",
+                              "num_beams", "d3plot_read_beam_element_ids",
+                              "d3plot_read_beam_elements", "d3plot_beam_con");
+  newline(pgni_h);
+  pgnind_add_element_function(pgni_h, "shells", "shell_ids", "shell_cons",
+                              "num_shells", "d3plot_read_shell_element_ids",
+                              "d3plot_read_shell_elements", "d3plot_shell_con");
+  newline(pgni_h);
+  pgnind_add_element_function(
+      pgni_h, "thick_shells", "thick_shell_ids", "thick_shell_cons",
+      "num_thick_shells", "d3plot_read_thick_shell_element_ids",
+      "d3plot_read_thick_shell_elements", "d3plot_thick_shell_con");
+  newline(pgni_h);
+  pgni_add_element_macro(pgni_h, "SOLIDS", "solids");
+  pgni_add_element_macro(pgni_h, "BEAMS", "beams");
+  pgni_add_element_macro(pgni_h, "SHELLS", "shells");
+  pgni_add_element_macro(pgni_h, "THICK_SHELLS", "thick_shells");
+  newline(pgni_h);
+  pgnind_add_element_macro(pgni_h, "SOLIDS", "solids");
+  pgnind_add_element_macro(pgni_h, "BEAMS", "beams");
+  pgnind_add_element_macro(pgni_h, "SHELLS", "shells");
+  pgnind_add_element_macro(pgni_h, "THICK_SHELLS", "thick_shells");
+  newline(pgni_h);
+  header_end(pgni_h);
+
   fclose(binary_search_h);
   fclose(binary_search_c);
+  fclose(pgni_h);
 
   format("src/binary_search.h");
   format("src/binary_search.c");
+  format("src/pgni.h");
 
   return 0;
 }

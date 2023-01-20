@@ -228,28 +228,12 @@ d3_word *d3plot_read_all_element_ids(d3plot_file *plot_file, size_t *num_ids);
 /* Returns the index of id in the array ids. If it cannot be found then
  * UINT64_MAX will be returned.*/
 size_t d3plot_index_for_id(d3_word id, const d3_word *ids, size_t num_ids);
-/* Returns an array containing all node ids that are inside of the part.
- * The return value needs to be deallocated by free. This functions takes a
- * d3plot_part_get_node_ids_params struct. You can set the values of the struct
- * to optimize the functions performance. If you set params to NULL all data
- * will be retrieved, allocated and deallocated inside this one function call*/
-d3_word *d3plot_part_get_node_ids(d3plot_file *plot_file,
-                                  const d3plot_part *part,
-                                  size_t *num_part_node_ids,
-                                  d3plot_part_get_node_ids_params *params);
-/* The same as d3plot_part_get_node_ids, but it returns indices instead of ids.
- * Those indices can be used to index into the node_ids array returned by
- * d3plot_read_node_ids. If you set params to NULL all data
- * will be retrieved, allocated and deallocated inside this one function call*/
-d3_word *d3plot_part_get_node_indices(d3plot_file *plot_file,
-                                      const d3plot_part *part,
-                                      size_t *num_part_node_indices,
-                                      d3plot_part_get_node_ids_params *params);
-
 /*********************************************/
 
 #ifdef __cplusplus
 }
 #endif
+
+#include "d3plot_part_nodes.h"
 
 #endif
