@@ -150,8 +150,8 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
       *num_values = file->size / (size_t)_binout_get_type_size(binout_type);
 
       data = realloc(data, data_size);
-      if (fread(data + (data_size - file->size), file->size, 1, file_handle) !=
-          1) {
+      if (fread((void *)((size_t)data + (data_size - file->size)), file->size,
+                1, file_handle) != 1) {
         free(data);
         NEW_ERROR_STRING("Failed to read the data");
         return NULL;
