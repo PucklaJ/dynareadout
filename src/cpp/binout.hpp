@@ -81,6 +81,9 @@ public:
   binout_file &get_handle() noexcept { return m_handle; }
   const binout_file &get_handle() const noexcept { return m_handle; }
 
+  String simple_path_to_real(const std::string &simple, BinoutType &type_id,
+                             bool &timed) const;
+
 private:
   // The underlying C handle of the binout file
   binout_file m_handle;

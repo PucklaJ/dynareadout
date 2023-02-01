@@ -234,4 +234,23 @@ std::vector<Array<double>> Binout::read_timed(const std::string &variable) {
   return vec;
 }
 
+String Binout::simple_path_to_real(const std::string &simple,
+                                   BinoutType &type_id, bool &timed) const {
+  uint8_t type_id_c;
+  int timed_c;
+
+  char *real_path = binout_simple_path_to_real(&m_handle, simple.c_str(),
+                                               &type_id_c, &timed_c);
+  if (!real_path) {
+    char *msg = reinterpret_cast<char *>(malloc(256 + simple.length()));
+    sprintf(msg, "The simple path \"%s\" can not be found", simple.c_str());
+    throw Exception(String(msg));
+  }
+
+  type_id = static_cast<BinoutType>(type_id_c);
+  timed_c = timed == 1;
+
+  return String(real_path);
+}
+
 } // namespace dro

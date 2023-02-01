@@ -201,7 +201,7 @@ TEST_CASE("binout0000") {
 }
 
 #ifdef BINOUT_CPP
-TEST_CASE("binout0000 C++") {
+TEST_CASE("binout0000C++") {
   {
     try {
       dro::Binout bin_file("test_data/i_dont_exist");
@@ -212,6 +212,18 @@ TEST_CASE("binout0000 C++") {
   }
 
   dro::Binout bin_file("test_data/binout0*");
+
+  dro::BinoutType type_id;
+  bool timed;
+  CHECK(bin_file.simple_path_to_real("nodout", type_id, timed).str() ==
+        "/nodout");
+
+  try {
+    bin_file.simple_path_to_real("/nodout/schinken", type_id, timed);
+    FAIL("simple_path_to_real should have thrown an exception");
+  } catch (const dro::Binout::Exception &) {
+  }
+
   {
     const auto children = bin_file.get_children("/");
     REQUIRE(children.size() == 2);
