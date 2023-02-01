@@ -53,7 +53,9 @@ d3_word *d3plot_part_get_node_ids(d3plot_file *plot_file,
     p->num_node_ids = &size_buffer[current_size++];
   }
 
-  if (!PGNI_LOAD(node_ids, num_node_ids, d3plot_read_node_ids)) {
+  if (!_PGNI_LOAD(&p->node_ids, &p->num_node_ids, d3plot_read_node_ids,
+                  pointer_buffer, &current_pointer, size_buffer, &current_size,
+                  plot_file)) {
     ERROR_AND_NO_RETURN_F_PTR("Failed to load node ids: %s",
                               plot_file->error_string);
     END_PROFILE_FUNC();

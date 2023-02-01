@@ -27,6 +27,7 @@
 
 #ifndef PGNI_H
 #define PGNI_H
+#include "binary_search.h"
 #include "d3plot.h"
 #include "d3plot_error_macros.h"
 #include "profiling.h"

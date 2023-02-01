@@ -26,6 +26,7 @@
 #include "conversions.hpp"
 #include <binout.hpp>
 #include <pybind11/pybind11.h>
+#include <tuple>
 
 namespace py = pybind11;
 
@@ -63,7 +64,16 @@ void add_binout_library_to_module(py::module_ &m) {
       .def("variable_exists", &dro::Binout::variable_exists)
       .def("get_children", &dro::Binout::get_children)
       .def("get_num_timesteps", &dro::Binout::get_num_timesteps)
-      .def("simple_path_to_real", &dro::Binout::simple_path_to_real)
+      .def("simple_path_to_real",
+           [](const dro::Binout &bin_file, const std::string &simple) {
+             dro::BinoutType type_id;
+             bool timed;
+
+             auto real_path =
+                 bin_file.simple_path_to_real(simple, type_id, timed);
+
+             return std::make_tuple(std::move(real_path), type_id, timed);
+           })
 
       ;
 }

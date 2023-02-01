@@ -222,6 +222,7 @@ int main(int args, char *argv[]) {
   include_rel(pgni_h, "profiling.h");
   include_abs(pgni_h, "stdlib.h");
   include_abs(pgni_h, "string.h");
+  include_rel(pgni_h, "binary_search.h");
   newline(pgni_h);
   pgni_load_function_and_macro(pgni_h);
   newline(pgni_h);
