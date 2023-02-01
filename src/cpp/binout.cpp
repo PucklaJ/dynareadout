@@ -248,7 +248,7 @@ String Binout::simple_path_to_real(const std::string &simple,
   }
 
   type_id = static_cast<BinoutType>(type_id_c);
-  timed_c = timed == 1;
+  timed = timed_c != 0;
 
   return String(real_path);
 }
