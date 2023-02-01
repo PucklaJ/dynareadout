@@ -24,6 +24,7 @@
  ************************************************************************************/
 
 #include <array.hpp>
+#include <cstring>
 #include <d3_defines.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -36,12 +37,107 @@ namespace py = pybind11;
 
 namespace dro {
 
+template <typename T> Array<T> array_constructor(size_t size) {
+  T *data = reinterpret_cast<T *>(malloc(size * sizeof(T)));
+  return Array<T>(data, size);
+}
+
+template <typename T>
+void array_setitem(Array<T> &self, size_t index, py::object other) {
+  if (py::isinstance<py::str>(other)) {
+    const py::str other_str(other);
+    if (py::len(other_str) == 1) {
+      const py::bytes other_bytes(other_str);
+      self[index] = other_bytes[py::int_(0)].cast<T>();
+    } else {
+      throw py::value_error("Unable to set Array value to string");
+    }
+  } else {
+    self[index] = other.cast<T>();
+  }
+}
+
 template <typename T> T &array_getitem(Array<T> &self, size_t index) {
   try {
     return self[index];
   } catch (const std::runtime_error &) {
     throw py::index_error("Index out of range");
   }
+}
+
+template <typename T>
+bool array_equals(const Array<T> &self, const py::object &other) {
+  if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) {
+    if (py::isinstance<py::str>(other)) {
+      const py::str other_str(other);
+      const py::bytes other_bytes(other_str);
+      if (self.size() != py::len(other_bytes)) {
+        return false;
+      }
+
+      for (size_t i = 0; i < self.size(); i++) {
+        if (self[i] != other_bytes[py::int_(i)].cast<T>()) {
+          return false;
+        }
+      }
+
+      return true;
+    }
+  } else {
+    if (py::isinstance<py::str>(other)) {
+      return false;
+    }
+  }
+
+  if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>) {
+    if (self.size() != py::len(other)) {
+      return false;
+    }
+
+    for (size_t i = 0; i < self.size(); i++) {
+      if (self[i] != other[py::int_(i)].cast<T>()) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  return false;
+}
+
+template <typename T>
+bool array_less_than(const Array<T> &self, const Array<T> &other) {
+  if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) {
+    if (self.size() <= other.size()) {
+      return strncmp(reinterpret_cast<const char *>(self.data()),
+                     reinterpret_cast<const char *>(other.data()),
+                     self.size()) < 0;
+    } else {
+      return strncmp(reinterpret_cast<const char *>(other.data()),
+                     reinterpret_cast<const char *>(self.data()),
+                     other.size()) > 0;
+    }
+  }
+
+  throw py::type_error("This array can not be compared");
+}
+
+template <typename T>
+bool array_greater_than(const Array<T> &self, const Array<T> &other) {
+  if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) {
+    if (self.size() <= other.size()) {
+      return strncmp(reinterpret_cast<const char *>(self.data()),
+                     reinterpret_cast<const char *>(other.data()),
+                     self.size()) > 0;
+    } else {
+      return strncmp(reinterpret_cast<const char *>(other.data()),
+                     reinterpret_cast<const char *>(self.data()),
+                     other.size()) < 0;
+    }
+  }
+
+  throw py::type_error("This array can not be compared");
 }
 
 template <typename T> inline const char *get_array_name() {
@@ -88,8 +184,13 @@ template <typename T> inline const char *get_array_name() {
 
 template <typename T> inline void add_array_type_to_module(py::module_ &m) {
   auto arr(py::class_<Array<T>>(m, get_array_name<T>())
+               .def(py::init(&array_constructor<T>))
                .def("__len__", &Array<T>::size)
+               .def("__setitem__", &array_setitem<T>)
                .def("__getitem__", &array_getitem<T>)
+               .def("__eq__", &array_equals<T>)
+               .def("__lt__", &array_less_than<T>)
+               .def("__gt__", &array_greater_than<T>)
 
   );
 
