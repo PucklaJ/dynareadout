@@ -48,7 +48,12 @@ void array_setitem(Array<T> &self, size_t index, py::object other) {
     const py::str other_str(other);
     if (py::len(other_str) == 1) {
       const py::bytes other_bytes(other_str);
-      self[index] = other_bytes[py::int_(0)].cast<T>();
+      if constexpr (std::is_same_v<T, char>) {
+        const auto temp{other_bytes[py::int_(0)].cast<int>()};
+        self[index] = static_cast<char>(temp);
+      } else {
+        self[index] = other_bytes[py::int_(0)].cast<T>();
+      }
     } else {
       throw py::value_error("Unable to set Array value to string");
     }
@@ -67,7 +72,8 @@ template <typename T> T &array_getitem(Array<T> &self, size_t index) {
 
 template <typename T>
 bool array_equals(const Array<T> &self, const py::object &other) {
-  if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) {
+  if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t> ||
+                std::is_same_v<T, char>) {
     if (py::isinstance<py::str>(other)) {
       const py::str other_str(other);
       const py::bytes other_bytes(other_str);
@@ -108,7 +114,8 @@ bool array_equals(const Array<T> &self, const py::object &other) {
 
 template <typename T>
 bool array_less_than(const Array<T> &self, const Array<T> &other) {
-  if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) {
+  if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t> ||
+                std::is_same_v<T, char>) {
     if (self.size() <= other.size()) {
       return strncmp(reinterpret_cast<const char *>(self.data()),
                      reinterpret_cast<const char *>(other.data()),
@@ -125,7 +132,8 @@ bool array_less_than(const Array<T> &self, const Array<T> &other) {
 
 template <typename T>
 bool array_greater_than(const Array<T> &self, const Array<T> &other) {
-  if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) {
+  if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t> ||
+                std::is_same_v<T, char>) {
     if (self.size() <= other.size()) {
       return strncmp(reinterpret_cast<const char *>(self.data()),
                      reinterpret_cast<const char *>(other.data()),
@@ -229,8 +237,38 @@ inline void add_array_to_module(py::module_ &m) {
   add_array_type_to_module<double>(m);
 
   py::class_<String>(m, "String")
+      .def(py::init([](size_t size) {
+        char *data = reinterpret_cast<char *>(malloc(size * sizeof(char)));
+        return String(data, size, true);
+      }))
       .def("__len__", &String::size)
-      .def("__getitem__", &array_getitem<char>)
+      .def("__setitem__",
+           [](String &self, size_t index, py::object other) {
+             Array<char> arr(self.data(), self.size(), false);
+             array_setitem(arr, index, std::move(other));
+           })
+      .def("__getitem__",
+           [](String &self, size_t index) {
+             Array<char> arr(self.data(), self.size(), false);
+             return array_getitem(arr, index);
+           })
+      .def("__eq__",
+           [](String &self, const py::object &other) {
+             Array<char> arr(self.data(), self.size(), false);
+             return array_equals(arr, other);
+           })
+      .def("__lt__",
+           [](String &self, String &other) {
+             Array<char> arr_self(self.data(), self.size(), false);
+             Array<char> arr_other(other.data(), other.size(), false);
+             return array_less_than(arr_self, arr_other);
+           })
+      .def("__gt__",
+           [](String &self, String &other) {
+             Array<char> arr_self(self.data(), self.size(), false);
+             Array<char> arr_other(other.data(), other.size(), false);
+             return array_greater_than(arr_self, arr_other);
+           })
       .def("__str__", [](String &arr) { return arr.str(); })
       .def("__repr__", [](String &arr) { return "'" + arr.str() + "'"; })
 
