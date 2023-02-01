@@ -537,7 +537,7 @@ char *binout_simple_path_to_real(const binout_file *bin_file,
       _binout_path_view_is_d_string(&pv)) {
     char *real_path = malloc((simple[0] != PATH_SEP) + strlen(simple) + 1);
     real_path[0] = PATH_SEP;
-    memcpy(&real_path[1], &simple[simple[0] != PATH_SEP], strlen(simple) + 1);
+    memcpy(&real_path[1], &simple[simple[0] == PATH_SEP], strlen(simple) + 1);
 
     /* Search for the file to get the type id*/
     pv = path_view_new(real_path);
@@ -560,7 +560,7 @@ char *binout_simple_path_to_real(const binout_file *bin_file,
   if (BINOUT_FOLDER_CHILDREN_GET_TYPE(folder) != BINOUT_FOLDER) {
     char *real_path = malloc((simple[0] != PATH_SEP) + strlen(simple) + 1);
     real_path[0] = PATH_SEP;
-    memcpy(&real_path[1], &simple[simple[0] != PATH_SEP], strlen(simple) + 1);
+    memcpy(&real_path[1], &simple[simple[0] == PATH_SEP], strlen(simple) + 1);
 
     /* Search for the file to get the type id*/
     const size_t file_index = binout_directory_binary_search_file(
