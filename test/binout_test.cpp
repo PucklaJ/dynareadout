@@ -77,6 +77,25 @@ TEST_CASE("binout0000") {
     return;
   }
 
+  int timed = 1234;
+  uint8_t type_id = BINOUT_TYPE_INVALID;
+  CHECK(binout_simple_path_to_real(&bin_file, "nodout", &type_id, &timed) ==
+        "/nodout");
+  CHECK(timed == 0);
+  CHECK(binout_simple_path_to_real(&bin_file, "/nodout", &type_id, &timed) ==
+        "/nodout");
+  CHECK(timed == 0);
+  CHECK(binout_simple_path_to_real(&bin_file, "nodout/ids", &type_id, &timed) ==
+        "/nodout/metadata/ids");
+  CHECK(timed == 0);
+  CHECK(binout_simple_path_to_real(&bin_file, "nodout/schinken", &type_id,
+                                   &timed) == NULL);
+  CHECK(binout_simple_path_to_real(&bin_file, "/", &type_id, &timed) == "/");
+  CHECK(binout_simple_path_to_real(&bin_file, "/nodout/x_displacement",
+                                   &type_id,
+                                   &timed) == "/nodout/x_displacement");
+  CHECK(timed == 1);
+
   size_t num_binout_children;
   char **binout_children =
       binout_get_children(&bin_file, "/", &num_binout_children);

@@ -93,6 +93,17 @@ char *binout_open_error(binout_file *bin_file);
  * returns ~0 if the path does not exist or if the path points to files.*/
 size_t binout_get_num_timesteps(const binout_file *bin_file, const char *path);
 
+/* This takes a path that without metadata or dxxxxxx in and converts it into a
+ * path which can be given to the read and read_timed functions. Returns the
+ * path that points to the correct file or NULL if the file does not exist or
+ * the path is invalid. timed will be set to 0 if it's a file of metadata and to
+ * 1 if it's a file of on of the dxxxxxx folders which means that the returned
+ * path should be given one of the read_timed functions. type_id will be set to
+ * the correct type id of the file. The returned string needs to be deallocated
+ * by free.*/
+char *binout_simple_path_to_real(const binout_file *bin_file,
+                                 const char *simple, uint8_t *type_id,
+                                 int *timed);
 /* ----------------------------- */
 
 /* ----- Private functions ----- */
@@ -110,6 +121,9 @@ void _binout_add_file_error(binout_file *bin_file, const char *file_name,
 /* Returns 1 if the given folder_name is a dxxxxxx folder and 0 otherwise. The
  * string can not be empty and must be null-terminated.*/
 int _binout_is_d_string(const char *folder_name);
+/* This is the same as _binout_is_d_string, but it uses the current element of a
+ * path view instead of a string*/
+int _binout_path_view_is_d_string(const path_view_t *pv);
 /* ----------------------------- */
 #ifdef __cplusplus
 }

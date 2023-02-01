@@ -29,6 +29,9 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define BINOUT_FOLDER_CHILDREN_GET_TYPE(folder)                                \
+  (((const binout_folder_or_file_t *)folder->children)->type)
+
 enum { BINOUT_FILE, BINOUT_FOLDER };
 
 /* A folder or file used to read the first byte to find out if it is a folder or
