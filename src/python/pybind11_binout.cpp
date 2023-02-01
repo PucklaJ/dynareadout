@@ -29,44 +29,6 @@
 
 namespace py = pybind11;
 
-namespace dro {
-
-template <typename T>
-std::vector<T> binout_read_type_wrapper(Binout &bin_file,
-                                        const std::string &path_to_variable) {
-  return array_vector_wrapper(bin_file.read<T>(path_to_variable));
-}
-
-py::object binout_read_wrapper(dro::Binout &bin_file,
-                               const std::string &path_to_variable) {
-  switch (bin_file.get_type_id(path_to_variable)) {
-  case Int8:
-    return array_to_python_string(bin_file.read<int8_t>(path_to_variable));
-  case Int16:
-    return array_to_python_list(bin_file.read<int16_t>(path_to_variable));
-  case Int32:
-    return array_to_python_list(bin_file.read<int32_t>(path_to_variable));
-  case Int64:
-    return array_to_python_list(bin_file.read<int64_t>(path_to_variable));
-  case Uint8:
-    return array_to_python_string(bin_file.read<uint8_t>(path_to_variable));
-  case Uint16:
-    return array_to_python_list(bin_file.read<uint16_t>(path_to_variable));
-  case Uint32:
-    return array_to_python_list(bin_file.read<uint32_t>(path_to_variable));
-  case Uint64:
-    return array_to_python_list(bin_file.read<uint64_t>(path_to_variable));
-  case Float32:
-    return array_to_python_list(bin_file.read<float>(path_to_variable));
-  case Float64:
-    return array_to_python_list(bin_file.read<double>(path_to_variable));
-  default:
-    throw Binout::Exception(String("Variable not found", false));
-  }
-}
-
-} // namespace dro
-
 void add_binout_library_to_module(py::module_ &m) {
   py::enum_<dro::BinoutType>(m, "BinoutType")
       .value("Int8", dro::BinoutType::Int8)
@@ -85,7 +47,6 @@ void add_binout_library_to_module(py::module_ &m) {
 
   py::class_<dro::Binout>(m, "Binout")
       .def(py::init<const std::string &>())
-      .def("read", &dro::binout_read_wrapper)
       .def("read_i8", &dro::Binout::read<int8_t>)
       .def("read_u8", &dro::Binout::read<uint8_t>)
       .def("read_i16", &dro::Binout::read<int16_t>)

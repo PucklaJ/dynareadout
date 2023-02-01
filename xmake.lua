@@ -94,7 +94,7 @@ if get_config("build_test") then
 end
 
 if get_config("build_python") then
-    add_requires("python3", "pybind11")
+    add_requires("python >=3.6", "pybind11")
     target("pybind11_module")
         set_kind("shared")
         set_languages("cxx17")
@@ -114,6 +114,6 @@ if get_config("build_python") then
             os.execv("python3-config", {"--extension-suffix"}, {stdout=ext_file})
             ext_name = io.readfile(ext_file)
             ext_name = ext_name:gsub("%s+", "")
-            target:set("filename", "dynareadout" .. (is_mode("debug") and "_d" or "") .. ext_name)
+            target:set("filename", "dynareadout_c" .. (is_mode("debug") and "_d" or "") .. ext_name)
         end)
 end

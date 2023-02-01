@@ -29,13 +29,6 @@
 
 namespace py = pybind11;
 
-#define D3PLOT_READ_WRAPPER(func)                                              \
-  [](dro::D3plot &plot_file) { return array_vector_wrapper(plot_file.func()); }
-#define D3PLOT_READ_STATE_WRAPPER(func)                                        \
-  [](dro::D3plot &plot_file, size_t state) {                                   \
-    return array_vector_wrapper(plot_file.func(state));                        \
-  }
-
 inline void add_d3plot_arrays_to_module(py::module_ &m) {
   dro::add_array_type_to_module<d3plot_solid_con>(m);
   dro::add_array_type_to_module<d3plot_beam_con>(m);

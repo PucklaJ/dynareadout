@@ -36,28 +36,6 @@ namespace py = pybind11;
 
 namespace dro {
 
-template <typename T>
-inline std::vector<T> array_vector_wrapper(Array<T> &&arr) noexcept {
-  std::vector<T> vec;
-  vec.resize(arr.size());
-  memcpy(vec.data(), arr.data(), arr.size() * sizeof(T));
-  return vec;
-}
-
-template <typename T> py::list array_to_python_list(Array<T> &&arr) {
-  py::list l;
-
-  for (const auto &v : arr) {
-    l.append(v);
-  }
-
-  return l;
-}
-
-template <typename T> py::str array_to_python_string(Array<T> &&arr) {
-  return py::str(arr.str());
-}
-
 template <typename T> T &array_getitem(Array<T> &self, size_t index) {
   try {
     return self[index];
