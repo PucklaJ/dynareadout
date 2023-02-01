@@ -63,6 +63,7 @@ void add_binout_library_to_module(py::module_ &m) {
       .def("variable_exists", &dro::Binout::variable_exists)
       .def("get_children", &dro::Binout::get_children)
       .def("get_num_timesteps", &dro::Binout::get_num_timesteps)
+      .def("simple_path_to_real", &dro::Binout::simple_path_to_real)
 
       ;
 }
