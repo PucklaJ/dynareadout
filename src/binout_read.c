@@ -45,7 +45,7 @@ void *_binout_read(binout_file *bin_file, const char *path_to_variable,
   if (file->var_type != binout_type) {
     char buffer[50];
     sprintf(buffer, "The data is of type %s instead of %s",
-            _binout_get_type_name(file->type),
+            _binout_get_type_name(file->var_type),
             _binout_get_type_name((uint64_t)binout_type));
     NEW_ERROR_STRING(buffer);
     return NULL;
