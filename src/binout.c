@@ -809,7 +809,7 @@ int _binout_path_view_is_d_string(const path_view_t *pv) {
     return 0;
   }
 
-  int i = pv->start;
+  int i = pv->start + 1;
   while (i <= pv->end) {
     /* If the character is not a number*/
     if (!(pv->string[i] >= 48 && pv->string[i] <= 57)) {

@@ -82,19 +82,32 @@ TEST_CASE("binout0000") {
   CHECK(binout_simple_path_to_real(&bin_file, "nodout", &type_id, &timed) ==
         "/nodout");
   CHECK(timed == 0);
+  CHECK(type_id == BINOUT_TYPE_INVALID);
   CHECK(binout_simple_path_to_real(&bin_file, "/nodout", &type_id, &timed) ==
         "/nodout");
   CHECK(timed == 0);
+  CHECK(type_id == BINOUT_TYPE_INVALID);
   CHECK(binout_simple_path_to_real(&bin_file, "nodout/ids", &type_id, &timed) ==
         "/nodout/metadata/ids");
   CHECK(timed == 0);
+  CHECK(type_id == BINOUT_TYPE_INT64);
   CHECK(binout_simple_path_to_real(&bin_file, "nodout/schinken", &type_id,
                                    &timed) == NULL);
+  CHECK(timed == 0);
+  CHECK(type_id == BINOUT_TYPE_INVALID);
   CHECK(binout_simple_path_to_real(&bin_file, "/", &type_id, &timed) == "/");
+  CHECK(timed == 0);
+  CHECK(type_id == BINOUT_TYPE_INVALID);
   CHECK(binout_simple_path_to_real(&bin_file, "/nodout/x_displacement",
                                    &type_id,
                                    &timed) == "/nodout/x_displacement");
   CHECK(timed == 1);
+  CHECK(type_id == BINOUT_TYPE_FLOAT32);
+  CHECK(binout_simple_path_to_real(&bin_file, "nodout/d000001/x_displacement",
+                                   &type_id,
+                                   &timed) == "/nodout/d000001/x_displacement");
+  CHECK(timed == 0);
+  CHECK(type_id == BINOUT_TYPE_FLOAT32);
 
   size_t num_binout_children;
   char **binout_children =
