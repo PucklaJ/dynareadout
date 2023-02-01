@@ -63,11 +63,17 @@ bool Binout::variable_exists(
                                 path_to_variable.c_str());
 }
 
-std::vector<String>
-Binout::get_children(const std::string &path) const noexcept {
+std::vector<String> Binout::get_children(const std::string &path) const {
   size_t num_children;
   char **children = binout_get_children(const_cast<binout_file *>(&m_handle),
                                         path.c_str(), &num_children);
+
+  // If the path does not exist
+  if (children == nullptr && num_children == static_cast<size_t>(~0)) {
+    char *msg = reinterpret_cast<char *>(malloc(256 + path.length()));
+    sprintf(msg, "The path \"%s\" does not exist", path.c_str());
+    throw Exception(String(msg));
+  }
 
   std::vector<String> children_vec;
   for (size_t i = 0; i < num_children; i++) {
