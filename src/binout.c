@@ -520,7 +520,8 @@ char *binout_simple_path_to_real(const binout_file *bin_file,
   if (!path_view_advance(&pv)) {
     char *real_path = malloc(1 + PATH_VIEW_LEN((&pv)) + 1);
     real_path[0] = PATH_SEP;
-    memcpy(&real_path[1], &pv.string[pv.start], PATH_VIEW_LEN((&pv)) + 1);
+    memcpy(&real_path[1], &pv.string[pv.start], PATH_VIEW_LEN((&pv)));
+    real_path[1 + PATH_VIEW_LEN((&pv))] = '\0';
 
     END_PROFILE_FUNC();
     return real_path;
@@ -535,17 +536,97 @@ char *binout_simple_path_to_real(const binout_file *bin_file,
   /* This means that the simple path is not really simple*/
   if (path_view_strcmp(&pv, "metadata") == 0 ||
       _binout_path_view_is_d_string(&pv)) {
-    char *real_path = malloc((simple[0] != PATH_SEP) + strlen(simple) + 1);
+    /* Construct the real path by advancing through the path elements*/
+    /* First start with the root folder, the name of 'folder' and the name of
+     * the current folder of pv*/
+    const size_t folder_name_len = strlen(folder->name);
+    size_t real_path_len = 1 + folder_name_len + 1 + PATH_VIEW_LEN((&pv));
+    /* Allocate one byte more for '\0'*/
+    char *real_path = malloc(real_path_len + 1);
     real_path[0] = PATH_SEP;
-    memcpy(&real_path[1], &simple[simple[0] == PATH_SEP], strlen(simple) + 1);
+    memcpy(&real_path[1], folder->name, folder_name_len);
+    real_path[1 + folder_name_len] = PATH_SEP;
+    memcpy(&real_path[1 + folder_name_len + 1], &pv.string[pv.start],
+           PATH_VIEW_LEN((&pv)));
 
-    /* Search for the file to get the type id*/
-    pv = path_view_new(real_path);
-    const binout_file_t *file =
-        binout_directory_get_file(&bin_file->directory, &pv);
-    if (file) {
-      *type_id = file->var_type;
+    /* Also iterate over the folders and files to get the type id*/
+    void *children = folder->children;
+    size_t num_children = folder->num_children;
+    if (((const binout_folder_or_file_t *)children)->type == BINOUT_FOLDER) {
+      folder_index = binout_directory_binary_search_folder(
+          (const binout_folder_t *)children, 0, num_children - 1, &pv);
+      if (folder_index != (size_t)~0) {
+        num_children =
+            ((const binout_folder_t *)children)[folder_index].num_children;
+        children = ((const binout_folder_t *)children)[folder_index].children;
+      } else {
+        /* The given path does not exist*/
+        free(real_path);
+        END_PROFILE_FUNC();
+        return NULL;
+      }
+    } else {
+      folder_index = binout_directory_binary_search_file(
+          (const binout_file_t *)children, 0, num_children - 1, &pv);
+      if (folder_index != (size_t)~0) {
+        *type_id = ((const binout_file_t *)children)[folder_index].var_type;
+        children = NULL;
+        num_children = 0;
+      } else {
+        /* The given path does not exist*/
+        free(real_path);
+        END_PROFILE_FUNC();
+        return NULL;
+      }
     }
+
+    while (path_view_advance(&pv)) {
+      /* Iterate over the folders and files to get the type id*/
+      if (num_children != 0 && children) {
+        if (((const binout_folder_or_file_t *)children)->type ==
+            BINOUT_FOLDER) {
+          folder_index = binout_directory_binary_search_folder(
+              (const binout_folder_t *)children, 0, num_children - 1, &pv);
+          if (folder_index != (size_t)~0) {
+            num_children =
+                ((const binout_folder_t *)children)[folder_index].num_children;
+            children =
+                ((const binout_folder_t *)children)[folder_index].children;
+          } else {
+            /* The given path does not exist*/
+            free(real_path);
+            END_PROFILE_FUNC();
+            return NULL;
+          }
+        } else {
+          folder_index = binout_directory_binary_search_file(
+              (const binout_file_t *)children, 0, num_children - 1, &pv);
+          if (folder_index != (size_t)~0) {
+            *type_id = ((const binout_file_t *)children)[folder_index].var_type;
+            children = NULL;
+            num_children = 0;
+          } else {
+            /* The given path does not exist*/
+            free(real_path);
+            END_PROFILE_FUNC();
+            return NULL;
+          }
+        }
+      } else {
+        /* The given path does not exist*/
+        free(real_path);
+        END_PROFILE_FUNC();
+        return NULL;
+      }
+
+      real_path_len += 1 + PATH_VIEW_LEN((&pv));
+      /* Allocate one byte more for '\0'*/
+      real_path = realloc(real_path, real_path_len + 1);
+      real_path[real_path_len - 1 - PATH_VIEW_LEN((&pv))] = PATH_SEP;
+      memcpy(&real_path[real_path_len - PATH_VIEW_LEN((&pv))],
+             &pv.string[pv.start], PATH_VIEW_LEN((&pv)));
+    }
+    real_path[real_path_len] = '\0';
 
     END_PROFILE_FUNC();
     return real_path;

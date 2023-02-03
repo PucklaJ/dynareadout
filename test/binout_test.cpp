@@ -108,6 +108,26 @@ TEST_CASE("binout0000") {
                                    &timed) == "/nodout/d000001/x_displacement");
   CHECK(timed == 0);
   CHECK(type_id == BINOUT_TYPE_FLOAT32);
+  CHECK(binout_simple_path_to_real(&bin_file, "//////nodout////ids/////",
+                                   &type_id, &timed) == "/nodout/metadata/ids");
+  CHECK(timed == 0);
+  CHECK(type_id == BINOUT_TYPE_INT64);
+  CHECK(binout_simple_path_to_real(&bin_file,
+                                   "//////nodout/////metadata////ids/////",
+                                   &type_id, &timed) == "/nodout/metadata/ids");
+  CHECK(timed == 0);
+  CHECK(type_id == BINOUT_TYPE_INT64);
+  CHECK(binout_simple_path_to_real(
+            &bin_file, "//////nodout/////d000001////x_displacement/////",
+            &type_id, &timed) == "/nodout/d000001/x_displacement");
+  CHECK(timed == 0);
+  CHECK(type_id == BINOUT_TYPE_FLOAT32);
+  CHECK(binout_simple_path_to_real(&bin_file, "/nodout/d000100/u_displacement",
+                                   &type_id, &timed) == NULL);
+  CHECK(binout_simple_path_to_real(&bin_file, "/nodout/metadata/schinken",
+                                   &type_id, &timed) == NULL);
+  CHECK(binout_simple_path_to_real(&bin_file, "/nodout/metadata/ids/schinken",
+                                   &type_id, &timed) == NULL);
 
   size_t num_binout_children;
   char **binout_children =
