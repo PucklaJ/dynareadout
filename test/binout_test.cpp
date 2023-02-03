@@ -673,23 +673,75 @@ TEST_CASE("path_view") {
 
     CHECK(path_view_strcmp(&pv, "legend") == 0);
   }
-}
 
-// #ifdef PROFILING
-// int main(int args, char *argv[]) {
-// doctest::Context ctx;
-//
-// ctx.addFilter("test-case", "binout0000");
-// ctx.applyCommandLine(args, argv);
-//
-// const int res = ctx.run();
-//
-// if (ctx.shouldExit()) {
-// return res;
-// }
-//
-// END_PROFILING("test_data/binout_profiling.txt");
-//
-// return res;
-// }
-// #endif
+  {
+    path_view_t pv = path_view_new("/");
+    CHECK(pv.start == 0);
+    CHECK(pv.end == 0);
+
+    pv = path_view_new("//");
+    CHECK(pv.start == 1);
+    CHECK(pv.end == 1);
+
+    pv = path_view_new("//////////");
+    CHECK(pv.start == 9);
+    CHECK(pv.end == 9);
+
+    pv = path_view_new("///nodout/metadata");
+    CHECK(pv.start == 2);
+    CHECK(pv.end == 2);
+
+    CHECK(path_view_advance(&pv) == 1);
+    CHECK(pv.start == 3);
+    CHECK(pv.end == 8);
+  }
+
+  {
+    path_view_t pv = path_view_new("nodout/metadata/");
+    CHECK(pv.start == 0);
+    CHECK(pv.end == 5);
+    CHECK(path_view_advance(&pv) == 1);
+    CHECK(pv.start == 7);
+    CHECK(pv.end == 14);
+    CHECK(path_view_advance(&pv) == 0);
+    CHECK(pv.start == 7);
+    CHECK(pv.end == 14);
+
+    pv = path_view_new("n/m//");
+    CHECK(pv.start == 0);
+    CHECK(pv.end == 0);
+    CHECK(path_view_advance(&pv) == 1);
+    CHECK(pv.start == 2);
+    CHECK(pv.end == 2);
+    CHECK(path_view_advance(&pv) == 0);
+    CHECK(pv.start == 2);
+    CHECK(pv.end == 2);
+
+    pv = path_view_new("a/b/////////");
+    CHECK(pv.start == 0);
+    CHECK(pv.end == 0);
+    CHECK(path_view_advance(&pv) == 1);
+    CHECK(pv.start == 2);
+    CHECK(pv.end == 2);
+    CHECK(path_view_advance(&pv) == 0);
+    CHECK(pv.start == 2);
+    CHECK(pv.end == 2);
+
+    pv = path_view_new("//////////////nodout//////////////metadata///////////"
+                       "ids///////////////");
+    CHECK(pv.start == 13);
+    CHECK(pv.end == 13);
+    CHECK(path_view_advance(&pv) == 1);
+    CHECK(pv.start == 14);
+    CHECK(pv.end == 19);
+    CHECK(path_view_advance(&pv) == 1);
+    CHECK(pv.start == 34);
+    CHECK(pv.end == 41);
+    CHECK(path_view_advance(&pv) == 1);
+    CHECK(pv.start == 53);
+    CHECK(pv.end == 55);
+    CHECK(path_view_advance(&pv) == 0);
+    CHECK(pv.start == 53);
+    CHECK(pv.end == 55);
+  }
+}

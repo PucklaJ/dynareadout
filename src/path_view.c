@@ -33,7 +33,7 @@
 path_view_t path_view_new(const char *string) {
   BEGIN_PROFILE_FUNC();
 
-  assert(string != NULL && strlen(string) > 0);
+  assert(string != NULL && string[0] != '\0');
 
   path_view_t pv;
   pv.string = string;
@@ -47,6 +47,14 @@ path_view_t path_view_new(const char *string) {
         pv.end++;
       }
     }
+  } else if (string[1] == PATH_SEP) {
+    /* Support multiple leading path separators*/
+    pv.start = 2;
+    while (string[pv.start] == PATH_SEP) {
+      pv.start++;
+    }
+    pv.start--;
+    pv.end = pv.start;
   }
 
   END_PROFILE_FUNC();
@@ -56,29 +64,24 @@ path_view_t path_view_new(const char *string) {
 int path_view_advance(path_view_t *pv) {
   BEGIN_PROFILE_FUNC();
 
-  const int len = strlen(pv->string);
-
-  /* Check if we are already at the end. This also supports trailing PATH_SEP.
-   * ONLY ONE!*/
-  if (pv->end == len - 1 ||
-      (pv->end == len - 2 && pv->string[pv->end + 1] == PATH_SEP)) {
+  /* Loop until we are at a none path separator. This handles path separators at
+   * the start, in the middle and at the end.*/
+  int i = pv->end + 1;
+  while (pv->string[i] == PATH_SEP) {
+    i++;
+  }
+  /* If we are at '\0', we are at the end*/
+  if (pv->string[i] == '\0') {
     END_PROFILE_FUNC();
     return 0;
   }
 
   /* Loop until a PATH_SEP has been found or the end has been reached*/
-  int i = pv->end + 1 + (pv->end != 0);
-  while (i < len - 1 && pv->string[i + 1] != PATH_SEP) {
+  pv->start = i;
+  while (pv->string[i + 1] != PATH_SEP && pv->string[i + 1] != '\0') {
     i++;
   }
-
-  pv->start = pv->end + 1 + (pv->end != 0);
   pv->end = i;
-
-  /* Handle multiple PATH_SEPs in the middle of the path*/
-  while (pv->string[pv->start] == PATH_SEP) {
-    pv->start++;
-  }
 
   END_PROFILE_FUNC();
   return 1;
