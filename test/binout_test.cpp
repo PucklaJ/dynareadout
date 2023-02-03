@@ -649,9 +649,14 @@ TEST_CASE("path_view") {
 
     CHECK(path_view_advance(&pv) == 1);
     CHECK(path_view_strcmp(&pv, "nodout") == 0);
+    CHECK(path_view_strcmp(&pv, "apple") > 0);
+    CHECK(path_view_strcmp(&pv, "nodout_ids") < 0);
 
     CHECK(path_view_advance(&pv) == 1);
     CHECK(path_view_strcmp(&pv, "metadata") == 0);
+    CHECK(path_view_strcmp(&pv, "metatime") < 0);
+    CHECK(path_view_strcmp(&pv, "metaapple") > 0);
+    CHECK(path_view_strcmp(&pv, "metadata_extra") < 0);
 
     CHECK(path_view_advance(&pv) == 1);
     CHECK(path_view_strcmp(&pv, "ids") == 0);

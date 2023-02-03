@@ -41,11 +41,9 @@ path_view_t path_view_new(const char *string) {
   pv.end = 0;
 
   if (string[0] != PATH_SEP) {
-    const int len = strlen(string);
-    if (len != 1) {
-      while (pv.end < len - 1 && string[pv.end + 1] != PATH_SEP) {
-        pv.end++;
-      }
+    /* Determine the first element*/
+    while (string[pv.end + 1] != PATH_SEP && string[pv.end + 1] != '\0') {
+      pv.end++;
     }
   } else if (string[1] == PATH_SEP) {
     /* Support multiple leading path separators*/
@@ -90,15 +88,28 @@ int path_view_advance(path_view_t *pv) {
 int path_view_strcmp(const path_view_t *pv, const char *str) {
   BEGIN_PROFILE_FUNC();
 
-  int cmp_val = strncmp(&pv->string[pv->start], str, PATH_VIEW_LEN(pv));
-  /* We need to also consider the lengths of the strings, because by calling
-   * strncmp, "legend" and "legend_ids" also returns 0*/
-  if (cmp_val == 0) {
-    cmp_val = (strlen(str) > PATH_VIEW_LEN(pv)) * -1;
+  assert(str != NULL);
 
-    END_PROFILE_FUNC();
-    return cmp_val;
+  /* Loop over the entire string*/
+  int i = 0;
+  while (i < PATH_VIEW_LEN(pv) && str[i] != '\0') {
+    /* If the characters are not equal, return the difference*/
+    const int cmp_val = (int)(pv->string[pv->start + i] - str[i]);
+    if (cmp_val != 0) {
+      END_PROFILE_FUNC();
+      return cmp_val;
+    }
+
+    i++;
   }
+
+  /* Handle the case when the path view is a substring of str
+   * (Example: "legend" and "legend_ids")*/
+  /* If i points to the end of the path view and str then path view == str (0)*/
+  /* If str is a substring of path view then path view > str (1)*/
+  /* Otherwise path view is a substring of str and therefore path view < str
+   * (-1)*/
+  const int cmp_val = (str[i] == '\0') * 2 - 1 - (i == PATH_VIEW_LEN(pv));
 
   END_PROFILE_FUNC();
   return cmp_val;
