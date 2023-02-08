@@ -40,6 +40,7 @@
 typedef struct {
   const char *execution_name;
   double execution_time;
+  double profiling_time;
 
   void *sub_executions;
   size_t num_sub_executions;
@@ -47,15 +48,17 @@ typedef struct {
 } profiling_stack_t;
 
 typedef struct {
-  profiling_stack_t *current_stack;
   uint8_t disable;
+  uint8_t disable_stacking;
 
+  profiling_stack_t *current_stack;
   profiling_stack_t *execution_stacks;
   size_t num_execution_stacks;
 } profiling_context_t;
 
 typedef struct {
   clock_t start_time;
+  clock_t profiling_start_time;
   uint8_t should_end;
   profiling_stack_t *current_stack;
 } profiling_execution_t;

@@ -73,8 +73,10 @@ void quick_sort_execution_times(profiling_stack_t *stack, signed long low,
 }
 
 profiling_execution_t _BEGIN_PROFILE_SECTION(const char *name) {
+  profiling_execution_t rv;
+  rv.profiling_start_time = clock();
+
   if (profiling_context.disable) {
-    profiling_execution_t rv = {0};
     return rv;
   }
 
@@ -84,14 +86,23 @@ profiling_execution_t _BEGIN_PROFILE_SECTION(const char *name) {
   size_t *stack_array_size;
 
   if (profiling_context.current_stack) {
+    if (profiling_context.disable_stacking) {
+      rv.current_stack = profiling_context.current_stack;
+      rv.should_end = 0;
+      rv.start_time = clock();
+      return rv;
+    }
+
     /* Avoid recursion*/
     if (strcmp(name, profiling_context.current_stack->execution_name) == 0) {
-      profiling_execution_t rv = {0};
+      rv.current_stack = profiling_context.current_stack;
+      rv.should_end = 0;
+      rv.start_time = clock();
       return rv;
     }
 
     stack_array =
-        &(profiling_stack_t *)profiling_context.current_stack->sub_executions;
+        (profiling_stack_t **)&profiling_context.current_stack->sub_executions;
     stack_array_size = &profiling_context.current_stack->num_sub_executions;
   } else {
     stack_array = &profiling_context.execution_stacks;
@@ -125,6 +136,7 @@ profiling_execution_t _BEGIN_PROFILE_SECTION(const char *name) {
 
       current_stack->execution_name = name;
       current_stack->execution_time = 0.0;
+      current_stack->profiling_time = 0.0;
       current_stack->sub_executions = NULL;
       current_stack->num_sub_executions = 0;
     }
@@ -135,6 +147,7 @@ profiling_execution_t _BEGIN_PROFILE_SECTION(const char *name) {
 
     current_stack->execution_name = name;
     current_stack->execution_time = 0.0;
+    current_stack->profiling_time = 0.0;
     current_stack->sub_executions = NULL;
     current_stack->num_sub_executions = 0;
   }
@@ -142,7 +155,6 @@ profiling_execution_t _BEGIN_PROFILE_SECTION(const char *name) {
   current_stack->parent = profiling_context.current_stack;
   profiling_context.current_stack = current_stack;
 
-  profiling_execution_t rv;
   rv.should_end = 1;
   rv.current_stack = current_stack;
   rv.start_time = clock();
@@ -153,16 +165,38 @@ profiling_execution_t _BEGIN_PROFILE_SECTION(const char *name) {
 void _END_PROFILE_SECTION(const char *name, profiling_execution_t start) {
   clock_t end_time = clock();
 
-  if (!start.should_end || profiling_context.disable) {
+  if (profiling_context.disable) {
     return;
   }
 
-  const double elapsed_time =
+  const double elapsed_execution_time =
       (double)(end_time - start.start_time) / CLOCKS_PER_SEC;
 
-  start.current_stack->execution_time += elapsed_time;
-  profiling_context.current_stack =
-      (profiling_stack_t *)start.current_stack->parent;
+  if (start.should_end) {
+    const double current_execution_time =
+        elapsed_execution_time - start.current_stack->profiling_time;
+
+    start.current_stack->execution_time += current_execution_time;
+    start.current_stack->profiling_time = 0.0;
+    profiling_context.current_stack =
+        (profiling_stack_t *)start.current_stack->parent;
+
+    end_time = clock();
+    const double elapsed_total_time =
+        (double)(end_time - start.profiling_start_time) / CLOCKS_PER_SEC;
+    if (start.current_stack->parent) {
+      ((profiling_stack_t *)start.current_stack->parent)->profiling_time +=
+          elapsed_total_time - current_execution_time;
+    }
+  } else {
+    end_time = clock();
+    const double elapsed_total_time =
+        (double)(end_time - start.profiling_start_time) / CLOCKS_PER_SEC;
+    if (start.current_stack) {
+      start.current_stack->profiling_time +=
+          elapsed_total_time - elapsed_execution_time;
+    }
+  }
 }
 
 void END_PROFILING(const char *out_file_name) {
