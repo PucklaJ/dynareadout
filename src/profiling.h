@@ -30,23 +30,35 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 #include <time.h>
 
-typedef struct {
-  char const **execution_names;
-  double *execution_times;
-  size_t num_executions;
+#define GET_SUB_EXECUTION(stack, index)                                        \
+  (((profiling_stack_t *)stack->sub_executions)[index])
 
-  char const **current_executions;
-  size_t num_current_executions;
+typedef struct {
+  const char *execution_name;
+  double execution_time;
+
+  void *sub_executions;
+  size_t num_sub_executions;
+  void *parent;
+} profiling_stack_t;
+
+typedef struct {
+  profiling_stack_t *current_stack;
+  uint8_t disable;
+
+  profiling_stack_t *execution_stacks;
+  size_t num_execution_stacks;
 } profiling_context_t;
 
 typedef struct {
   clock_t start_time;
   uint8_t should_end;
-  size_t current_execution_index;
-} execution_t;
+  profiling_stack_t *current_stack;
+} profiling_execution_t;
 
 extern profiling_context_t profiling_context;
 
@@ -54,20 +66,25 @@ extern profiling_context_t profiling_context;
 extern "C" {
 #endif
 
-execution_t _BEGIN_PROFILE_SECTION(const char *name);
-void _END_PROFILE_SECTION(const char *name, execution_t start_time);
+profiling_execution_t _BEGIN_PROFILE_SECTION(const char *name);
+void _END_PROFILE_SECTION(const char *name, profiling_execution_t start_time);
 void END_PROFILING(const char *out_file_name);
+
+void fprint_profiling_stack(FILE *file, const profiling_stack_t *stack,
+                            int level);
+void free_profiling_stack(profiling_stack_t *stack);
 
 #ifdef __cplusplus
 }
 #endif
 
 #define BEGIN_PROFILE_FUNC()                                                   \
-  const execution_t func_profiling_start = _BEGIN_PROFILE_SECTION(__FUNCTION__)
+  const profiling_execution_t func_profiling_start =                           \
+      _BEGIN_PROFILE_SECTION(__FUNCTION__)
 #define END_PROFILE_FUNC()                                                     \
   _END_PROFILE_SECTION(__FUNCTION__, func_profiling_start)
 #define BEGIN_PROFILE_SECTION(section_name)                                    \
-  const execution_t section_name##_profiling_start =                           \
+  const profiling_execution_t section_name##_profiling_start =                 \
       _BEGIN_PROFILE_SECTION(#section_name)
 #define END_PROFILE_SECTION(section_name)                                      \
   _END_PROFILE_SECTION(#section_name, section_name##_profiling_start)

@@ -1,4 +1,5 @@
 #include "d3plot_part_nodes_gen.h"
+#include <stdlib.h>
 
 void pgni_load_function_and_macro(FILE *file) {
   fprintf(file,
@@ -89,6 +90,9 @@ char *pgni_unload(const char *member) {
   sprintf(
 #endif
       buffer,
+#ifdef _WIN32
+      1024,
+#endif
       "/*unload %1$s*/\nif (!params || !params->%1$s) free(*p->%1$s);\n",
       member);
   return buffer;

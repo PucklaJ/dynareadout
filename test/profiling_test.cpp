@@ -55,7 +55,7 @@ void profile_test_func2() {
 void profile_test_func3(int i = 0) {
   BEGIN_PROFILE_FUNC();
 
-  if (i == 10000) {
+  if (i == 1000) {
     END_PROFILE_FUNC();
     return;
   }
@@ -65,15 +65,88 @@ void profile_test_func3(int i = 0) {
   END_PROFILE_FUNC();
 }
 
+void profile_test_func411() {
+  BEGIN_PROFILE_FUNC();
+
+  for (size_t i = 0; i < 204987298347;) {
+    if (i < 10) {
+      i++;
+    } else {
+      i += (i * i) / (i / 2);
+    }
+  }
+
+  BEGIN_PROFILE_SECTION(profile_test_4111);
+
+  for (size_t i = 0; i < 204;) {
+    if (i < 10) {
+      i++;
+    } else {
+      i += (i * i) / (i / 2);
+      cos(i);
+    }
+  }
+
+  END_PROFILE_SECTION(profile_test_4111);
+
+  BEGIN_PROFILE_SECTION(profile_test_4112);
+
+  for (size_t i = 0; i < 204;) {
+    if (i < 10) {
+      i++;
+    } else {
+      i += (i * i) / (i / 2);
+      sin(i);
+    }
+  }
+
+  END_PROFILE_SECTION(profile_test_4112);
+
+  END_PROFILE_FUNC();
+}
+
+void profile_test_func41(int i) {
+  BEGIN_PROFILE_FUNC();
+
+  int j = 5 * i;
+  for (int k = j; k < 234; k++) {
+    k = k + 1;
+    k = k - 1;
+  }
+
+  profile_test_func411();
+
+  END_PROFILE_FUNC();
+}
+
+void profile_test_func4() {
+  BEGIN_PROFILE_FUNC();
+
+  for (size_t j = 0; j < 10; j++) {
+    for (size_t i = 0; i < 2040;) {
+      if (i < 10) {
+        i++;
+      } else {
+        i += (i * i) / (i / 2);
+        profile_test_func41(i);
+      }
+    }
+  }
+
+  END_PROFILE_FUNC();
+}
+
 TEST_CASE("profiling") {
   BEGIN_PROFILE_SECTION(math_equation);
   float math_value = sin(cos(sin(tan(5.0f + tan(5.0f)))));
-  math_value += sin(cos(sin(tan(math_value + tan(math_value)))));
+  for (size_t i = 0; i < 10000; i++)
+    math_value += sin(tan(sin(cos(sin(tan(math_value + tan(math_value)))))));
   END_PROFILE_SECTION(math_equation);
 
   profile_test_func1();
   profile_test_func2();
   profile_test_func3();
+  profile_test_func4();
 
   END_PROFILING("test_data/profiling_test.txt");
 }

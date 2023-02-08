@@ -112,6 +112,9 @@ int main(int args, char *argv[]) {
   include_rel(binary_search_h, "binout_directory.h");
   include_rel(binary_search_h, "d3_defines.h");
   include_abs(binary_search_h, "stddef.h");
+  ifdef_start(binary_search_h, "PROFILING");
+  include_rel(binary_search_h, "profiling.h");
+  ifdef_end(binary_search_h);
   newline(binary_search_h);
   cpp_start(binary_search_h);
   binary_search_prototype(binary_search_h,
@@ -148,6 +151,12 @@ int main(int args, char *argv[]) {
   binary_search_insert_prototype(binary_search_h, "string_binary_search_insert",
                                  "char const **", "const char *");
   semicolon(binary_search_h);
+  newline(binary_search_h);
+  binary_search_insert_prototype(binary_search_h,
+                                 "profiling_stack_binary_search_insert",
+                                 "const profiling_stack_t*", "const char*");
+  semicolon(binary_search_h);
+  newline(binary_search_h);
   ifdef_end(binary_search_h);
   newline(binary_search_h);
   cpp_end(binary_search_h);
@@ -211,6 +220,15 @@ int main(int args, char *argv[]) {
   newline(binary_search_c);
   binary_search_insert_body(binary_search_c, "string_binary_search_insert",
                             "strcmp", "");
+  newline(binary_search_c);
+  binary_search_insert_prototype(binary_search_c,
+                                 "profiling_stack_binary_search_insert",
+                                 "const profiling_stack_t*", "const char*");
+  newline(binary_search_c);
+  binary_search_insert_body(binary_search_c,
+                            "profiling_stack_binary_search_insert", "strcmp",
+                            ".execution_name");
+  newline(binary_search_c);
   ifdef_end(binary_search_c);
 
   license(pgni_h);

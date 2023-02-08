@@ -30,6 +30,9 @@
 #include "binout_directory.h"
 #include "d3_defines.h"
 #include <stddef.h>
+#ifdef PROFILING
+#include "profiling.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -67,6 +70,12 @@ size_t d3_word_binary_search_insert(const d3_word *arr, size_t start_index,
 size_t string_binary_search_insert(char const **arr, size_t start_index,
                                    size_t end_index, const char *value,
                                    int *found);
+
+size_t profiling_stack_binary_search_insert(const profiling_stack_t *arr,
+                                            size_t start_index,
+                                            size_t end_index, const char *value,
+                                            int *found);
+
 #endif
 
 #ifdef __cplusplus

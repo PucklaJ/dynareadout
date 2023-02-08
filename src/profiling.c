@@ -29,7 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-profiling_context_t profiling_context = {NULL, NULL, 0, NULL, 0};
+profiling_context_t profiling_context = {0};
 
 signed long partition_execution_times(char const ***names, double **times,
                                       signed long low, signed long high) {
@@ -73,131 +73,230 @@ void quick_sort_execution_times(char const ***names, double **times,
   }
 }
 
-execution_t _BEGIN_PROFILE_SECTION(const char *name) {
-  /* Only start profiling if it isn't already getting profiled (to avoid
-   * recursion issues)*/
-  execution_t rv = {0, 0, ~0};
-  size_t i = 0, index = ~0;
-  while (i < profiling_context.num_current_executions) {
-    if (index == ~0 && !profiling_context.current_executions[i]) {
-      index = i;
-    } else if (profiling_context.current_executions[i] &&
-               strcmp(profiling_context.current_executions[i], name) == 0) {
+profiling_execution_t _BEGIN_PROFILE_SECTION(const char *name) {
+  if (profiling_context.disable) {
+    profiling_execution_t rv = {0};
+    return rv;
+  }
+
+  profiling_stack_t *current_stack;
+
+  profiling_stack_t **stack_array;
+  size_t *stack_array_size;
+
+  if (profiling_context.current_stack) {
+    /* Avoid recursion*/
+    if (strcmp(name, profiling_context.current_stack->execution_name) == 0) {
+      profiling_execution_t rv = {0};
       return rv;
     }
 
-    i++;
+    stack_array =
+        &(profiling_stack_t *)profiling_context.current_stack->sub_executions;
+    stack_array_size = &profiling_context.current_stack->num_sub_executions;
+  } else {
+    stack_array = &profiling_context.execution_stacks;
+    stack_array_size = &profiling_context.num_execution_stacks;
   }
 
-  if (index == ~0) {
-    profiling_context.num_current_executions++;
-    profiling_context.current_executions = realloc(
-        profiling_context.current_executions,
-        profiling_context.num_current_executions * sizeof(const char *));
-    index = profiling_context.num_current_executions - 1;
+  if (*stack_array) {
+    int found;
+    size_t index;
+
+    profiling_context.disable = 1;
+    index = profiling_stack_binary_search_insert(
+        *stack_array, 0, *stack_array_size - 1, name, &found);
+    profiling_context.disable = 0;
+
+    if (found) {
+      current_stack = &(*stack_array)[index];
+    } else {
+      (*stack_array_size)++;
+      *stack_array =
+          realloc(*stack_array, *stack_array_size * sizeof(profiling_stack_t));
+
+      /* Move everything to the right*/
+      size_t i = *stack_array_size - 1;
+      while (i > index) {
+        (*stack_array)[i] = (*stack_array)[i - 1];
+        i--;
+      }
+
+      current_stack = &(*stack_array)[index];
+
+      current_stack->execution_name = name;
+      current_stack->execution_time = 0.0;
+      current_stack->sub_executions = NULL;
+      current_stack->num_sub_executions = 0;
+    }
+  } else {
+    *stack_array_size = 1;
+    *stack_array = malloc(sizeof(profiling_stack_t));
+    current_stack = &(*stack_array)[0];
+
+    current_stack->execution_name = name;
+    current_stack->execution_time = 0.0;
+    current_stack->sub_executions = NULL;
+    current_stack->num_sub_executions = 0;
   }
 
-  profiling_context.current_executions[index] = name;
+  current_stack->parent = profiling_context.current_stack;
+  profiling_context.current_stack = current_stack;
 
+  profiling_execution_t rv;
   rv.should_end = 1;
-  rv.current_execution_index = index;
+  rv.current_stack = current_stack;
   rv.start_time = clock();
 
   return rv;
 }
 
-void _END_PROFILE_SECTION(const char *name, execution_t start) {
-  if (!start.should_end) {
+void _END_PROFILE_SECTION(const char *name, profiling_execution_t start) {
+  clock_t end_time = clock();
+
+  if (!start.should_end || profiling_context.disable) {
     return;
   }
 
-  clock_t end_time = clock();
   const double elapsed_time =
       (double)(end_time - start.start_time) / CLOCKS_PER_SEC;
 
-  int execution_found = profiling_context.num_executions != 0;
-  size_t index = 0;
-  if (execution_found) {
-    index = string_binary_search_insert(profiling_context.execution_names, 0,
-                                        profiling_context.num_executions - 1,
-                                        name, &execution_found);
-  }
-
-  profiling_context.current_executions[start.current_execution_index] = NULL;
-
-  if (!execution_found) {
-    profiling_context.num_executions++;
-    profiling_context.execution_names =
-        realloc(profiling_context.execution_names,
-                profiling_context.num_executions * sizeof(const char *));
-    profiling_context.execution_times =
-        realloc(profiling_context.execution_times,
-                profiling_context.num_executions * sizeof(double));
-
-    if (profiling_context.num_executions != 1) {
-      /* Move everything to the right*/
-      size_t i = profiling_context.num_executions - 1;
-      while (i > index) {
-        profiling_context.execution_names[i] =
-            profiling_context.execution_names[i - 1];
-        profiling_context.execution_times[i] =
-            profiling_context.execution_times[i - 1];
-        i--;
-      }
-    }
-
-    profiling_context.execution_times[index] = 0.0;
-    profiling_context.execution_names[index] = name;
-  }
-
-  profiling_context.execution_times[index] += elapsed_time;
+  start.current_stack->execution_time += elapsed_time;
+  profiling_context.current_stack =
+      (profiling_stack_t *)start.current_stack->parent;
 }
 
 void END_PROFILING(const char *out_file_name) {
-  if (out_file_name && profiling_context.num_executions) {
+  if (profiling_context.disable) {
+    return;
+  }
+
+  if (profiling_context.current_stack) {
+    char const **current_stack = NULL;
+    size_t current_stack_size = 0;
+
+    const profiling_stack_t *stack = profiling_context.current_stack;
+    while (stack) {
+      current_stack_size++;
+      current_stack =
+          realloc(current_stack, sizeof(const char *) * current_stack_size);
+      current_stack[current_stack_size - 1] = stack->execution_name;
+
+      stack = (const profiling_stack_t *)stack->parent;
+    }
+
+    fprintf(stderr, "Profiling is still running!\n");
+
+    size_t i = 0;
+    while (i < current_stack_size) {
+      size_t j = i;
+      while (j > 0) {
+        fprintf(stderr, "-");
+
+        j--;
+      }
+
+      fprintf(stderr, "%s\n", current_stack[i]);
+
+      i++;
+    }
+
+    free(current_stack);
+    return;
+  }
+
+  if (out_file_name && profiling_context.num_execution_stacks != 0) {
     FILE *out_file = fopen(out_file_name, "w");
     if (!out_file) {
-      fprintf(stderr, "[PROFILING] Failed to open profiling output file: %s\n",
-              strerror(errno));
-    } else {
-      /* Sort execution times in descending order*/
-      quick_sort_execution_times(
-          &profiling_context.execution_names,
-          &profiling_context.execution_times, 0,
-          (signed long)(profiling_context.num_executions - 1));
-
-      fprintf(out_file, "---------- %d Profiling Entries ---------\n",
-              profiling_context.num_executions);
-      size_t i = 0;
-      while (i < profiling_context.num_executions) {
-        fprintf(out_file, "--- %20s: %10.3f ms ---\n",
-                profiling_context.execution_names[i],
-                profiling_context.execution_times[i] * 1000.0);
-
-        i++;
-      }
-      fprintf(out_file, "--------------------------------------------\n");
-      fclose(out_file);
+      fprintf(stderr, "Failed to open profiling file: %s\n", strerror(errno));
+      return;
     }
+
+    fprintf(out_file,
+            "--------------------- Profiling ----------------------\n");
+
+    size_t i = 0;
+    while (i < profiling_context.num_execution_stacks) {
+      fprint_profiling_stack(out_file, &profiling_context.execution_stacks[i],
+                             0);
+
+      i++;
+    }
+
+    fprintf(out_file,
+            "------------------------------------------------------\n");
+
+    fclose(out_file);
+    printf("Profiling written to \"%s\"\n", out_file_name);
   }
 
   size_t i = 0;
-  while (i < profiling_context.num_current_executions) {
-    if (profiling_context.current_executions[i]) {
-      fprintf(stderr,
-              "[PROFILING] %s is still executing when ending profiling\n",
-              profiling_context.current_executions[i]);
-    }
+  while (i < profiling_context.num_execution_stacks) {
+    free_profiling_stack(&profiling_context.execution_stacks[i]);
 
     i++;
   }
 
-  free(profiling_context.execution_names);
-  free(profiling_context.execution_times);
-  free(profiling_context.current_executions);
-  profiling_context.execution_names = NULL;
-  profiling_context.execution_times = NULL;
-  profiling_context.current_executions = NULL;
-  profiling_context.num_executions = 0;
-  profiling_context.num_current_executions = 0;
+  free(profiling_context.execution_stacks);
+  profiling_context.execution_stacks = NULL;
+  profiling_context.num_execution_stacks = 0;
+}
+
+void fprint_profiling_stack(FILE *file, const profiling_stack_t *stack,
+                            int level) {
+  fprintf(file, "| ");
+
+  {
+    char name_buffer[1024];
+
+    int i = level;
+    while (i > 0) {
+      sprintf(&name_buffer[level - i], "-");
+      i--;
+    }
+
+    sprintf(&name_buffer[level], "%s", stack->execution_name);
+    size_t pos = (size_t)level + strlen(stack->execution_name);
+    name_buffer[pos] = ' ';
+    size_t j = pos + 1;
+    while (j < 40) {
+      sprintf(&name_buffer[j], ".");
+
+      j++;
+    }
+    name_buffer[40] = '\0';
+
+    fprintf(file, "%s", name_buffer);
+
+    sprintf(name_buffer, "%7.1f", stack->execution_time * 1000.0);
+    j = 0;
+    while (name_buffer[j] == ' ') {
+      name_buffer[j] = '.';
+
+      j++;
+    }
+    if (j != 0) {
+      name_buffer[j - 1] = ' ';
+    }
+
+    fprintf(file, "%s ms |\n", name_buffer);
+  }
+
+  size_t j = 0;
+  while (j < stack->num_sub_executions) {
+    fprint_profiling_stack(file, &GET_SUB_EXECUTION(stack, j), level + 1);
+
+    j++;
+  }
+}
+
+void free_profiling_stack(profiling_stack_t *stack) {
+  size_t i = 0;
+  while (i < stack->num_sub_executions) {
+    free_profiling_stack(&GET_SUB_EXECUTION(stack, i));
+
+    i++;
+  }
+
+  free(stack->sub_executions);
 }

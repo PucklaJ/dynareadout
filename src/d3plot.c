@@ -1720,8 +1720,8 @@ d3plot_part d3plot_read_part_by_id(d3plot_file *plot_file, d3_word part_id,
 
   d3plot_part part;
 
-  d3_word *p_part_ids =
-      part_ids ? part_ids : d3plot_read_part_ids(plot_file, &num_parts);
+  d3_word *p_part_ids = part_ids ? (d3_word *)part_ids
+                                 : d3plot_read_part_ids(plot_file, &num_parts);
   if (plot_file->error_string) {
     END_PROFILE_FUNC();
     return part;
