@@ -411,7 +411,7 @@ TEST_CASE("d3plot") {
 }
 
 #ifdef D3PLOT_CPP
-TEST_CASE("d3plot C++") {
+TEST_CASE("d3plotC++") {
   try {
     dro::D3plot plot_file("i_dont_exist");
     FAIL("No exception was thrown");
@@ -642,7 +642,7 @@ TEST_CASE("d3plot C++") {
     auto shell_ids = plot_file.read_shell_element_ids();
     auto shell_cons = plot_file.read_shell_elements();
 
-    dro::Array<d3_word> node_ids;
+    const auto node_ids = plot_file.read_node_ids();
 
     const auto part_node_ids =
         part.get_node_ids(plot_file, nullptr, nullptr, &shell_ids, nullptr,
