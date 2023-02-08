@@ -346,29 +346,15 @@ TEST_CASE("d3plot") {
   d3plot_shell_con *shell_cons =
       d3plot_read_shell_elements(&plot_file, &num_shell_ids);
 
-  node_ids = NULL;
-
-  d3plot_part_get_node_ids_params pgni_params;
-  pgni_params.solid_ids = NULL;
-  pgni_params.beam_ids = NULL;
-  pgni_params.shell_ids = &shell_ids;
-  pgni_params.thick_shell_ids = NULL;
-  pgni_params.node_ids = &node_ids;
-  pgni_params.solid_cons = NULL;
-  pgni_params.beam_cons = NULL;
-  pgni_params.shell_cons = &shell_cons;
-  pgni_params.thick_shell_cons = NULL;
-  pgni_params.num_solids = NULL;
-  pgni_params.num_beams = NULL;
-  pgni_params.num_shells = &num_shell_ids;
-  pgni_params.num_thick_shells = NULL;
-  pgni_params.num_node_ids = &num_nodes;
-
   size_t num_part_node_ids, num_part_node_indices;
-  d3_word *part_node_ids = d3plot_part_get_node_ids(
-      &plot_file, &part, &num_part_node_ids, &pgni_params);
-  d3_word *part_node_indices = d3plot_part_get_node_indices(
-      &plot_file, &part, &num_part_node_indices, &pgni_params);
+  d3_word *part_node_ids = d3plot_part_get_node_ids2(
+      &plot_file, &part, &num_part_node_ids, NULL, 0, NULL, 0, NULL, 0,
+      shell_ids, num_shell_ids, NULL, 0, NULL, NULL, shell_cons, NULL);
+  d3_word *part_node_indices = d3plot_part_get_node_indices2(
+      &plot_file, &part, &num_part_node_indices, NULL, 0, NULL, 0, shell_ids,
+      num_shell_ids, NULL, 0, NULL, NULL, shell_cons, NULL);
+
+  node_ids = d3plot_read_node_ids(&plot_file, &num_nodes);
 
   free(shell_ids);
   free(shell_cons);

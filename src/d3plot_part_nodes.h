@@ -33,6 +33,15 @@
 struct d3plot_file;
 #endif
 
+#define d3plot_part_get_node_ids(plot_file, part, num_part_node_ids)           \
+  d3plot_part_get_node_ids2(plot_file, part, num_part_node_ids, NULL, 0, NULL, \
+                            0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL,    \
+                            NULL);
+#define d3plot_part_get_node_indices(plot_file, part, num_part_node_indices)   \
+  d3plot_part_get_node_indices2(plot_file, part, num_part_node_indices, NULL,  \
+                                0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL,      \
+                                NULL, NULL);
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -42,18 +51,26 @@ extern "C" {
  * d3plot_part_get_node_ids_params struct. You can set the values of the struct
  * to optimize the functions performance. If you set params to NULL all data
  * will be retrieved, allocated and deallocated inside this one function call*/
-d3_word *d3plot_part_get_node_ids(d3plot_file *plot_file,
-                                  const d3plot_part *part,
-                                  size_t *num_part_node_ids,
-                                  d3plot_part_get_node_ids_params *params);
+d3_word *d3plot_part_get_node_ids2(
+    d3plot_file *plot_file, const d3plot_part *part, size_t *num_part_node_ids,
+    const d3_word *node_ids, size_t num_nodes, const d3_word *solid_ids,
+    size_t num_solids, const d3_word *beam_ids, size_t num_beams,
+    const d3_word *shell_ids, size_t num_shells, const d3_word *thick_shell_ids,
+    size_t num_thick_shells, const d3plot_solid_con *solid_cons,
+    const d3plot_beam_con *beam_cons, const d3plot_shell_con *shell_cons,
+    const d3plot_thick_shell_con *thick_shell_cons);
 /* The same as d3plot_part_get_node_ids, but it returns indices instead of ids.
  * Those indices can be used to index into the node_ids array returned by
  * d3plot_read_node_ids. If you set params to NULL all data
  * will be retrieved, allocated and deallocated inside this one function call*/
-d3_word *d3plot_part_get_node_indices(d3plot_file *plot_file,
-                                      const d3plot_part *part,
-                                      size_t *num_part_node_indices,
-                                      d3plot_part_get_node_ids_params *params);
+d3_word *d3plot_part_get_node_indices2(
+    d3plot_file *plot_file, const d3plot_part *part,
+    size_t *num_part_node_indices, const d3_word *solid_ids, size_t num_solids,
+    const d3_word *beam_ids, size_t num_beams, const d3_word *shell_ids,
+    size_t num_shells, const d3_word *thick_shell_ids, size_t num_thick_shells,
+    const d3plot_solid_con *solid_cons, const d3plot_beam_con *beam_cons,
+    const d3plot_shell_con *shell_cons,
+    const d3plot_thick_shell_con *thick_shell_cons);
 
 #ifdef __cplusplus
 }

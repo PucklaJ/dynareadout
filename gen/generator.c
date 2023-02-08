@@ -242,8 +242,6 @@ int main(int args, char *argv[]) {
   include_abs(pgni_h, "string.h");
   include_rel(pgni_h, "binary_search.h");
   newline(pgni_h);
-  pgni_load_function_and_macro(pgni_h);
-  newline(pgni_h);
   pgni_add_element_function(pgni_h, "solids", "solid_ids", "solid_cons",
                             "num_solids", "d3plot_read_solid_element_ids",
                             "d3plot_read_solid_elements", "d3plot_solid_con");
@@ -278,15 +276,25 @@ int main(int args, char *argv[]) {
       "num_thick_shells", "d3plot_read_thick_shell_element_ids",
       "d3plot_read_thick_shell_elements", "d3plot_thick_shell_con");
   newline(pgni_h);
-  pgni_add_element_macro(pgni_h, "SOLIDS", "solids");
-  pgni_add_element_macro(pgni_h, "BEAMS", "beams");
-  pgni_add_element_macro(pgni_h, "SHELLS", "shells");
-  pgni_add_element_macro(pgni_h, "THICK_SHELLS", "thick_shells");
+  pgni_add_element_macro(pgni_h, "SOLIDS", "solids", "solid_ids", "solid_cons",
+                         "num_solids");
+  pgni_add_element_macro(pgni_h, "BEAMS", "beams", "beam_ids", "beam_cons",
+                         "num_beams");
+  pgni_add_element_macro(pgni_h, "SHELLS", "shells", "shell_ids", "shell_cons",
+                         "num_shells");
+  pgni_add_element_macro(pgni_h, "THICK_SHELLS", "thick_shells",
+                         "thick_shell_ids", "thick_shell_cons",
+                         "num_thick_shells");
   newline(pgni_h);
-  pgnind_add_element_macro(pgni_h, "SOLIDS", "solids");
-  pgnind_add_element_macro(pgni_h, "BEAMS", "beams");
-  pgnind_add_element_macro(pgni_h, "SHELLS", "shells");
-  pgnind_add_element_macro(pgni_h, "THICK_SHELLS", "thick_shells");
+  pgnind_add_element_macro(pgni_h, "SOLIDS", "solids", "solid_ids",
+                           "solid_cons", "num_solids");
+  pgnind_add_element_macro(pgni_h, "BEAMS", "beams", "beam_ids", "beam_cons",
+                           "num_beams");
+  pgnind_add_element_macro(pgni_h, "SHELLS", "shells", "shell_ids",
+                           "shell_cons", "num_shells");
+  pgnind_add_element_macro(pgni_h, "THICK_SHELLS", "thick_shells",
+                           "thick_shell_ids", "thick_shell_cons",
+                           "num_thick_shells");
   newline(pgni_h);
   header_end(pgni_h);
 

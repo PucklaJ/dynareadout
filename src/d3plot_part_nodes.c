@@ -25,41 +25,29 @@
 
 #include "pgni.h"
 
-d3_word *d3plot_part_get_node_ids(d3plot_file *plot_file,
-                                  const d3plot_part *part,
-                                  size_t *num_part_node_ids,
-                                  d3plot_part_get_node_ids_params *params) {
+d3_word *d3plot_part_get_node_ids2(
+    d3plot_file *plot_file, const d3plot_part *part, size_t *num_part_node_ids,
+    const d3_word *node_ids, size_t num_nodes, const d3_word *solid_ids,
+    size_t num_solids, const d3_word *beam_ids, size_t num_beams,
+    const d3_word *shell_ids, size_t num_shells, const d3_word *thick_shell_ids,
+    size_t num_thick_shells, const d3plot_solid_con *solid_cons,
+    const d3plot_beam_con *beam_cons, const d3plot_shell_con *shell_cons,
+    const d3plot_thick_shell_con *thick_shell_cons) {
   BEGIN_PROFILE_FUNC();
   CLEAR_ERROR_STRING();
 
-  d3plot_part_get_node_ids_params _param_buffer;
-  /* To allocate pointers*/
-  void *pointer_buffer[9];
-  size_t current_pointer = 0;
-  size_t size_buffer[5];
-  size_t current_size = 0;
+  uint8_t node_ids_loaded = 0;
 
-  d3plot_part_get_node_ids_params *p;
-  p = &_param_buffer;
-  if (params) {
-    memcpy(p, params, sizeof(*p));
-  } else {
-    /* Set all pointers to NULL*/
-    memset(p, 0, sizeof(*p));
-    p->num_solids = &size_buffer[current_size++];
-    p->num_beams = &size_buffer[current_size++];
-    p->num_shells = &size_buffer[current_size++];
-    p->num_thick_shells = &size_buffer[current_size++];
-    p->num_node_ids = &size_buffer[current_size++];
-  }
-
-  if (!_PGNI_LOAD(&p->node_ids, &p->num_node_ids, d3plot_read_node_ids,
-                  pointer_buffer, &current_pointer, size_buffer, &current_size,
-                  plot_file)) {
-    ERROR_AND_NO_RETURN_F_PTR("Failed to load node ids: %s",
-                              plot_file->error_string);
-    END_PROFILE_FUNC();
-    return NULL;
+  /* Load node ids*/
+  if (!node_ids) {
+    node_ids_loaded = 1;
+    node_ids = d3plot_read_node_ids(plot_file, &num_nodes);
+    if (plot_file->error_string) {
+      ERROR_AND_NO_RETURN_F_PTR("Failed to load node ids: %s",
+                                plot_file->error_string);
+      END_PROFILE_FUNC();
+      return NULL;
+    }
   }
 
   const size_t part_node_ids_cap = part->num_solids * 8 + part->num_beams * 2 +
@@ -74,8 +62,9 @@ d3_word *d3plot_part_get_node_ids(d3plot_file *plot_file,
   PGNI_ADD_THICK_SHELLS();
 
   /*unload node_ids*/
-  if (!params || !params->node_ids)
-    free(*p->node_ids);
+  if (node_ids_loaded) {
+    free((d3_word *)node_ids);
+  }
 
   /* Shrink to fit*/
   if (part_node_ids_cap != *num_part_node_ids) {
@@ -87,33 +76,16 @@ d3_word *d3plot_part_get_node_ids(d3plot_file *plot_file,
   return part_node_ids;
 }
 
-d3_word *d3plot_part_get_node_indices(d3plot_file *plot_file,
-                                      const d3plot_part *part,
-                                      size_t *num_part_node_indices,
-                                      d3plot_part_get_node_ids_params *params) {
+d3_word *d3plot_part_get_node_indices2(
+    d3plot_file *plot_file, const d3plot_part *part,
+    size_t *num_part_node_indices, const d3_word *solid_ids, size_t num_solids,
+    const d3_word *beam_ids, size_t num_beams, const d3_word *shell_ids,
+    size_t num_shells, const d3_word *thick_shell_ids, size_t num_thick_shells,
+    const d3plot_solid_con *solid_cons, const d3plot_beam_con *beam_cons,
+    const d3plot_shell_con *shell_cons,
+    const d3plot_thick_shell_con *thick_shell_cons) {
   BEGIN_PROFILE_FUNC();
   CLEAR_ERROR_STRING();
-
-  d3plot_part_get_node_ids_params _param_buffer;
-  /* To allocate pointers*/
-  void *pointer_buffer[9];
-  size_t current_pointer = 0;
-  size_t size_buffer[5];
-  size_t current_size = 0;
-
-  d3plot_part_get_node_ids_params *p;
-  p = &_param_buffer;
-  if (params) {
-    memcpy(p, params, sizeof(*p));
-  } else {
-    /* Set all pointers to NULL*/
-    memset(p, 0, sizeof(*p));
-    p->num_solids = &size_buffer[current_size++];
-    p->num_beams = &size_buffer[current_size++];
-    p->num_shells = &size_buffer[current_size++];
-    p->num_thick_shells = &size_buffer[current_size++];
-    p->num_node_ids = &size_buffer[current_size++];
-  }
 
   const size_t part_node_indices_cap =
       part->num_solids * 8 + part->num_beams * 2 + part->num_shells * 4 +

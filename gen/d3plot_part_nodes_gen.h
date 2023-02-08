@@ -18,9 +18,11 @@ void pgnind_add_element_function(FILE *file, const char *element_name,
                                  const char *cons_func, const char *con_type);
 
 void pgni_add_element_macro(FILE *file, const char *element_name,
-                            const char *element_lower);
+                            const char *element_lower, const char *el_ids,
+                            const char *el_cons, const char *num_els);
 
 void pgnind_add_element_macro(FILE *file, const char *element_name,
-                              const char *element_lower);
+                              const char *element_lower, const char *el_ids,
+                              const char *el_cons, const char *num_els);
 
 #endif

@@ -1,44 +1,6 @@
 #include "d3plot_part_nodes_gen.h"
 #include <stdlib.h>
 
-void pgni_load_function_and_macro(FILE *file) {
-  fprintf(file,
-          "int _PGNI_LOAD(void ***member, size_t **num,\n"
-          "void *(func)(d3plot_file *, size_t *), void "
-          "**pointer_buffer,\n"
-          "size_t *current_pointer, size_t *size_buffer,\n"
-          "size_t *current_size, d3plot_file *plot_file) {\n"
-          "if (!*member) {\n"
-          "*member = &pointer_buffer[(*current_pointer)++];\n"
-          "**member = NULL;\n"
-          "}\n"
-          "if (!**member) {\n"
-          "if (!*num) {\n"
-          "*num = &size_buffer[(*current_size)++];\n"
-          "}\n"
-          "**member = func(plot_file, *num);\n"
-          "if (plot_file->error_string) {\n"
-          "return 0;\n"
-          "}\n"
-          "}\n"
-          "\n"
-          "return 1;\n"
-          "}\n"
-          "\n"
-          "#define PGNI_LOAD(member, num, func)"
-          "\\\n"
-          "_PGNI_LOAD((void ***)&p->member, &p->num, func, pointer_buffer,"
-          "\\\n"
-          "current_pointer, size_buffer, current_size, plot_file)\n"
-          "\n");
-}
-
-void pgni_unload_macro(FILE *file) {
-  fprintf(file, "#define PGNI_UNLOAD(member)\\\n"
-                "if (!params || !params->member)\\\n"
-                "free(*p->member);\n");
-}
-
 const char *pgni_push_snippet() {
   return "if (*num_part_node_ids == 0) {"
          "*num_part_node_ids = 1;"
@@ -82,22 +44,6 @@ const char *pgnind_push_snippet() {
          "}\n";
 }
 
-char *pgni_unload(const char *member) {
-  char *buffer = malloc(1024);
-#ifdef _WIN32
-  _sprintf_p(
-#else
-  sprintf(
-#endif
-      buffer,
-#ifdef _WIN32
-      1024,
-#endif
-      "/*unload %1$s*/\nif (!params || !params->%1$s) free(*p->%1$s);\n",
-      member);
-  return buffer;
-}
-
 void pgni_add_element_function(FILE *file, const char *element_name /*1*/,
                                const char *el_ids /*2*/,
                                const char *el_cons /*3*/,
@@ -112,30 +58,43 @@ void pgni_add_element_function(FILE *file, const char *element_name /*1*/,
 #endif
       file,
       "void pgni_add_element_%1$s(d3plot_file* plot_file, const d3plot_part* "
-      "part, d3_word* part_node_ids, size_t* num_part_node_ids, "
-      "d3plot_part_get_node_ids_params* p, "
-      "d3plot_part_get_node_ids_params* params, void** pointer_buffer, size_t* "
-      "current_pointer, size_t* size_buffer, size_t* current_size) {\n"
-      "if (part->%4$s != 0) {"
-      "if (!PGNI_LOAD(%2$s, %4$s, %5$s)) {\n"
-      "/* Ignore these elements*/\n"
-      "CLEAR_ERROR_STRING();"
-      "} else {"
-      "if (!PGNI_LOAD(%3$s, %4$s, %6$s)) {\n"
-      "/* Ignore these elements*/\n"
-      "%10$s"
-      " CLEAR_ERROR_STRING();"
-      "} else {"
+      "part, d3_word* part_node_ids, size_t* num_part_node_ids, const d3_word* "
+      "node_ids, const d3_word* "
+      "%2$s, size_t %4$s, const %7$s* %3$s) {\n"
+      "if (part->%4$s != 0) {\n"
+      "uint8_t loaded_ids = 0;\n"
+      "uint8_t loaded_cons = 0;\n"
+      "if (!%2$s) {\n"
+      "loaded_ids = 1;\n"
+      "%2$s = %5$s(plot_file, &%4$s);\n"
+      "if (plot_file->error_string) {\n"
+      "/*Ignore these elements*/\n"
+      "CLEAR_ERROR_STRING();\n"
+      "}\n"
+      "}\n"
+      "if (%2$s) {\n"
+      "if (!%3$s) {\n"
+      "%3$s = %6$s(plot_file, &%4$s);\n"
+      "if (plot_file->error_string) {\n"
+      "/* Ignore these elements */\n"
+      "/* Unload solid_ids*/\n"
+      "if (loaded_ids) {\n"
+      "free((d3_word*)%2$s);\n"
+      "}\n"
+      "CLEAR_ERROR_STRING();\n"
+      "}\n"
+      "}\n"
+      "if (%3$s) {\n"
       "size_t i = 0;"
       "while (i < part->%4$s) {"
       "const size_t el_index ="
-      "d3plot_index_for_id(part->%2$s[i], *p->%2$s, *p->%4$s);\n"
-      "const %7$s *el_con = &(*p->%3$s)[el_index];\n"
+      "d3plot_index_for_id(part->%2$s[i], %2$s, %4$s);\n"
+      "const %7$s *el_con = &%3$s[el_index];\n"
       "size_t j = 0;"
       "while (j < (sizeof(el_con->node_indices) /"
       "sizeof(*el_con->node_indices))) {"
       "const d3_word node_index = el_con->node_indices[j];"
-      "const d3_word node_id = (*p->node_ids)[node_index];\n"
+      "const d3_word node_id = node_ids[node_index];\n"
       "/* Push node id onto the array of node ids*/\n"
       "%8$s"
       "/******************************************/\n"
@@ -143,14 +102,18 @@ void pgni_add_element_function(FILE *file, const char *element_name /*1*/,
       "}"
       "i++;"
       "}\n"
-      "%9$s"
-      "%10$s"
+      "if (loaded_ids) {\n"
+      "free((d3_word*)%2$s);\n"
+      "}\n"
+      "if (loaded_cons) {\n"
+      "free((%7$s*)%3$s);\n"
+      "}\n"
       "}"
       "}"
       "}"
       "}\n",
       element_name, el_ids, el_cons, num_els, ids_func, cons_func, con_type,
-      pgni_push_snippet(), pgni_unload(el_cons), pgni_unload(el_ids));
+      pgni_push_snippet());
 }
 
 void pgnind_add_element_function(FILE *file, const char *element_name /*1*/,
@@ -167,63 +130,77 @@ void pgnind_add_element_function(FILE *file, const char *element_name /*1*/,
 #endif
       file,
       "void pgnind_add_element_%1$s(d3plot_file* plot_file, const d3plot_part* "
-      "part, d3_word* part_node_indices, size_t* num_part_node_indices, "
-      "d3plot_part_get_node_ids_params* p, "
-      "d3plot_part_get_node_ids_params* params, void** pointer_buffer, size_t* "
-      "current_pointer, size_t* size_buffer, size_t* current_size) {"
-      "if (part->%4$s != 0) {"
-      " if (!PGNI_LOAD(%2$s, %4$s,"
-      "%5$s)) {\n"
-      "/* Ignore these elements*/\n"
-      "CLEAR_ERROR_STRING();"
-      "} else {"
-      "if (!PGNI_LOAD(%3$s, %4$s,"
-      "%6$s)) {\n"
-      "/* Ignore these elements*/\n"
-      "%10$s"
-      "CLEAR_ERROR_STRING();"
-      "} else {"
+      "part, d3_word* part_node_indices, size_t* num_part_node_indices, const "
+      "d3_word* "
+      "%2$s, size_t %4$s, const %7$s* %3$s) {\n"
+      "if (part->%4$s != 0) {\n"
+      "uint8_t loaded_ids = 0;\n"
+      "uint8_t loaded_cons = 0;\n"
+      "if (!%2$s) {\n"
+      "loaded_ids = 1;\n"
+      "%2$s = %5$s(plot_file, &%4$s);\n"
+      "if (plot_file->error_string) {\n"
+      "/*Ignore these elements*/\n"
+      "CLEAR_ERROR_STRING();\n"
+      "}\n"
+      "}\n"
+      "if (%2$s) {\n"
+      "if (!%3$s) {\n"
+      "%3$s = %6$s(plot_file, &%4$s);\n"
+      "if (plot_file->error_string) {\n"
+      "/* Ignore these elements */\n"
+      "/* Unload solid_ids*/\n"
+      "if (loaded_ids) {\n"
+      "free((d3_word*)%2$s);\n"
+      "}\n"
+      "CLEAR_ERROR_STRING();\n"
+      "}\n"
+      "}\n"
+      "if (%3$s) {\n"
       "size_t i = 0;"
       "while (i < part->%4$s) {"
-      "const size_t el_index = d3plot_index_for_id("
-      "part->%2$s[i], *p->%2$s, *p->%4$s);"
-      "const %7$s *el_con = &(*p->%3$s)[el_index];"
+      "const size_t el_index ="
+      "d3plot_index_for_id(part->%2$s[i], %2$s, %4$s);\n"
+      "const %7$s *el_con = &%3$s[el_index];\n"
       "size_t j = 0;"
       "while (j < (sizeof(el_con->node_indices) /"
       "sizeof(*el_con->node_indices))) {"
       "const d3_word node_index = el_con->node_indices[j];\n"
       "/* Push node index onto the array of node indices*/\n"
       "%8$s"
-      "/*********************************************/\n"
+      "/******************************************/\n"
       "j++;"
       "}"
       "i++;"
       "}\n"
-      "%9$s"
-      "%10$s"
+      "if (loaded_ids) {\n"
+      "free((d3_word*)%2$s);\n"
+      "}\n"
+      "if (loaded_cons) {\n"
+      "free((%7$s*)%3$s);\n"
+      "}\n"
       "}"
       "}"
       "}"
       "}\n",
       element_name, el_ids, el_cons, num_els, ids_func, cons_func, con_type,
-      pgnind_push_snippet(), pgni_unload(el_cons), pgni_unload(el_ids));
+      pgnind_push_snippet());
 }
 
 void pgni_add_element_macro(FILE *file, const char *element_name,
-                            const char *element_lower) {
+                            const char *element_lower, const char *el_ids,
+                            const char *el_cons, const char *num_els) {
   fprintf(file,
           "#define PGNI_ADD_%s() pgni_add_element_%s(plot_file, part, "
-          "part_node_ids, num_part_node_ids, p, params, pointer_buffer, "
-          "&current_pointer, size_buffer, &current_size);\n",
-          element_name, element_lower);
+          "part_node_ids, num_part_node_ids, node_ids, %s, %s, %s);\n",
+          element_name, element_lower, el_ids, num_els, el_cons);
 }
 
 void pgnind_add_element_macro(FILE *file, const char *element_name,
-                              const char *element_lower) {
-  fprintf(
-      file,
-      "#define PGNIND_ADD_%s() pgnind_add_element_%s(plot_file, part, "
-      "part_node_indices, num_part_node_indices, p, params, pointer_buffer, "
-      "&current_pointer, size_buffer, &current_size);\n",
-      element_name, element_lower);
+                              const char *element_lower, const char *el_ids,
+                              const char *el_cons, const char *num_els) {
+  fprintf(file,
+          "#define PGNIND_ADD_%s() pgnind_add_element_%s(plot_file, part, "
+          "part_node_indices, num_part_node_indices, %s, %s, %s);\n",
+          element_name, element_lower, el_ids, num_els, el_cons);
 }
