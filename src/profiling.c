@@ -31,45 +31,44 @@
 
 profiling_context_t profiling_context = {0};
 
-signed long partition_execution_times(char const ***names, double **times,
-                                      signed long low, signed long high) {
-  const double pivot = (*times)[high];
+signed long partition_execution_times(profiling_stack_t *stack, signed long low,
+                                      signed long high) {
+  const double pivot = stack[high].execution_time;
 
   signed long i = low - 1, j = low;
 
   while (j < high) {
-    if ((*times)[j] > pivot) {
+    if (stack[j].execution_time > pivot) {
       i++;
       /* Swap i and j*/
-      const char *temp_name = (*names)[i];
-      (*names)[i] = (*names)[j];
-      (*names)[j] = temp_name;
-      const double temp_time = (*times)[i];
-      (*times)[i] = (*times)[j];
-      (*times)[j] = temp_time;
+      const profiling_stack_t temp = stack[i];
+      stack[i] = stack[j];
+      stack[j] = temp;
     }
 
     j++;
   }
 
   /* Swap i + 1 and high*/
-  const char *temp_name = (*names)[i + 1];
-  (*names)[i + 1] = (*names)[high];
-  (*names)[high] = temp_name;
-  const double temp_time = (*times)[i + 1];
-  (*times)[i + 1] = (*times)[high];
-  (*times)[high] = temp_time;
+  const profiling_stack_t temp = stack[i + 1];
+  stack[i + 1] = stack[high];
+  stack[high] = temp;
 
   return i + 1;
 }
 
-void quick_sort_execution_times(char const ***names, double **times,
-                                signed long low, signed long high) {
+void quick_sort_execution_times(profiling_stack_t *stack, signed long low,
+                                signed long high) {
   if (low < high) {
-    const signed long pi = partition_execution_times(names, times, low, high);
+    const signed long pi = partition_execution_times(stack, low, high);
 
-    quick_sort_execution_times(names, times, low, pi - 1);
-    quick_sort_execution_times(names, times, pi + 1, high);
+    quick_sort_execution_times(stack, low, pi - 1);
+    quick_sort_execution_times(stack, pi + 1, high);
+  }
+
+  if (stack->num_sub_executions != 0) {
+    quick_sort_execution_times(stack->sub_executions, 0,
+                               stack->num_sub_executions - 1);
   }
 }
 
@@ -211,6 +210,9 @@ void END_PROFILING(const char *out_file_name) {
       fprintf(stderr, "Failed to open profiling file: %s\n", strerror(errno));
       return;
     }
+
+    quick_sort_execution_times(profiling_context.execution_stacks, 0,
+                               profiling_context.num_execution_stacks - 1);
 
     fprintf(out_file,
             "--------------------- Profiling ----------------------\n");
