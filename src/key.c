@@ -216,6 +216,8 @@ keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
 }
 
 void key_file_free(keyword_t *keywords, size_t num_keywords) {
+  BEGIN_PROFILE_FUNC();
+
   size_t i = 0;
   while (i < num_keywords) {
     free(keywords[i].name);
@@ -231,4 +233,184 @@ void key_file_free(keyword_t *keywords, size_t num_keywords) {
   }
 
   free(keywords);
+
+  END_PROFILE_FUNC();
+}
+
+keyword_t *key_file_get(keyword_t *keywords, size_t num_keywords,
+                        const char *name, size_t index) {
+  BEGIN_PROFILE_FUNC();
+
+  if (num_keywords == 0) {
+    END_PROFILE_FUNC();
+    return NULL;
+  }
+
+  const size_t find_index =
+      key_file_binary_search(keywords, 0, num_keywords - 1, name);
+  if (find_index == (size_t)~0) {
+    END_PROFILE_FUNC();
+    return NULL;
+  }
+
+  if (find_index == 0 && index == 0) {
+    END_PROFILE_FUNC();
+    return NULL;
+  }
+
+  /* Find the first of the keyword*/
+  size_t i = find_index;
+  while (i > 0 && strcmp(keywords[i].name, name) == 0) {
+    i--;
+  }
+
+  if (i != 0 || strcmp(keywords[i].name, name) != 0) {
+    i++;
+  }
+
+  size_t j = 0;
+  while (j < index && i < num_keywords) {
+    j++;
+    i += j;
+  }
+
+  if (j == index && strcmp(keywords[i].name, name) == 0) {
+    keyword_t *value = &keywords[i];
+    END_PROFILE_FUNC();
+    return value;
+  }
+
+  END_PROFILE_FUNC();
+  return NULL;
+}
+
+void card_parse_begin(card_t *card, uint8_t value_width) {
+  BEGIN_PROFILE_FUNC();
+
+  card->current_index = 0;
+  card->value_width = value_width;
+
+  END_PROFILE_FUNC();
+}
+
+void card_parse_next(card_t *card) {
+  BEGIN_PROFILE_FUNC();
+
+  card->current_index += card->value_width;
+
+  END_PROFILE_FUNC();
+}
+
+void card_parse_next_width(card_t *card, uint8_t value_width) {
+  BEGIN_PROFILE_FUNC();
+
+  card->current_index += value_width;
+
+  END_PROFILE_FUNC();
+}
+
+int card_parse_done(const card_t *card) {
+  BEGIN_PROFILE_FUNC();
+
+  const int is_done = card->string[card->current_index] == '\0';
+
+  END_PROFILE_FUNC();
+  return is_done;
+}
+
+int card_parse_int(const card_t *card) {
+  BEGIN_PROFILE_FUNC();
+
+  const char temp = card->string[card->current_index + card->value_width];
+  card->string[card->current_index + card->value_width] = '\0';
+
+  const int value = atoi(&card->string[card->current_index]);
+
+  card->string[card->current_index + card->value_width] = temp;
+
+  END_PROFILE_FUNC();
+  return value;
+}
+
+int card_parse_int_width(const card_t *card, uint8_t value_width) {
+  BEGIN_PROFILE_FUNC();
+
+  const char temp = card->string[card->current_index + value_width];
+  card->string[card->current_index + value_width] = '\0';
+
+  const int value = atoi(&card->string[card->current_index]);
+
+  card->string[card->current_index + value_width] = temp;
+
+  END_PROFILE_FUNC();
+  return value;
+}
+
+float card_parse_float32(const card_t *card) {
+  /* atof always uses double*/
+  return (float)card_parse_float64(card);
+}
+
+float card_parse_float32_width(const card_t *card, uint8_t value_width) {
+  /* atof always uses double*/
+  return (float)card_parse_float64_width(card, value_width);
+}
+
+double card_parse_float64(const card_t *card) {
+  BEGIN_PROFILE_FUNC();
+
+  const char temp = card->string[card->current_index + card->value_width];
+  card->string[card->current_index + card->value_width] = '\0';
+
+  const double value = atof(&card->string[card->current_index]);
+
+  card->string[card->current_index + card->value_width] = temp;
+
+  END_PROFILE_FUNC();
+  return value;
+}
+
+double card_parse_float64_width(const card_t *card, uint8_t value_width) {
+  BEGIN_PROFILE_FUNC();
+
+  const char temp = card->string[card->current_index + value_width];
+  card->string[card->current_index + value_width] = '\0';
+
+  const double value = atof(&card->string[card->current_index]);
+
+  card->string[card->current_index + value_width] = temp;
+
+  END_PROFILE_FUNC();
+  return value;
+}
+
+char *card_parse_string(const card_t *card) {
+  BEGIN_PROFILE_FUNC();
+
+  char *value = malloc(card->value_width + 1);
+  memcpy(value, &card->string[card->current_index], card->value_width);
+  value[card->value_width] = '\0';
+
+  END_PROFILE_FUNC();
+  return value;
+}
+
+char *card_parse_string_width(const card_t *card, uint8_t value_width) {
+  BEGIN_PROFILE_FUNC();
+
+  char *value = malloc(value_width + 1);
+  memcpy(value, &card->string[card->current_index], value_width);
+  value[value_width] = '\0';
+
+  END_PROFILE_FUNC();
+  return value;
+}
+
+const char *card_parse_whole(const card_t *card) {
+  BEGIN_PROFILE_FUNC();
+
+  const char *value = card->string;
+
+  END_PROFILE_FUNC();
+  return value;
 }

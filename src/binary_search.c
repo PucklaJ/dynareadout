@@ -357,6 +357,45 @@ size_t key_file_binary_search_insert(const keyword_t *arr, size_t start_index,
   return half_index;
 }
 
+size_t key_file_binary_search(const keyword_t *arr, size_t start_index,
+                              size_t end_index, const char *value) {
+  BEGIN_PROFILE_FUNC();
+
+  if (start_index == end_index) {
+    if (strcmp(value, arr[start_index].name) == 0) {
+      END_PROFILE_FUNC();
+      return start_index;
+    }
+
+    END_PROFILE_FUNC();
+    return ~0;
+  }
+
+  const size_t half_index = start_index + (end_index - start_index) / 2;
+  const int cmp_val = strcmp(value, arr[half_index].name);
+
+  if (cmp_val < 0) {
+    const size_t index =
+        key_file_binary_search(arr, start_index, half_index, value);
+    END_PROFILE_FUNC();
+    return index;
+  } else if (cmp_val > 0) {
+    if (half_index == end_index - 1) {
+      const size_t index =
+          key_file_binary_search(arr, end_index, end_index, value);
+      END_PROFILE_FUNC();
+      return index;
+    }
+    const size_t index =
+        key_file_binary_search(arr, half_index, end_index, value);
+    END_PROFILE_FUNC();
+    return index;
+  }
+
+  END_PROFILE_FUNC();
+  return half_index;
+}
+
 #ifdef PROFILING
 size_t string_binary_search_insert(char const **arr, size_t start_index,
                                    size_t end_index, const char *value,

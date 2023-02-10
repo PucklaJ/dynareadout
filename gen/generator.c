@@ -152,6 +152,9 @@ int main(int args, char *argv[]) {
                                  "const keyword_t*", "const char*");
   semicolon(binary_search_h);
   newline(binary_search_h);
+  binary_search_prototype(binary_search_h, "key_file_binary_search",
+                          "const keyword_t*", "const char*");
+  semicolon(binary_search_h);
   newline(binary_search_h);
   ifdef_start(binary_search_h, "PROFILING");
   binary_search_insert_prototype(binary_search_h, "string_binary_search_insert",
@@ -226,6 +229,12 @@ int main(int args, char *argv[]) {
   newline(binary_search_c);
   binary_search_insert_body(binary_search_c, "key_file_binary_search_insert",
                             "strcmp", ".name");
+  newline(binary_search_c);
+  binary_search_prototype(binary_search_c, "key_file_binary_search",
+                          "const keyword_t*", "const char*");
+  newline(binary_search_c);
+  binary_search_body(binary_search_c, "key_file_binary_search", "strcmp",
+                     ".name");
   newline(binary_search_c);
   ifdef_start(binary_search_c, "PROFILING");
   binary_search_insert_prototype(binary_search_c, "string_binary_search_insert",

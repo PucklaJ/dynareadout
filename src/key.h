@@ -30,11 +30,12 @@
 #include <stdint.h>
 
 #define DEFAULT_VALUE_WIDTH 10
+#define NODE_VALUE_WIDTH 8
 
 typedef struct {
   char *string;
 
-  uint8_t current_value;
+  uint8_t current_index;
   uint8_t value_width;
 } card_t;
 
@@ -50,6 +51,16 @@ typedef void (*key_file_callback)(const char *keyword_name, const card_t *card,
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* Needs to be deallocated by key_file_free*/
+keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
+                          char **error_string);
+void key_file_parse_with_callback(const char *file_name,
+                                  key_file_callback callback,
+                                  char **error_string);
+void key_file_free(keyword_t *keywords, size_t num_keywords);
+keyword_t *key_file_get(keyword_t *keywords, size_t num_keywords,
+                        const char *name, size_t index);
 
 /*
 card_parse_begin(card);
@@ -68,21 +79,18 @@ double z = card_parse_double(card);
 */
 void card_parse_begin(card_t *card, uint8_t value_width);
 void card_parse_next(card_t *card);
+void card_parse_next_width(card_t *card, uint8_t value_width);
 int card_parse_done(const card_t *card);
 int card_parse_int(const card_t *card);
+int card_parse_int_width(const card_t *card, uint8_t value_width);
 float card_parse_float32(const card_t *card);
+float card_parse_float32_width(const card_t *card, uint8_t value_width);
 double card_parse_float64(const card_t *card);
+double card_parse_float64_width(const card_t *card, uint8_t value_width);
+/* Needs to be deallocated by free*/
 char *card_parse_string(const card_t *card);
+char *card_parse_string_width(const card_t *card, uint8_t value_width);
 const char *card_parse_whole(const card_t *card);
-
-/* Needs to be deallocated by key_file_free*/
-keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
-                          char **error_string);
-void key_file_parse_with_callback(const char *file_name,
-                                  key_file_callback callback,
-                                  char **error_string);
-
-void key_file_free(keyword_t *keywords, size_t num_keywords);
 
 #ifdef __cplusplus
 }

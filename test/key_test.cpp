@@ -40,8 +40,116 @@ TEST_CASE("key_file_parse") {
     return;
   }
 
-  for (size_t i = 0; i < num_keywords; i++) {
-    std::cout << keywords[i].name << ": " << keywords[i].num_cards << std::endl;
+  keyword_t *keyword = key_file_get(keywords, num_keywords, "TITLE", 0);
+  REQUIRE(keyword != NULL);
+  CHECK(keyword->num_cards == 1);
+  card_parse_begin(&keyword->cards[0], DEFAULT_VALUE_WIDTH);
+  CHECK(card_parse_string(&keyword->cards[0]) == "Cube_Test");
+
+  keyword = key_file_get(keywords, num_keywords, "PART", 0);
+  REQUIRE(keyword != NULL);
+  CHECK(keyword->num_cards == 2);
+
+  card_t *card = &keyword->cards[1];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  CHECK(card_parse_int(card) == 71000063);
+  card_parse_next(card);
+  CHECK(card_parse_done(card) == 0);
+  CHECK(card_parse_float32(card) == 71000063.0f);
+  card_parse_next(card);
+  CHECK(card_parse_done(card) == 0);
+  CHECK(card_parse_int(card) == 6);
+  card_parse_next(card);
+  CHECK(card_parse_done(card) == 0);
+  CHECK(card_parse_int(card) == 0);
+  card_parse_next(card);
+  CHECK(card_parse_done(card) == 0);
+  CHECK(card_parse_int(card) == 0);
+  card_parse_next(card);
+  CHECK(card_parse_done(card) == 0);
+  CHECK(card_parse_int(card) == 0);
+  card_parse_next(card);
+  CHECK(card_parse_done(card) == 0);
+  CHECK(card_parse_int(card) == 0);
+  card_parse_next(card);
+  CHECK(card_parse_done(card) == 0);
+  CHECK(card_parse_int(card) == 0);
+  card_parse_next(card);
+  CHECK(card_parse_done(card) != 0);
+
+  keyword = key_file_get(keywords, num_keywords, "SECTION_SHELL_TITLE", 0);
+  REQUIRE(keyword != NULL);
+  CHECK(keyword->num_cards == 3);
+
+  card = &keyword->cards[2];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  CHECK(card_parse_float64(card) == 0.15);
+  card_parse_next(card);
+  CHECK(card_parse_done(card) == 0);
+  CHECK(card_parse_float64(card) == 0.15);
+  card_parse_next(card);
+  CHECK(card_parse_done(card) == 0);
+  CHECK(card_parse_float64(card) == 0.15);
+  card_parse_next(card);
+  CHECK(card_parse_done(card) == 0);
+  CHECK(card_parse_float64(card) == 0.15);
+  card_parse_next(card);
+  CHECK(card_parse_done(card) == 0);
+  CHECK(card_parse_float64(card) == 0.0);
+  card_parse_next(card);
+  CHECK(card_parse_done(card) == 0);
+  CHECK(card_parse_float64(card) == 0.0);
+  card_parse_next(card);
+  CHECK(card_parse_done(card) == 0);
+  CHECK(card_parse_float64(card) == 0.0);
+  card_parse_next(card);
+  CHECK(card_parse_done(card) == 0);
+  CHECK(card_parse_int(card) == 0);
+  card_parse_next(card);
+  CHECK(card_parse_done(card) != 0);
+
+  keyword_t *nodes = key_file_get(keywords, num_keywords, "NODE", 0);
+  REQUIRE(nodes != NULL);
+  CHECK(nodes->num_cards == 30);
+  size_t i = 0;
+  while (nodes) {
+    size_t j = 0;
+    while (j < nodes->num_cards) {
+      card_t *node = &nodes->cards[j];
+
+      card_parse_begin(node, NODE_VALUE_WIDTH);
+      const int nid = card_parse_int(node);
+      card_parse_next(node);
+      const double x = card_parse_float64_width(node, NODE_VALUE_WIDTH * 2);
+      card_parse_next_width(node, NODE_VALUE_WIDTH * 2);
+      const double y = card_parse_float64_width(node, NODE_VALUE_WIDTH * 2);
+      card_parse_next_width(node, NODE_VALUE_WIDTH * 2);
+      const double z = card_parse_float64_width(node, NODE_VALUE_WIDTH * 2);
+
+      if (j <= 8 && j >= 0) {
+        CHECK(y == -10.0);
+      } else if (j <= 16 && j >= 9) {
+        CHECK(y == -5.0);
+      } else if (j <= 25 && j >= 17) {
+        CHECK(y == 0.0);
+      } else if (j == 26 || j == 28) {
+        CHECK(y == 0.125169);
+      } else {
+        CHECK(y == 0.125161);
+      }
+
+      CHECK(x >= -10.0);
+      CHECK(x <= 20.0);
+      CHECK(z >= -10.0);
+      CHECK(z <= 20.0);
+
+      CHECK(nid == (j + 1));
+
+      j++;
+    }
+
+    i++;
+    nodes = key_file_get(keywords, num_keywords, "NODE", i);
   }
 
   key_file_free(keywords, num_keywords);

@@ -71,6 +71,9 @@ size_t key_file_binary_search_insert(const keyword_t *arr, size_t start_index,
                                      size_t end_index, const char *value,
                                      int *found);
 
+size_t key_file_binary_search(const keyword_t *arr, size_t start_index,
+                              size_t end_index, const char *value);
+
 #ifdef PROFILING
 size_t string_binary_search_insert(char const **arr, size_t start_index,
                                    size_t end_index, const char *value,
