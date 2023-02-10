@@ -44,22 +44,22 @@ void add_d3plot_library_to_module(py::module_ &m) {
   add_d3plot_arrays_to_module(m);
 
   py::class_<d3plot_solid_con>(m, "d3plot_solid_con")
-      .def_readonly("node_ids", &d3plot_solid_con::node_indices)
-      .def_readonly("material_id", &d3plot_solid_con::material_index)
+      .def_readonly("node_indices", &d3plot_solid_con::node_indices)
+      .def_readonly("material_index", &d3plot_solid_con::material_index)
 
       ;
 
   py::class_<d3plot_beam_con>(m, "d3plot_beam_con")
-      .def_readonly("node_ids", &d3plot_beam_con::node_indices)
-      .def_readonly("orientation_node_id",
+      .def_readonly("node_indices", &d3plot_beam_con::node_indices)
+      .def_readonly("orientation_node_index",
                     &d3plot_beam_con::orientation_node_index)
-      .def_readonly("material_id", &d3plot_beam_con::material_index)
+      .def_readonly("material_index", &d3plot_beam_con::material_index)
 
       ;
 
   py::class_<d3plot_shell_con>(m, "d3plot_shell_con")
-      .def_readonly("node_ids", &d3plot_shell_con::node_indices)
-      .def_readonly("material_id", &d3plot_shell_con::material_index)
+      .def_readonly("node_indices", &d3plot_shell_con::node_indices)
+      .def_readonly("material_index", &d3plot_shell_con::material_index)
 
       ;
 
