@@ -29,6 +29,7 @@
 #define BINARY_SEARCH_H
 #include "binout_directory.h"
 #include "d3_defines.h"
+#include "key.h"
 #include <stddef.h>
 #ifdef PROFILING
 #include "profiling.h"
@@ -65,6 +66,10 @@ size_t d3_word_binary_search(const d3_word *arr, size_t start_index,
 size_t d3_word_binary_search_insert(const d3_word *arr, size_t start_index,
                                     size_t end_index, d3_word value,
                                     int *found);
+
+size_t key_file_binary_search_insert(const keyword_t *arr, size_t start_index,
+                                     size_t end_index, const char *value,
+                                     int *found);
 
 #ifdef PROFILING
 size_t string_binary_search_insert(char const **arr, size_t start_index,

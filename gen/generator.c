@@ -112,6 +112,7 @@ int main(int args, char *argv[]) {
   include_rel(binary_search_h, "binout_directory.h");
   include_rel(binary_search_h, "d3_defines.h");
   include_abs(binary_search_h, "stddef.h");
+  include_rel(binary_search_h, "key.h");
   ifdef_start(binary_search_h, "PROFILING");
   include_rel(binary_search_h, "profiling.h");
   ifdef_end(binary_search_h);
@@ -144,6 +145,11 @@ int main(int args, char *argv[]) {
   binary_search_insert_prototype(binary_search_h,
                                  "d3_word_binary_search_insert",
                                  "const d3_word *", "d3_word");
+  semicolon(binary_search_h);
+  newline(binary_search_h);
+  binary_search_insert_prototype(binary_search_h,
+                                 "key_file_binary_search_insert",
+                                 "const keyword_t*", "const char*");
   semicolon(binary_search_h);
   newline(binary_search_h);
   newline(binary_search_h);
@@ -213,6 +219,13 @@ int main(int args, char *argv[]) {
   newline(binary_search_c);
   binary_search_insert_body(binary_search_c, "d3_word_binary_search_insert",
                             "d3_word_cmp", "");
+  newline(binary_search_c);
+  binary_search_insert_prototype(binary_search_c,
+                                 "key_file_binary_search_insert",
+                                 "const keyword_t*", "const char*");
+  newline(binary_search_c);
+  binary_search_insert_body(binary_search_c, "key_file_binary_search_insert",
+                            "strcmp", ".name");
   newline(binary_search_c);
   ifdef_start(binary_search_c, "PROFILING");
   binary_search_insert_prototype(binary_search_c, "string_binary_search_insert",

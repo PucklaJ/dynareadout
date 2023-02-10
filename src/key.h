@@ -1,0 +1,91 @@
+/***********************************************************************************
+ *                         This file is part of dynareadout
+ *                    https://github.com/PucklaJ/dynareadout
+ ***********************************************************************************
+ * Copyright (c) 2022 Jonas Pucher
+ *
+ * This software is provided 'as-is', without any express or implied warranty.
+ * In no event will the authors be held liable for any damages arising from the
+ * use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ * 1. The origin of this software must not be misrepresented; you must not claim
+ * that you wrote the original software. If you use this software in a product,
+ * an acknowledgment in the product documentation would be appreciated but is
+ * not required.
+ *
+ * 2. Altered source versions must be plainly marked as such, and must not be
+ * misrepresented as being the original software.
+ *
+ * 3. This notice may not be removed or altered from any source distribution.
+ ************************************************************************************/
+
+#ifndef KEY_H
+#define KEY_H
+
+#include <stddef.h>
+#include <stdint.h>
+
+#define DEFAULT_VALUE_WIDTH 10
+
+typedef struct {
+  char *string;
+
+  uint8_t current_value;
+  uint8_t value_width;
+} card_t;
+
+typedef struct {
+  char *name;
+  card_t *cards;
+  size_t num_cards;
+} keyword_t;
+
+typedef void (*key_file_callback)(const char *keyword_name, const card_t *card,
+                                  size_t card_index);
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/*
+card_parse_begin(card);
+while (!card_parse_done()) {
+  int val = card_parse_int(card);
+
+  card_parse_next();
+}
+
+card_parse_begin(card);
+
+double x = card_parse_double(card);
+double y = card_parse_double(card);
+double z = card_parse_double(card);
+
+*/
+void card_parse_begin(card_t *card, uint8_t value_width);
+void card_parse_next(card_t *card);
+int card_parse_done(const card_t *card);
+int card_parse_int(const card_t *card);
+float card_parse_float32(const card_t *card);
+double card_parse_float64(const card_t *card);
+char *card_parse_string(const card_t *card);
+const char *card_parse_whole(const card_t *card);
+
+/* Needs to be deallocated by key_file_free*/
+keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
+                          char **error_string);
+void key_file_parse_with_callback(const char *file_name,
+                                  key_file_callback callback,
+                                  char **error_string);
+
+void key_file_free(keyword_t *keywords, size_t num_keywords);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
