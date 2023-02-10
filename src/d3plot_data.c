@@ -51,13 +51,6 @@ int _d3plot_read_geometry_data(d3plot_file *plot_file) {
     return 0;
   }
 
-  if (CDP.icode != D3_CODE_OLD_DYNA3D &&
-      CDP.icode != D3_CODE_NIKE3D_LS_DYNA3D_LS_NIKE3D) {
-    ERROR_AND_NO_RETURN_PTR("The given order of the elements is not supported");
-    END_PROFILE_FUNC();
-    return 0;
-  }
-
   /* Here are the node coordinates*/
   DT_PTR_SET(D3PLT_PTR_NODE_COORDS);
 
