@@ -38,8 +38,85 @@
   *error_string = malloc(1024);                                                \
   sprintf(*error_string, msg, strerror(errno));
 
+typedef struct {
+  keyword_t *current_keyword;
+  keyword_t *keywords;
+  size_t *num_keywords;
+} key_file_parse_data;
+
+void key_file_parse_callback(const char *keyword_name, const card_t *card,
+                             size_t card_index, void *user_data) {
+  key_file_parse_data *data = (key_file_parse_data *)user_data;
+
+  if (!data->current_keyword ||
+      strcmp(data->current_keyword->name, keyword_name) != 0) {
+    size_t index = 0;
+
+    if (data->keywords) {
+      int found;
+      index = key_file_binary_search_insert(
+          data->keywords, 0, *data->num_keywords - 1, keyword_name, &found);
+
+      if (found) {
+        index++;
+      }
+    }
+
+    (*data->num_keywords)++;
+    data->keywords =
+        realloc(data->keywords, *data->num_keywords * sizeof(keyword_t));
+
+    /* Move everything to the right*/
+    size_t j = *data->num_keywords - 1;
+    while (j > index) {
+      data->keywords[j] = data->keywords[j - 1];
+      j--;
+    }
+
+    data->current_keyword = &data->keywords[index];
+
+    data->current_keyword->cards = NULL;
+    data->current_keyword->num_cards = 0;
+
+    /* Always allocate LINE_WIDTH bytes*/
+    data->current_keyword->name = malloc(LINE_WIDTH);
+    strcpy(data->current_keyword->name, keyword_name);
+  }
+
+  if (!card) {
+    return;
+  }
+
+  /* Add the card to the keyword*/
+  data->current_keyword->num_cards++;
+  data->current_keyword->cards =
+      realloc(data->current_keyword->cards,
+              data->current_keyword->num_cards * sizeof(card_t));
+  card_t *keyword_card =
+      &data->current_keyword->cards[data->current_keyword->num_cards - 1];
+  keyword_card->string = malloc(LINE_WIDTH + 1);
+  memcpy(keyword_card->string, card->string, LINE_WIDTH + 1);
+}
+
 keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
                           char **error_string) {
+  BEGIN_PROFILE_FUNC();
+
+  key_file_parse_data data;
+  data.current_keyword = NULL;
+  data.keywords = NULL;
+  data.num_keywords = num_keywords;
+
+  key_file_parse_with_callback(file_name, key_file_parse_callback, error_string,
+                               &data);
+
+  END_PROFILE_FUNC();
+  return data.keywords;
+}
+
+void key_file_parse_with_callback(const char *file_name,
+                                  key_file_callback callback,
+                                  char **error_string, void *user_data) {
   BEGIN_PROFILE_FUNC();
 
   *error_string = NULL;
@@ -48,13 +125,11 @@ keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
   if (!file) {
     ERROR_ERRNO("Failed to open key file: %s")
     END_PROFILE_FUNC();
-    return NULL;
+    return;
   }
 
-  keyword_t *keywords = NULL;
-  *num_keywords = 0;
-  keyword_t current_keyword = {0};
-  char *card_string = NULL;
+  char current_keyword_name[LINE_WIDTH + 1];
+  size_t card_index = 0;
 
   char line[LINE_WIDTH + 1];
 
@@ -127,92 +202,36 @@ keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
     const int is_keyword = line[i] == '*';
 
     if (is_keyword) {
-      /* Add the previous keyword to the array*/
-      if (current_keyword.name) {
-        size_t index = 0;
-
-        if (keywords) {
-          int found;
-          index = key_file_binary_search_insert(keywords, 0, *num_keywords - 1,
-                                                current_keyword.name, &found);
-
-          if (found) {
-            index++;
-          }
-        }
-
-        (*num_keywords)++;
-        keywords = realloc(keywords, *num_keywords * sizeof(keyword_t));
-
-        /* Move everything to the right*/
-        size_t j = *num_keywords - 1;
-        while (j > index) {
-          keywords[j] = keywords[j - 1];
-          j--;
-        }
-
-        keywords[index] = current_keyword;
-
-        current_keyword.name = NULL;
-        current_keyword.cards = NULL;
-        current_keyword.num_cards = 0;
-      }
+      memcpy(current_keyword_name, &line[i + 1], LINE_WIDTH + 1);
 
       /* Quit on "END"*/
-      if (strcmp(&line[i + 1], "END") == 0) {
+      if (strcmp(current_keyword_name, "END") == 0) {
         break;
       }
 
-      /* Always allocate LINE_WIDTH bytes*/
-      current_keyword.name = malloc(LINE_WIDTH);
-      strcpy(current_keyword.name, &line[i + 1]);
+      card_index = 0;
     } else {
       /* This means that we have a card*/
       card_t card;
-      card.string = malloc(LINE_WIDTH + 1);
-      memcpy(card.string, line, LINE_WIDTH + 1);
+      card.string = line;
 
-      /* Add it to the keyword*/
-      current_keyword.num_cards++;
-      current_keyword.cards = realloc(
-          current_keyword.cards, current_keyword.num_cards * sizeof(card_t));
-      current_keyword.cards[current_keyword.num_cards - 1] = card;
+      callback(current_keyword_name, &card, card_index, user_data);
+
+      card_index++;
     }
 
     /* ---------------------------------------- */
   }
 
-  /* Add the last keyword to the array, but only if not "END"*/
-  if (current_keyword.name && strcmp(current_keyword.name, "END") != 0) {
-    size_t index = 0;
-
-    if (keywords) {
-      int found;
-      index = key_file_binary_search_insert(keywords, 0, *num_keywords - 1,
-                                            current_keyword.name, &found);
-
-      if (found) {
-        index++;
-      }
-    }
-
-    (*num_keywords)++;
-    keywords = realloc(keywords, *num_keywords * sizeof(keyword_t));
-
-    /* Move everything to the right*/
-    size_t i = *num_keywords - 1;
-    while (i > index) {
-      keywords[i] = keywords[i - 1];
-      i--;
-    }
-
-    keywords[index] = current_keyword;
+  /* Call the callback for the last keyword if it is not "END", because some
+   * keywords can have no cards*/
+  if (strcmp(current_keyword_name, "END") != 0) {
+    callback(current_keyword_name, NULL, (size_t)~0, user_data);
   }
 
   fclose(file);
 
   END_PROFILE_FUNC();
-  return keywords;
 }
 
 void key_file_free(keyword_t *keywords, size_t num_keywords) {

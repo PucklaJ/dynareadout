@@ -25,6 +25,7 @@
 
 #define DOCTEST_CONFIG_TREAT_CHAR_STAR_AS_STRING
 #include <cstdlib>
+#include <cstring>
 #include <doctest/doctest.h>
 #include <iostream>
 #include <key.h>
@@ -38,6 +39,10 @@ TEST_CASE("key_file_parse") {
     FAIL(error_string);
     free(error_string);
     return;
+  }
+
+  for (size_t i = 0; i < num_keywords; i++) {
+    std::cout << keywords[i].name << std::endl;
   }
 
   keyword_t *keyword = key_file_get(keywords, num_keywords, "TITLE", 0);
@@ -153,4 +158,61 @@ TEST_CASE("key_file_parse") {
   }
 
   key_file_free(keywords, num_keywords);
+}
+
+TEST_CASE("key_file_parse_with_callback") {
+  char *error_string;
+  size_t num_keywords;
+
+  key_file_parse_with_callback(
+      "test_data/key_file.k",
+      [](const char *keyword_name, const card_t *card, size_t card_index,
+         void *user_data) {
+        CHECK(user_data == NULL);
+        REQUIRE(card != NULL);
+        REQUIRE(keyword_name != NULL);
+
+        if (strcmp(keyword_name, "NODE") == 0) {
+          const size_t j = card_index;
+          card_t node;
+          node.string = card->string;
+
+          card_parse_begin(&node, NODE_VALUE_WIDTH);
+          const int nid = card_parse_int(&node);
+          card_parse_next(&node);
+          const double x =
+              card_parse_float64_width(&node, NODE_VALUE_WIDTH * 2);
+          card_parse_next_width(&node, NODE_VALUE_WIDTH * 2);
+          const double y =
+              card_parse_float64_width(&node, NODE_VALUE_WIDTH * 2);
+          card_parse_next_width(&node, NODE_VALUE_WIDTH * 2);
+          const double z =
+              card_parse_float64_width(&node, NODE_VALUE_WIDTH * 2);
+
+          if (j <= 8 && j >= 0) {
+            CHECK(y == -10.0);
+          } else if (j <= 16 && j >= 9) {
+            CHECK(y == -5.0);
+          } else if (j <= 25 && j >= 17) {
+            CHECK(y == 0.0);
+          } else if (j == 26 || j == 28) {
+            CHECK(y == 0.125169);
+          } else {
+            CHECK(y == 0.125161);
+          }
+
+          CHECK(x >= -10.0);
+          CHECK(x <= 20.0);
+          CHECK(z >= -10.0);
+          CHECK(z <= 20.0);
+
+          CHECK(nid == (j + 1));
+        }
+      },
+      &error_string, NULL);
+  if (error_string) {
+    FAIL(error_string);
+    free(error_string);
+    return;
+  }
 }
