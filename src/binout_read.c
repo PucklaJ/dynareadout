@@ -75,14 +75,14 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
                          const uint8_t binout_type) {
   CLEAR_ERROR_STRING();
 
-  path_view_t path = path_view_new(variable);
-  if (!path_view_advance(&path)) {
-    NEW_ERROR_STRING("The variable path is too short");
+  if (bin_file->directory.num_children == 0) {
+    NEW_ERROR_STRING("The binout directory is empty");
     return NULL;
   }
 
-  if (bin_file->directory.num_children == 0) {
-    NEW_ERROR_STRING("The binout directory is empty");
+  path_view_t path = path_view_new(variable);
+  if (!path_view_advance(&path)) {
+    NEW_ERROR_STRING("The variable path is too short");
     return NULL;
   }
 
@@ -92,6 +92,12 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
 
   if (folder_index == (size_t)~0) {
     NEW_ERROR_STRING("The folder of the variable does not exist");
+    return NULL;
+  }
+
+  if (BINOUT_FOLDER_CHILDREN_GET_TYPE(
+          (&bin_file->directory.children[folder_index])) != BINOUT_FOLDER) {
+    NEW_ERROR_STRING("The folder contains files");
     return NULL;
   }
 
@@ -106,56 +112,108 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
   const size_t num_folders =
       bin_file->directory.children[folder_index].num_children;
 
-  size_t i = 0;
-  *num_timesteps = 0;
+  if (num_folders == 0) {
+    NEW_ERROR_STRING("The folder is empty");
+    return NULL;
+  }
 
+  /* Loop until the first dxxxxxx string has been found. It's probably the first
+   * one.*/
+  size_t start_index = 0;
+  while (start_index < num_folders &&
+         !_binout_is_d_string(d_folders[start_index].name)) {
+    start_index++;
+  }
+
+  /* If no dxxxxxx folders are found*/
+  if (start_index == num_folders) {
+    NEW_ERROR_STRING("The folder does not contain timed data");
+    return NULL;
+  }
+
+  /* Loop until the last dxxxxxx string has been found. It's probably the
+   * penultimate one, after "metadata"*/
+  size_t end_index = num_folders - 1;
+  while (end_index > start_index &&
+         !_binout_is_d_string(d_folders[end_index].name)) {
+    end_index--;
+  }
+
+  *num_timesteps = end_index - start_index + 1;
   void *data = NULL;
-  size_t data_size = 0;
+  size_t file_index;
 
-  while (i < num_folders) {
-    if (_binout_is_d_string(d_folders[i].name)) {
-      if (d_folders[i].num_children == 0) {
-        i++;
-        continue;
-      }
+  size_t i = start_index;
+  while (i <= end_index) {
+    const binout_folder_t *current_d_folder = &d_folders[i];
 
-      const binout_file_t *files = (const binout_file_t *)d_folders[i].children;
-      const size_t file_index = binout_directory_binary_search_file(
-          files, 0, d_folders[i].num_children - 1, &path);
+    if (current_d_folder->num_children == 0) {
+      free(data);
+      NEW_ERROR_STRING("The folder which should contain the data is empty");
+      return NULL;
+    }
+
+    if (BINOUT_FOLDER_CHILDREN_GET_TYPE(current_d_folder) != BINOUT_FILE) {
+      free(data);
+      NEW_ERROR_STRING(
+          "The folder which should contain the data does contain more folders");
+      return NULL;
+    }
+
+    /* Look for the variable in the first folder*/
+    if (!data) {
+      file_index = binout_directory_binary_search_file(
+          (const binout_file_t *)current_d_folder->children, 0,
+          current_d_folder->num_children - 1, &path);
 
       if (file_index == (size_t)~0) {
-        free(data);
-        NEW_ERROR_STRING("The file of the variable does not exist");
+        NEW_ERROR_STRING("The variable has not been found");
         return NULL;
       }
 
-      (*num_timesteps)++;
-
-      const binout_file_t *file = &files[file_index];
-      FILE *file_handle = bin_file->file_handles[file->file_index];
+      const binout_file_t *file =
+          &((const binout_file_t *)current_d_folder->children)[file_index];
 
       if (file->var_type != binout_type) {
-        free(data);
         NEW_ERROR_STRING("The variable is of the wrong type");
         return NULL;
       }
 
-      if (fseek(file_handle, file->file_pos, SEEK_SET) != 0) {
+      *num_values = file->size /
+                    (size_t)_binout_get_type_size((const uint64_t)binout_type);
+
+      data = malloc(file->size * *num_timesteps);
+    }
+
+    const binout_file_t *file =
+        &((const binout_file_t *)current_d_folder->children)[file_index];
+
+    if (path_view_strcmp(&path, file->name) != 0) {
+      file_index = binout_directory_binary_search_file(
+          (const binout_file_t *)current_d_folder->children, 0,
+          current_d_folder->num_children, &path);
+
+      if (file_index == (size_t)~0) {
         free(data);
-        NEW_ERROR_STRING("Failed to seek to the position of the data");
+        NEW_ERROR_STRING("The variable has not been found");
         return NULL;
       }
 
-      data_size += file->size;
-      *num_values = file->size / (size_t)_binout_get_type_size(binout_type);
+      file = &((const binout_file_t *)current_d_folder->children)[file_index];
+    }
 
-      data = realloc(data, data_size);
-      if (fread((void *)((size_t)data + (data_size - file->size)), file->size,
-                1, file_handle) != 1) {
-        free(data);
-        NEW_ERROR_STRING("Failed to read the data");
-        return NULL;
-      }
+    FILE *file_handle = bin_file->file_handles[file->file_index];
+    if (fseek(file_handle, file->file_pos, SEEK_SET) != 0) {
+      free(data);
+      NEW_ERROR_STRING("Failed to seek to the data");
+      return NULL;
+    }
+
+    if (fread(&((uint8_t *)data)[(i - start_index) * file->size], file->size, 1,
+              file_handle) != 1) {
+      free(data);
+      NEW_ERROR_STRING("Failed to read the data");
+      return NULL;
     }
 
     i++;
