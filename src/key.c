@@ -149,6 +149,7 @@ void key_file_parse_with_callback(const char *file_name,
     /* Find the new line*/
     /* Read more data from the file until a new line has been found*/
     size_t i = 0;
+    size_t comment_index = (size_t)~0;
     /* Read the file in LINE_WIDTH sized chunks, but read LINE_WIDTH + 1
      * characters for the first read, because a lot of lines will be exactly
      * LINE_WIDTH characters long, therefore we read the new line directly in
@@ -160,8 +161,12 @@ void key_file_parse_with_callback(const char *file_name,
     while (1) {
       size_t j = 0;
       while (j < (size_t)n) {
-        if (extra_string_get(&line, i) == '\n') {
+        const char c = extra_string_get(&line, i);
+        if (c == '\n') {
           break;
+        }
+        if (c == KEY_COMMENT && comment_index == (size_t)~0) {
+          comment_index = i;
         }
 
         i++;
@@ -214,28 +219,14 @@ void key_file_parse_with_callback(const char *file_name,
       continue;
     }
 
-    /* Check if the line starts with a comment*/
-    int is_comment = 0;
-    size_t comment_index = (size_t)~0;
-    i = 0;
-    while (i < line_length) {
-      if (extra_string_get(&line, i) == KEY_COMMENT) {
-        comment_index = i;
-        is_comment = 1 - (is_comment / 2);
-        break;
-      } else if (extra_string_get(&line, i) != ' ') {
-        is_comment = 2;
-      }
-
-      i++;
-    }
-
-    if (is_comment && is_comment != 2) {
-      continue;
-    }
-
+    /* Check if the line starts with a comment or contains a comment character*/
     if (comment_index != (size_t)~0) {
-      extra_string_set(&line, comment_index, '\0');
+      if (comment_index != 0) {
+        extra_string_set(&line, comment_index, '\0');
+      } else {
+        /* The entire line is a comment. Ignore it.*/
+        continue;
+      }
     }
 
     /* ------- 🐉 Here be parsings 🐉 --------- */
@@ -261,6 +252,7 @@ void key_file_parse_with_callback(const char *file_name,
         }
         current_keyword_length++;
       }
+      extra_string_set(&current_keyword_name, current_keyword_length, '\0');
 
       /* Quit on "END"*/
       if (current_keyword_length == 3 &&
