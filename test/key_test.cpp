@@ -79,7 +79,13 @@ TEST_CASE("key_file_parse") {
   REQUIRE(keyword != NULL);
   CHECK(keyword->num_cards == 1);
   card_parse_begin(&keyword->cards[0], DEFAULT_VALUE_WIDTH);
-  CHECK(card_parse_string(&keyword->cards[0]) == "Cube_Test");
+  CHECK(card_parse_whole(&keyword->cards[0]) == "Cube_Test");
+
+  keyword = key_file_get(keywords, num_keywords, "KEYWORD", 0);
+  REQUIRE(keyword != NULL);
+  CHECK(keyword->num_cards == 1);
+  card_parse_begin(&keyword->cards[0], DEFAULT_VALUE_WIDTH);
+  CHECK(card_parse_whole(&keyword->cards[0]) == "");
 
   keyword = key_file_get(keywords, num_keywords, "PART", 0);
   REQUIRE(keyword != NULL);

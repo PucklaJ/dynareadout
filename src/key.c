@@ -132,10 +132,11 @@ void key_file_parse_with_callback(const char *file_name,
 
   extra_string line;
   extra_string current_keyword_name;
+  current_keyword_name.buffer[0] = '\0';
   current_keyword_name.extra = NULL;
   line.extra = NULL;
 
-  size_t current_keyword_length;
+  size_t current_keyword_length = 0;
   size_t card_index = 0;
 
   while (1) {
@@ -195,8 +196,9 @@ void key_file_parse_with_callback(const char *file_name,
       } else {
         /* The first character that we read is a new line. Most of the time this
          * means that
-         * 1. The line is exactly LINE_WIDTH characters long or
+         * 1. The line is exactly EXTRA_STRING_BUFFER_SIZE characters long or
          * 2. The line is empty*/
+        fseek(file, 1 - n, SEEK_CUR);
         extra_string_set(&line, i, '\0');
         line_length = i;
         break;
@@ -214,30 +216,26 @@ void key_file_parse_with_callback(const char *file_name,
       break;
     }
 
-    /* The line is empty. Ignore it.*/
-    if (line_length == 0) {
-      continue;
-    }
-
     /* Check if the line starts with a comment or contains a comment character*/
-    if (comment_index != (size_t)~0) {
-      if (comment_index != 0) {
-        extra_string_set(&line, comment_index, '\0');
-      } else {
-        /* The entire line is a comment. Ignore it.*/
-        continue;
-      }
+    if (comment_index == 0) {
+      /* The entire line is a comment. Ignore it.*/
+      continue;
+    } else if (comment_index != (size_t)~0) {
+      extra_string_set(&line, comment_index, '\0');
     }
 
     /* ------- 🐉 Here be parsings 🐉 --------- */
 
     /* Check if the line is a keyword (starts with '*')
      * Support lines being preceded by ' ' */
-    i = 0;
-    while (extra_string_get(&line, i) == ' ') {
-      i++;
+    int is_keyword = 0;
+    if (line_length != 0) {
+      i = 0;
+      while (extra_string_get(&line, i) == ' ') {
+        i++;
+      }
+      is_keyword = extra_string_get(&line, i) == '*';
     }
-    const int is_keyword = extra_string_get(&line, i) == '*';
 
     if (is_keyword) {
       extra_string_copy(&current_keyword_name, &line, line_length, i + 1);
