@@ -432,11 +432,11 @@ int card_parse_done(const card_t *card) {
   return is_done;
 }
 
-int card_parse_int(const card_t *card) {
+int64_t card_parse_int(const card_t *card) {
   return card_parse_int_width(card, card->value_width);
 }
 
-int card_parse_int_width(const card_t *card, uint8_t value_width) {
+int64_t card_parse_int_width(const card_t *card, uint8_t value_width) {
   BEGIN_PROFILE_FUNC();
 
   /* Check if the end of the string is within the bounds of the current value*/
@@ -449,7 +449,7 @@ int card_parse_int_width(const card_t *card, uint8_t value_width) {
   const char temp = card->string[end_index];
   card->string[end_index] = '\0';
 
-  const int value = atoi(&card->string[card->current_index]);
+  const int64_t value = strtol(&card->string[card->current_index], NULL, 10);
 
   card->string[end_index] = temp;
 
@@ -462,8 +462,24 @@ float card_parse_float32(const card_t *card) {
 }
 
 float card_parse_float32_width(const card_t *card, uint8_t value_width) {
-  /* atof always uses double*/
-  return (float)card_parse_float64_width(card, value_width);
+  BEGIN_PROFILE_FUNC();
+
+  /* Check if the end of the string is within the bounds of the current value*/
+  uint8_t end_index = card->current_index;
+  while (end_index < card->current_index + value_width &&
+         card->string[end_index] != '\0') {
+    end_index++;
+  }
+
+  const char temp = card->string[end_index];
+  card->string[end_index] = '\0';
+
+  const float value = (float)atof(&card->string[card->current_index]);
+
+  card->string[end_index] = temp;
+
+  END_PROFILE_FUNC();
+  return value;
 }
 
 double card_parse_float64(const card_t *card) {
@@ -483,7 +499,7 @@ double card_parse_float64_width(const card_t *card, uint8_t value_width) {
   const char temp = card->string[end_index];
   card->string[end_index] = '\0';
 
-  const double value = atof(&card->string[card->current_index]);
+  const double value = strtod(&card->string[card->current_index], NULL);
 
   card->string[end_index] = temp;
 

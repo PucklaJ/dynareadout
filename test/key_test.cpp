@@ -254,6 +254,23 @@ TEST_CASE("key_file_parse") {
   CHECK(card_parse_done(card) == 0);
   CHECK(card_parse_int(card) == 14);
 
+  keyword = key_file_get(keywords, num_keywords, "SET_PART_LIST_TITLE", 0);
+  REQUIRE(keyword != NULL);
+  CHECK(keyword->num_cards == 3);
+  card = &keyword->cards[1];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  card_parse_next(card);
+  card_parse_next(card);
+  card_parse_next(card);
+  card_parse_next(card);
+  card_parse_next(card);
+  CHECK(card_parse_done(card) == 0);
+  CHECK(card_parse_string(card) == "");
+  CHECK(card_parse_string_no_trim(card) == "          ");
+  CHECK(card_parse_int(card) == 0);
+  CHECK(card_parse_float32(card) == 0.0f);
+  CHECK(card_parse_float64(card) == 0.0);
+
   i = 0;
   keyword = key_file_get(keywords, num_keywords, "SET_NODE_LIST_TITLE", i++);
   while (keyword) {
