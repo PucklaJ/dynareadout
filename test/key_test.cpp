@@ -228,6 +228,32 @@ TEST_CASE("key_file_parse") {
   CHECK(card_parse_done(card) == 0);
   CHECK(card_parse_string(card) == "MECH");
 
+  keyword = key_file_get(keywords, num_keywords, "SET_NODE_LIST_TITLE", 2);
+  REQUIRE(keyword != NULL);
+  CHECK(keyword->num_cards == 4);
+  card = &keyword->cards[2];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  card_parse_next(card);
+  card_parse_next(card);
+  card_parse_next(card);
+  card_parse_next(card);
+  card_parse_next(card);
+  card_parse_next(card);
+  card_parse_next(card);
+  CHECK(card_parse_done(card) == 0);
+  CHECK(card_parse_float64(card) == 25.05);
+  card = &keyword->cards[3];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  card_parse_next(card);
+  card_parse_next(card);
+  card_parse_next(card);
+  card_parse_next(card);
+  card_parse_next(card);
+  card_parse_next(card);
+  card_parse_next(card);
+  CHECK(card_parse_done(card) == 0);
+  CHECK(card_parse_int(card) == 14);
+
   i = 0;
   keyword = key_file_get(keywords, num_keywords, "SET_NODE_LIST_TITLE", i++);
   while (keyword) {
