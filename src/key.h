@@ -87,10 +87,14 @@ float card_parse_float32(const card_t *card);
 float card_parse_float32_width(const card_t *card, uint8_t value_width);
 double card_parse_float64(const card_t *card);
 double card_parse_float64_width(const card_t *card, uint8_t value_width);
-/* Needs to be deallocated by free*/
+/* Trims trailing and leading spaces. Return value should be deallocated by
+ * free*/
 char *card_parse_string(const card_t *card);
-/* Needs to be deallocated by free*/
+char *card_parse_string_no_trim(const card_t *card);
+/* Trims trailing and leading spaces. Return value should be deallocated by
+ * free*/
 char *card_parse_string_width(const card_t *card, uint8_t value_width);
+char *card_parse_string_width_no_trim(const card_t *card, uint8_t value_width);
 /* Trims trailing and leading spaces. Return value should be deallocated by
  * free*/
 char *card_parse_whole(const card_t *card);

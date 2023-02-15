@@ -494,17 +494,41 @@ double card_parse_float64_width(const card_t *card, uint8_t value_width) {
 }
 
 char *card_parse_string(const card_t *card) {
+  return card_parse_string_width(card, card->value_width);
+}
+
+char *card_parse_string_no_trim(const card_t *card) {
+  return card_parse_string_width_no_trim(card, card->value_width);
+}
+
+char *card_parse_string_width(const card_t *card, uint8_t value_width) {
   BEGIN_PROFILE_FUNC();
 
-  char *value = malloc(card->value_width + 1);
-  memcpy(value, &card->string[card->current_index], card->value_width);
-  value[card->value_width] = '\0';
+  /* TODO: Use value_width to determine correct string length*/
+  uint8_t i = card->current_index;
+  while (card->string[i] == ' ') {
+    i++;
+  }
+
+  const uint8_t start_index = i;
+
+  uint8_t end_index = i;
+  while (card->string[i] != '\0') {
+    if (card->string[i] != ' ') {
+      end_index = i;
+    }
+    i++;
+  }
+
+  char *value = malloc(end_index - start_index + 1 + 1);
+  memcpy(value, &card->string[start_index], end_index - start_index + 1);
+  value[end_index - start_index + 1] = '\0';
 
   END_PROFILE_FUNC();
   return value;
 }
 
-char *card_parse_string_width(const card_t *card, uint8_t value_width) {
+char *card_parse_string_width_no_trim(const card_t *card, uint8_t value_width) {
   BEGIN_PROFILE_FUNC();
 
   char *value = malloc(value_width + 1);
