@@ -228,6 +228,44 @@ TEST_CASE("key_file_parse") {
   CHECK(card_parse_done(card) == 0);
   CHECK(card_parse_string(card) == "MECH");
 
+  i = 0;
+  keyword = key_file_get(keywords, num_keywords, "SET_NODE_LIST_TITLE", i++);
+  while (keyword) {
+    char *title = card_parse_whole_no_trim(&keyword->cards[0]);
+    if (i == 1) {
+      CHECK(title == "Pouch_nodes_out_displ");
+    } else if (i == 2) {
+      CHECK(title == "Pressure_Top");
+    } else if (i == 3) {
+      CHECK(title == "Pressure_Bottom");
+    }
+
+    free(title);
+
+    keyword = key_file_get(keywords, num_keywords, "SET_NODE_LIST_TITLE", i++);
+  }
+
+  CHECK(i == 4);
+
+  i = 0;
+  keyword = key_file_get(keywords, num_keywords, "DEFINE_CURVE_TITLE", i++);
+  while (keyword) {
+    char *title = card_parse_whole_no_trim(&keyword->cards[0]);
+    if (i == 1) {
+      CHECK(title == "Pressure");
+    } else if (i == 2) {
+      CHECK(title == "Pouch_flow");
+    } else if (i == 3) {
+      CHECK(title == "Velocity Impactor");
+    }
+
+    free(title);
+
+    keyword = key_file_get(keywords, num_keywords, "DEFINE_CURVE_TITLE", i++);
+  }
+
+  CHECK(i == 4);
+
   key_file_free(keywords, num_keywords);
 }
 

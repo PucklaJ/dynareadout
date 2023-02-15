@@ -58,7 +58,13 @@ void key_file_parse_callback(const char *keyword_name, const card_t *card,
           data->keywords, 0, *data->num_keywords - 1, keyword_name, &found);
 
       if (found) {
+        /* Look for the last occurrence of the keyword*/
         index++;
+        if (index != *data->num_keywords) {
+          while (strcmp(data->keywords[index].name, keyword_name) == 0) {
+            index++;
+          }
+        }
       }
     }
 
@@ -379,7 +385,7 @@ keyword_t *key_file_get(keyword_t *keywords, size_t num_keywords,
   size_t j = 0;
   while (j < index && i < num_keywords) {
     j++;
-    i += j;
+    i++;
   }
 
   if (j == index && strcmp(keywords[i].name, name) == 0) {
