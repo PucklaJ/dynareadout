@@ -121,6 +121,7 @@ TEST_CASE("key_file_parse") {
   card_parse_next(card);
   CHECK(card_parse_done(card) == 0);
   CHECK(card_parse_int(card) == 0);
+  CHECK(errno == EINVAL);
   card_parse_next(card);
   CHECK(card_parse_done(card) != 0);
 

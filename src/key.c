@@ -439,22 +439,57 @@ int64_t card_parse_int(const card_t *card) {
 int64_t card_parse_int_width(const card_t *card, uint8_t value_width) {
   BEGIN_PROFILE_FUNC();
 
-  /* Check if the end of the string is within the bounds of the current value*/
-  uint8_t end_index = card->current_index;
-  while (end_index < card->current_index + value_width &&
-         card->string[end_index] != '\0') {
-    end_index++;
+  errno = 0;
+
+  uint8_t i = card->current_index;
+  /* Loop until leading whitespace is trimmed*/
+  while (i < card->current_index + value_width && card->string[i] == ' ') {
+    i++;
   }
 
-  const char temp = card->string[end_index];
-  card->string[end_index] = '\0';
+  /* The string is completely empty or just spaces*/
+  if (i == card->current_index + value_width || card->string[i] == '\0') {
+    errno = EINVAL;
 
-  const int64_t value = strtol(&card->string[card->current_index], NULL, 10);
+    END_PROFILE_FUNC();
+    return 0;
+  }
 
-  card->string[end_index] = temp;
+  /* Check for negative sign*/
+  int64_t sign = 1;
+  if (card->string[i] == '-') {
+    sign = -1;
+    i++;
+  }
+  int64_t result = 0;
+
+  /* Iterate over the digits of the string and compute the integer value*/
+  while (i < card->current_index + value_width && card->string[i] != '\0') {
+    if (card->string[i] >= '0' && card->string[i] <= '9') {
+      result = result * 10 + (card->string[i] - '0');
+    } else if (card->string[i] == ' ') {
+      /* Quit when encountering whitespace*/
+      result *= sign;
+      errno = EINVAL;
+
+      END_PROFILE_FUNC();
+      return result;
+    } else {
+      /* If a non-digit character is encountered, return 0 to indicate an
+       * error*/
+      errno = EINVAL;
+
+      END_PROFILE_FUNC();
+      return 0;
+    }
+
+    i++;
+  }
+
+  result *= sign;
 
   END_PROFILE_FUNC();
-  return value;
+  return result;
 }
 
 float card_parse_float32(const card_t *card) {
