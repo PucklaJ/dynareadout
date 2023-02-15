@@ -199,6 +199,35 @@ TEST_CASE("key_file_parse") {
     nodes = key_file_get(keywords, num_keywords, "NODE", i);
   }
 
+  keyword = key_file_get(keywords, num_keywords, "SET_NODE_LIST_TITLE", 0);
+  REQUIRE(keyword != NULL);
+  CHECK(keyword->num_cards == 6);
+  card = &keyword->cards[1];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  card_parse_next(card);
+  card_parse_next(card);
+  card_parse_next(card);
+  card_parse_next(card);
+  card_parse_next(card);
+  CHECK(card_parse_done(card) == 0);
+  CHECK(card_parse_string(card) == "MECH");
+  CHECK(card_parse_string_no_trim(card) == "MECH      ");
+  CHECK(card_parse_string_width(card, 1) == "M");
+  CHECK(card_parse_string_width_no_trim(card, 5) == "MECH ");
+
+  keyword = key_file_get(keywords, num_keywords, "SET_NODE_LIST_TITLE", 1);
+  REQUIRE(keyword != NULL);
+  CHECK(keyword->num_cards == 4);
+  card = &keyword->cards[1];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  card_parse_next(card);
+  card_parse_next(card);
+  card_parse_next(card);
+  card_parse_next(card);
+  card_parse_next(card);
+  CHECK(card_parse_done(card) == 0);
+  CHECK(card_parse_string(card) == "MECH");
+
   key_file_free(keywords, num_keywords);
 }
 

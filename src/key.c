@@ -49,8 +49,7 @@ void key_file_parse_callback(const char *keyword_name, const card_t *card,
                              size_t card_index, void *user_data) {
   key_file_parse_data *data = (key_file_parse_data *)user_data;
 
-  if (!data->current_keyword ||
-      strcmp(data->current_keyword->name, keyword_name) != 0) {
+  if (!data->current_keyword || card_index == 0) {
     size_t index = 0;
 
     if (data->keywords) {
@@ -504,24 +503,33 @@ char *card_parse_string_no_trim(const card_t *card) {
 char *card_parse_string_width(const card_t *card, uint8_t value_width) {
   BEGIN_PROFILE_FUNC();
 
-  /* TODO: Use value_width to determine correct string length*/
-  uint8_t i = card->current_index;
-  while (card->string[i] == ' ') {
+  uint8_t i = 0;
+  while (i < value_width && card->string[i + card->current_index] != '\0' &&
+         card->string[i + card->current_index] == ' ') {
     i++;
+  }
+
+  /* There is no string. Just spaces*/
+  if (i == value_width || card->string[i + card->current_index] == '\0') {
+    char *value = malloc(1);
+    *value = '\0';
+    END_PROFILE_FUNC();
+    return value;
   }
 
   const uint8_t start_index = i;
 
   uint8_t end_index = i;
-  while (card->string[i] != '\0') {
-    if (card->string[i] != ' ') {
+  while (i < value_width && card->string[i + card->current_index] != '\0') {
+    if (card->string[i + card->current_index] != ' ') {
       end_index = i;
     }
     i++;
   }
 
   char *value = malloc(end_index - start_index + 1 + 1);
-  memcpy(value, &card->string[start_index], end_index - start_index + 1);
+  memcpy(value, &card->string[start_index + card->current_index],
+         end_index - start_index + 1);
   value[end_index - start_index + 1] = '\0';
 
   END_PROFILE_FUNC();
