@@ -28,6 +28,7 @@
 #include "extra_string.h"
 #include "profiling.h"
 #include <errno.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -470,7 +471,6 @@ int64_t card_parse_int_width(const card_t *card, uint8_t value_width) {
     } else if (card->string[i] == ' ') {
       /* Quit when encountering whitespace*/
       result *= sign;
-      errno = EINVAL;
 
       END_PROFILE_FUNC();
       return result;
@@ -499,22 +499,203 @@ float card_parse_float32(const card_t *card) {
 float card_parse_float32_width(const card_t *card, uint8_t value_width) {
   BEGIN_PROFILE_FUNC();
 
-  /* Check if the end of the string is within the bounds of the current value*/
-  uint8_t end_index = card->current_index;
-  while (end_index < card->current_index + value_width &&
-         card->string[end_index] != '\0') {
-    end_index++;
+  errno = 0;
+
+  float result = 0.0f;
+  float fraction = 0.0f;
+  float exponent = 1.0f;
+  float sign = 1.0f;
+  int has_integer = 0;
+  int has_fraction = 0;
+  int has_exponent = 0;
+  int exponent_sign = 1;
+  int exponent_value = 0;
+
+  uint8_t i = card->current_index;
+  /* Loop until leading whitespace is trimmed*/
+  while (i < card->current_index + value_width && card->string[i] == ' ') {
+    i++;
   }
 
-  const char temp = card->string[end_index];
-  card->string[end_index] = '\0';
+  /* The string is completely empty or just spaces*/
+  if (i == card->current_index + value_width || card->string[i] == '\0') {
+    errno = EINVAL;
 
-  const float value = (float)atof(&card->string[card->current_index]);
+    END_PROFILE_FUNC();
+    return 0.0f;
+  }
 
-  card->string[end_index] = temp;
+  /* Check for sign*/
+  if (card->string[i] == '-') {
+    sign = -1.0f;
+    i++;
+  } else if (card->string[i] == '+') {
+    i++;
+  }
+
+  if (i == card->current_index + value_width || card->string[i] == '\0' ||
+      card->string[i] == ' ') {
+    errno = EINVAL;
+
+    END_PROFILE_FUNC();
+    return 0.0f;
+  }
+
+  /* Parse integer part*/
+  while (i < card->current_index + value_width && card->string[i] != '\0' &&
+         card->string[i] != '.' && card->string[i] != 'e' &&
+         card->string[i] != 'E') {
+    if (card->string[i] >= '0' && card->string[i] <= '9') {
+      has_integer = 1;
+
+      result = result * 10.0f + (card->string[i] - '0');
+    } else if (card->string[i] == ' ') {
+      /* Quit when encountering whitespace*/
+      result *= sign;
+
+      END_PROFILE_FUNC();
+      return result;
+    } else {
+      /* Invalid character*/
+      errno = EINVAL;
+
+      END_PROFILE_FUNC();
+      return 0.0f;
+    }
+    i++;
+  }
+
+  /* If we already reached the end*/
+  if (i == card->current_index + value_width || card->string[i] == '\0') {
+    result *= sign;
+
+    END_PROFILE_FUNC();
+    return result;
+  }
+
+  /* Parse fraction part*/
+  if (card->string[i] == '.') {
+    i++;
+    has_fraction = 1;
+    while (i < card->current_index + value_width && card->string[i] != '\0' &&
+           card->string[i] != 'e' && card->string[i] != 'E') {
+      if (card->string[i] >= '0' && card->string[i] <= '9') {
+        fraction = fraction * 10.0f + (card->string[i] - '0');
+        exponent *= 10.0f;
+        i++;
+      } else if (card->string[i] == ' ') {
+        /* Quit when encountering whitespace*/
+        fraction /= exponent;
+        result += fraction;
+        result *= sign;
+
+        END_PROFILE_FUNC();
+        return result;
+      } else {
+        /* Invalid character*/
+        errno = EINVAL;
+
+        return 0.0;
+      }
+    }
+
+    /* If we already reached the end*/
+    if (i == card->current_index + value_width || card->string[i] == '\0') {
+      fraction /= exponent;
+      result += fraction;
+      result *= sign;
+
+      END_PROFILE_FUNC();
+      return result;
+    }
+  }
+
+  /* Parse exponent part*/
+  if (card->string[i] == 'e' || card->string[i] == 'E') {
+    if (!has_integer) {
+      errno = EINVAL;
+
+      END_PROFILE_FUNC();
+      return 0.0f;
+    }
+
+    i++;
+    if (card->string[i] == '-') {
+      exponent_sign = -1;
+      i++;
+    } else if (card->string[i] == '+') {
+      i++;
+    }
+
+    if (i == card->current_index + value_width || card->string[i] == '\0' ||
+        card->string[i] == ' ') {
+      if (has_fraction) {
+        fraction /= exponent;
+        result += fraction;
+      }
+
+      result *= sign;
+
+      errno = EINVAL;
+
+      END_PROFILE_FUNC();
+      return result;
+    }
+
+    while (i < card->current_index + value_width && card->string[i] != '\0') {
+      if (card->string[i] >= '0' && card->string[i] <= '9') {
+        has_exponent = 1;
+
+        exponent_value = exponent_value * 10 + (card->string[i] - '0');
+        i++;
+      } else if (card->string[i] == ' ') {
+        /* Quit when encountering whitespace*/
+        if (has_fraction) {
+          fraction /= exponent;
+          result += fraction;
+        }
+        result *= pow(10, exponent_sign * exponent_value);
+        result *= sign;
+
+        END_PROFILE_FUNC();
+        return result;
+      } else {
+        /* Invalid character*/
+        errno = EINVAL;
+
+        END_PROFILE_FUNC();
+        return 0.0f;
+      }
+    }
+
+    if (!has_exponent) {
+      if (has_fraction) {
+        fraction /= exponent;
+        result += fraction;
+      }
+
+      result *= sign;
+
+      errno = EINVAL;
+
+      END_PROFILE_FUNC();
+      return result;
+    }
+  }
+
+  /* Combine integer, fraction, and exponent parts */
+  if (has_fraction) {
+    fraction /= exponent;
+    result += fraction;
+  }
+  if (has_exponent) {
+    result *= pow(10, exponent_sign * exponent_value);
+  }
+
+  result *= sign;
 
   END_PROFILE_FUNC();
-  return value;
+  return result;
 }
 
 double card_parse_float64(const card_t *card) {
@@ -524,22 +705,203 @@ double card_parse_float64(const card_t *card) {
 double card_parse_float64_width(const card_t *card, uint8_t value_width) {
   BEGIN_PROFILE_FUNC();
 
-  /* Check if the end of the string is within the bounds of the current value*/
-  uint8_t end_index = card->current_index;
-  while (end_index < card->current_index + value_width &&
-         card->string[end_index] != '\0') {
-    end_index++;
+  errno = 0;
+
+  double result = 0.0;
+  double fraction = 0.0;
+  double exponent = 1.0;
+  double sign = 1.0;
+  int has_integer = 0;
+  int has_fraction = 0;
+  int has_exponent = 0;
+  int exponent_sign = 1;
+  int exponent_value = 0;
+
+  uint8_t i = card->current_index;
+  /* Loop until leading whitespace is trimmed*/
+  while (i < card->current_index + value_width && card->string[i] == ' ') {
+    i++;
   }
 
-  const char temp = card->string[end_index];
-  card->string[end_index] = '\0';
+  /* The string is completely empty or just spaces*/
+  if (i == card->current_index + value_width || card->string[i] == '\0') {
+    errno = EINVAL;
 
-  const double value = strtod(&card->string[card->current_index], NULL);
+    END_PROFILE_FUNC();
+    return 0.0;
+  }
 
-  card->string[end_index] = temp;
+  /* Check for sign*/
+  if (card->string[i] == '-') {
+    sign = -1.0;
+    i++;
+  } else if (card->string[i] == '+') {
+    i++;
+  }
+
+  if (i == card->current_index + value_width || card->string[i] == '\0' ||
+      card->string[i] == ' ') {
+    errno = EINVAL;
+
+    END_PROFILE_FUNC();
+    return 0.0;
+  }
+
+  /* Parse integer part*/
+  while (i < card->current_index + value_width && card->string[i] != '\0' &&
+         card->string[i] != '.' && card->string[i] != 'e' &&
+         card->string[i] != 'E') {
+    if (card->string[i] >= '0' && card->string[i] <= '9') {
+      has_integer = 1;
+
+      result = result * 10.0 + (card->string[i] - '0');
+    } else if (card->string[i] == ' ') {
+      /* Quit when encountering whitespace*/
+      result *= sign;
+
+      END_PROFILE_FUNC();
+      return result;
+    } else {
+      /* Invalid character*/
+      errno = EINVAL;
+
+      END_PROFILE_FUNC();
+      return 0.0;
+    }
+    i++;
+  }
+
+  /* If we already reached the end*/
+  if (i == card->current_index + value_width || card->string[i] == '\0') {
+    result *= sign;
+
+    END_PROFILE_FUNC();
+    return result;
+  }
+
+  /* Parse fraction part*/
+  if (card->string[i] == '.') {
+    i++;
+    has_fraction = 1;
+    while (i < card->current_index + value_width && card->string[i] != '\0' &&
+           card->string[i] != 'e' && card->string[i] != 'E') {
+      if (card->string[i] >= '0' && card->string[i] <= '9') {
+        fraction = fraction * 10.0 + (card->string[i] - '0');
+        exponent *= 10.0;
+        i++;
+      } else if (card->string[i] == ' ') {
+        /* Quit when encountering whitespace*/
+        fraction /= exponent;
+        result += fraction;
+        result *= sign;
+
+        END_PROFILE_FUNC();
+        return result;
+      } else {
+        /* Invalid character*/
+        errno = EINVAL;
+
+        return 0.0;
+      }
+    }
+
+    /* If we already reached the end*/
+    if (i == card->current_index + value_width || card->string[i] == '\0') {
+      fraction /= exponent;
+      result += fraction;
+      result *= sign;
+
+      END_PROFILE_FUNC();
+      return result;
+    }
+  }
+
+  /* Parse exponent part*/
+  if (card->string[i] == 'e' || card->string[i] == 'E') {
+    if (!has_integer) {
+      errno = EINVAL;
+
+      END_PROFILE_FUNC();
+      return 0.0;
+    }
+
+    i++;
+    if (card->string[i] == '-') {
+      exponent_sign = -1;
+      i++;
+    } else if (card->string[i] == '+') {
+      i++;
+    }
+
+    if (i == card->current_index + value_width || card->string[i] == '\0' ||
+        card->string[i] == ' ') {
+      if (has_fraction) {
+        fraction /= exponent;
+        result += fraction;
+      }
+
+      result *= sign;
+
+      errno = EINVAL;
+
+      END_PROFILE_FUNC();
+      return result;
+    }
+
+    while (i < card->current_index + value_width && card->string[i] != '\0') {
+      if (card->string[i] >= '0' && card->string[i] <= '9') {
+        has_exponent = 1;
+
+        exponent_value = exponent_value * 10 + (card->string[i] - '0');
+        i++;
+      } else if (card->string[i] == ' ') {
+        /* Quit when encountering whitespace*/
+        if (has_fraction) {
+          fraction /= exponent;
+          result += fraction;
+        }
+        result *= pow(10, exponent_sign * exponent_value);
+        result *= sign;
+
+        END_PROFILE_FUNC();
+        return result;
+      } else {
+        /* Invalid character*/
+        errno = EINVAL;
+
+        END_PROFILE_FUNC();
+        return 0.0;
+      }
+    }
+
+    if (!has_exponent) {
+      if (has_fraction) {
+        fraction /= exponent;
+        result += fraction;
+      }
+
+      result *= sign;
+
+      errno = EINVAL;
+
+      END_PROFILE_FUNC();
+      return result;
+    }
+  }
+
+  /* Combine integer, fraction, and exponent parts */
+  if (has_fraction) {
+    fraction /= exponent;
+    result += fraction;
+  }
+  if (has_exponent) {
+    result *= pow(10, exponent_sign * exponent_value);
+  }
+
+  result *= sign;
 
   END_PROFILE_FUNC();
-  return value;
+  return result;
 }
 
 char *card_parse_string(const card_t *card) {

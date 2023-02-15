@@ -310,6 +310,55 @@ TEST_CASE("key_file_parse") {
 
   CHECK(i == 4);
 
+  keyword = key_file_get(keywords, num_keywords, "TEST_KEYWORD", 0);
+  REQUIRE(keyword != NULL);
+  card = &keyword->cards[0];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  CHECK(card_parse_float32(card) == 7.89f);
+  CHECK(card_parse_float64(card) == 7.89);
+  card = &keyword->cards[1];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  CHECK(card_parse_float32(card) == 12E1f);
+  CHECK(card_parse_float64(card) == 12E1);
+  card = &keyword->cards[2];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  CHECK(card_parse_float32(card) == -4.16e-5f);
+  CHECK(card_parse_float64(card) == -4.16e-5);
+  card = &keyword->cards[3];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  CHECK(card_parse_float32(card) == 0.0f);
+  CHECK(errno == EINVAL);
+  CHECK(card_parse_float64(card) == 0.0);
+  CHECK(errno == EINVAL);
+  card = &keyword->cards[4];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  CHECK(card_parse_float32(card) == 4.0f);
+  CHECK(errno == EINVAL);
+  CHECK(card_parse_float64(card) == 4.0);
+  CHECK(errno == EINVAL);
+  card = &keyword->cards[5];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  CHECK(card_parse_float32(card) == 0.0f);
+  CHECK(errno == EINVAL);
+  CHECK(card_parse_float64(card) == 0.0);
+  CHECK(errno == EINVAL);
+  card = &keyword->cards[6];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  CHECK(card_parse_float32(card) == 0.0f);
+  CHECK(errno == EINVAL);
+  CHECK(card_parse_float64(card) == 0.0);
+  CHECK(errno == EINVAL);
+  card = &keyword->cards[7];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  CHECK(card_parse_float32(card) == 5.0f);
+  CHECK(errno == EINVAL);
+  CHECK(card_parse_float64(card) == 5.0);
+  CHECK(errno == EINVAL);
+  card = &keyword->cards[8];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  CHECK(card_parse_float32(card) == 567.0f);
+  CHECK(card_parse_float64(card) == 567.0);
+
   key_file_free(keywords, num_keywords);
 }
 
