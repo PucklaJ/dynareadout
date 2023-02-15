@@ -27,8 +27,38 @@
 #include <cstdlib>
 #include <cstring>
 #include <doctest/doctest.h>
+#include <extra_string.h>
 #include <iostream>
 #include <key.h>
+
+extra_string extra_string_new(const char *str) {
+  extra_string xstr;
+  xstr.extra = NULL;
+  size_t i = 0;
+  while (i < EXTRA_STRING_BUFFER_SIZE) {
+    xstr.buffer[i] = str[i];
+    if (str[i] == '\0') {
+      return xstr;
+    }
+
+    i++;
+  }
+
+  while (1) {
+    xstr.extra = (char *)realloc((void *)xstr.extra, i * sizeof(char));
+    size_t j = 0;
+    while (j < EXTRA_STRING_BUFFER_SIZE) {
+      xstr.extra[(i / EXTRA_STRING_BUFFER_SIZE - 1) * EXTRA_STRING_BUFFER_SIZE +
+                 j] = str[i];
+      if (str[i] == '\0') {
+        return xstr;
+      }
+
+      j++;
+      i++;
+    }
+  }
+}
 
 TEST_CASE("key_file_parse") {
   char *error_string;
@@ -214,5 +244,42 @@ TEST_CASE("key_file_parse_with_callback") {
     FAIL(error_string);
     free(error_string);
     return;
+  }
+}
+
+TEST_CASE("extra_string") {
+  {
+    const char *cstr = "Hello World";
+    extra_string str = extra_string_new(cstr);
+    CHECK(extra_string_compare(&str, cstr) == 0);
+    CHECK(extra_string_compare(&str, "Bye World") > 0);
+    CHECK(
+        extra_string_compare(
+            &str,
+            "Hello World. I wanted to introduce myself, but your establishment "
+            "made me overthink that thought therefore I will just kindly avoid "
+            "your "
+            "eye contact until you agree to do what I came for.") < 0);
+  }
+
+  {
+    const char *cstr =
+        "This is a test to test out the capabilities of the world of computer "
+        "programming. Because of that I need to exam the very foundation of "
+        "the cosmos itself so that you know that I am not overthinking what "
+        "you think is otherwise too much for a regular "
+        "conversation.";
+    extra_string str = extra_string_new(cstr);
+    CHECK(extra_string_compare(&str, cstr) == 0);
+    CHECK(extra_string_compare(&str, "This") > 0);
+    CHECK(extra_string_compare(&str, "Why") < 0);
+
+    CHECK(extra_string_get(&str, 0) == 'T');
+    CHECK(extra_string_get(&str, 3) == 's');
+    CHECK(extra_string_get(&str, strlen(cstr) - 1) == '.');
+    extra_string_set(&str, strlen(cstr) - 1, '-');
+    CHECK(extra_string_get(&str, strlen(cstr) - 1) == '-');
+
+    free(str.extra);
   }
 }

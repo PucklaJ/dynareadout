@@ -25,6 +25,7 @@
 
 #include "key.h"
 #include "binary_search.h"
+#include "extra_string.h"
 #include "profiling.h"
 #include <errno.h>
 #include <stdio.h>
@@ -106,6 +107,7 @@ keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
   data.current_keyword = NULL;
   data.keywords = NULL;
   data.num_keywords = num_keywords;
+  *num_keywords = 0;
 
   key_file_parse_with_callback(file_name, key_file_parse_callback, error_string,
                                &data);
@@ -121,62 +123,107 @@ void key_file_parse_with_callback(const char *file_name,
 
   *error_string = NULL;
 
-  FILE *file = fopen(file_name, "r");
+  FILE *file = fopen(file_name, "rb");
   if (!file) {
     ERROR_ERRNO("Failed to open key file: %s")
     END_PROFILE_FUNC();
     return;
   }
 
-  char current_keyword_name[LINE_WIDTH + 1];
+  extra_string line;
+  extra_string current_keyword_name;
+  current_keyword_name.extra = NULL;
+  line.extra = NULL;
+
+  size_t current_keyword_length;
   size_t card_index = 0;
 
-  char line[LINE_WIDTH + 1];
-
   while (1) {
-    const int n = fread(line, 1, LINE_WIDTH, file);
+    /* Clear extra without freeing the memory*/
+    if (line.extra) {
+      line.extra[0] = '\0';
+    }
+
+    size_t line_length;
+
+    /* Find the new line*/
+    /* Read more data from the file until a new line has been found*/
+    size_t i = 0;
+    /* Read the file in LINE_WIDTH sized chunks, but read LINE_WIDTH + 1
+     * characters for the first read, because a lot of lines will be exactly
+     * LINE_WIDTH characters long, therefore we read the new line directly in
+     * the first read chunk*/
+    int n = fread(line.buffer, 1, EXTRA_STRING_BUFFER_SIZE, file);
+    if (n == 0 && feof(file)) {
+      break;
+    }
+    while (1) {
+      size_t j = 0;
+      while (j < (size_t)n) {
+        if (extra_string_get(&line, i) == '\n') {
+          break;
+        }
+
+        i++;
+        j++;
+      }
+
+      if (j == (size_t)n) {
+        /* New line is exactly after the line (perfect!)*/
+        if ((i < EXTRA_STRING_BUFFER_SIZE || line.extra != NULL) &&
+            extra_string_get(&line, i) == '\n') {
+          extra_string_set(&line, i, '\0');
+          line_length = i;
+          break;
+        }
+
+        /* We still need to read more to find the new line*/
+      } else if (j != 0) {
+        /* New line is somewhere within LINE_WIDTH (or EXTRA_STRING_BUFFER_SIZE)
+         * characters*/
+        /* Seek back to the beginning of the line that has been "accidentally"
+         * read*/
+        fseek(file, j - n + 1, SEEK_CUR);
+        extra_string_set(&line, i, '\0');
+        line_length = i;
+        break;
+      } else {
+        /* The first character that we read is a new line. Most of the time this
+         * means that
+         * 1. The line is exactly LINE_WIDTH characters long or
+         * 2. The line is empty*/
+        extra_string_set(&line, i, '\0');
+        line_length = i;
+        break;
+      }
+
+      line.extra = realloc(line.extra, i * sizeof(char));
+      n = fread(&line.extra[i - EXTRA_STRING_BUFFER_SIZE], 1,
+                EXTRA_STRING_BUFFER_SIZE, file);
+      if (n == 0 && feof(file)) {
+        break;
+      }
+    }
+
     if (n == 0 && feof(file)) {
       break;
     }
 
-    /* Find the new line*/
-    size_t i = 0;
-    while (i < (size_t)n) {
-      if (line[i] == '\n') {
-        break;
-      }
-
-      i++;
-    }
-
-    /* New line is exactly after the line (perfect!)*/
-    if (i == (size_t)n) {
-      char buffer = '\0';
-      while (buffer != '\n') {
-        fread(&buffer, 1, 1, file);
-      }
-    } else if (i != 0) {
-      /* New line is somewhere within LINE_WIDTH characters*/
-      /* Seek back to the beginning of the line that has been "accidentally"
-       * read*/
-      fseek(file, i - n + 1, SEEK_CUR);
-    } else {
-      /* Line is just a new line*/
+    /* The line is empty. Ignore it.*/
+    if (line_length == 0) {
       continue;
     }
-
-    line[i] = '\0';
 
     /* Check if the line starts with a comment*/
     int is_comment = 0;
     size_t comment_index = (size_t)~0;
     i = 0;
-    while (line[i] != '\0') {
-      if (line[i] == KEY_COMMENT) {
+    while (i < line_length) {
+      if (extra_string_get(&line, i) == KEY_COMMENT) {
         comment_index = i;
         is_comment = 1 - (is_comment / 2);
         break;
-      } else if (line[i] != ' ') {
+      } else if (extra_string_get(&line, i) != ' ') {
         is_comment = 2;
       }
 
@@ -188,7 +235,7 @@ void key_file_parse_with_callback(const char *file_name,
     }
 
     if (comment_index != (size_t)~0) {
-      line[comment_index] = '\0';
+      extra_string_set(&line, comment_index, '\0');
     }
 
     /* ------- 🐉 Here be parsings 🐉 --------- */
@@ -196,16 +243,28 @@ void key_file_parse_with_callback(const char *file_name,
     /* Check if the line is a keyword (starts with '*')
      * Support lines being preceded by ' ' */
     i = 0;
-    while (line[i] == ' ') {
+    while (extra_string_get(&line, i) == ' ') {
       i++;
     }
-    const int is_keyword = line[i] == '*';
+    const int is_keyword = extra_string_get(&line, i) == '*';
 
     if (is_keyword) {
-      memcpy(current_keyword_name, &line[i + 1], LINE_WIDTH + 1);
+      extra_string_copy(&current_keyword_name, &line, line_length, i + 1);
+
+      /* Compute the length of the keyword*/
+      current_keyword_length = 0;
+      while (1) {
+        const char c =
+            extra_string_get(&current_keyword_name, current_keyword_length);
+        if (c == ' ' || c == '\0') {
+          break;
+        }
+        current_keyword_length++;
+      }
 
       /* Quit on "END"*/
-      if (strcmp(current_keyword_name, "END") == 0) {
+      if (current_keyword_length == 3 &&
+          extra_string_compare(&current_keyword_name, "END") == 0) {
         break;
       }
 
@@ -213,9 +272,32 @@ void key_file_parse_with_callback(const char *file_name,
     } else {
       /* This means that we have a card*/
       card_t card;
-      card.string = line;
+      if (line_length < EXTRA_STRING_BUFFER_SIZE) {
+        card.string = line.buffer;
+      } else {
+        card.string = malloc(line_length + 1);
+        extra_string_copy_to_string(card.string, &line, line_length);
+        card.string[line_length] = '\0';
+      }
 
-      callback(current_keyword_name, &card, card_index, user_data);
+      char *keyword_name;
+      if (current_keyword_length < EXTRA_STRING_BUFFER_SIZE) {
+        keyword_name = current_keyword_name.buffer;
+      } else {
+        keyword_name = malloc(current_keyword_length + 1);
+        extra_string_copy_to_string(keyword_name, &current_keyword_name,
+                                    current_keyword_length);
+        keyword_name[current_keyword_length] = '\0';
+      }
+
+      callback(keyword_name, &card, card_index, user_data);
+
+      if (card.string != line.buffer) {
+        free(card.string);
+      }
+      if (keyword_name != current_keyword_name.buffer) {
+        free(keyword_name);
+      }
 
       card_index++;
     }
@@ -225,9 +307,27 @@ void key_file_parse_with_callback(const char *file_name,
 
   /* Call the callback for the last keyword if it is not "END", because some
    * keywords can have no cards*/
-  if (strcmp(current_keyword_name, "END") != 0) {
-    callback(current_keyword_name, NULL, (size_t)~0, user_data);
+  if (current_keyword_length != 3 ||
+      extra_string_compare(&current_keyword_name, "END") != 0) {
+    char *keyword_name;
+    if (current_keyword_length < EXTRA_STRING_BUFFER_SIZE) {
+      keyword_name = current_keyword_name.buffer;
+    } else {
+      keyword_name = malloc(current_keyword_length + 1);
+      extra_string_copy_to_string(keyword_name, &current_keyword_name,
+                                  current_keyword_length);
+      keyword_name[current_keyword_length] = '\0';
+    }
+
+    callback(keyword_name, NULL, (size_t)~0, user_data);
+
+    if (keyword_name != current_keyword_name.buffer) {
+      free(keyword_name);
+    }
   }
+
+  free(line.extra);
+  free(current_keyword_name.extra);
 
   fclose(file);
 
