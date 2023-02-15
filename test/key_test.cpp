@@ -87,6 +87,11 @@ TEST_CASE("key_file_parse") {
   card_parse_begin(&keyword->cards[0], DEFAULT_VALUE_WIDTH);
   CHECK(card_parse_whole(&keyword->cards[0]) == "");
 
+  keyword = key_file_get(keywords, num_keywords, "", 0);
+  REQUIRE(keyword != NULL);
+  CHECK(keyword->num_cards == 1);
+  CHECK(card_parse_whole(&keyword->cards[0]) == "Start of File");
+
   keyword = key_file_get(keywords, num_keywords, "PART", 0);
   REQUIRE(keyword != NULL);
   CHECK(keyword->num_cards == 2);

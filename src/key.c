@@ -364,7 +364,7 @@ keyword_t *key_file_get(keyword_t *keywords, size_t num_keywords,
 
   if (find_index == 0 && index == 0) {
     END_PROFILE_FUNC();
-    return NULL;
+    return keywords;
   }
 
   /* Find the first of the keyword*/
