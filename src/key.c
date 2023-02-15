@@ -515,10 +515,38 @@ char *card_parse_string_width(const card_t *card, uint8_t value_width) {
   return value;
 }
 
-const char *card_parse_whole(const card_t *card) {
+char *card_parse_whole(const card_t *card) {
   BEGIN_PROFILE_FUNC();
 
-  const char *value = card->string;
+  size_t i = 0;
+  while (card->string[i] == ' ') {
+    i++;
+  }
+
+  const size_t start_index = i;
+
+  size_t end_index = i;
+  while (card->string[i] != '\0') {
+    if (card->string[i] != ' ') {
+      end_index = i;
+    }
+    i++;
+  }
+
+  char *value = malloc(end_index - start_index + 1 + 1);
+  memcpy(value, &card->string[start_index], end_index - start_index + 1);
+  value[end_index - start_index + 1] = '\0';
+
+  END_PROFILE_FUNC();
+  return value;
+}
+
+char *card_parse_whole_no_trim(const card_t *card) {
+  BEGIN_PROFILE_FUNC();
+
+  const int len = strlen(card->string);
+  char *value = malloc(len + 1);
+  memcpy(value, card->string, len + 1);
 
   END_PROFILE_FUNC();
   return value;
