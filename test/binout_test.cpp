@@ -650,6 +650,14 @@ TEST_CASE("path_move_up") {
   CHECK(path_move_up("/////nodout/////") == 0);
 }
 
+TEST_CASE("path_join") {
+  CHECK(path_join("Hello", "World") == "Hello/World");
+  CHECK(path_join("Hello/", "World") == "Hello/World");
+  CHECK(path_join("Hello/", "/World") == "Hello/World");
+  CHECK(path_join("Hello/////", "//////World") == "Hello/World");
+  CHECK(path_join("Hello", "/World") == "Hello/World");
+}
+
 TEST_CASE("path_view") {
   {
     const char *str = "/nodout/metadata/ids";

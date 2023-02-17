@@ -39,6 +39,16 @@ extern "C" {
  * when moving up one folder*/
 size_t path_move_up(const char *path);
 
+/* Join two paths together by inserting a PATH_SEP. Needs to be deallocated by
+ * free*/
+char *path_join(const char *lhs, const char *rhs);
+
+/* Returns wether the given path exists and is a file*/
+int path_is_file(const char *path_name);
+
+/* Returns the current working directory. Needs to be deallocated by free.*/
+char *path_working_directory();
+
 #ifdef __cplusplus
 }
 #endif

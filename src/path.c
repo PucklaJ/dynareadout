@@ -27,24 +27,8 @@
 #include "profiling.h"
 #include <assert.h>
 #include <string.h>
-
-int path_elements_contain(char **elements, size_t num_elements,
-                          const char *value) {
-  BEGIN_PROFILE_FUNC();
-
-  size_t i = 0;
-  while (i < num_elements) {
-    if (strcmp(elements[i], value) == 0) {
-      END_PROFILE_FUNC();
-      return 1;
-    }
-
-    i++;
-  }
-
-  END_PROFILE_FUNC();
-  return 0;
-}
+#include <sys/stat.h>
+#include <unistd.h>
 
 size_t path_move_up(const char *path) {
   BEGIN_PROFILE_FUNC();
@@ -66,4 +50,60 @@ size_t path_move_up(const char *path) {
   const size_t index = i - (i == 1);
   END_PROFILE_FUNC();
   return index;
+}
+
+char *path_join(const char *lhs, const char *rhs) {
+  BEGIN_PROFILE_FUNC();
+
+  const size_t lhs_len = strlen(lhs);
+  const size_t rhs_len = strlen(rhs);
+
+  size_t i = lhs_len - 1, j = 0;
+  /* Loop until the last non path seperator has been found*/
+  while (lhs[i] == PATH_SEP) {
+    if (i == 0) {
+      break;
+    }
+    i--;
+  }
+
+  /* Loop unti the first non path seperator has been found*/
+  while (rhs[j] == PATH_SEP) {
+    if (j == rhs_len - 1) {
+      break;
+    }
+    j++;
+  }
+
+  const size_t str_len = (i + 1) + (rhs_len - j) + 1;
+
+  char *str = malloc(str_len + 1);
+  memcpy(str, lhs, i + 1);
+  memcpy(&str[i + 2], &rhs[j], rhs_len - j);
+  str[i + 1] = PATH_SEP;
+  str[str_len] = '\0';
+
+  END_PROFILE_FUNC();
+  return str;
+}
+
+int path_is_file(const char *path_name) {
+  struct stat path_stat;
+  if (stat(path_name, &path_stat) != 0) {
+    return 0;
+  }
+
+  return S_ISREG(path_stat.st_mode);
+}
+
+char *path_working_directory() {
+  char *buffer = malloc(1024);
+
+  char *rv = getcwd(buffer, 1024);
+  if (!rv) {
+    free(buffer);
+    buffer = NULL;
+  }
+
+  return buffer;
 }

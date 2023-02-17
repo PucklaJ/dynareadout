@@ -59,7 +59,8 @@ keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
 void key_file_parse_with_callback(const char *file_name,
                                   key_file_callback callback,
                                   int parse_includes, char **error_string,
-                                  void *user_data, char ***include_paths);
+                                  void *user_data, char ***include_paths,
+                                  size_t *num_include_paths);
 void key_file_free(keyword_t *keywords, size_t num_keywords);
 keyword_t *key_file_get(keyword_t *keywords, size_t num_keywords,
                         const char *name, size_t index);

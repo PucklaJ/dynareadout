@@ -116,7 +116,7 @@ keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
   *num_keywords = 0;
 
   key_file_parse_with_callback(file_name, key_file_parse_callback,
-                               parse_includes, error_string, &data, NULL);
+                               parse_includes, error_string, &data, NULL, NULL);
 
   END_PROFILE_FUNC();
   return data.keywords;
@@ -125,7 +125,8 @@ keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
 void key_file_parse_with_callback(const char *file_name,
                                   key_file_callback callback,
                                   int parse_includes, char **error_string,
-                                  void *user_data, char ***include_paths) {
+                                  void *user_data, char ***include_paths,
+                                  size_t *num_include_paths) {
   BEGIN_PROFILE_FUNC();
 
   *error_string = NULL;
@@ -136,6 +137,39 @@ void key_file_parse_with_callback(const char *file_name,
     END_PROFILE_FUNC();
     return;
   }
+
+  /* This points to the include paths*/
+  char ***include_paths_ptr;
+  size_t *num_include_paths_ptr;
+
+  if (!include_paths) {
+    include_paths_ptr = malloc(sizeof(char **));
+  } else {
+    include_paths_ptr = include_paths;
+  }
+
+  *include_paths_ptr = NULL;
+
+  if (!num_include_paths) {
+    num_include_paths_ptr = malloc(sizeof(size_t));
+  } else {
+    num_include_paths_ptr = num_include_paths;
+  }
+
+  *num_include_paths_ptr = 0;
+
+  /* Add the current directory to the include paths*/
+  char *current_wd = path_working_directory();
+  if (!current_wd) {
+    current_wd = malloc(2);
+    current_wd[0] = '.';
+    current_wd[1] = '\0';
+  }
+
+  (*num_include_paths_ptr)++;
+  *include_paths_ptr =
+      realloc(*include_paths_ptr, *num_include_paths_ptr * sizeof(char *));
+  (*include_paths_ptr)[*num_include_paths_ptr - 1] = current_wd;
 
   extra_string line;
   extra_string current_keyword_name;
@@ -289,13 +323,38 @@ void key_file_parse_with_callback(const char *file_name,
           extra_string_starts_with(&current_keyword_name, "INCLUDE")) {
         /* Parse all the different INCLUDE keywords*/
         if (extra_string_compare(&current_keyword_name, "INCLUDE") == 0) {
+          /* TODO: Support multi line file names (Remark 3)*/
           char *include_file_name = card_parse_whole(&card);
+          char *final_include_file_name = NULL;
 
-          /* TODO: Loop over all include paths and look for file*/
+          /* Loop over all include paths and look for file*/
+          i = 0;
+          while (i < *num_include_paths_ptr) {
+            char *full_include_file_name =
+                path_join((*include_paths_ptr)[i], include_file_name);
 
-          /* Call the function recursively*/
-          key_file_parse_with_callback(include_file_name, callback, 1,
-                                       error_string, user_data, include_paths);
+            if (path_is_file(full_include_file_name)) {
+              final_include_file_name = full_include_file_name;
+              break;
+            }
+
+            free(full_include_file_name);
+
+            i++;
+          }
+
+          if (final_include_file_name) {
+            /* Call the function recursively*/
+            key_file_parse_with_callback(
+                include_file_name, callback, 1, error_string, user_data,
+                include_paths_ptr, num_include_paths_ptr);
+            free(final_include_file_name);
+          } else {
+            fprintf(stderr,
+                    "The include file \"%s\" could not be found in any of the "
+                    "given paths\n",
+                    include_file_name);
+          }
           free(include_file_name);
 
           /* continue without calling the callback for the card*/
@@ -312,9 +371,13 @@ void key_file_parse_with_callback(const char *file_name,
           continue;
         } else if (extra_string_compare(&current_keyword_name,
                                         "INCLUDE_PATH") == 0) {
-          /* TODO: Store all the include paths, so that we know where to look
-           * for include files*/
-          fprintf(stderr, "The INCLUDE_PATH keyword is not implemented\n");
+          /* TODO: Support multi line path names (Remark 3)*/
+          char *include_path_name = card_parse_whole(&card);
+
+          (*num_include_paths_ptr)++;
+          *include_paths_ptr = realloc(*include_paths_ptr,
+                                       *num_include_paths_ptr * sizeof(char *));
+          (*include_paths_ptr)[*num_include_paths_ptr - 1] = include_path_name;
         } else if (extra_string_compare(&current_keyword_name,
                                         "INCLUDE_PATH_RELATIVE") == 0) {
           /* TODO: Store all the include paths, so that we know where to look
@@ -391,6 +454,21 @@ void key_file_parse_with_callback(const char *file_name,
     if (keyword_name != current_keyword_name.buffer) {
       free(keyword_name);
     }
+  }
+
+  /* Free all include paths*/
+  if (!include_paths) {
+    size_t i = 0;
+    while (i < *num_include_paths_ptr) {
+      free((*include_paths_ptr)[i]);
+
+      i++;
+    }
+    free(*include_paths_ptr);
+    free(include_paths_ptr);
+  }
+  if (!num_include_paths) {
+    free(num_include_paths_ptr);
   }
 
   free(line.extra);
