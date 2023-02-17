@@ -51,6 +51,8 @@ void extra_string_copy_to_string(char *dst, const extra_string *src,
 
 int extra_string_compare(const extra_string *lhs, const char *rhs);
 
+int extra_string_starts_with(const extra_string *str, const char *prefix);
+
 #ifdef __cplusplus
 }
 #endif

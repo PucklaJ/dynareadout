@@ -54,10 +54,11 @@ extern "C" {
 
 /* Needs to be deallocated by key_file_free*/
 keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
-                          char **error_string);
+                          int parse_includes, char **error_string);
 void key_file_parse_with_callback(const char *file_name,
                                   key_file_callback callback,
-                                  char **error_string, void *user_data);
+                                  int parse_includes, char **error_string,
+                                  void *user_data);
 void key_file_free(keyword_t *keywords, size_t num_keywords);
 keyword_t *key_file_get(keyword_t *keywords, size_t num_keywords,
                         const char *name, size_t index);

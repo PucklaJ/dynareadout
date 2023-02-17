@@ -106,7 +106,7 @@ void key_file_parse_callback(const char *keyword_name, const card_t *card,
 }
 
 keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
-                          char **error_string) {
+                          int parse_includes, char **error_string) {
   BEGIN_PROFILE_FUNC();
 
   key_file_parse_data data;
@@ -115,8 +115,8 @@ keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
   data.num_keywords = num_keywords;
   *num_keywords = 0;
 
-  key_file_parse_with_callback(file_name, key_file_parse_callback, error_string,
-                               &data);
+  key_file_parse_with_callback(file_name, key_file_parse_callback,
+                               parse_includes, error_string, &data);
 
   END_PROFILE_FUNC();
   return data.keywords;
@@ -124,7 +124,8 @@ keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
 
 void key_file_parse_with_callback(const char *file_name,
                                   key_file_callback callback,
-                                  char **error_string, void *user_data) {
+                                  int parse_includes, char **error_string,
+                                  void *user_data) {
   BEGIN_PROFILE_FUNC();
 
   *error_string = NULL;
@@ -274,6 +275,10 @@ void key_file_parse_with_callback(const char *file_name,
         card.string = malloc(line_length + 1);
         extra_string_copy_to_string(card.string, &line, line_length);
         card.string[line_length] = '\0';
+      }
+
+      if (parse_includes) {
+        /* Parse all the different INCLUDE keywords*/
       }
 
       char *keyword_name;

@@ -105,3 +105,48 @@ int extra_string_compare(const extra_string *lhs, const char *rhs) {
 
   return 1;
 }
+
+int extra_string_starts_with(const extra_string *str, const char *prefix) {
+  size_t i = 0;
+  while (i < EXTRA_STRING_BUFFER_SIZE && str->buffer[i] != '\0' &&
+         prefix[i] != '\0') {
+    if (str->buffer[i] != prefix[i]) {
+      return 0;
+    }
+
+    i++;
+  }
+
+  if (i == EXTRA_STRING_BUFFER_SIZE) {
+    if (prefix[i] == '\0') {
+      return 1;
+    }
+  } else if (str->buffer[i] == '\0') {
+    if (prefix[i] == '\0') {
+      return 1;
+    } else {
+      return 0;
+    }
+  } else { /* prefix[i] == '\0'*/
+    return 1;
+  }
+
+  size_t j = 0;
+  while (str->extra[j] != '\0' && prefix[i] != '\0') {
+    if (str->extra[j] != prefix[i]) {
+      return 0;
+    }
+
+    j++;
+    i++;
+  }
+
+  if (str->extra[j] == '\0') {
+    if (prefix[i] == '\0') {
+      return 1;
+    }
+  }
+
+  /* prefix[i] == '\0*/
+  return 1;
+}

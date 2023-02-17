@@ -64,7 +64,7 @@ TEST_CASE("key_file_parse") {
   char *error_string;
   size_t num_keywords;
   keyword_t *keywords =
-      key_file_parse("test_data/key_file.k", &num_keywords, &error_string);
+      key_file_parse("test_data/key_file.k", &num_keywords, 1, &error_string);
   if (error_string) {
     FAIL(error_string);
     free(error_string);
@@ -411,7 +411,7 @@ TEST_CASE("key_file_parse_with_callback") {
           CHECK(nid == (j + 1));
         }
       },
-      &error_string, NULL);
+      1, &error_string, NULL);
   if (error_string) {
     FAIL(error_string);
     free(error_string);
@@ -451,6 +451,48 @@ TEST_CASE("extra_string") {
     CHECK(extra_string_get(&str, strlen(cstr) - 1) == '.');
     extra_string_set(&str, strlen(cstr) - 1, '-');
     CHECK(extra_string_get(&str, strlen(cstr) - 1) == '-');
+
+    free(str.extra);
+  }
+
+  {
+    const char *cstr = "Hello World My dudes";
+    extra_string str = extra_string_new(cstr);
+    CHECK(extra_string_starts_with(&str, "Hello") != 0);
+    CHECK(extra_string_starts_with(&str, "Helo") == 0);
+    CHECK(extra_string_starts_with(&str, "Hello World") != 0);
+    CHECK(extra_string_starts_with(
+              &str, "Hello World My dudes, you are awesome") == 0);
+    CHECK(extra_string_starts_with(&str, "Hello World My dudes") != 0);
+  }
+
+  {
+    const char *cstr = "Hello World My incredible dudes, you are as always an "
+                       "awesome bunch, with which it is so nice to work with, "
+                       "but I have some bad news for you.";
+    extra_string str = extra_string_new(cstr);
+    CHECK(extra_string_starts_with(&str, "Hello") != 0);
+    CHECK(extra_string_starts_with(&str, "Helo") == 0);
+    CHECK(extra_string_starts_with(&str, "Hello World") != 0);
+    CHECK(extra_string_starts_with(&str, "Hello World My incredible dudes") !=
+          0);
+
+    CHECK(extra_string_starts_with(
+              &str,
+              "Hello World My incredible dudes, you are as always an awesome "
+              "bunch, with which it is so nice to work with, ") != 0);
+    CHECK(extra_string_starts_with(
+              &str,
+              "Hello World My incredible dudes, you are as always an awesome "
+              "bunch, with which it is so nice to work with, 1") == 0);
+    CHECK(extra_string_starts_with(
+              &str, "Hello World My incredible dudes, you are as always an "
+                    "awesome bunch, with which it is so nice to work with, "
+                    "but I have some bad news for you. The news are.") != 0);
+    CHECK(extra_string_starts_with(
+              &str, "Hello World My incredible dudes, you are as always an "
+                    "awesome bunch, with which it is so nice to work with, "
+                    "but I have some bad news for you.") != 0);
 
     free(str.extra);
   }
