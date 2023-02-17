@@ -85,9 +85,9 @@ void key_file_parse_callback(const char *keyword_name, const card_t *card,
     data->current_keyword->cards = NULL;
     data->current_keyword->num_cards = 0;
 
-    /* Always allocate LINE_WIDTH bytes*/
-    data->current_keyword->name = malloc(LINE_WIDTH);
-    strcpy(data->current_keyword->name, keyword_name);
+    const size_t keyword_len = strlen(keyword_name);
+    data->current_keyword->name = malloc(keyword_len + 1);
+    memcpy(data->current_keyword->name, keyword_name, keyword_len + 1);
   }
 
   if (!card) {
@@ -379,6 +379,14 @@ void key_file_parse_with_callback(const char *file_name,
           *include_paths_ptr = realloc(*include_paths_ptr,
                                        *num_include_paths_ptr * sizeof(char *));
           (*include_paths_ptr)[*num_include_paths_ptr - 1] = include_path_name;
+
+          /* continue without calling the callback for the card*/
+          if (card.string != line.buffer) {
+            free(card.string);
+          }
+
+          card_index++;
+          continue;
         } else if (extra_string_compare(&current_keyword_name,
                                         "INCLUDE_PATH_RELATIVE") == 0) {
           /* TODO: Support multi line path names (Remark 3)*/
@@ -415,6 +423,14 @@ void key_file_parse_with_callback(const char *file_name,
                                        *num_include_paths_ptr * sizeof(char *));
           (*include_paths_ptr)[*num_include_paths_ptr - 1] =
               full_include_path_name;
+
+          /* continue without calling the callback for the card*/
+          if (card.string != line.buffer) {
+            free(card.string);
+          }
+
+          card_index++;
+          continue;
         } else if (extra_string_compare(&current_keyword_name,
                                         "INCLUDE_BINARY") == 0) {
           /* TODO*/
@@ -438,6 +454,17 @@ void key_file_parse_with_callback(const char *file_name,
           /* TODO*/
           fprintf(stderr, "The %s keyword is not implemented\n",
                   current_keyword_name.buffer);
+        } else {
+          /*TODO: Error*/
+          fprintf(stderr, "Invalid INCLUDE keyword: \"");
+          if (current_keyword_length >= EXTRA_STRING_BUFFER_SIZE) {
+            fwrite(current_keyword_name.buffer, EXTRA_STRING_BUFFER_SIZE, 1,
+                   stderr);
+            fprintf(stderr, "%s", current_keyword_name.extra);
+          } else {
+            fprintf(stderr, "%s", current_keyword_name.buffer);
+          }
+          fprintf(stderr, "\"\n");
         }
       }
 
