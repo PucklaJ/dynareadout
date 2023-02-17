@@ -159,7 +159,8 @@ int path_is_abs(const char *path_name) {
   BEGIN_PROFILE_FUNC();
 
 #ifdef _WIN32
-#error "path_is_abs is not implemented for Windows"
+  const int rv = ((path_name[0] >= 'A' && path_name[0] <= 'Z') &&
+                  (path_name[1] == ':') && (path_name[2] == REAL_PATH_SEP));
 #else
   const int rv = path_name[0] == PATH_SEP;
 #endif

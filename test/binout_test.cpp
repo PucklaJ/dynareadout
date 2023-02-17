@@ -664,6 +664,14 @@ TEST_CASE("path_join") {
   CHECK(path_join("Hello", "/World") == "Hello/World");
 }
 
+TEST_CASE("path_is_abs") {
+#ifdef _WIN32
+  CHECK(path_is_abs("C:\\temp") != 0);
+#else
+  CHECK(path_is_abs("/tmp") != 0);
+#endif
+}
+
 TEST_CASE("path_view") {
   {
     const char *str = "/nodout/metadata/ids";
