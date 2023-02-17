@@ -144,19 +144,17 @@ void key_file_parse_with_callback(const char *file_name,
 
   if (!include_paths) {
     include_paths_ptr = malloc(sizeof(char **));
+    *include_paths_ptr = NULL;
   } else {
     include_paths_ptr = include_paths;
   }
 
-  *include_paths_ptr = NULL;
-
   if (!num_include_paths) {
     num_include_paths_ptr = malloc(sizeof(size_t));
+    *num_include_paths_ptr = 0;
   } else {
     num_include_paths_ptr = num_include_paths;
   }
-
-  *num_include_paths_ptr = 0;
 
   /* Add the current directory to the include paths*/
   char *current_wd = path_working_directory();
@@ -170,6 +168,9 @@ void key_file_parse_with_callback(const char *file_name,
   *include_paths_ptr =
       realloc(*include_paths_ptr, *num_include_paths_ptr * sizeof(char *));
   (*include_paths_ptr)[*num_include_paths_ptr - 1] = current_wd;
+
+  /* Store the parent path of the file if need by INCLUDE_PATH_RELATIVE*/
+  char *file_parent_path = NULL;
 
   extra_string line;
   extra_string current_keyword_name;
@@ -346,7 +347,7 @@ void key_file_parse_with_callback(const char *file_name,
           if (final_include_file_name) {
             /* Call the function recursively*/
             key_file_parse_with_callback(
-                include_file_name, callback, 1, error_string, user_data,
+                final_include_file_name, callback, 1, error_string, user_data,
                 include_paths_ptr, num_include_paths_ptr);
             free(final_include_file_name);
           } else {
@@ -380,10 +381,40 @@ void key_file_parse_with_callback(const char *file_name,
           (*include_paths_ptr)[*num_include_paths_ptr - 1] = include_path_name;
         } else if (extra_string_compare(&current_keyword_name,
                                         "INCLUDE_PATH_RELATIVE") == 0) {
-          /* TODO: Store all the include paths, so that we know where to look
-           * for include files*/
-          fprintf(stderr,
-                  "The INCLUDE_PATH_RELATIVE keyword is not implemented\n");
+          /* TODO: Support multi line path names (Remark 3)*/
+          char *include_path_name = card_parse_whole(&card);
+
+          if (!file_parent_path) {
+            /* TODO: The relative path probably needs to be relative to the
+             * FIRST input given to LS Dyna by the command line
+             * 'i=parent_folder/file_name.k'*/
+            const size_t index = path_move_up_real(file_name);
+            if (index == (size_t)~0) {
+              const size_t current_wd_len = strlen(current_wd);
+              file_parent_path = malloc(current_wd_len + 1);
+              memcpy(file_parent_path, current_wd, current_wd_len + 1);
+            } else {
+              if (path_is_abs(file_name)) {
+                file_parent_path = malloc(index + 1 + 1);
+                memcpy(file_parent_path, file_name, index + 1);
+                file_parent_path[index + 1] = '\0';
+              } else {
+                file_parent_path = path_join(current_wd, file_name);
+                file_parent_path[path_move_up_real(file_parent_path) + 1] =
+                    '\0';
+              }
+            }
+          }
+
+          char *full_include_path_name =
+              path_join(file_parent_path, include_path_name);
+          free(include_path_name);
+
+          (*num_include_paths_ptr)++;
+          *include_paths_ptr = realloc(*include_paths_ptr,
+                                       *num_include_paths_ptr * sizeof(char *));
+          (*include_paths_ptr)[*num_include_paths_ptr - 1] =
+              full_include_path_name;
         } else if (extra_string_compare(&current_keyword_name,
                                         "INCLUDE_BINARY") == 0) {
           /* TODO*/
@@ -471,6 +502,7 @@ void key_file_parse_with_callback(const char *file_name,
     free(num_include_paths_ptr);
   }
 
+  free(file_parent_path);
   free(line.extra);
   free(current_keyword_name.extra);
 

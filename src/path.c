@@ -30,26 +30,64 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-size_t path_move_up(const char *path) {
+size_t _path_move_up(const char *path, char path_sep) {
   BEGIN_PROFILE_FUNC();
 
-  const int len = strlen(path);
-  /* Only support absolute paths*/
-  assert(len > 1 && path[0] == PATH_SEP);
+  /* Loop over the string and store the last position of a path seperator*/
+  size_t last_path_sep = (size_t)~0;
+  size_t i = 0;
+  while (path[i] != '\0') {
+    if (path[i] == path_sep) {
+      last_path_sep = i;
+    }
 
-  /* Support trailing PATH_SEPs*/
-  size_t i = len - 1;
-  while (i > 0 && path[i] == PATH_SEP) {
-    i--;
+    i++;
   }
 
-  while (i > 1 && !(path[i] == PATH_SEP && path[i - 1] != PATH_SEP)) {
-    i--;
+  if (last_path_sep == (size_t)~0) {
+    END_PROFILE_FUNC();
+    return last_path_sep;
   }
 
-  const size_t index = i - (i == 1);
+  /* Support trailing path separators*/
+  if (path[last_path_sep + 1] == '\0') {
+    /* Support multiple path separators*/
+    while (path[last_path_sep] == path_sep) {
+      if (last_path_sep == 0) {
+        break;
+      }
+      last_path_sep--;
+    }
+
+    /* The path consists of only path separators*/
+    if (last_path_sep == 0) {
+      END_PROFILE_FUNC();
+      return (size_t)~0;
+    }
+
+    /* Loop until the first path seperator has been found*/
+    while (path[last_path_sep] != path_sep) {
+      if (last_path_sep == 0) {
+        break;
+      }
+      last_path_sep--;
+    }
+  }
+
+  /* Support multiple path separators*/
+  while (path[last_path_sep] == path_sep) {
+    if (last_path_sep == 0) {
+      break;
+    }
+    last_path_sep--;
+  }
+
+  if (last_path_sep != 0) {
+    last_path_sep++;
+  }
+
   END_PROFILE_FUNC();
-  return index;
+  return last_path_sep;
 }
 
 char *path_join(const char *lhs, const char *rhs) {
@@ -88,15 +126,23 @@ char *path_join(const char *lhs, const char *rhs) {
 }
 
 int path_is_file(const char *path_name) {
+  BEGIN_PROFILE_FUNC();
+
   struct stat path_stat;
   if (stat(path_name, &path_stat) != 0) {
+    END_PROFILE_FUNC();
     return 0;
   }
 
-  return S_ISREG(path_stat.st_mode);
+  const int rv = S_ISREG(path_stat.st_mode);
+
+  END_PROFILE_FUNC();
+  return rv;
 }
 
 char *path_working_directory() {
+  BEGIN_PROFILE_FUNC();
+
   char *buffer = malloc(1024);
 
   char *rv = getcwd(buffer, 1024);
@@ -105,5 +151,19 @@ char *path_working_directory() {
     buffer = NULL;
   }
 
+  END_PROFILE_FUNC();
   return buffer;
+}
+
+int path_is_abs(const char *path_name) {
+  BEGIN_PROFILE_FUNC();
+
+#ifdef _WIN32
+#error "path_is_abs is not implemented for Windows"
+#else
+  const int rv = path_name[0] == PATH_SEP;
+#endif
+
+  END_PROFILE_FUNC();
+  return rv;
 }

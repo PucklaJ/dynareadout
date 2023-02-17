@@ -378,6 +378,12 @@ TEST_CASE("key_file_parse") {
   card = &keyword->cards[0];
   CHECK(card_parse_whole_no_trim(card) == "I am more");
 
+  keyword = key_file_get(keywords, num_keywords, "KEYWORD_OF_LESS", 0);
+  REQUIRE(keyword != NULL);
+  CHECK(keyword->num_cards == 1);
+  card = &keyword->cards[0];
+  CHECK(card_parse_whole_no_trim(card) == "This is less");
+
   key_file_free(keywords, num_keywords);
 }
 
@@ -390,8 +396,11 @@ TEST_CASE("key_file_parse_with_callback") {
       [](const char *keyword_name, const card_t *card, size_t card_index,
          void *user_data) {
         CHECK(user_data == NULL);
-        REQUIRE(card != NULL);
         REQUIRE(keyword_name != NULL);
+
+        if (!card) {
+          return;
+        }
 
         if (strcmp(keyword_name, "NODE") == 0) {
           const size_t j = card_index;

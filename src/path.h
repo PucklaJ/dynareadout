@@ -27,7 +27,14 @@
 #define PATH_H
 #include <stdlib.h>
 
+/* TODO: Make sure to use the correct PATH_SEP on windows when working with the
+ * real file system*/
 #define PATH_SEP '/'
+#ifdef _WIN32
+#define REAL_PATH_SEP '\\'
+#else
+#define REAL_PATH_SEP '/'
+#endif
 
 #define PATH_IS_ABS(str) (str[0] == PATH_SEP)
 
@@ -35,9 +42,12 @@
 extern "C" {
 #endif
 
+#define path_move_up(path) _path_move_up(path, PATH_SEP)
+#define path_move_up_real(path) _path_move_up(path, REAL_PATH_SEP)
+
 /* Returns the index at which the new path string would end (index of PATH_SEP)
- * when moving up one folder*/
-size_t path_move_up(const char *path);
+ * when moving up one folder. If no parent folder exists, then ~0 is returned.*/
+size_t _path_move_up(const char *path, char path_sep);
 
 /* Join two paths together by inserting a PATH_SEP. Needs to be deallocated by
  * free*/
@@ -48,6 +58,9 @@ int path_is_file(const char *path_name);
 
 /* Returns the current working directory. Needs to be deallocated by free.*/
 char *path_working_directory();
+
+/* Returns wether a path is absolute*/
+int path_is_abs(const char *path_name);
 
 #ifdef __cplusplus
 }

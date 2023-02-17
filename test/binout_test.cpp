@@ -648,6 +648,12 @@ TEST_CASE("path_move_up") {
   CHECK(path_move_up("/nodout/////////metadata//////ids") == 24);
   CHECK(path_move_up("////nodout/////metadata") == 10);
   CHECK(path_move_up("/////nodout/////") == 0);
+  CHECK(path_move_up("/") == (size_t)~0);
+  CHECK(path_move_up("/////") == (size_t)~0);
+
+  CHECK(path_move_up("file.txt") == (size_t)~0);
+
+  CHECK(path_move_up("/home/user/file.txt") == 10);
 }
 
 TEST_CASE("path_join") {
