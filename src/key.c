@@ -116,7 +116,7 @@ keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
   *num_keywords = 0;
 
   key_file_parse_with_callback(file_name, key_file_parse_callback,
-                               parse_includes, error_string, &data);
+                               parse_includes, error_string, &data, NULL);
 
   END_PROFILE_FUNC();
   return data.keywords;
@@ -125,7 +125,7 @@ keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
 void key_file_parse_with_callback(const char *file_name,
                                   key_file_callback callback,
                                   int parse_includes, char **error_string,
-                                  void *user_data) {
+                                  void *user_data, char ***include_paths) {
   BEGIN_PROFILE_FUNC();
 
   *error_string = NULL;
@@ -152,7 +152,7 @@ void key_file_parse_with_callback(const char *file_name,
       line.extra[0] = '\0';
     }
 
-    size_t line_length;
+    size_t line_length = 0;
 
     /* Find the new line*/
     /* Read more data from the file until a new line has been found*/
@@ -165,7 +165,10 @@ void key_file_parse_with_callback(const char *file_name,
     int n = fread(line.buffer, 1, EXTRA_STRING_BUFFER_SIZE, file);
     if (n == 0 && feof(file)) {
       break;
+    } else if (n < EXTRA_STRING_BUFFER_SIZE) {
+      line.buffer[n] = '\0';
     }
+
     while (1) {
       size_t j = 0;
       while (j < (size_t)n) {
@@ -181,12 +184,13 @@ void key_file_parse_with_callback(const char *file_name,
         j++;
       }
 
+      line_length = i;
+
       if (j == (size_t)n) {
         /* New line is exactly after the line (perfect!)*/
         if ((i < EXTRA_STRING_BUFFER_SIZE || line.extra != NULL) &&
             extra_string_get(&line, i) == '\n') {
           extra_string_set(&line, i, '\0');
-          line_length = i;
           break;
         }
 
@@ -198,7 +202,6 @@ void key_file_parse_with_callback(const char *file_name,
          * read*/
         fseek(file, j - n + 1, SEEK_CUR);
         extra_string_set(&line, i, '\0');
-        line_length = i;
         break;
       } else {
         /* The first character that we read is a new line. Most of the time this
@@ -207,7 +210,11 @@ void key_file_parse_with_callback(const char *file_name,
          * 2. The line is empty*/
         fseek(file, 1 - n, SEEK_CUR);
         extra_string_set(&line, i, '\0');
-        line_length = i;
+        break;
+      }
+
+      /* The file ends without a new line*/
+      if (n < EXTRA_STRING_BUFFER_SIZE) {
         break;
       }
 
@@ -215,11 +222,12 @@ void key_file_parse_with_callback(const char *file_name,
       n = fread(&line.extra[i - EXTRA_STRING_BUFFER_SIZE], 1,
                 EXTRA_STRING_BUFFER_SIZE, file);
       if (n == 0 && feof(file)) {
+        line.extra[i - EXTRA_STRING_BUFFER_SIZE] = '\0';
         break;
       }
     }
 
-    if (n == 0 && feof(file)) {
+    if (line_length == 0 && n == 0 && feof(file)) {
       break;
     }
 
@@ -277,8 +285,66 @@ void key_file_parse_with_callback(const char *file_name,
         card.string[line_length] = '\0';
       }
 
-      if (parse_includes) {
+      if (parse_includes &&
+          extra_string_starts_with(&current_keyword_name, "INCLUDE")) {
         /* Parse all the different INCLUDE keywords*/
+        if (extra_string_compare(&current_keyword_name, "INCLUDE") == 0) {
+          char *include_file_name = card_parse_whole(&card);
+
+          /* TODO: Loop over all include paths and look for file*/
+
+          /* Call the function recursively*/
+          key_file_parse_with_callback(include_file_name, callback, 1,
+                                       error_string, user_data, include_paths);
+          free(include_file_name);
+
+          /* continue without calling the callback for the card*/
+          if (card.string != line.buffer) {
+            free(card.string);
+          }
+
+          /* Quit if an error in the recursive call happened*/
+          if (*error_string != NULL) {
+            break;
+          }
+
+          card_index++;
+          continue;
+        } else if (extra_string_compare(&current_keyword_name,
+                                        "INCLUDE_PATH") == 0) {
+          /* TODO: Store all the include paths, so that we know where to look
+           * for include files*/
+          fprintf(stderr, "The INCLUDE_PATH keyword is not implemented\n");
+        } else if (extra_string_compare(&current_keyword_name,
+                                        "INCLUDE_PATH_RELATIVE") == 0) {
+          /* TODO: Store all the include paths, so that we know where to look
+           * for include files*/
+          fprintf(stderr,
+                  "The INCLUDE_PATH_RELATIVE keyword is not implemented\n");
+        } else if (extra_string_compare(&current_keyword_name,
+                                        "INCLUDE_BINARY") == 0) {
+          /* TODO*/
+          fprintf(stderr, "The INCLUDE_BINARY keyword is not implemented\n");
+        } else if (extra_string_compare(&current_keyword_name,
+                                        "INCLUDE_NASTRAN") == 0) {
+          /* TODO*/
+          fprintf(stderr, "The INCLUDE_NASTRAN keyword is not implemented\n");
+        } else if (extra_string_compare(&current_keyword_name,
+                                        "INCLUDE_STAMPED_SET") == 0) {
+          /* TODO*/
+          fprintf(stderr,
+                  "The INCLUDE_STAMPED_SET keyword is not implemented\n");
+        } else if (extra_string_starts_with(&current_keyword_name,
+                                            "INCLUDE_TRANSFORM") != 0) {
+          /* TODO*/
+          fprintf(stderr, "The %s keyword is not implemented\n",
+                  current_keyword_name.buffer);
+        } else if (extra_string_starts_with(&current_keyword_name,
+                                            "INCLUDE_STAMPED_PART") != 0) {
+          /* TODO*/
+          fprintf(stderr, "The %s keyword is not implemented\n",
+                  current_keyword_name.buffer);
+        }
       }
 
       char *keyword_name;

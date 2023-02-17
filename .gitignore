@@ -10,11 +10,7 @@ build/
 .DS_Store
 
 # Test Data
-test_data/**/d3plot*
-test_data/**/binout*
-test_data/profiling_test.txt
-test_data/profiling_data.txt
-test_data/key_file.k
+test_data/*
 
 # LS PrePost
 *.cfile

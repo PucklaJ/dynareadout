@@ -359,6 +359,19 @@ TEST_CASE("key_file_parse") {
   CHECK(card_parse_float32(card) == 567.0f);
   CHECK(card_parse_float64(card) == 567.0);
 
+  keyword = key_file_get(keywords, num_keywords, "KEYWORD_OF_INCLUDE", 0);
+  REQUIRE(keyword != NULL);
+  CHECK(keyword->num_cards == 1);
+  card = &keyword->cards[0];
+  CHECK(card_parse_whole_no_trim(card) == "I am inside an include");
+
+  keyword =
+      key_file_get(keywords, num_keywords, "KEYWORD_OF_INCLUDE_INCLUDE", 0);
+  REQUIRE(keyword != NULL);
+  CHECK(keyword->num_cards == 1);
+  card = &keyword->cards[0];
+  CHECK(card_parse_whole_no_trim(card) == "I am inside another include");
+
   key_file_free(keywords, num_keywords);
 }
 
@@ -411,7 +424,7 @@ TEST_CASE("key_file_parse_with_callback") {
           CHECK(nid == (j + 1));
         }
       },
-      1, &error_string, NULL);
+      1, &error_string, NULL, NULL);
   if (error_string) {
     FAIL(error_string);
     free(error_string);
