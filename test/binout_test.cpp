@@ -672,6 +672,12 @@ TEST_CASE("path_is_abs") {
 #endif
 }
 
+TEST_CASE("path_is_file") {
+  CHECK(path_is_file("test_data/key_file.k") != 0);
+  CHECK(path_is_file("test_data/binout0000") != 0);
+  CHECK(path_is_file("test_data/schinken") == 0);
+}
+
 TEST_CASE("path_view") {
   {
     const char *str = "/nodout/metadata/ids";

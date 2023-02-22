@@ -27,8 +27,12 @@
 #include "profiling.h"
 #include <assert.h>
 #include <string.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <sys/stat.h>
 #include <unistd.h>
+#endif
 
 size_t _path_move_up(const char *path, char path_sep) {
   BEGIN_PROFILE_FUNC();
@@ -105,7 +109,7 @@ char *path_join(const char *lhs, const char *rhs) {
     i--;
   }
 
-  /* Loop unti the first non path seperator has been found*/
+  /* Loop until the first non path seperator has been found*/
   while (rhs[j] == PATH_SEP) {
     if (j == rhs_len - 1) {
       break;
@@ -125,6 +129,20 @@ char *path_join(const char *lhs, const char *rhs) {
   return str;
 }
 
+#ifdef _WIN32
+int path_is_file(const char *path_name) {
+  BEGIN_PROFILE_FUNC();
+
+  const DWORD attributes = GetFileAttributes(path_name);
+  const int rv =
+      (attributes != INVALID_FILE_ATTRIBUTES &&
+       !(attributes & FILE_ATTRIBUTE_DIRECTORY) &&
+       (attributes & (FILE_ATTRIBUTE_NORMAL | FILE_ATTRIBUTE_ARCHIVE)));
+
+  END_PROFILE_FUNC();
+  return rv;
+}
+#else
 int path_is_file(const char *path_name) {
   BEGIN_PROFILE_FUNC();
 
@@ -139,7 +157,35 @@ int path_is_file(const char *path_name) {
   END_PROFILE_FUNC();
   return rv;
 }
+#endif
 
+#ifdef _WIN32
+char *path_working_directory() {
+  BEGIN_PROFILE_FUNC();
+
+  char *buffer;
+
+  const DWORD buffer_size = GetCurrentDirectory(0, NULL);
+  if (buffer_size == 0) {
+    buffer = NULL;
+  } else {
+    buffer = malloc(buffer_size);
+    if (GetCurrentDirectory(buffer_size, buffer) == 0) {
+      free(buffer);
+      buffer = NULL;
+    }
+  }
+
+  if (!buffer) {
+    buffer = malloc(2);
+    buffer[0] = '.';
+    buffer[1] = '\n';
+  }
+
+  END_PROFILE_FUNC();
+  return buffer;
+}
+#else
 char *path_working_directory() {
   BEGIN_PROFILE_FUNC();
 
@@ -147,13 +193,14 @@ char *path_working_directory() {
 
   char *rv = getcwd(buffer, 1024);
   if (!rv) {
-    free(buffer);
-    buffer = NULL;
+    buffer[0] = '.';
+    buffer[1] = '\0';
   }
 
   END_PROFILE_FUNC();
   return buffer;
 }
+#endif
 
 int path_is_abs(const char *path_name) {
   BEGIN_PROFILE_FUNC();
