@@ -248,7 +248,7 @@ inline std::ostream &operator<<(std::ostream &stream, const Array<T> &str) {
   static_assert(std::is_same_v<T, char> || std::is_same_v<T, int8_t> ||
                 std::is_same_v<T, uint8_t>);
 
-  for (size_t i = 0; i < str.size(); i++) {
+  for (size_t i = 0; i < str.size() && str[i] != '\0'; i++) {
     stream << static_cast<char>(str[i]);
   }
   return stream;

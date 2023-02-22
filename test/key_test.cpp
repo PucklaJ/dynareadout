@@ -622,4 +622,12 @@ TEST_CASE("key_file_parseC++") {
       "                                 Start of File                        ");
 }
 
-TEST_CASE("key_file_parse_with_callbackC++") {}
+TEST_CASE("key_file_parse_with_callbackC++") {
+  dro::KeyFile::parse_with_callback(
+      "test_data/key_file.k",
+      [](dro::String keyword_name, dro::Card card, size_t card_index) {
+        const auto card_str = card.parse_whole_no_trim<dro::String>();
+        std::cout << keyword_name << "[" << card_index << "]: " << card_str
+                  << std::endl;
+      });
+}

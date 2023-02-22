@@ -30,6 +30,7 @@
 #include <cstdlib>
 #include <exception>
 #include <filesystem>
+#include <functional>
 #include <key.h>
 #include <limits>
 #include <string>
@@ -144,11 +145,13 @@ public:
     const String m_error_str;
   };
 
+  using Callback =
+      std::function<void(String keyword_name, Card card, size_t card_index)>;
+
   static Keywords parse(const std::filesystem::path &file_name,
                         bool parse_includes = true);
   static void parse_with_callback(const std::filesystem::path &file_name,
-                                  key_file_callback callback,
-                                  void *user_data = nullptr,
+                                  Callback callback,
                                   bool parse_includes = true);
 };
 
