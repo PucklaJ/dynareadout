@@ -24,13 +24,7 @@
  ************************************************************************************/
 
 #include "d3_buffer.h"
-#ifdef _WIN32
-#include <io.h>
-#define F_OK 0
-#define access _access
-#else
-#include <unistd.h>
-#endif
+#include "path.h"
 #include "profiling.h"
 #include <errno.h>
 #include <stdlib.h>
@@ -91,7 +85,7 @@ d3_buffer d3_buffer_open(const char *root_file_name) {
 
   size_t i = 0;
   while (i < 1000) {
-    if (access(file_name_buffer, F_OK) != 0) {
+    if (!path_is_file(file_name_buffer)) {
       break;
     }
 

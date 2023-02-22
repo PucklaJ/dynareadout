@@ -61,6 +61,19 @@ extra_string extra_string_new(const char *str) {
 }
 
 TEST_CASE("key_file_parse") {
+  {
+    char *error_string;
+    size_t num_keywords;
+    keyword_t *keywords =
+        key_file_parse("test_data/schinken.k", &num_keywords, 0, &error_string);
+    CHECK(error_string != NULL);
+    CHECK(keywords == NULL);
+    free(error_string);
+
+    CHECK(key_file_parse("test_data/schinken.k", &num_keywords, 0, NULL) ==
+          NULL);
+  }
+
   char *error_string;
   size_t num_keywords;
   keyword_t *keywords =

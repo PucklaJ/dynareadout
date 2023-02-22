@@ -36,9 +36,26 @@
 #define KEY_COMMENT '$'
 #define LINE_WIDTH 80
 
-#define ERROR_ERRNO(msg)                                                       \
-  *error_string = malloc(1024);                                                \
-  sprintf(*error_string, msg, strerror(errno));
+#define ERROR_MSG(msg)                                                         \
+  const size_t error_msg_len = strlen(msg);                                    \
+  error_stack_size += error_msg_len + 1;                                       \
+  error_stack = realloc(error_stack, error_stack_size);                        \
+  memcpy(&error_stack[error_ptr], msg, error_msg_len);                         \
+  error_ptr += error_msg_len;                                                  \
+  error_stack[error_ptr] = '\n';                                               \
+  error_ptr++
+#define ERROR_F(msg, ...)                                                      \
+  const int error_buffer_size = snprintf(NULL, 0, msg, __VA_ARGS__);           \
+  error_stack_size += error_buffer_size + 1;                                   \
+  error_stack = realloc(error_stack, error_stack_size);                        \
+  sprintf(&error_stack[error_ptr], msg, __VA_ARGS__);                          \
+  error_ptr += error_buffer_size;                                              \
+  error_stack[error_ptr] = '\n';                                               \
+  error_ptr++;
+#define ERROR_ERRNO(msg) ERROR_F(msg, strerror(errno));
+#define ERROR_KEYWORD_NOT_IMPLEMENTED(keyword)                                 \
+  ERROR_F("%s:%lu: The keyword %s is not implemented", file_name,              \
+          current_keyword_line, keyword)
 
 typedef struct {
   keyword_t *current_keyword;
@@ -129,11 +146,18 @@ void key_file_parse_with_callback(const char *file_name,
                                   size_t *num_include_paths) {
   BEGIN_PROFILE_FUNC();
 
-  *error_string = NULL;
+  /* Variables to stack multiple errors*/
+  char *error_stack = NULL;
+  size_t error_stack_size = 0;
+  size_t error_ptr = 0;
 
   FILE *file = fopen(file_name, "rb");
   if (!file) {
-    ERROR_ERRNO("Failed to open key file: %s")
+    if (error_string) {
+      ERROR_ERRNO("Failed to open key file: %s");
+      error_stack[error_stack_size - 1] = '\0';
+      *error_string = error_stack;
+    }
     END_PROFILE_FUNC();
     return;
   }
@@ -158,11 +182,6 @@ void key_file_parse_with_callback(const char *file_name,
 
   /* Add the current directory to the include paths*/
   char *current_wd = path_working_directory();
-  if (!current_wd) {
-    current_wd = malloc(2);
-    current_wd[0] = '.';
-    current_wd[1] = '\0';
-  }
 
   (*num_include_paths_ptr)++;
   *include_paths_ptr =
@@ -179,8 +198,11 @@ void key_file_parse_with_callback(const char *file_name,
   line.extra = NULL;
 
   size_t current_keyword_length = 0;
+  size_t current_keyword_line = (size_t)~0;
   size_t card_index = 0;
+  size_t line_count = 0;
 
+  /* Loop until all lines have been read or an error occurred*/
   while (1) {
     /* Clear extra without freeing the memory*/
     if (line.extra) {
@@ -198,13 +220,19 @@ void key_file_parse_with_callback(const char *file_name,
      * LINE_WIDTH characters long, therefore we read the new line directly in
      * the first read chunk*/
     int n = fread(line.buffer, 1, EXTRA_STRING_BUFFER_SIZE, file);
-    if (n == 0 && feof(file)) {
+    if ((n == 0 && feof(file)) || ferror(file)) {
       break;
     } else if (n < EXTRA_STRING_BUFFER_SIZE) {
       line.buffer[n] = '\0';
     }
 
+    /* ------------ LINE READING ------------*/
+    /* Loop until the next line has been read. After this loop the file is
+     * either at the beginning of the line after the
+     * next one, at EOF or has an error.*/
     while (1) {
+      /* Look for the new line character and also look for the comment
+       * character*/
       size_t j = 0;
       while (j < (size_t)n) {
         const char c = extra_string_get(&line, i);
@@ -253,18 +281,22 @@ void key_file_parse_with_callback(const char *file_name,
         break;
       }
 
+      /* Read the next chunk of the file*/
       line.extra = realloc(line.extra, i * sizeof(char));
       n = fread(&line.extra[i - EXTRA_STRING_BUFFER_SIZE], 1,
                 EXTRA_STRING_BUFFER_SIZE, file);
-      if (n == 0 && feof(file)) {
+      if ((n == 0 && feof(file)) || ferror(file)) {
         line.extra[i - EXTRA_STRING_BUFFER_SIZE] = '\0';
         break;
       }
     }
+    /* -------------------------------------------- */
 
-    if (line_length == 0 && n == 0 && feof(file)) {
+    if ((line_length == 0 && n == 0 && feof(file)) || ferror(file)) {
       break;
     }
+
+    line_count++;
 
     /* Check if the line starts with a comment or contains a comment character*/
     if (comment_index == 0) {
@@ -301,6 +333,8 @@ void key_file_parse_with_callback(const char *file_name,
         current_keyword_length++;
       }
       extra_string_set(&current_keyword_name, current_keyword_length, '\0');
+
+      current_keyword_line = line_count;
 
       /* Quit on "END"*/
       if (current_keyword_length == 3 &&
@@ -345,15 +379,21 @@ void key_file_parse_with_callback(const char *file_name,
           }
 
           if (final_include_file_name) {
+            char *include_error;
             /* Call the function recursively*/
             key_file_parse_with_callback(
-                final_include_file_name, callback, 1, error_string, user_data,
+                final_include_file_name, callback, 1, &include_error, user_data,
                 include_paths_ptr, num_include_paths_ptr);
             free(final_include_file_name);
+
+            /* Add the error to the error stack if an error occurred in the
+             * recursive call*/
+            if (include_error != NULL) {
+              ERROR_MSG(include_error);
+              free(include_error);
+            }
           } else {
-            fprintf(stderr,
-                    "The include file \"%s\" could not be found in any of the "
-                    "given paths\n",
+            ERROR_F("%s:%lu: \"%s\" could not be found", file_name, line_count,
                     include_file_name);
           }
           free(include_file_name);
@@ -361,11 +401,6 @@ void key_file_parse_with_callback(const char *file_name,
           /* continue without calling the callback for the card*/
           if (card.string != line.buffer) {
             free(card.string);
-          }
-
-          /* Quit if an error in the recursive call happened*/
-          if (*error_string != NULL) {
-            break;
           }
 
           card_index++;
@@ -434,37 +469,40 @@ void key_file_parse_with_callback(const char *file_name,
         } else if (extra_string_compare(&current_keyword_name,
                                         "INCLUDE_BINARY") == 0) {
           /* TODO*/
-          fprintf(stderr, "The INCLUDE_BINARY keyword is not implemented\n");
+          ERROR_KEYWORD_NOT_IMPLEMENTED("INCLUDE_BINARY");
         } else if (extra_string_compare(&current_keyword_name,
                                         "INCLUDE_NASTRAN") == 0) {
           /* TODO*/
-          fprintf(stderr, "The INCLUDE_NASTRAN keyword is not implemented\n");
+          ERROR_KEYWORD_NOT_IMPLEMENTED("INCLUDE_NASTRAN");
         } else if (extra_string_compare(&current_keyword_name,
                                         "INCLUDE_STAMPED_SET") == 0) {
           /* TODO*/
-          fprintf(stderr,
-                  "The INCLUDE_STAMPED_SET keyword is not implemented\n");
+          ERROR_KEYWORD_NOT_IMPLEMENTED("INCLUDE_STAMPED_SET");
         } else if (extra_string_starts_with(&current_keyword_name,
                                             "INCLUDE_TRANSFORM") != 0) {
           /* TODO*/
-          fprintf(stderr, "The %s keyword is not implemented\n",
-                  current_keyword_name.buffer);
+          ERROR_KEYWORD_NOT_IMPLEMENTED(current_keyword_name.buffer);
         } else if (extra_string_starts_with(&current_keyword_name,
                                             "INCLUDE_STAMPED_PART") != 0) {
           /* TODO*/
-          fprintf(stderr, "The %s keyword is not implemented\n",
-                  current_keyword_name.buffer);
+          ERROR_KEYWORD_NOT_IMPLEMENTED(current_keyword_name.buffer);
         } else {
-          /*TODO: Error*/
-          fprintf(stderr, "Invalid INCLUDE keyword: \"");
-          if (current_keyword_length >= EXTRA_STRING_BUFFER_SIZE) {
-            fwrite(current_keyword_name.buffer, EXTRA_STRING_BUFFER_SIZE, 1,
-                   stderr);
-            fprintf(stderr, "%s", current_keyword_name.extra);
+          char *keyword_name;
+          if (current_keyword_length < EXTRA_STRING_BUFFER_SIZE) {
+            keyword_name = current_keyword_name.buffer;
           } else {
-            fprintf(stderr, "%s", current_keyword_name.buffer);
+            keyword_name = malloc(current_keyword_length + 1);
+            extra_string_copy_to_string(keyword_name, &current_keyword_name,
+                                        current_keyword_length);
+            keyword_name[current_keyword_length] = '\0';
           }
-          fprintf(stderr, "\"\n");
+
+          ERROR_F("%s:%lu: Invalid INCLUDE keyword: \"%s\"", file_name,
+                  current_keyword_line, keyword_name);
+
+          if (keyword_name != current_keyword_name.buffer) {
+            free(keyword_name);
+          }
         }
       }
 
@@ -493,24 +531,29 @@ void key_file_parse_with_callback(const char *file_name,
     /* ---------------------------------------- */
   }
 
-  /* Call the callback for the last keyword if it is not "END", because some
-   * keywords can have no cards*/
-  if (current_keyword_length != 3 ||
-      extra_string_compare(&current_keyword_name, "END") != 0) {
-    char *keyword_name;
-    if (current_keyword_length < EXTRA_STRING_BUFFER_SIZE) {
-      keyword_name = current_keyword_name.buffer;
-    } else {
-      keyword_name = malloc(current_keyword_length + 1);
-      extra_string_copy_to_string(keyword_name, &current_keyword_name,
-                                  current_keyword_length);
-      keyword_name[current_keyword_length] = '\0';
-    }
+  if (ferror(file)) {
+    ERROR_F("An error occurred while reading \"%s\": %s", file_name,
+            strerror(errno));
+  } else {
+    /* Call the callback for the last keyword if it is not "END", because some
+     * keywords can have no cards*/
+    if (current_keyword_length != 3 ||
+        extra_string_compare(&current_keyword_name, "END") != 0) {
+      char *keyword_name;
+      if (current_keyword_length < EXTRA_STRING_BUFFER_SIZE) {
+        keyword_name = current_keyword_name.buffer;
+      } else {
+        keyword_name = malloc(current_keyword_length + 1);
+        extra_string_copy_to_string(keyword_name, &current_keyword_name,
+                                    current_keyword_length);
+        keyword_name[current_keyword_length] = '\0';
+      }
 
-    callback(keyword_name, NULL, (size_t)~0, user_data);
+      callback(keyword_name, NULL, (size_t)~0, user_data);
 
-    if (keyword_name != current_keyword_name.buffer) {
-      free(keyword_name);
+      if (keyword_name != current_keyword_name.buffer) {
+        free(keyword_name);
+      }
     }
   }
 
@@ -534,6 +577,17 @@ void key_file_parse_with_callback(const char *file_name,
   free(current_keyword_name.extra);
 
   fclose(file);
+
+  if (error_stack) {
+    if (!error_string) {
+      free(error_stack);
+    } else {
+      error_stack[error_stack_size - 1] = '\0';
+      *error_string = error_stack;
+    }
+  } else if (error_string) {
+    *error_string = NULL;
+  }
 
   END_PROFILE_FUNC();
 }
