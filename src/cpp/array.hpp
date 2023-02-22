@@ -104,7 +104,7 @@ public:
   Array(T *data, size_t size, bool delete_data = true) noexcept;
   Array(Array<T> &&rhs) noexcept;
   Array(const Array<T> &rhs) = delete;
-  ~Array() noexcept;
+  virtual ~Array() noexcept;
 
   inline T &operator[](size_t index);
   inline const T &operator[](size_t index) const;
@@ -127,7 +127,7 @@ public:
   ConstIterator begin() const noexcept { return ConstIterator(m_data, 0); }
   ConstIterator end() const noexcept { return ConstIterator(m_data, m_size); }
 
-private:
+protected:
   T *m_data;
   size_t m_size;
   bool m_delete_data;

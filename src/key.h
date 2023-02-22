@@ -64,6 +64,8 @@ void key_file_parse_with_callback(const char *file_name,
 void key_file_free(keyword_t *keywords, size_t num_keywords);
 keyword_t *key_file_get(keyword_t *keywords, size_t num_keywords,
                         const char *name, size_t index);
+keyword_t *key_file_get_slice(keyword_t *keywords, size_t num_keywords,
+                              const char *name, size_t *slice_size);
 
 /*
 card_parse_begin(card);

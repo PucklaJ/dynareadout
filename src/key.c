@@ -661,6 +661,53 @@ keyword_t *key_file_get(keyword_t *keywords, size_t num_keywords,
   return NULL;
 }
 
+keyword_t *key_file_get_slice(keyword_t *keywords, size_t num_keywords,
+                              const char *name, size_t *slice_size) {
+  BEGIN_PROFILE_FUNC();
+
+  if (num_keywords == 0) {
+    *slice_size = 0;
+    END_PROFILE_FUNC();
+    return NULL;
+  }
+
+  const size_t find_index =
+      key_file_binary_search(keywords, 0, num_keywords - 1, name);
+  if (find_index == (size_t)~0) {
+    *slice_size = 0;
+    END_PROFILE_FUNC();
+    return NULL;
+  }
+
+  /* Find the first of the keyword*/
+  size_t start_index = find_index;
+  while (start_index > 0 && strcmp(keywords[start_index].name, name) == 0) {
+    start_index--;
+  }
+
+  if (start_index != 0 || strcmp(keywords[start_index].name, name) != 0) {
+    start_index++;
+  }
+
+  /* Find the last of the keyword*/
+  size_t end_index = find_index;
+  while (end_index < num_keywords &&
+         strcmp(keywords[start_index].name, name) == 0) {
+    end_index++;
+  }
+
+  if (end_index == num_keywords) {
+    end_index--;
+  }
+
+  *slice_size = end_index - start_index + 1;
+
+  keyword_t *slice = &keywords[start_index];
+
+  END_PROFILE_FUNC();
+  return slice;
+}
+
 void card_parse_begin(card_t *card, uint8_t value_width) {
   BEGIN_PROFILE_FUNC();
 

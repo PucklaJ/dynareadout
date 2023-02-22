@@ -29,7 +29,7 @@
 #include <doctest/doctest.h>
 #include <extra_string.h>
 #include <iostream>
-#include <key.h>
+#include <key.hpp>
 
 extra_string extra_string_new(const char *str) {
   extra_string xstr;
@@ -538,3 +538,88 @@ TEST_CASE("extra_string") {
     free(str.extra);
   }
 }
+
+#define FABS(x) ((x) > 0 ? (x) : -(x))
+
+TEST_CASE("key_file_parseC++") {
+  auto keywords = dro::KeyFile::parse("test_data/key_file.k");
+
+  // Takes the first found keyword of "MAT_PIECEWISE_LINEAR_PLASTICITY_TITLE"
+  // (in this case is only one) and the second card of that keyword
+  auto card = keywords["MAT_PIECEWISE_LINEAR_PLASTICITY_TITLE"][0][1];
+
+  card.begin();
+  CHECK(card.done() == false);
+  CHECK(card.parse<int>() == 6);
+  CHECK(card.parse<unsigned int>() == 6);
+  card.next();
+  CHECK(card.done() == false);
+  CHECK(FABS(card.parse<double>() - 1.57e-6) < 1e-10);
+  card.next();
+  CHECK(card.done() == false);
+  CHECK(card.parse<float>() == 11.05647f);
+  CHECK(card.parse<double>() == 11.05647);
+  card.next();
+  CHECK(card.done() == false);
+  CHECK(card.parse<float>() == 0.3f);
+  CHECK(card.parse<double>() == 0.3);
+  card.next();
+  CHECK(card.done() == false);
+  CHECK(card.parse<float>() == 0.01597f);
+  CHECK(card.parse<double>() == 0.01597);
+  card.next();
+  CHECK(card.done() == false);
+  CHECK(card.parse<float>() == 0.0f);
+  CHECK(card.parse<double>() == 0.0);
+  card.next();
+  CHECK(card.done() == false);
+  CHECK(card.parse<float>() == 1e21f);
+  CHECK(card.parse<double>() == 1e21);
+  card.next();
+  CHECK(card.done() == false);
+  CHECK(card.parse<float>() == 0.0);
+  CHECK(card.parse<double>() == 0.0f);
+  card.next();
+  CHECK(card.done() == true);
+
+  card = keywords["TEST_KEYWORD"][0][0];
+
+  card.begin();
+  CHECK(card.parse<int>() == -10);
+  try {
+    card.parse<unsigned int>();
+    FAIL("parse should fail, because it tries to read a negative value and "
+         "convert it into an unsigned int");
+  } catch (const dro::KeyFile::Exception &e) {
+    CHECK(e.what() != NULL);
+  }
+
+  card = keywords["PART"][1][0];
+
+  card.begin();
+  CHECK(card.parse<char *>() == "Ground");
+  auto str = card.parse<dro::String>();
+  CHECK(str.data() == "Ground");
+  CHECK(card.parse<std::string>() == "Ground");
+
+  card = keywords[""][0][0];
+
+  card.begin();
+  CHECK(card.parse_whole<char *>() == "Start of File");
+  str = card.parse_whole<dro::String>();
+  CHECK(str.data() == "Start of File");
+  CHECK(card.parse_whole<std::string>() == "Start of File");
+
+  CHECK(
+      card.parse_whole_no_trim<char *>() ==
+      "                                 Start of File                        ");
+  str = card.parse_whole_no_trim<dro::String>();
+  CHECK(
+      str.data() ==
+      "                                 Start of File                        ");
+  CHECK(
+      card.parse_whole_no_trim<std::string>() ==
+      "                                 Start of File                        ");
+}
+
+TEST_CASE("key_file_parse_with_callbackC++") {}
