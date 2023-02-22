@@ -83,7 +83,7 @@ void profile_test_func411() {
       i++;
     } else {
       i += (i * i) / (i / 2);
-      cos(i);
+      const double value = cos(i);
     }
   }
 
@@ -96,7 +96,7 @@ void profile_test_func411() {
       i++;
     } else {
       i += (i * i) / (i / 2);
-      sin(i);
+      const double value = sin(i);
     }
   }
 
