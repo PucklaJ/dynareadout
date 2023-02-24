@@ -132,8 +132,25 @@ keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
   data.num_keywords = num_keywords;
   *num_keywords = 0;
 
+  char *internal_error_string;
+
   key_file_parse_with_callback(file_name, key_file_parse_callback,
-                               parse_includes, error_string, &data, NULL, NULL);
+                               parse_includes, &internal_error_string, &data,
+                               NULL, NULL);
+
+  /* Deallocate the memory if an error occurred*/
+  if (internal_error_string) {
+    key_file_free(data.keywords, *data.num_keywords);
+    data.keywords = NULL;
+    *data.num_keywords = 0;
+    if (error_string) {
+      *error_string = internal_error_string;
+    } else {
+      free(internal_error_string);
+    }
+  } else if (error_string) {
+    *error_string = NULL;
+  }
 
   END_PROFILE_FUNC();
   return data.keywords;
