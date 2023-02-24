@@ -38,7 +38,7 @@
 #include <path_view.h>
 #include <sstream>
 #include <string>
-#ifdef BINOUT_CPP
+#ifdef BUILD_CPP
 #include "main_test.hpp"
 #include <binout.hpp>
 #endif
@@ -241,7 +241,7 @@ TEST_CASE("binout0000") {
   binout_close(&bin_file);
 }
 
-#ifdef BINOUT_CPP
+#ifdef BUILD_CPP
 TEST_CASE("binout0000C++") {
   {
     try {
@@ -415,7 +415,7 @@ TEST_CASE("glob") {
   binout_free_glob(globed_files, num_files);
 }
 
-#ifdef BINOUT_CPP
+#ifdef BUILD_CPP
 TEST_CASE("Array::New") {
   auto arr = dro::Array<int>::New(5);
   arr[0] = 1;

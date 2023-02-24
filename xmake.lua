@@ -83,7 +83,7 @@ if get_config("build_test") then
         end
         if get_config("build_cpp") then
             add_deps("dynareadout_cpp")
-            add_defines("BINOUT_CPP", "D3PLOT_CPP")
+            add_defines("BUILD_CPP")
             add_includedirs("src/cpp")
         end
         add_packages("doctest")

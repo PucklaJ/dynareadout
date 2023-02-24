@@ -29,7 +29,10 @@
 #include <doctest/doctest.h>
 #include <extra_string.h>
 #include <iostream>
+#include <key.h>
+#ifdef BUILD_CPP
 #include <key.hpp>
+#endif
 
 extra_string extra_string_new(const char *str) {
   extra_string xstr;
@@ -539,6 +542,7 @@ TEST_CASE("extra_string") {
   }
 }
 
+#ifdef BUILD_CPP
 #define FABS(x) ((x) > 0 ? (x) : -(x))
 
 TEST_CASE("key_file_parseC++") {
@@ -631,3 +635,4 @@ TEST_CASE("key_file_parse_with_callbackC++") {
                   << std::endl;
       });
 }
+#endif

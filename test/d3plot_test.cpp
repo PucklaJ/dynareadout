@@ -31,7 +31,7 @@
 #include <ctime>
 #include <d3plot.h>
 #include <doctest/doctest.h>
-#ifdef D3PLOT_CPP
+#ifdef BUILD_CPP
 #include "main_test.hpp"
 #include <d3plot.hpp>
 #endif
@@ -410,7 +410,7 @@ TEST_CASE("d3plot") {
   d3plot_close(&plot_file);
 }
 
-#ifdef D3PLOT_CPP
+#ifdef BUILD_CPP
 TEST_CASE("d3plotC++") {
   try {
     dro::D3plot plot_file("i_dont_exist");
