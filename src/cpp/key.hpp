@@ -50,27 +50,6 @@ class Card {
 public:
   Card(card_t *handle) noexcept;
 
-  template <uint8_t... N>
-  static constexpr std::array<uint8_t, sizeof...(N)> make_array() {
-    std::array<uint8_t, sizeof...(N)> arr;
-
-    size_t i = 0;
-
-    (
-        [&] {
-          if constexpr (N == 0) {
-            arr[i] = DEFAULT_VALUE_WIDTH;
-          } else {
-            arr[i] = N;
-          }
-
-          i++;
-        }(),
-        ...);
-
-    return arr;
-  }
-
   void begin(uint8_t value_width = DEFAULT_VALUE_WIDTH) noexcept;
   void next() noexcept;
   void next(uint8_t value_width) noexcept;
@@ -309,6 +288,10 @@ void Card::parse_whole_width(std::array<uint8_t, sizeof...(T)> value_widths,
                                    i + 1, m_handle->string);
         }
 
+        if (value_widths[i] == 0) {
+          value_widths[i] = DEFAULT_VALUE_WIDTH;
+        }
+
         rv = parse<parse_type>(value_widths[i]);
 
         next(value_widths[i]);
@@ -350,6 +333,10 @@ Card::parse_whole(std::array<uint8_t, sizeof...(T)> value_widths) {
       THROW_KEY_FILE_EXCEPTION(
           "Trying to parse %d values out of card \"%s\" with width %d", i + 1,
           m_handle->string, DEFAULT_VALUE_WIDTH);
+    }
+
+    if (value_widths[i] == 0) {
+      value_widths[i] = DEFAULT_VALUE_WIDTH;
     }
 
     T value = parse<T>(value_widths[i]);

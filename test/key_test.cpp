@@ -655,8 +655,7 @@ TEST_CASE("key_file_parseC++") {
     float da1, da2, da3, da4;
     std::string solver;
 
-    card.parse_whole_width(dro::Card::make_array<0, 0, 0, 0, 0, 0>(), sid, da1,
-                           da2, da3, da4, solver);
+    card.parse_whole_width({0, 0, 0, 0, 0, 0}, sid, da1, da2, da3, da4, solver);
 
     CHECK(sid == 1);
     CHECK(da1 == 0.0f);
@@ -688,7 +687,7 @@ TEST_CASE("key_file_parseC++") {
   {
     auto [_sid, _da1, _da2, _da3, _da4, _solver] =
         card.parse_whole<int, float, float, float, float, std::string>(
-            dro::Card::make_array<0, 0, 0, 0, 0, 0>());
+            {0, 0, 0, 0, 0, 0});
 
     const auto sid = _sid;
     const auto da1 = _da1;
@@ -736,8 +735,7 @@ TEST_CASE("key_file_parseC++") {
     int nid, tc, rc;
     float x, y, z;
 
-    card.parse_whole_width(dro::Card::make_array<8, 16, 16, 16, 8, 8>(), nid, x,
-                           y, z, tc, rc);
+    card.parse_whole_width({8, 16, 16, 16, 8, 8}, nid, x, y, z, tc, rc);
 
     CHECK(nid == 3);
     CHECK(x == 10.0f);
@@ -750,7 +748,7 @@ TEST_CASE("key_file_parseC++") {
   {
     auto [_nid, _x, _y, _z, _tc, _rc] =
         card.parse_whole<int, float, float, float, int, int>(
-            dro::Card::make_array<8, 16, 16, 16, 8, 8>());
+            {8, 16, 16, 16, 8, 8});
 
     const auto nid = _nid;
     const auto x = _x;
@@ -770,7 +768,7 @@ TEST_CASE("key_file_parseC++") {
   {
     try {
       card.parse_whole<int, float, float, float, int, int, std::string>(
-          dro::Card::make_array<8, 16, 16, 16, 8, 8, 12>());
+          {8, 16, 16, 16, 8, 8, 12});
       FAIL("parse_whole should throw an exception because it tries to read too "
            "much values");
     } catch (const dro::KeyFile::Exception &e) {
@@ -784,8 +782,8 @@ TEST_CASE("key_file_parseC++") {
       float x, y, z;
       std::string crash_causer;
 
-      card.parse_whole_width(dro::Card::make_array<8, 16, 16, 16, 8, 8, 12>(),
-                             nid, x, y, z, tc, rc, crash_causer);
+      card.parse_whole_width({8, 16, 16, 16, 8, 8, 12}, nid, x, y, z, tc, rc,
+                             crash_causer);
       FAIL("parse_whole should throw an exception because it tries to read too "
            "much values");
     } catch (const dro::KeyFile::Exception &e) {
