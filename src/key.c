@@ -67,7 +67,7 @@ void key_file_parse_callback(const char *keyword_name, const card_t *card,
                              size_t card_index, void *user_data) {
   key_file_parse_data *data = (key_file_parse_data *)user_data;
 
-  if (!data->current_keyword || card_index == 0) {
+  if (!data->current_keyword || card_index == 0 || card_index == (size_t)~0) {
     size_t index = 0;
 
     if (data->keywords) {
@@ -336,7 +336,28 @@ void key_file_parse_with_callback(const char *file_name,
       is_keyword = extra_string_get(&line, i) == '*';
     }
 
+    /* ------ 🔑 Keyword Parsing 🔑 --------- */
     if (is_keyword) {
+      /* If we already read a keyword we need to call the callback if the
+       * keyword had no cards*/
+      if (current_keyword_length != 0 && card_index == 0) {
+        char *keyword_name;
+        if (current_keyword_length < EXTRA_STRING_BUFFER_SIZE) {
+          keyword_name = current_keyword_name.buffer;
+        } else {
+          keyword_name = malloc(current_keyword_length + 1);
+          extra_string_copy_to_string(keyword_name, &current_keyword_name,
+                                      current_keyword_length);
+          keyword_name[current_keyword_length] = '\0';
+        }
+
+        callback(keyword_name, NULL, (size_t)~0, user_data);
+
+        if (keyword_name != current_keyword_name.buffer) {
+          free(keyword_name);
+        }
+      }
+
       extra_string_copy(&current_keyword_name, &line, line_length, i + 1);
 
       /* Compute the length of the keyword*/
@@ -361,7 +382,7 @@ void key_file_parse_with_callback(const char *file_name,
 
       card_index = 0;
     } else {
-      /* This means that we have a card*/
+      /* -------- 🃏 Card Parsing 🃏 ----------*/
       card_t card;
       if (line_length < EXTRA_STRING_BUFFER_SIZE) {
         card.string = line.buffer;
@@ -371,6 +392,7 @@ void key_file_parse_with_callback(const char *file_name,
         card.string[line_length] = '\0';
       }
 
+      /* -------- ⛅ Include Parsing ⛅ -------*/
       if (parse_includes &&
           extra_string_starts_with(&current_keyword_name, "INCLUDE")) {
         /* Parse all the different INCLUDE keywords*/
@@ -522,6 +544,7 @@ void key_file_parse_with_callback(const char *file_name,
           }
         }
       }
+      /* ------- ⛅ End of Include Parsing ⛅ -------*/
 
       char *keyword_name;
       if (current_keyword_length < EXTRA_STRING_BUFFER_SIZE) {

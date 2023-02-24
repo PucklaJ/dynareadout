@@ -400,6 +400,14 @@ TEST_CASE("key_file_parse") {
   card = &keyword->cards[0];
   CHECK(card_parse_whole_no_trim(card) == "This is less");
 
+  keyword = key_file_get(keywords, num_keywords, "USER_LOADING", 0);
+  REQUIRE(keyword != NULL);
+  CHECK(keyword->num_cards == 0);
+
+  keyword = key_file_get(keywords, num_keywords, "USER_NOT_LOADING", 0);
+  REQUIRE(keyword != NULL);
+  CHECK(keyword->num_cards == 0);
+
   key_file_free(keywords, num_keywords);
 }
 
