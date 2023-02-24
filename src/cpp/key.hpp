@@ -90,6 +90,11 @@ public:
   void parse_whole_width(std::array<uint8_t, sizeof...(T)> value_widths,
                          T &...rv);
 
+  template <typename... T> std::tuple<T...> parse_whole();
+
+  template <typename... T>
+  std::tuple<T...> parse_whole(std::array<uint8_t, sizeof...(T)> value_widths);
+
 private:
   card_t *m_handle;
 };
@@ -299,9 +304,9 @@ void Card::parse_whole_width(std::array<uint8_t, sizeof...(T)> value_widths,
         using parse_type = std::remove_reference_t<decltype(rv)>;
 
         if (done()) {
-          THROW_KEY_FILE_EXCEPTION(
-              "Trying to parse %d values out of card \"%s\" with width %d",
-              i + 1, m_handle->string, DEFAULT_VALUE_WIDTH);
+          THROW_KEY_FILE_EXCEPTION("Trying to parse %d values out of card "
+                                   "\"%s\"",
+                                   i + 1, m_handle->string);
         }
 
         rv = parse<parse_type>(value_widths[i]);
@@ -310,6 +315,51 @@ void Card::parse_whole_width(std::array<uint8_t, sizeof...(T)> value_widths,
         i++;
       }(),
       ...);
+}
+
+template <typename... T> std::tuple<T...> Card::parse_whole() {
+  int i = 0;
+  begin();
+
+  std::tuple<T...> t = {([&] {
+    if (done()) {
+      THROW_KEY_FILE_EXCEPTION(
+          "Trying to parse %d values out of card \"%s\" with width %d", i + 1,
+          m_handle->string, DEFAULT_VALUE_WIDTH);
+    }
+
+    T value = parse<T>();
+
+    next();
+    i++;
+
+    return value;
+  }())...};
+
+  return t;
+}
+
+template <typename... T>
+std::tuple<T...>
+Card::parse_whole(std::array<uint8_t, sizeof...(T)> value_widths) {
+  int i = 0;
+  begin();
+
+  std::tuple<T...> t = {([&] {
+    if (done()) {
+      THROW_KEY_FILE_EXCEPTION(
+          "Trying to parse %d values out of card \"%s\" with width %d", i + 1,
+          m_handle->string, DEFAULT_VALUE_WIDTH);
+    }
+
+    T value = parse<T>(value_widths[i]);
+
+    next(value_widths[i++]);
+
+    return value;
+  }())...};
+
+  return t;
 }
 
 } // namespace dro
