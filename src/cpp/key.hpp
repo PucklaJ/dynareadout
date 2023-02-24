@@ -26,6 +26,7 @@
 #pragma once
 
 #include "array.hpp"
+#include <array>
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
@@ -34,6 +35,7 @@
 #include <key.h>
 #include <limits>
 #include <string>
+#include <tuple>
 #include <type_traits>
 #include <typeinfo>
 
@@ -48,18 +50,45 @@ class Card {
 public:
   Card(card_t *handle) noexcept;
 
+  template <uint8_t... N>
+  static constexpr std::array<uint8_t, sizeof...(N)> make_array() {
+    std::array<uint8_t, sizeof...(N)> arr;
+
+    size_t i = 0;
+
+    (
+        [&] {
+          if constexpr (N == 0) {
+            arr[i] = DEFAULT_VALUE_WIDTH;
+          } else {
+            arr[i] = N;
+          }
+
+          i++;
+        }(),
+        ...);
+
+    return arr;
+  }
+
   void begin(uint8_t value_width = DEFAULT_VALUE_WIDTH) noexcept;
-  void next(uint8_t value_width = DEFAULT_VALUE_WIDTH) noexcept;
+  void next() noexcept;
+  void next(uint8_t value_width) noexcept;
   bool done() const noexcept;
 
-  template <typename T>
-  T parse(uint8_t value_width = DEFAULT_VALUE_WIDTH) const;
+  template <typename T> T parse() const;
+  template <typename T> T parse(uint8_t value_width) const;
 
+  template <typename T> T parse_string_no_trim() const noexcept;
   template <typename T>
-  T parse_string_no_trim(
-      uint8_t value_width = DEFAULT_VALUE_WIDTH) const noexcept;
-  template <typename T> T parse_whole() const noexcept;
-  template <typename T> T parse_whole_no_trim() const noexcept;
+  T parse_string_no_trim(uint8_t value_width) const noexcept;
+  template <typename T> T parse_string_whole() const noexcept;
+  template <typename T> T parse_string_whole_no_trim() const noexcept;
+
+  template <typename... T> void parse_whole(T &...rv);
+  template <typename... T>
+  void parse_whole_width(std::array<uint8_t, sizeof...(T)> value_widths,
+                         T &...rv);
 
 private:
   card_t *m_handle;
@@ -164,9 +193,11 @@ template <> constexpr bool is_string_v<char *> = true;
 template <> constexpr bool is_string_v<String> = true;
 template <> constexpr bool is_string_v<std::string> = true;
 
-template <typename T> T Card::parse(uint8_t value_width) const {
-  constexpr bool is_supported = is_number_v<T> || is_string_v<T>;
+template <typename T> T Card::parse() const {
+  return parse<T>(m_handle->value_width);
+}
 
+template <typename T> T Card::parse(uint8_t value_width) const {
   /* TODO: Bounds check*/
   if constexpr (std::is_integral_v<T>) {
     const auto value = card_parse_int_width(m_handle, value_width);
@@ -203,8 +234,15 @@ template <typename T> T Card::parse(uint8_t value_width) const {
     free(value);
     return str;
   } else {
-    static_assert(is_supported && "Can not parse a card to the given type");
+    // clang-format off
+    static_assert((is_number_v<T> || is_string_v<T>) && "Can not parse a card to the given type");
+    // clang-format on
+    return T{0};
   }
+}
+
+template <typename T> T Card::parse_string_no_trim() const noexcept {
+  return parse_string_no_trim<T>(m_handle->value_width);
 }
 
 // clang-format off
@@ -214,15 +252,64 @@ T Card::parse_string_no_trim(uint8_t value_width) const noexcept {
   return T{0};
 }
 
-template <typename T> T Card::parse_whole() const noexcept {
+template <typename T> T Card::parse_string_whole() const noexcept {
   static_assert(is_string_v<T> && "Can parse the whole card only as string (char*, dro::String, std::string)");
   return T{0};
 }
 
-template <typename T> T Card::parse_whole_no_trim() const noexcept {
+template <typename T> T Card::parse_string_whole_no_trim() const noexcept {
   static_assert(is_string_v<T> && "Can parse the whole card only as string (char*, dro::String, std::string)");
   return T{0};
 }
 // clang-format on
+
+template <typename... T> void Card::parse_whole(T &...rv) {
+
+  int i = 0;
+
+  begin();
+
+  (
+      [&] {
+        using parse_type = std::remove_reference_t<decltype(rv)>;
+
+        if (done()) {
+          THROW_KEY_FILE_EXCEPTION(
+              "Trying to parse %d values out of card \"%s\" with width %d",
+              i + 1, m_handle->string, DEFAULT_VALUE_WIDTH);
+        }
+
+        rv = parse<parse_type>();
+
+        next();
+        i++;
+      }(),
+      ...);
+}
+
+template <typename... T>
+void Card::parse_whole_width(std::array<uint8_t, sizeof...(T)> value_widths,
+                             T &...rv) {
+  int i = 0;
+
+  begin();
+
+  (
+      [&] {
+        using parse_type = std::remove_reference_t<decltype(rv)>;
+
+        if (done()) {
+          THROW_KEY_FILE_EXCEPTION(
+              "Trying to parse %d values out of card \"%s\" with width %d",
+              i + 1, m_handle->string, DEFAULT_VALUE_WIDTH);
+        }
+
+        rv = parse<parse_type>(value_widths[i]);
+
+        next(value_widths[i]);
+        i++;
+      }(),
+      ...);
+}
 
 } // namespace dro

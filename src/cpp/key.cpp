@@ -34,6 +34,8 @@ void Card::begin(uint8_t value_width) noexcept {
   card_parse_begin(m_handle, value_width);
 }
 
+void Card::next() noexcept { card_parse_next(m_handle); }
+
 void Card::next(uint8_t value_width) noexcept {
   card_parse_next_width(m_handle, value_width);
 }
@@ -59,31 +61,31 @@ Card::parse_string_no_trim<std::string>(uint8_t value_width) const noexcept {
   return str;
 }
 
-template <> char *Card::parse_whole<char *>() const noexcept {
+template <> char *Card::parse_string_whole<char *>() const noexcept {
   return card_parse_whole(m_handle);
 }
 
-template <> String Card::parse_whole<String>() const noexcept {
+template <> String Card::parse_string_whole<String>() const noexcept {
   return String(card_parse_whole(m_handle));
 }
 
-template <> std::string Card::parse_whole<std::string>() const noexcept {
+template <> std::string Card::parse_string_whole<std::string>() const noexcept {
   char *data = card_parse_whole(m_handle);
   std::string str(data);
   free(data);
   return str;
 }
 
-template <> char *Card::parse_whole_no_trim<char *>() const noexcept {
+template <> char *Card::parse_string_whole_no_trim<char *>() const noexcept {
   return card_parse_whole_no_trim(m_handle);
 }
 
-template <> String Card::parse_whole_no_trim<String>() const noexcept {
+template <> String Card::parse_string_whole_no_trim<String>() const noexcept {
   return String(card_parse_whole_no_trim(m_handle));
 }
 
 template <>
-std::string Card::parse_whole_no_trim<std::string>() const noexcept {
+std::string Card::parse_string_whole_no_trim<std::string>() const noexcept {
   char *data = card_parse_whole_no_trim(m_handle);
   std::string str(data);
   free(data);

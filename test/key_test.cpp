@@ -617,28 +617,78 @@ TEST_CASE("key_file_parseC++") {
   card = keywords[""][0][0];
 
   card.begin();
-  CHECK(card.parse_whole<char *>() == "Start of File");
-  str = card.parse_whole<dro::String>();
+  CHECK(card.parse_string_whole<char *>() == "Start of File");
+  str = card.parse_string_whole<dro::String>();
   CHECK(str.data() == "Start of File");
-  CHECK(card.parse_whole<std::string>() == "Start of File");
+  CHECK(card.parse_string_whole<std::string>() == "Start of File");
 
   CHECK(
-      card.parse_whole_no_trim<char *>() ==
+      card.parse_string_whole_no_trim<char *>() ==
       "                                 Start of File                        ");
-  str = card.parse_whole_no_trim<dro::String>();
+  str = card.parse_string_whole_no_trim<dro::String>();
   CHECK(
       str.data() ==
       "                                 Start of File                        ");
   CHECK(
-      card.parse_whole_no_trim<std::string>() ==
+      card.parse_string_whole_no_trim<std::string>() ==
       "                                 Start of File                        ");
+
+  card = keywords["SET_NODE_LIST_TITLE"][0][1];
+
+  {
+    int sid;
+    float da1, da2, da3, da4;
+    std::string solver;
+
+    card.parse_whole(sid, da1, da2, da3, da4, solver);
+
+    CHECK(sid == 1);
+    CHECK(da1 == 0.0f);
+    CHECK(da2 == 0.0f);
+    CHECK(da3 == 0.0f);
+    CHECK(da4 == 0.0f);
+    CHECK(solver == "MECH");
+  }
+
+  {
+    int sid;
+    float da1, da2, da3, da4;
+    std::string solver;
+
+    card.parse_whole_width(dro::Card::make_array<0, 0, 0, 0, 0, 0>(), sid, da1,
+                           da2, da3, da4, solver);
+
+    CHECK(sid == 1);
+    CHECK(da1 == 0.0f);
+    CHECK(da2 == 0.0f);
+    CHECK(da3 == 0.0f);
+    CHECK(da4 == 0.0f);
+    CHECK(solver == "MECH");
+  }
+
+  card = keywords["NODE"][0][2];
+
+  {
+    int nid, tc, rc;
+    float x, y, z;
+
+    card.parse_whole_width(dro::Card::make_array<0, 16, 16, 16, 0, 0>(), nid, x,
+                           y, z, tc, rc);
+
+    CHECK(nid == 3);
+    CHECK(x == 10.0f);
+    CHECK(y == -10.0f);
+    CHECK(z == 0.0f);
+    CHECK(tc == 0);
+    CHECK(rc == 0);
+  }
 }
 
 TEST_CASE("key_file_parse_with_callbackC++") {
   dro::KeyFile::parse_with_callback(
       "test_data/key_file.k",
       [](dro::String keyword_name, dro::Card card, size_t card_index) {
-        const auto card_str = card.parse_whole_no_trim<dro::String>();
+        const auto card_str = card.parse_string_whole_no_trim<dro::String>();
         std::cout << keyword_name << "[" << card_index << "]: " << card_str
                   << std::endl;
       });
