@@ -594,7 +594,7 @@ TEST_CASE("key_file_parseC++") {
   card.next();
   CHECK(card.done() == true);
 
-  card = keywords["TEST_KEYWORD"][0][0];
+  card = keywords["TEST_KEYWORD_CPP"][0][0];
 
   card.begin();
   CHECK(card.parse<int>() == -10);

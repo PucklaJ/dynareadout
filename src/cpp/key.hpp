@@ -155,7 +155,18 @@ public:
                                   bool parse_includes = true);
 };
 
+template <typename T> static constexpr bool is_string_v = false;
+template <typename T>
+static constexpr bool is_number_v =
+    std::is_integral_v<T> || std::is_floating_point_v<T>;
+
+template <> constexpr bool is_string_v<char *> = true;
+template <> constexpr bool is_string_v<String> = true;
+template <> constexpr bool is_string_v<std::string> = true;
+
 template <typename T> T Card::parse(uint8_t value_width) const {
+  constexpr bool is_supported = is_number_v<T> || is_string_v<T>;
+
   /* TODO: Bounds check*/
   if constexpr (std::is_integral_v<T>) {
     const auto value = card_parse_int_width(m_handle, value_width);
@@ -192,8 +203,26 @@ template <typename T> T Card::parse(uint8_t value_width) const {
     free(value);
     return str;
   } else {
-    static_assert(false && "Can not convert a card to the given type");
+    static_assert(is_supported && "Can not parse a card to the given type");
   }
 }
+
+// clang-format off
+template <typename T>
+T Card::parse_string_no_trim(uint8_t value_width) const noexcept {
+  static_assert(is_string_v<T> && "Can parse the whole card only as string (char*, dro::String, std::string)");
+  return T{0};
+}
+
+template <typename T> T Card::parse_whole() const noexcept {
+  static_assert(is_string_v<T> && "Can parse the whole card only as string (char*, dro::String, std::string)");
+  return T{0};
+}
+
+template <typename T> T Card::parse_whole_no_trim() const noexcept {
+  static_assert(is_string_v<T> && "Can parse the whole card only as string (char*, dro::String, std::string)");
+  return T{0};
+}
+// clang-format on
 
 } // namespace dro
