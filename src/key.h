@@ -33,6 +33,12 @@
 #define NODE_VALUE_WIDTH 8
 #define INCLUDE_FILE_PATH_MAX 236
 
+typedef enum {
+  CARD_PARSE_INT,
+  CARD_PARSE_FLOAT,
+  CARD_PARSE_STRING
+} card_parse_type;
+
 typedef struct {
   char *string;
 
@@ -106,6 +112,9 @@ char *card_parse_whole(const card_t *card);
 /* Does not apply trimming of trailing and leading spaces and returns the
  * complete string of the card. Return value should be deallocated by free.*/
 char *card_parse_whole_no_trim(const card_t *card);
+card_parse_type card_parse_get_type(const card_t *card);
+card_parse_type card_parse_get_type_width(const card_t *card,
+                                          uint8_t value_width);
 
 #ifdef __cplusplus
 }

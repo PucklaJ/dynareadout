@@ -564,6 +564,54 @@ TEST_CASE("extra_string") {
   }
 }
 
+TEST_CASE("card_parse_get_type") {
+  card_t card;
+  card.string = "10";
+  card.current_index = 0;
+  card.value_width = DEFAULT_VALUE_WIDTH;
+
+  CHECK(card_parse_get_type(&card) == CARD_PARSE_INT);
+
+  card.string = "  +30  ";
+  CHECK(card_parse_get_type(&card) == CARD_PARSE_INT);
+
+  card.string = " -20.5   ";
+  CHECK(card_parse_get_type(&card) == CARD_PARSE_FLOAT);
+
+  card.string = "4e56";
+  CHECK(card_parse_get_type(&card) == CARD_PARSE_FLOAT);
+
+  card.string = "+7E-7";
+  CHECK(card_parse_get_type(&card) == CARD_PARSE_FLOAT);
+
+  card.string = "6.8e10";
+  CHECK(card_parse_get_type(&card) == CARD_PARSE_FLOAT);
+
+  card.string = "Hey World";
+  CHECK(card_parse_get_type(&card) == CARD_PARSE_STRING);
+
+  card.string = "10M";
+  CHECK(card_parse_get_type(&card) == CARD_PARSE_STRING);
+
+  card.string = "5.6j";
+  CHECK(card_parse_get_type(&card) == CARD_PARSE_STRING);
+
+  card.string = "1.";
+  CHECK(card_parse_get_type(&card) == CARD_PARSE_STRING);
+
+  card.string = "1e";
+  CHECK(card_parse_get_type(&card) == CARD_PARSE_STRING);
+
+  card.string = "1.0e";
+  CHECK(card_parse_get_type(&card) == CARD_PARSE_STRING);
+
+  card.string = "+";
+  CHECK(card_parse_get_type(&card) == CARD_PARSE_STRING);
+
+  card.string = "1e+";
+  CHECK(card_parse_get_type(&card) == CARD_PARSE_STRING);
+}
+
 #ifdef BUILD_CPP
 #define FABS(x) ((x) > 0 ? (x) : -(x))
 

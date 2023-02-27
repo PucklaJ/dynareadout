@@ -53,9 +53,17 @@ py::list python_card_parse_whole(dro::Card &self, py::list value_widths) {
       value_width = value_widths[i].cast<uint8_t>();
     }
 
-    dro::String str(self.parse<dro::String>(value_width));
-
-    rv.append(std::move(str));
+    switch (self.parse_get_type(value_width)) {
+    case CARD_PARSE_INT:
+      rv.append(self.parse<int64_t>(value_width));
+      break;
+    case CARD_PARSE_FLOAT:
+      rv.append(self.parse<double>(value_width));
+      break;
+    case CARD_PARSE_STRING:
+      rv.append(self.parse<dro::String>(value_width));
+      break;
+    }
 
     self.next(value_width);
     i++;

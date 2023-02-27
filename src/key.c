@@ -1344,3 +1344,129 @@ char *card_parse_whole_no_trim(const card_t *card) {
   END_PROFILE_FUNC();
   return value;
 }
+
+card_parse_type card_parse_get_type(const card_t *card) {
+  return card_parse_get_type_width(card, card->value_width);
+}
+
+card_parse_type card_parse_get_type_width(const card_t *card,
+                                          uint8_t value_width) {
+  BEGIN_PROFILE_FUNC();
+
+  if (value_width == 0) {
+    END_PROFILE_FUNC();
+    return CARD_PARSE_STRING;
+  }
+
+  uint8_t i = card->current_index;
+
+  /* Loop until the leading spaces have been trimmed*/
+  while (card->string[i] == ' ' && (i - card->current_index) < value_width) {
+    i++;
+  }
+
+  /* Only spaces*/
+  if (card->string[i] == '\0' || (i - card->current_index) == value_width) {
+    END_PROFILE_FUNC();
+    return CARD_PARSE_STRING;
+  }
+
+  if (card->string[i] == '+' || card->string[i] == '-') {
+    i++;
+    if ((i - card->current_index) == value_width ||
+        !(card->string[i] >= '0' && card->string[i] <= '9')) {
+      END_PROFILE_FUNC();
+      return CARD_PARSE_STRING;
+    }
+  } else if (card->string[i] >= '0' && card->string[i] <= '9') {
+    i++;
+  } else {
+    END_PROFILE_FUNC();
+    return CARD_PARSE_STRING;
+  }
+
+  /* Loop until there are no numbers*/
+  while (card->string[i] >= '0' && card->string[i] <= '9' &&
+         (i - card->current_index) < value_width) {
+    i++;
+  }
+
+  /* If we are done*/
+  if (card->string[i] == '\0' || card->string[i] == ' ' ||
+      (i - card->current_index) == value_width) {
+    END_PROFILE_FUNC();
+    return CARD_PARSE_INT;
+  }
+
+  if (card->string[i] == '.') {
+    i++;
+    if ((i - card->current_index) == value_width ||
+        !(card->string[i] >= '0' && card->string[i] <= '9')) {
+      END_PROFILE_FUNC();
+      return CARD_PARSE_STRING;
+    }
+
+    /* Loop until there are no numbers*/
+    while (card->string[i] >= '0' && card->string[i] <= '9' &&
+           (i - card->current_index) < value_width) {
+      i++;
+    }
+
+    if (card->string[i] == '\0' || card->string[i] == ' ' ||
+        (i - card->current_index) == value_width) {
+      END_PROFILE_FUNC();
+      return CARD_PARSE_FLOAT;
+    }
+
+    if (card->string[i] == 'e' || card->string[i] == 'E') {
+      i++;
+      if (card->string[i] == '+' || card->string[i] == '-') {
+        i++;
+      }
+
+      if ((i - card->current_index) == value_width ||
+          !(card->string[i] >= '0' && card->string[i] <= '9')) {
+        END_PROFILE_FUNC();
+        return CARD_PARSE_STRING;
+      }
+
+      /* Loop until there are no numbers*/
+      while (card->string[i] >= '0' && card->string[i] <= '9' &&
+             (i - card->current_index) < value_width) {
+        i++;
+      }
+
+      if (card->string[i] == '\0' || card->string[i] == ' ' ||
+          (i - card->current_index) == value_width) {
+        END_PROFILE_FUNC();
+        return CARD_PARSE_FLOAT;
+      }
+    }
+  } else if (card->string[i] == 'e' || card->string[i] == 'E') {
+    i++;
+    if (card->string[i] == '+' || card->string[i] == '-') {
+      i++;
+    }
+
+    if ((i - card->current_index) == value_width ||
+        !(card->string[i] >= '0' && card->string[i] <= '9')) {
+      END_PROFILE_FUNC();
+      return CARD_PARSE_STRING;
+    }
+
+    /* Loop until there are no numbers*/
+    while (card->string[i] >= '0' && card->string[i] <= '9' &&
+           (i - card->current_index) < value_width) {
+      i++;
+    }
+
+    if (card->string[i] == '\0' || card->string[i] == ' ' ||
+        (i - card->current_index) == value_width) {
+      END_PROFILE_FUNC();
+      return CARD_PARSE_FLOAT;
+    }
+  }
+
+  END_PROFILE_FUNC();
+  return CARD_PARSE_STRING;
+}

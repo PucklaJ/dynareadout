@@ -42,6 +42,14 @@ void Card::next(uint8_t value_width) noexcept {
 
 bool Card::done() const noexcept { return card_parse_done(m_handle) != 0; }
 
+card_parse_type Card::parse_get_type() const noexcept {
+  return card_parse_get_type(m_handle);
+}
+
+card_parse_type Card::parse_get_type(uint8_t value_width) const noexcept {
+  return card_parse_get_type_width(m_handle, value_width);
+}
+
 template <>
 char *Card::parse_string_no_trim<char *>(uint8_t value_width) const noexcept {
   return card_parse_string_width_no_trim(m_handle, value_width);

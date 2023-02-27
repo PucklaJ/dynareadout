@@ -54,6 +54,8 @@ public:
   void next() noexcept;
   void next(uint8_t value_width) noexcept;
   bool done() const noexcept;
+  card_parse_type parse_get_type() const noexcept;
+  card_parse_type parse_get_type(uint8_t value_width) const noexcept;
 
   template <typename T> T parse() const;
   template <typename T> T parse(uint8_t value_width) const;
