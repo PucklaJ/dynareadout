@@ -77,12 +77,16 @@ bool array_equals(const Array<T> &self, const py::object &other) {
     if (py::isinstance<py::str>(other)) {
       const py::str other_str(other);
       const py::bytes other_bytes(other_str);
-      if (self.size() != py::len(other_bytes)) {
+      // - 1 because the String is null-terminated and the null character does
+      // count too
+      if ((self.size() - 1) != py::len(other_bytes)) {
         return false;
       }
 
-      for (size_t i = 0; i < self.size(); i++) {
-        if (self[i] != other_bytes[py::int_(i)].cast<T>()) {
+      for (size_t i = 0; i < self.size() - 1; i++) {
+        const int other_byte = other_bytes[py::int_(i)].cast<int>();
+
+        if (self[i] != static_cast<T>(other_byte)) {
           return false;
         }
       }
