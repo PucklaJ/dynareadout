@@ -116,6 +116,16 @@ Keyword KeywordSlice::operator[](size_t index) {
 Keywords::Keywords(keyword_t *data, size_t size) noexcept
     : Array<keyword_t>(data, size, false) {}
 
+Keywords::Keywords(Keywords &&rhs) noexcept {
+  m_data = rhs.m_data;
+  m_size = rhs.m_size;
+  m_delete_data = rhs.m_delete_data;
+
+  rhs.m_data = nullptr;
+  rhs.m_size = 0;
+  rhs.m_delete_data = false;
+}
+
 Keywords::~Keywords() noexcept { key_file_free(m_data, m_size); }
 
 KeywordSlice Keywords::operator[](const std::string &name) {

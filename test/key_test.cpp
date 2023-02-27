@@ -408,6 +408,20 @@ TEST_CASE("key_file_parse") {
   REQUIRE(keyword != NULL);
   CHECK(keyword->num_cards == 0);
 
+  keyword = key_file_get(keywords, num_keywords, "NODE", 0);
+  REQUIRE(keyword != NULL);
+
+  card = &keyword->cards[26];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  CHECK(card_parse_string_width(card, 8) == "27");
+  card_parse_next_width(card, 8);
+  CHECK(card_parse_string_width(card, 16) == "-10.0");
+  card_parse_next_width(card, 16);
+  CHECK(card_parse_string_width(card, 16) == "0.125169");
+  card_parse_next_width(card, 16);
+  CHECK(card_parse_string_width(card, 16) == "20.0");
+  CHECK(card_parse_done(card) == 0);
+
   key_file_free(keywords, num_keywords);
 }
 
@@ -632,6 +646,18 @@ TEST_CASE("key_file_parseC++") {
   CHECK(
       card.parse_string_whole_no_trim<std::string>() ==
       "                                 Start of File                        ");
+
+  card = keywords["NODE"][0][26];
+
+  card.begin();
+  CHECK(card.parse<char *>(8) == "27");
+  card.next(8);
+  CHECK(card.parse<char *>(16) == "-10.0");
+  card.next(16);
+  CHECK(card.parse<char *>(16) == "0.125169");
+  card.next(16);
+  CHECK(card.parse<char *>(16) == "20.0");
+  CHECK(card.done() == false);
 
   card = keywords["SET_NODE_LIST_TITLE"][0][1];
 

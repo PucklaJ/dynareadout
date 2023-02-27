@@ -43,7 +43,7 @@
   const int error_buffer_size = snprintf(NULL, 0, msg, __VA_ARGS__);           \
   char *error_buffer = reinterpret_cast<char *>(malloc(error_buffer_size));    \
   sprintf(error_buffer, msg, __VA_ARGS__);                                     \
-  throw KeyFile::Exception(String(error_buffer));
+  throw dro::KeyFile::Exception(dro::String(error_buffer))
 
 namespace dro {
 class Card {
@@ -114,6 +114,8 @@ public:
 
   Keyword(keyword_t *handle) noexcept;
 
+  inline size_t num_cards() const noexcept { return m_handle->num_cards; }
+
   Card operator[](size_t index);
 
   CardsIterator begin() noexcept { return CardsIterator(m_handle->cards, 0); }
@@ -141,6 +143,7 @@ private:
 class Keywords : public Array<keyword_t> {
 public:
   Keywords(keyword_t *data, size_t size) noexcept;
+  Keywords(Keywords &&rhs) noexcept;
   ~Keywords() noexcept override;
 
   KeywordSlice operator[](const std::string &name);
@@ -207,13 +210,13 @@ template <typename T> T Card::parse(uint8_t value_width) const {
       return value;
     }
   } else if constexpr (std::is_same_v<T, char *>) {
-    char *value = card_parse_string(m_handle);
+    char *value = card_parse_string_width(m_handle, value_width);
     return value;
   } else if constexpr (std::is_same_v<T, String>) {
-    char *value = card_parse_string(m_handle);
+    char *value = card_parse_string_width(m_handle, value_width);
     return String(value);
   } else if constexpr (std::is_same_v<T, std::string>) {
-    char *value = card_parse_string(m_handle);
+    char *value = card_parse_string_width(m_handle, value_width);
     std::string str(value);
     free(value);
     return str;
