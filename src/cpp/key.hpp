@@ -181,6 +181,45 @@ private:
 // contains only keyword with the same name.
 class KeywordSlice {
 public:
+  // An iterator to iterate over all keywords of the slice
+  class Iterator {
+  public:
+    using iterator_category = std::input_iterator_tag;
+    using difference_type = std::ptrdiff_t;
+
+    explicit Iterator(keyword_t *data, size_t left) noexcept
+        : m_data(data), m_left(left) {}
+    Iterator operator++() noexcept {
+      if (m_left == 0) {
+        m_data = nullptr;
+      } else {
+        m_data = &m_data[1];
+        m_left--;
+      }
+      return *this;
+    }
+    Iterator operator++(int) noexcept {
+      auto rv = *this;
+      ++(*this);
+      return rv;
+    }
+    bool operator==(const Iterator &rhs) const noexcept {
+      return m_data == rhs.m_data;
+    }
+    bool operator!=(const Iterator &rhs) const noexcept {
+      return m_data != rhs.m_data;
+    }
+    difference_type operator-(const Iterator &rhs) const noexcept {
+      return (difference_type)m_data - (difference_type)rhs.m_data;
+    }
+    Keyword operator->() noexcept { return Keyword(m_data); }
+    Keyword operator*() noexcept { return Keyword(m_data); }
+
+  public:
+    keyword_t *m_data;
+    size_t m_left;
+  };
+
   KeywordSlice(keyword_t *ptr, size_t size) noexcept;
 
   inline size_t size() const noexcept { return m_size; }
@@ -188,6 +227,9 @@ public:
   // Access the nth keyword in the slice. Where 0 refers to the first keyword
   // encountered in the key file.
   Keyword operator[](size_t index);
+
+  Iterator begin() noexcept { return Iterator(m_ptr, m_size - 1); }
+  Iterator end() noexcept { return Iterator(nullptr, 0); }
 
 private:
   keyword_t *m_ptr;
