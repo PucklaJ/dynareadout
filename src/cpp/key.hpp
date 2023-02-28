@@ -153,6 +153,7 @@ public:
       return m_index - rhs.m_index;
     }
     Card operator->() noexcept { return Card(&m_data[m_index]); }
+    Card operator*() noexcept { return Card(&m_data[m_index]); }
 
   public:
     card_t *m_data;
