@@ -46,33 +46,76 @@
   throw dro::KeyFile::Exception(dro::String(error_buffer))
 
 namespace dro {
+// A Card inside of a LS Dyna key file (input deck)
 class Card {
 public:
   Card(card_t *handle) noexcept;
 
+  // Initialises the parsing of the card
   void begin(uint8_t value_width = DEFAULT_VALUE_WIDTH) noexcept;
+  // Advance to the next value. Uses the value width from begin.
   void next() noexcept;
+  // Advance to the next value. Uses the value width provided here.
   void next(uint8_t value_width) noexcept;
+  // Returns wether the card has been completely parsed. Breaks if incorrect
+  // value widths have been supplied
   bool done() const noexcept;
+  // Returns the type of the current value. Uses the value width from
+  // begin. If CARD_PARSE_INT is returned the value can be parsed with an
+  // integer type. If CARD_PARSE_FLOAT is returned the value can be parsed with
+  // a floating point type. Else the value can only be parsed with a string
+  // type.
   card_parse_type parse_get_type() const noexcept;
+  // Returns the type of the current value. Uses the value width provided here.
+  // If CARD_PARSE_INT is returned the value can be parsed with an integer type.
+  // If CARD_PARSE_FLOAT is returned the value can be parsed with a floating
+  // point type. Else the value can only be parsed with a string type.
   card_parse_type parse_get_type(uint8_t value_width) const noexcept;
 
+  // Parses the current value as the given type. This will throw a
+  // dro::KeyFile::Exception if it can not be parsed. Uses the value width from
+  // begin. If a string type is used leading and trailing spaces are trimmed.
   template <typename T> T parse() const;
+  // Parses the current value as the given type. This will throw a
+  // dro::KeyFile::Exception if it can not be parsed. Uses the value width
+  // provided here. If a string type is used leading and trailing spaces are
+  // trimmed.
   template <typename T> T parse(uint8_t value_width) const;
 
+  // Parses the current value as a string. Uses the value width
+  // from begin. No spaces are trimmed.
   template <typename T> T parse_string_no_trim() const noexcept;
+  // Parses the current value as a string. Uses the value width
+  // provided here. No spaces are trimmed.
   template <typename T>
   T parse_string_no_trim(uint8_t value_width) const noexcept;
+  // Returns the whole card as a string. Trims trailing and leading spaces.
   template <typename T> T parse_string_whole() const noexcept;
+  // Returns the whole card as a string. Performs no trimming.
   template <typename T> T parse_string_whole_no_trim() const noexcept;
 
+  // Parses all values of a card as the given types. Uses DEFAULT_VALUE_WIDTH as
+  // the value width.
   template <typename... T> void parse_whole(T &...rv);
+  // Parses all values of a card as the given types. Uses the values of the
+  // value_widths array as the value width for every value.
+  // Example NODE: card.parse_whole_width({8, 16, 16, 16, 8, 8}, nid, x, y, z,
+  // tc, rc);
   template <typename... T>
   void parse_whole_width(std::array<uint8_t, sizeof...(T)> value_widths,
                          T &...rv);
 
+  // Parses all values of a card as the given types and returns them in a tuple.
+  // Uses DEFAULT_VALUE_WIDTH as the value width.
+  // Example SET_NODE_LIST_TITLE: auto [sid, da1, da2, da3, da4, solver] =
+  // card.parse_whole<int, float, float, float, float, dro::String>();
   template <typename... T> std::tuple<T...> parse_whole();
 
+  // Parses all values of a card as the given types and returns them in a tuple.
+  // Uses the values of the value_widths array as the value width for every
+  // value. Example NODE: auto [nid, x, y, z, tc, rc] =
+  // card.parse_whole<int, float, float, float, int, int>({8, 16, 16, 16, 8,
+  // 8});
   template <typename... T>
   std::tuple<T...> parse_whole(std::array<uint8_t, sizeof...(T)> value_widths);
 
@@ -80,8 +123,10 @@ private:
   card_t *m_handle;
 };
 
+// A Keyword of a LS Dyna key file (input deck) with all its cards
 class Keyword {
 public:
+  // An iterator to iterate over all cards of the keyword
   class CardsIterator {
   public:
     using iterator_category = std::input_iterator_tag;
@@ -118,6 +163,8 @@ public:
 
   inline size_t num_cards() const noexcept { return m_handle->num_cards; }
 
+  // Returns the nth card of a keyword. Where 0 refers to the first card
+  // encountered in the key file.
   Card operator[](size_t index);
 
   CardsIterator begin() noexcept { return CardsIterator(m_handle->cards, 0); }
@@ -129,12 +176,16 @@ private:
   keyword_t *m_handle;
 };
 
+// A part of all keywords returned by dro::KeyFile::parse. A KeywordSlice
+// contains only keyword with the same name.
 class KeywordSlice {
 public:
   KeywordSlice(keyword_t *ptr, size_t size) noexcept;
 
   inline size_t size() const noexcept { return m_size; }
 
+  // Access the nth keyword in the slice. Where 0 refers to the first keyword
+  // encountered in the key file.
   Keyword operator[](size_t index);
 
 private:
@@ -142,15 +193,18 @@ private:
   size_t m_size;
 };
 
+// An array of keywords of a LS Dyna key file (input deck)
 class Keywords : public Array<keyword_t> {
 public:
   Keywords(keyword_t *data, size_t size) noexcept;
   Keywords(Keywords &&rhs) noexcept;
   ~Keywords() noexcept override;
 
+  // Return a slice of keywords with the same name
   KeywordSlice operator[](const std::string &name);
 };
 
+// This static class holds the functions for parsing LS Dyna key files
 class KeyFile {
 public:
   class Exception : public std::exception {
@@ -166,8 +220,16 @@ public:
   using Callback =
       std::function<void(String keyword_name, Card card, size_t card_index)>;
 
+  // Parses a LS Dyna key file for keywords and their respective cards. Returns
+  // an array keywords
+  // parse_includes: tells the function wether to parse include files via the
+  // *INCLUDE and similar keywords or if they should be added as regular
+  // keywords to the array.
+  // Throws a dro::KeyFile::Exception if an error occurs.
   static Keywords parse(const std::filesystem::path &file_name,
                         bool parse_includes = true);
+  // Same as parse, but instead of returning an array it calls a callback every
+  // time a card (or empty keyword) is encountered.
   static void parse_with_callback(const std::filesystem::path &file_name,
                                   Callback callback,
                                   bool parse_includes = true);
