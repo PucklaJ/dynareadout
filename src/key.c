@@ -721,22 +721,22 @@ keyword_t *key_file_get_slice(keyword_t *keywords, size_t num_keywords,
 
   /* Find the first of the keyword*/
   size_t start_index = find_index;
-  while (start_index > 0 && strcmp(keywords[start_index].name, name) == 0) {
-    start_index--;
-  }
+  if (find_index != 0) {
+    while (start_index > 0 && strcmp(keywords[start_index].name, name) == 0) {
+      start_index--;
+    }
 
-  if (start_index != 0 || strcmp(keywords[start_index].name, name) != 0) {
     start_index++;
   }
 
   /* Find the last of the keyword*/
   size_t end_index = find_index;
-  while (end_index < num_keywords &&
-         strcmp(keywords[start_index].name, name) == 0) {
-    end_index++;
-  }
+  if (find_index != num_keywords - 1) {
+    while (end_index < num_keywords &&
+           strcmp(keywords[end_index].name, name) == 0) {
+      end_index++;
+    }
 
-  if (end_index == num_keywords) {
     end_index--;
   }
 
