@@ -299,13 +299,10 @@ int main(int args, char *argv[]) {
     dro::Keywords keywords = dro::KeyFile::parse("simulation/input.k");
 
     // Parse all nodes
-    dro::KeywordSlice nodes = keywords["NODE"];
-
-    for (size_t i = 0; i < nodes.size(); i++) {
-      dro::Keyword node_keyword = nodes[i];
-      for (dro::Card card : node_keyword) {
+    for (auto node_keyword : keywords["NODE"]) {
+      for (auto node_card : node_keyword) {
         auto [nid, x, y, z] =
-            card.parse_whole<int, float, float, float>({8, 16, 16, 16});
+            node_card.parse_whole<int, float, float, float>({8, 16, 16, 16});
 
         std::cout << std::setprecision(3) << std::fixed;
         std::cout << "NODE " << nid << ": (" << x << "; " << y << "; " << z
