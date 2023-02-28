@@ -31,6 +31,7 @@ namespace dro {
 
 class D3plot;
 
+// A class used to access data of a certain part in a d3plot file (family)
 class D3plotPart {
 public:
   D3plotPart(const d3plot_part &part);
@@ -39,11 +40,18 @@ public:
 
   D3plotPart &operator=(D3plotPart &&rhs);
 
+  // Returns all solid element ids of the part
   Array<d3_word> get_solid_elements();
+  // Returns all thick shell element ids of the part
   Array<d3_word> get_thick_shell_elements();
+  // Returns all beam element ids of the part
   Array<d3_word> get_beam_elements();
+  // Returns all shell element ids of the part
   Array<d3_word> get_shell_elements();
 
+  // Returns all node ids of the part. All ids and connectivities of all
+  // different elements can be provided to improve performance, since they would
+  // not need to be loaded.
   Array<d3_word> get_node_ids(
       D3plot &plot_file, const Array<d3_word> *solid_ids = nullptr,
       const Array<d3_word> *beam_ids = nullptr,
@@ -54,6 +62,10 @@ public:
       const Array<d3plot_beam_con> *beam_cons = nullptr,
       const Array<d3plot_shell_con> *shell_cons = nullptr,
       const Array<d3plot_thick_shell_con> *thick_shell_cons = nullptr) const;
+  // Returns all node indices of the part. All ids and connectivities of all
+  // different elements can be provided to improve performance, since they would
+  // not need to be loaded. This returns indices into the node ids array
+  // returned by dro::D3plot::read_node_ids
   Array<d3_word> get_node_indices(
       D3plot &plot_file, const Array<d3_word> *solid_ids = nullptr,
       const Array<d3_word> *beam_ids = nullptr,
