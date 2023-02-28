@@ -161,6 +161,65 @@ int main(int args, char* argv[]) {
 
 ```
 
+### C - KeyFile
+
+```c
+#include <errno.h>
+#include <key.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(int args, char *argv[]) {
+  size_t num_keywords;
+  char *error_string;
+  keyword_t *keywords =
+      key_file_parse("simulation/input.k", &num_keywords, 1, &error_string);
+  /* Always make sure to check for errors */
+  if (error_string) {
+    fprintf(stderr, "Failed to parse key file: %s\n", error_string);
+    free(error_string);
+    return 1;
+  }
+
+  /* Print all nodes */
+  size_t node_index = 0;
+  keyword_t *node_keyword =
+      key_file_get(keywords, num_keywords, "NODE", node_index++);
+  while (node_keyword) {
+    size_t card_index = 0;
+    while (card_index < node_keyword->num_cards) {
+      card_t *card = &node_keyword->cards[card_index];
+
+      /* Parse the values of a card by iterating over them*/
+      card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+      const int64_t nid = card_parse_int_width(card, 8);
+      card_parse_next_width(card, 8);
+      const double x = card_parse_float64_width(card, 16);
+      card_parse_next_width(card, 16);
+      const double y = card_parse_float64_width(card, 16);
+      card_parse_next_width(card, 16);
+      const double z = card_parse_float64_width(card, 16);
+
+      /* You can check for parsing errors using errno */
+      if (errno != 0) {
+        fprintf(stderr, "An error occurred while parsing NODE\n");
+      } else {
+        printf("NODE %ld: (%.3f; %.3f; %.3f)\n", nid, x, y, z);
+      }
+
+      card_index++;
+    }
+
+    node_keyword = key_file_get(keywords, num_keywords, "NODE", node_index++);
+  }
+
+  /* Always make sure to deallocate the memory */
+  key_file_free(keywords, num_keywords);
+
+  return 0;
+}
+```
+
 ### C++ - Binout
 
 ```C++
@@ -226,4 +285,38 @@ int main(int args, char* argv[]) {
   return 0;
 }
 
+```
+
+### C++ - KeyFile
+
+```C++
+#include <iomanip>
+#include <iostream>
+#include <key.hpp>
+
+int main(int args, char *argv[]) {
+  try {
+    dro::Keywords keywords = dro::KeyFile::parse("simulation/input.k");
+
+    // Parse all nodes
+    dro::KeywordSlice nodes = keywords["NODE"];
+
+    for (size_t i = 0; i < nodes.size(); i++) {
+      dro::Keyword node_keyword = nodes[i];
+      for (dro::Card card : node_keyword) {
+        auto [nid, x, y, z] =
+            card.parse_whole<int, float, float, float>({8, 16, 16, 16});
+
+        std::cout << std::setprecision(3) << std::fixed;
+        std::cout << "NODE " << nid << ": (" << x << "; " << y << "; " << z
+                  << ")" << std::endl;
+      }
+    }
+
+  } catch (const dro::KeyFile::Exception &e) {
+    std::cerr << "An error occurred: " << e.what() << std::endl;
+  }
+
+  return 0;
+}
 ```
