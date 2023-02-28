@@ -422,6 +422,12 @@ TEST_CASE("key_file_parse") {
   CHECK(card_parse_string_width(card, 16) == "20.0");
   CHECK(card_parse_done(card) == 0);
 
+  size_t slice_size;
+  keyword = key_file_get_slice(keywords, num_keywords, "NODE", &slice_size);
+  REQUIRE(keyword != NULL);
+  CHECK(slice_size == 1);
+  CHECK(keyword->num_cards == 30);
+
   key_file_free(keywords, num_keywords);
 }
 
