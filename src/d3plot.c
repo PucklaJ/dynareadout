@@ -28,6 +28,9 @@
 #include "profiling.h"
 #include <stdlib.h>
 #include <string.h>
+#ifndef inline
+#define inline
+#endif
 #include <time.h>
 
 #define READ_CONTROL_DATA_PLOT_FILE_WORD(value)                                \

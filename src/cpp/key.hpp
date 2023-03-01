@@ -339,6 +339,7 @@ template <typename T> T Card::parse_string_no_trim() const noexcept {
   return parse_string_no_trim<T>(m_handle->value_width);
 }
 
+#ifdef __GNUC__
 // clang-format off
 template <typename T>
 T Card::parse_string_no_trim(uint8_t value_width) const noexcept {
@@ -356,6 +357,7 @@ template <typename T> T Card::parse_string_whole_no_trim() const noexcept {
   return T{0};
 }
 // clang-format on
+#endif
 
 template <typename... T> void Card::parse_whole(T &...rv) {
 
