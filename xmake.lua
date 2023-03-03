@@ -110,10 +110,34 @@ if get_config("build_python") then
         add_rpathdirs("@executable_path")
 
         on_load(function (target)
-            local ext_file = os.tmpfile()
-            os.execv("python3-config", {"--extension-suffix"}, {stdout=ext_file})
-            ext_name = io.readfile(ext_file)
-            ext_name = ext_name:gsub("%s+", "")
+            import("lib.detect.find_program")
+            local ext_name
+            local python_config = find_program("python3-config", { check = "--extension-suffix"})
+            if python_config then
+                local ext_file = os.tmpfile()
+                os.execv(python_config, {"--extension-suffix"}, {stdout=ext_file})
+                ext_name = io.readfile(ext_file)
+                ext_name = ext_name:gsub("%s+", "")
+            else
+                import("lib.detect.find_programver")
+                local version
+                local python_version = find_programver("python")
+                if python_version then
+                    local majorminor = python_version:split(".", {plain = true})
+                    version = majorminor[1] .. majorminor[2]
+                else
+                    version = "310"
+                end
+                local platform = target:plat()
+                if platform == "linux" then
+                    platform = platform .. "-gnu"
+                end
+                local suffix = ".so"
+                if target:is_plat("windows", "mingw") then
+                    suffix = ".dll"
+                end
+                ext_name = ".cpython-" .. version .. "-" .. target:arch() .. "-" .. platform .. suffix
+            end
             target:set("filename", "dynareadout_c" .. (is_mode("debug") and "_d" or "") .. ext_name)
         end)
 end
