@@ -423,7 +423,7 @@ TEST_CASE("d3plotC++") {
 
   {
     const auto title(plot_file.read_title());
-    CHECK(title == "Pouch_macro_37Ah                        ");
+    CHECK(title == "Pouch_macro_37Ah");
   }
 
   struct tm *run_time = plot_file.read_run_time();
@@ -594,33 +594,15 @@ TEST_CASE("d3plotC++") {
 
     const auto part_titles = plot_file.read_part_titles();
     REQUIRE(part_titles.size() == 9);
-    CHECK(part_titles[0] ==
-          "Negative_Terminal_Copper_Anode                      "
-          "                    ");
-    CHECK(part_titles[1] ==
-          "Negative_Terminal_Copper_Anode_Minus                "
-          "                    ");
-    CHECK(part_titles[2] ==
-          "Positive_Terminal_Aluminum_Cathode                  "
-          "                    ");
-    CHECK(part_titles[3] ==
-          "Positive_Terminal_Aluminum_Cathode_Plus             "
-          "                    ");
-    CHECK(part_titles[4] ==
-          "Pouch                                               "
-          "                    ");
-    CHECK(part_titles[5] ==
-          "Pouch_Fold                                          "
-          "                    ");
-    CHECK(part_titles[6] ==
-          "Impactor                                            "
-          "                    ");
-    CHECK(part_titles[7] ==
-          "Ground                                              "
-          "                    ");
-    CHECK(part_titles[8] ==
-          "Jellyroll                                           "
-          "                    ");
+    CHECK(part_titles[0] == "Negative_Terminal_Copper_Anode");
+    CHECK(part_titles[1] == "Negative_Terminal_Copper_Anode_Minus");
+    CHECK(part_titles[2] == "Positive_Terminal_Aluminum_Cathode");
+    CHECK(part_titles[3] == "Positive_Terminal_Aluminum_Cathode_Plus");
+    CHECK(part_titles[4] == "Pouch");
+    CHECK(part_titles[5] == "Pouch_Fold");
+    CHECK(part_titles[6] == "Impactor");
+    CHECK(part_titles[7] == "Ground");
+    CHECK(part_titles[8] == "Jellyroll");
   }
 
   auto part(plot_file.read_part(0));
