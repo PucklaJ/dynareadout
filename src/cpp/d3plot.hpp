@@ -68,9 +68,8 @@ public:
   Array<d3_word> read_all_element_ids();
   // Read all ids of the parts
   Array<d3_word> read_part_ids();
-  // Returns a vector containing all part titles as null terminated strings
-  // TODO: Convert to SizedString
-  std::vector<NullTerminatedString> read_part_titles();
+  // Returns a vector containing all part titles as sized strings
+  std::vector<SizedString> read_part_titles();
 
   // Read the node coordinates of all nodes of a given state (time step)
   Array<dVec3> read_node_coordinates(size_t state);

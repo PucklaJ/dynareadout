@@ -124,17 +124,23 @@ Array<d3_word> D3plot::read_part_ids() {
   return Array<d3_word>(ids, num_ids);
 }
 
-std::vector<NullTerminatedString> D3plot::read_part_titles() {
+std::vector<SizedString> D3plot::read_part_titles() {
   size_t num_parts;
   char **part_titles = d3plot_read_part_titles(&m_handle, &num_parts);
   if (m_handle.error_string) {
     throw Exception(NullTerminatedString(m_handle.error_string, false));
   }
 
-  std::vector<NullTerminatedString> vec;
+  std::vector<SizedString> vec;
   vec.reserve(num_parts);
   for (size_t i = 0; i < num_parts; i++) {
-    vec.emplace_back(part_titles[i]);
+    // Trim part titles
+    size_t j = 0;
+    while (part_titles[i][j] != ' ') {
+      j++;
+    }
+
+    vec.emplace_back(part_titles[i], j);
   }
 
   free(part_titles);
