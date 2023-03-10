@@ -309,12 +309,19 @@ Array<d3plot_shell_con> D3plot::read_shell_elements() {
   return Array<d3plot_shell_con>(elements, num_elements);
 }
 
-NullTerminatedString D3plot::read_title() {
+SizedString D3plot::read_title() {
   char *title = d3plot_read_title(&m_handle);
   if (m_handle.error_string) {
     throw Exception(NullTerminatedString(m_handle.error_string, false));
   }
-  return NullTerminatedString(title);
+
+  // Trim whitespace
+  size_t j = 0;
+  while (title[j] != ' ') {
+    j++;
+  }
+
+  return SizedString(title, j);
 }
 
 struct tm *D3plot::read_run_time() {

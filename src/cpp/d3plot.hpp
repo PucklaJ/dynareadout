@@ -110,8 +110,7 @@ public:
   // elements
   Array<d3plot_shell_con> read_shell_elements();
   // Returns a string holding the Title of the d3plot file
-  // TODO: Convert to SizedString
-  NullTerminatedString read_title();
+  SizedString read_title();
   // Returns the time at which the simulation has been run as calender time
   struct tm *read_run_time();
   // Returns all elements of a part. The part_index can retrieved by iterating
