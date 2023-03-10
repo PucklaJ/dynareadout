@@ -267,8 +267,9 @@ TEST_CASE("binout0000C++") {
   {
     const auto children = bin_file.get_children("/");
     REQUIRE(children.size() == 2);
-    CHECK(children[0] == "nodout");
-    CHECK(children[1] == "rcforc");
+    CHECK(children[0] == dro::NullTerminatedString("nodout", false));
+    CHECK(children[1] == dro::SizedString("rcforc", strlen("rcforc"), false));
+    CHECK(children[1] == std::string("rcforc"));
   }
 
   CHECK(bin_file.get_num_timesteps("/nodout") == 601);

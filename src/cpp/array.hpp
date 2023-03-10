@@ -109,6 +109,9 @@ public:
   inline T &operator[](size_t index);
   inline const T &operator[](size_t index) const;
   Array<T> &operator=(Array<T> &&rhs) noexcept;
+  bool operator==(const char *str2) const noexcept;
+  bool operator==(const std::string &str2) const noexcept;
+  bool operator==(const Array<T> &rhs) const noexcept;
 
   T *data() noexcept { return m_data; }
   const T *data() const noexcept { return m_data; }
@@ -119,7 +122,8 @@ public:
     return std::make_pair(&m_data, &m_size);
   }
 
-  // Convert the array to a std::string. Only works for uint8_t, int8_t and char
+  // Convert the array to a std::string. Only works for uint8_t, int8_t and
+  // char
   std::string str() const noexcept;
 
   Iterator begin() noexcept { return Iterator(m_data, 0); }
@@ -132,6 +136,108 @@ protected:
   size_t m_size;
   bool m_delete_data;
 };
+
+class NullTerminatedString : public Array<char> {
+public:
+  NullTerminatedString(char *str, bool delete_data = true) noexcept
+      : Array<char>(str, strlen(str), delete_data) {}
+
+  std::string str() const noexcept { return std::string(m_data); }
+
+  bool operator==(const char *other) const noexcept {
+    size_t i = 0;
+    for (; m_data[i] != '\0' && other[i] != '\0'; i++) {
+      if (m_data[i] != other[i]) {
+        return false;
+      }
+    }
+    return m_data[i] == '\0' && other[i] == '\0';
+  }
+
+  bool operator==(const NullTerminatedString &rhs) const noexcept {
+    if (m_size != rhs.m_size) {
+      return false;
+    }
+
+    for (size_t i = 0; i < m_size; i++) {
+      if (m_data[i] != rhs.m_data[i]) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  bool operator==(const std::string &rhs) const noexcept {
+    return operator==(rhs.c_str());
+  }
+};
+
+class SizedString : public Array<char> {
+public:
+  SizedString(char *str, size_t size, bool delete_data = true) noexcept
+      : Array<char>(str, size, delete_data) {}
+
+  std::string str() const noexcept {
+    if (empty()) {
+      return std::string();
+    }
+    return std::string(m_data, m_size);
+  }
+
+  bool operator==(const char *other) const noexcept {
+    if (m_size == 0) {
+      return other[0] == '\0';
+    }
+
+    size_t i = 0;
+    for (; i < m_size && other[i] != '\0'; i++) {
+      if (m_data[i] != other[i]) {
+        return false;
+      }
+    }
+
+    return i == m_size && other[i] == '\0';
+  }
+
+  bool operator==(const SizedString &rhs) const noexcept {
+    if (m_size != rhs.m_size) {
+      return false;
+    }
+
+    for (size_t i = 0; i < m_size; i++) {
+      if (m_data[i] != rhs.m_data[i]) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  bool operator==(const std::string &rhs) const noexcept {
+    return operator==(rhs.c_str());
+  }
+};
+
+static bool operator==(const NullTerminatedString &str1,
+                       const SizedString &str2) noexcept {
+  if (str1.size() != str2.size()) {
+    return false;
+  }
+
+  for (size_t i = 0; i < str1.size(); i++) {
+    if (str1[i] != str2[i]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+inline bool operator==(const SizedString &str2,
+                       const NullTerminatedString &str1) noexcept {
+  return str1 == str2;
+}
 
 template <typename T> Array<T> Array<T>::New(size_t size) {
   T *data = reinterpret_cast<T *>(malloc(size * sizeof(T)));
@@ -190,54 +296,38 @@ template <typename T> Array<T> &Array<T>::operator=(Array<T> &&rhs) noexcept {
 template <typename T> std::string Array<T>::str() const noexcept {
   static_assert(std::is_same_v<T, char> || std::is_same_v<T, int8_t> ||
                 std::is_same_v<T, uint8_t>);
-  if (empty()) {
-    return std::string();
-  }
-
-  if (m_data[m_size - 1] == '\0') {
-    return std::string(reinterpret_cast<const char *>(m_data), m_size - 1);
-  }
-
-  return std::string(reinterpret_cast<const char *>(m_data), m_size);
+  return SizedString(reinterpret_cast<char *>(m_data), m_size, false).str();
 }
 
 template <typename T>
-bool operator==(const Array<T> &str1, const char *str2) noexcept {
+bool Array<T>::operator==(const char *str2) const noexcept {
   static_assert(std::is_same_v<T, char> || std::is_same_v<T, int8_t> ||
                 std::is_same_v<T, uint8_t>);
-  // An empty String can be equal to a string with 0 length
-  if (str1.empty()) {
-    return strlen(str2) == 0;
-  }
+  return SizedString(const_cast<char *>(reinterpret_cast<const char *>(m_data)),
+                     m_size, false) == str2;
+}
 
-  // If the string ends with a null terminator we can use strcmp()
-  if (str1.data()[str1.size() - 1] == '\0') {
-    return strcmp(reinterpret_cast<const char *>(str1.data()), str2) == 0;
-  }
+template <typename T>
+bool Array<T>::operator==(const std::string &str2) const noexcept {
+  static_assert(std::is_same_v<T, char> || std::is_same_v<T, int8_t> ||
+                std::is_same_v<T, uint8_t>);
+  return SizedString(const_cast<char *>(reinterpret_cast<const char *>(m_data)),
+                     m_size, false) == str2;
+}
 
-  if (strlen(str2) != str1.size()) {
+template <typename T>
+bool Array<T>::operator==(const Array<T> &rhs) const noexcept {
+  if (m_size != rhs.m_size) {
     return false;
   }
 
-  for (size_t i = 0; i < str1.size(); i++) {
-    if (static_cast<char>(str1[i]) != str2[i]) {
+  for (size_t i = 0; i < m_size; i++) {
+    if (m_data[i] != rhs.m_data[i]) {
       return false;
     }
   }
 
   return true;
 }
-
-class NullTerminatedString : public Array<char> {
-public:
-  NullTerminatedString(char *str, bool delete_data = true) noexcept
-      : Array<char>(str, strlen(str), delete_data) {}
-};
-
-class SizedString : public Array<char> {
-public:
-  SizedString(char *str, size_t size, bool delete_data = true) noexcept
-      : Array<char>(str, size, delete_data) {}
-};
 
 } // namespace dro
