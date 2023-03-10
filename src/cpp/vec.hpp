@@ -25,6 +25,7 @@
 
 #pragma once
 #include <array>
+#include <ostream>
 
 namespace dro {
 
@@ -33,3 +34,19 @@ typedef std::array<double, 3> dVec3;
 typedef std::array<float, 3> fVec3;
 
 } // namespace dro
+
+namespace std {
+
+static ostream &operator<<(ostream &stream, const dro::uVec3 &vec) {
+  return stream << "(" << vec[0] << ", " << vec[1] << ", " << vec[2] << ")";
+}
+
+static ostream &operator<<(ostream &stream, const dro::dVec3 &vec) {
+  return stream << "(" << vec[0] << ", " << vec[1] << ", " << vec[2] << ")";
+}
+
+static ostream &operator<<(ostream &stream, const dro::fVec3 &vec) {
+  return stream << "(" << vec[0] << ", " << vec[1] << ", " << vec[2] << ")";
+}
+
+} // namespace std

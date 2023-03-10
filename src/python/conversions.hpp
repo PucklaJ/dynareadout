@@ -194,7 +194,8 @@ template <typename T> inline const char *get_array_name() {
   }
 }
 
-template <typename T> inline void add_array_type_to_module(py::module_ &m) {
+template <typename T>
+inline py::class_<Array<T>> add_array_type_to_module(py::module_ &m) {
   auto arr(py::class_<Array<T>>(m, get_array_name<T>())
                .def(py::init(&array_constructor<T>))
                .def("__len__", &Array<T>::size)
@@ -212,20 +213,12 @@ template <typename T> inline void add_array_type_to_module(py::module_ &m) {
   } else if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>) {
     arr.def("__repr__", [](Array<T> &arr) {
       std::stringstream str;
-
-      str << '[';
-
-      for (size_t i = 0; i < arr.size(); i++) {
-        str << arr[i];
-        if (i != arr.size() - 1)
-          str << ", ";
-      }
-
-      str << ']';
-
+      str << arr;
       return str.str();
     });
   }
+
+  return arr;
 }
 
 inline void add_array_to_module(py::module_ &m) {

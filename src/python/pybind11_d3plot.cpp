@@ -37,7 +37,12 @@ inline void add_d3plot_arrays_to_module(py::module_ &m) {
   dro::add_array_type_to_module<d3plot_thick_shell>(m);
   dro::add_array_type_to_module<d3plot_beam>(m);
   dro::add_array_type_to_module<d3plot_shell>(m);
-  dro::add_array_type_to_module<dro::dVec3>(m);
+  dro::add_array_type_to_module<dro::dVec3>(m).def(
+      "__repr__", [](dro::Array<dro::dVec3> &arr) {
+        std::stringstream stream;
+        stream << arr;
+        return stream.str();
+      });
 }
 
 void add_d3plot_library_to_module(py::module_ &m) {
