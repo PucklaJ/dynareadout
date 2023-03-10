@@ -233,6 +233,39 @@ inline bool operator==(const SizedString &str2, const String &str1) noexcept {
   return str1 == str2;
 }
 
+static std::ostream &operator<<(std::ostream &stream, const String &str) {
+  return stream << str.data();
+}
+
+static std::ostream &operator<<(std::ostream &stream, const SizedString &str) {
+  for (const auto &v : str) {
+    stream << v;
+  }
+  return stream;
+}
+
+template <typename T>
+static std::ostream &operator<<(std::ostream &stream, const Array<T> &arr) {
+  stream << "[";
+
+  for (size_t i = 0; i < arr.size(); i++) {
+    if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t> ||
+                  std::is_same_v<T, char>) {
+      stream << "'" << static_cast<char>(arr[i]) << "'";
+    } else {
+      stream << arr[i];
+    }
+
+    if (i + 1 != arr.size()) {
+      stream << ", ";
+    }
+  }
+
+  stream << "]";
+
+  return stream;
+}
+
 template <typename T> Array<T> Array<T>::New(size_t size) {
   T *data = reinterpret_cast<T *>(malloc(size * sizeof(T)));
   if (!data) {
