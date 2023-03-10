@@ -28,7 +28,7 @@
 
 namespace dro {
 
-D3plot::Exception::Exception(NullTerminatedString error_str) noexcept
+D3plot::Exception::Exception(String error_str) noexcept
     : m_error_str(std::move(error_str)) {}
 
 const char *D3plot::Exception::what() const noexcept {
@@ -48,7 +48,7 @@ D3plot::D3plot(const std::filesystem::path &root_file_name) {
     m_handle.error_string = NULL;
     d3plot_close(&m_handle);
 
-    throw Exception(NullTerminatedString(error_string));
+    throw Exception(String(error_string));
   }
 }
 
@@ -58,7 +58,7 @@ Array<d3_word> D3plot::read_node_ids() {
   size_t num_ids;
   d3_word *ids = d3plot_read_node_ids(&m_handle, &num_ids);
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<d3_word>(ids, num_ids);
@@ -68,7 +68,7 @@ Array<d3_word> D3plot::read_solid_element_ids() {
   size_t num_ids;
   d3_word *ids = d3plot_read_solid_element_ids(&m_handle, &num_ids);
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<d3_word>(ids, num_ids);
@@ -78,7 +78,7 @@ Array<d3_word> D3plot::read_beam_element_ids() {
   size_t num_ids;
   d3_word *ids = d3plot_read_beam_element_ids(&m_handle, &num_ids);
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<d3_word>(ids, num_ids);
@@ -88,7 +88,7 @@ Array<d3_word> D3plot::read_shell_element_ids() {
   size_t num_ids;
   d3_word *ids = d3plot_read_shell_element_ids(&m_handle, &num_ids);
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<d3_word>(ids, num_ids);
@@ -98,7 +98,7 @@ Array<d3_word> D3plot::read_solid_shell_element_ids() {
   size_t num_ids;
   d3_word *ids = d3plot_read_thick_shell_element_ids(&m_handle, &num_ids);
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<d3_word>(ids, num_ids);
@@ -108,7 +108,7 @@ Array<d3_word> D3plot::read_all_element_ids() {
   size_t num_ids;
   d3_word *ids = d3plot_read_all_element_ids(&m_handle, &num_ids);
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<d3_word>(ids, num_ids);
@@ -118,7 +118,7 @@ Array<d3_word> D3plot::read_part_ids() {
   size_t num_ids;
   d3_word *ids = d3plot_read_part_ids(&m_handle, &num_ids);
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<d3_word>(ids, num_ids);
@@ -128,7 +128,7 @@ std::vector<SizedString> D3plot::read_part_titles() {
   size_t num_parts;
   char **part_titles = d3plot_read_part_titles(&m_handle, &num_parts);
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   std::vector<SizedString> vec;
@@ -152,7 +152,7 @@ Array<dVec3> D3plot::read_node_coordinates(size_t state) {
   dVec3 *nodes = reinterpret_cast<dVec3 *>(
       d3plot_read_node_coordinates(&m_handle, state, &num_nodes));
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<dVec3>(nodes, num_nodes);
@@ -163,7 +163,7 @@ Array<dVec3> D3plot::read_node_velocity(size_t state) {
   dVec3 *nodes = reinterpret_cast<dVec3 *>(
       d3plot_read_node_velocity(&m_handle, state, &num_nodes));
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<dVec3>(nodes, num_nodes);
@@ -174,7 +174,7 @@ Array<dVec3> D3plot::read_node_acceleration(size_t state) {
   dVec3 *nodes = reinterpret_cast<dVec3 *>(
       d3plot_read_node_acceleration(&m_handle, state, &num_nodes));
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<dVec3>(nodes, num_nodes);
@@ -185,7 +185,7 @@ Array<fVec3> D3plot::read_node_coordinates_32(size_t state) {
   fVec3 *nodes = reinterpret_cast<fVec3 *>(
       d3plot_read_node_coordinates_32(&m_handle, state, &num_nodes));
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<fVec3>(nodes, num_nodes);
@@ -196,7 +196,7 @@ Array<fVec3> D3plot::read_node_velocity_32(size_t state) {
   fVec3 *nodes = reinterpret_cast<fVec3 *>(
       d3plot_read_node_velocity_32(&m_handle, state, &num_nodes));
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<fVec3>(nodes, num_nodes);
@@ -207,7 +207,7 @@ Array<fVec3> D3plot::read_node_acceleration_32(size_t state) {
   fVec3 *nodes = reinterpret_cast<fVec3 *>(
       d3plot_read_node_acceleration_32(&m_handle, state, &num_nodes));
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<fVec3>(nodes, num_nodes);
@@ -216,7 +216,7 @@ Array<fVec3> D3plot::read_node_acceleration_32(size_t state) {
 double D3plot::read_time(size_t state) {
   double time{d3plot_read_time(&m_handle, state)};
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
   return time;
 }
@@ -226,7 +226,7 @@ Array<d3plot_solid> D3plot::read_solids_state(size_t state) {
   d3plot_solid *elements =
       d3plot_read_solids_state(&m_handle, state, &num_elements);
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<d3plot_solid>(elements, num_elements);
@@ -237,7 +237,7 @@ Array<d3plot_thick_shell> D3plot::read_thick_shells_state(size_t state) {
   d3plot_thick_shell *elements =
       d3plot_read_thick_shells_state(&m_handle, state, &num_elements);
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<d3plot_thick_shell>(elements, num_elements);
@@ -248,7 +248,7 @@ Array<d3plot_beam> D3plot::read_beams_state(size_t state) {
   d3plot_beam *elements =
       d3plot_read_beams_state(&m_handle, state, &num_elements);
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<d3plot_beam>(elements, num_elements);
@@ -259,7 +259,7 @@ Array<d3plot_shell> D3plot::read_shells_state(size_t state) {
   d3plot_shell *elements =
       d3plot_read_shells_state(&m_handle, state, &num_elements);
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<d3plot_shell>(elements, num_elements);
@@ -270,7 +270,7 @@ Array<d3plot_solid_con> D3plot::read_solid_elements() {
   d3plot_solid_con *elements =
       d3plot_read_solid_elements(&m_handle, &num_elements);
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<d3plot_solid_con>(elements, num_elements);
@@ -281,7 +281,7 @@ Array<d3plot_thick_shell_con> D3plot::read_thick_shell_elements() {
   d3plot_thick_shell_con *elements =
       d3plot_read_thick_shell_elements(&m_handle, &num_elements);
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<d3plot_thick_shell_con>(elements, num_elements);
@@ -292,7 +292,7 @@ Array<d3plot_beam_con> D3plot::read_beam_elements() {
   d3plot_beam_con *elements =
       d3plot_read_beam_elements(&m_handle, &num_elements);
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<d3plot_beam_con>(elements, num_elements);
@@ -303,7 +303,7 @@ Array<d3plot_shell_con> D3plot::read_shell_elements() {
   d3plot_shell_con *elements =
       d3plot_read_shell_elements(&m_handle, &num_elements);
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   return Array<d3plot_shell_con>(elements, num_elements);
@@ -312,7 +312,7 @@ Array<d3plot_shell_con> D3plot::read_shell_elements() {
 SizedString D3plot::read_title() {
   char *title = d3plot_read_title(&m_handle);
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
 
   // Trim whitespace
@@ -327,7 +327,7 @@ SizedString D3plot::read_title() {
 struct tm *D3plot::read_run_time() {
   struct tm *run_time = d3plot_read_run_time(&m_handle);
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
   return run_time;
 }
@@ -335,7 +335,7 @@ struct tm *D3plot::read_run_time() {
 D3plotPart D3plot::read_part(size_t part_index) {
   d3plot_part part = d3plot_read_part(&m_handle, part_index);
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
   return D3plotPart(part);
 }
@@ -345,7 +345,7 @@ D3plotPart D3plot::read_part_by_id(size_t part_id,
   d3plot_part part = d3plot_read_part_by_id(&m_handle, part_id, part_ids.data(),
                                             part_ids.size());
   if (m_handle.error_string) {
-    throw Exception(NullTerminatedString(m_handle.error_string, false));
+    throw Exception(String(m_handle.error_string, false));
   }
   return D3plotPart(part);
 }

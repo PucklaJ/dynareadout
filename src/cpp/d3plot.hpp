@@ -39,12 +39,12 @@ class D3plot {
 public:
   class Exception : public std::exception {
   public:
-    Exception(NullTerminatedString error_str) noexcept;
+    Exception(String error_str) noexcept;
 
     const char *what() const noexcept override;
 
   private:
-    const NullTerminatedString m_error_str;
+    const String m_error_str;
   };
 
   static size_t index_for_id(const Array<d3_word> &ids, d3_word id);

@@ -137,9 +137,9 @@ protected:
   bool m_delete_data;
 };
 
-class NullTerminatedString : public Array<char> {
+class String : public Array<char> {
 public:
-  NullTerminatedString(char *str, bool delete_data = true) noexcept
+  String(char *str, bool delete_data = true) noexcept
       : Array<char>(str, ~0, delete_data) {}
 
   inline size_t size() const { return strlen(m_data); }
@@ -156,7 +156,7 @@ public:
     return m_data[i] == '\0' && other[i] == '\0';
   }
 
-  bool operator==(const NullTerminatedString &rhs) const noexcept {
+  bool operator==(const String &rhs) const noexcept {
     size_t i = 0;
     for (; m_data[i] != '\0' && rhs.m_data[i] != '\0'; i++) {
       if (m_data[i] != rhs.m_data[i]) {
@@ -218,8 +218,7 @@ public:
   }
 };
 
-static bool operator==(const NullTerminatedString &str1,
-                       const SizedString &str2) noexcept {
+static bool operator==(const String &str1, const SizedString &str2) noexcept {
   size_t i = 0;
   for (; i < str1[i] != '\0' && i < str2.size(); i++) {
     if (str1[i] != str2[i]) {
@@ -230,8 +229,7 @@ static bool operator==(const NullTerminatedString &str1,
   return i == str2.size() && str1[i] == '\0';
 }
 
-inline bool operator==(const SizedString &str2,
-                       const NullTerminatedString &str1) noexcept {
+inline bool operator==(const SizedString &str2, const String &str1) noexcept {
   return str1 == str2;
 }
 

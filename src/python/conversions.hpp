@@ -240,7 +240,7 @@ inline void add_array_to_module(py::module_ &m) {
   add_array_type_to_module<float>(m);
   add_array_type_to_module<double>(m);
 
-  py::class_<NullTerminatedString>(m, "NullTerminatedString")
+  py::class_<String>(m, "String")
       .def(py::init([](const py::object &obj) {
         if (py::isinstance<py::str>(obj)) {
           const py::str obj_str(obj);
@@ -252,7 +252,7 @@ inline void add_array_to_module(py::module_ &m) {
             data[i] = static_cast<char>(obj_bytes[py::int_(i)].cast<int>());
           }
           data[len] = '\0';
-          return NullTerminatedString(data);
+          return String(data);
         } else if (py::isinstance<py::list>(obj) ||
                    py::isinstance<py::tuple>(obj)) {
           const size_t len = py::len(obj);
@@ -278,26 +278,26 @@ inline void add_array_to_module(py::module_ &m) {
           }
 
           data[len] = '\0';
-          return NullTerminatedString(data);
+          return String(data);
         } else {
           throw py::type_error("Can not convert this object to string");
         }
       }))
-      .def("__len__", [](NullTerminatedString &self) { return self.size(); })
+      .def("__len__", [](String &self) { return self.size(); })
       .def("__setitem__",
-           [](NullTerminatedString &self, size_t index, py::object other) {
+           [](String &self, size_t index, py::object other) {
              Array<char> arr(self.data(), self.size(), false);
              array_setitem(arr, index, std::move(other));
            })
       .def("__getitem__",
-           [](NullTerminatedString &self, size_t index) {
+           [](String &self, size_t index) {
              Array<char> arr(self.data(), self.size(), false);
              return array_getitem(arr, index);
            })
       .def("__eq__",
-           [](NullTerminatedString &self, const py::object &other) {
-             if (py::isinstance<NullTerminatedString>(other)) {
-               return self == other.cast<const NullTerminatedString &>();
+           [](String &self, const py::object &other) {
+             if (py::isinstance<String>(other)) {
+               return self == other.cast<const String &>();
              } else if (py::isinstance<SizedString>(other)) {
                return self == other.cast<const SizedString &>();
              }
@@ -306,11 +306,10 @@ inline void add_array_to_module(py::module_ &m) {
              return array_equals(arr, other);
            })
       .def("__lt__",
-           [](NullTerminatedString &self, const py::object &other) {
+           [](String &self, const py::object &other) {
              Array<char> arr_self(self.data(), self.size(), false);
-             if (py::isinstance<NullTerminatedString>(other)) {
-               const auto &other_str =
-                   other.cast<const NullTerminatedString &>();
+             if (py::isinstance<String>(other)) {
+               const auto &other_str = other.cast<const String &>();
                Array<char> arr_other(const_cast<char *>(other_str.data()),
                                      other_str.size(), false);
                return array_less_than(arr_self, arr_other);
@@ -325,11 +324,10 @@ inline void add_array_to_module(py::module_ &m) {
                  "This string can not be compared with the other type");
            })
       .def("__gt__",
-           [](NullTerminatedString &self, const py::object &other) {
+           [](String &self, const py::object &other) {
              Array<char> arr_self(self.data(), self.size(), false);
-             if (py::isinstance<NullTerminatedString>(other)) {
-               const auto &other_str =
-                   other.cast<const NullTerminatedString &>();
+             if (py::isinstance<String>(other)) {
+               const auto &other_str = other.cast<const String &>();
                Array<char> arr_other(const_cast<char *>(other_str.data()),
                                      other_str.size(), false);
                return array_greater_than(arr_self, arr_other);
@@ -343,9 +341,8 @@ inline void add_array_to_module(py::module_ &m) {
              throw py::type_error(
                  "This string can not be compared with the other type");
            })
-      .def("__str__", [](NullTerminatedString &arr) { return arr.str(); })
-      .def("__repr__",
-           [](NullTerminatedString &arr) { return "'" + arr.str() + "'"; })
+      .def("__str__", [](String &arr) { return arr.str(); })
+      .def("__repr__", [](String &arr) { return "'" + arr.str() + "'"; })
 
       ;
 
@@ -403,8 +400,8 @@ inline void add_array_to_module(py::module_ &m) {
            })
       .def("__eq__",
            [](SizedString &self, const py::object &other) {
-             if (py::isinstance<NullTerminatedString>(other)) {
-               return self == other.cast<const NullTerminatedString &>();
+             if (py::isinstance<String>(other)) {
+               return self == other.cast<const String &>();
              } else if (py::isinstance<SizedString>(other)) {
                return self == other.cast<const SizedString &>();
              }
@@ -415,9 +412,8 @@ inline void add_array_to_module(py::module_ &m) {
       .def("__lt__",
            [](SizedString &self, const py::object &other) {
              Array<char> arr_self(self.data(), self.size(), false);
-             if (py::isinstance<NullTerminatedString>(other)) {
-               const auto &other_str =
-                   other.cast<const NullTerminatedString &>();
+             if (py::isinstance<String>(other)) {
+               const auto &other_str = other.cast<const String &>();
                Array<char> arr_other(const_cast<char *>(other_str.data()),
                                      other_str.size(), false);
                return array_less_than(arr_self, arr_other);
@@ -434,9 +430,8 @@ inline void add_array_to_module(py::module_ &m) {
       .def("__gt__",
            [](SizedString &self, const py::object &other) {
              Array<char> arr_self(self.data(), self.size(), false);
-             if (py::isinstance<NullTerminatedString>(other)) {
-               const auto &other_str =
-                   other.cast<const NullTerminatedString &>();
+             if (py::isinstance<String>(other)) {
+               const auto &other_str = other.cast<const String &>();
                Array<char> arr_other(const_cast<char *>(other_str.data()),
                                      other_str.size(), false);
                return array_greater_than(arr_self, arr_other);

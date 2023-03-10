@@ -43,7 +43,7 @@
   const int error_buffer_size = snprintf(NULL, 0, msg, __VA_ARGS__);           \
   char *error_buffer = reinterpret_cast<char *>(malloc(error_buffer_size));    \
   sprintf(error_buffer, msg, __VA_ARGS__);                                     \
-  throw dro::KeyFile::Exception(dro::NullTerminatedString(error_buffer))
+  throw dro::KeyFile::Exception(dro::String(error_buffer))
 
 namespace dro {
 // A Card inside of a LS Dyna key file (input deck)
@@ -109,7 +109,7 @@ public:
   // Uses DEFAULT_VALUE_WIDTH as the value width.
   // Example SET_NODE_LIST_TITLE: auto [sid, da1, da2, da3, da4, solver] =
   // card.parse_whole<int, float, float, float, float,
-  // dro::NullTerminatedString>();
+  // dro::String>();
   template <typename... T> std::tuple<T...> parse_whole();
 
   // Parses all values of a card as the given types and returns them in a tuple.
@@ -256,17 +256,17 @@ class KeyFile {
 public:
   class Exception : public std::exception {
   public:
-    Exception(NullTerminatedString error_str) noexcept;
+    Exception(String error_str) noexcept;
 
     const char *what() const noexcept override;
 
   private:
-    const NullTerminatedString m_error_str;
+    const String m_error_str;
   };
 
   // TODO: Card is sometimes NULL
-  using Callback = std::function<void(NullTerminatedString keyword_name,
-                                      Card card, size_t card_index)>;
+  using Callback =
+      std::function<void(String keyword_name, Card card, size_t card_index)>;
 
   // Parses a LS Dyna key file for keywords and their respective cards. Returns
   // an array keywords
@@ -289,7 +289,7 @@ static constexpr bool is_number_v =
     std::is_integral_v<T> || std::is_floating_point_v<T>;
 
 template <> constexpr bool is_string_v<char *> = true;
-template <> constexpr bool is_string_v<NullTerminatedString> = true;
+template <> constexpr bool is_string_v<String> = true;
 template <> constexpr bool is_string_v<SizedString> = true;
 template <> constexpr bool is_string_v<std::string> = true;
 
@@ -325,9 +325,9 @@ template <typename T> T Card::parse(uint8_t value_width) const {
   } else if constexpr (std::is_same_v<T, char *>) {
     char *value = card_parse_string_width(m_handle, value_width);
     return value;
-  } else if constexpr (std::is_same_v<T, NullTerminatedString>) {
+  } else if constexpr (std::is_same_v<T, String>) {
     char *value = card_parse_string_width(m_handle, value_width);
-    return NullTerminatedString(value);
+    return String(value);
   } else if constexpr (std::is_same_v<T, SizedString>) {
     char *value = card_parse_string_width(m_handle, value_width);
     return SizedString(value, strlen(value));
@@ -352,17 +352,17 @@ template <typename T> T Card::parse_string_no_trim() const noexcept {
 // clang-format off
 template <typename T>
 T Card::parse_string_no_trim(uint8_t value_width) const noexcept {
-  static_assert(is_string_v<T> && "Can parse the whole card only as string (char*, dro::NullTerminatedString, dro::SizedString, std::string)");
+  static_assert(is_string_v<T> && "Can parse the whole card only as string (char*, dro::String, dro::SizedString, std::string)");
   return T{0};
 }
 
 template <typename T> T Card::parse_string_whole() const noexcept {
-  static_assert(is_string_v<T> && "Can parse the whole card only as string (char*, dro::NullTerminatedString, dro::SizedString, std::string)");
+  static_assert(is_string_v<T> && "Can parse the whole card only as string (char*, dro::String, dro::SizedString, std::string)");
   return T{0};
 }
 
 template <typename T> T Card::parse_string_whole_no_trim() const noexcept {
-  static_assert(is_string_v<T> && "Can parse the whole card only as string (char*, dro::NullTerminatedString, dro::SizedString, std::string)");
+  static_assert(is_string_v<T> && "Can parse the whole card only as string (char*, dro::String, dro::SizedString, std::string)");
   return T{0};
 }
 // clang-format on

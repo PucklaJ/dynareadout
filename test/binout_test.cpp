@@ -267,7 +267,7 @@ TEST_CASE("binout0000C++") {
   {
     const auto children = bin_file.get_children("/");
     REQUIRE(children.size() == 2);
-    CHECK(children[0] == dro::NullTerminatedString("nodout", false));
+    CHECK(children[0] == dro::String("nodout", false));
     CHECK(children[1] == dro::SizedString("rcforc", strlen("rcforc"), false));
     CHECK(children[1] == std::string("rcforc"));
   }
