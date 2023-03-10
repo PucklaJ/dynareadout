@@ -240,41 +240,45 @@ inline void add_array_to_module(py::module_ &m) {
   add_array_type_to_module<float>(m);
   add_array_type_to_module<double>(m);
 
-  py::class_<String>(m, "String")
+  py::class_<NullTerminatedString>(m, "NullTerminatedString")
       .def(py::init([](size_t size) {
-        char *data = reinterpret_cast<char *>(malloc(size * sizeof(char)));
-        return String(data, size, true);
+        char *data =
+            reinterpret_cast<char *>(malloc((size + 1) * sizeof(char)));
+        memset(data, 1, size);
+        data[size] = '\0';
+        return NullTerminatedString(data);
       }))
-      .def("__len__", &String::size)
+      .def("__len__", &NullTerminatedString::size)
       .def("__setitem__",
-           [](String &self, size_t index, py::object other) {
+           [](NullTerminatedString &self, size_t index, py::object other) {
              Array<char> arr(self.data(), self.size(), false);
              array_setitem(arr, index, std::move(other));
            })
       .def("__getitem__",
-           [](String &self, size_t index) {
+           [](NullTerminatedString &self, size_t index) {
              Array<char> arr(self.data(), self.size(), false);
              return array_getitem(arr, index);
            })
       .def("__eq__",
-           [](String &self, const py::object &other) {
+           [](NullTerminatedString &self, const py::object &other) {
              Array<char> arr(self.data(), self.size(), false);
              return array_equals(arr, other);
            })
       .def("__lt__",
-           [](String &self, String &other) {
+           [](NullTerminatedString &self, NullTerminatedString &other) {
              Array<char> arr_self(self.data(), self.size(), false);
              Array<char> arr_other(other.data(), other.size(), false);
              return array_less_than(arr_self, arr_other);
            })
       .def("__gt__",
-           [](String &self, String &other) {
+           [](NullTerminatedString &self, NullTerminatedString &other) {
              Array<char> arr_self(self.data(), self.size(), false);
              Array<char> arr_other(other.data(), other.size(), false);
              return array_greater_than(arr_self, arr_other);
            })
-      .def("__str__", [](String &arr) { return arr.str(); })
-      .def("__repr__", [](String &arr) { return "'" + arr.str() + "'"; })
+      .def("__str__", [](NullTerminatedString &arr) { return arr.str(); })
+      .def("__repr__",
+           [](NullTerminatedString &arr) { return "'" + arr.str() + "'"; })
 
       ;
 }

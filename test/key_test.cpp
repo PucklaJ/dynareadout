@@ -678,7 +678,7 @@ TEST_CASE("key_file_parseC++") {
 
   card.begin();
   CHECK(card.parse<char *>() == "Ground");
-  auto str = card.parse<dro::String>();
+  auto str = card.parse<dro::NullTerminatedString>();
   CHECK(str.data() == "Ground");
   CHECK(card.parse<std::string>() == "Ground");
 
@@ -686,14 +686,14 @@ TEST_CASE("key_file_parseC++") {
 
   card.begin();
   CHECK(card.parse_string_whole<char *>() == "Start of File");
-  str = card.parse_string_whole<dro::String>();
+  str = card.parse_string_whole<dro::NullTerminatedString>();
   CHECK(str.data() == "Start of File");
   CHECK(card.parse_string_whole<std::string>() == "Start of File");
 
   CHECK(
       card.parse_string_whole_no_trim<char *>() ==
       "                                 Start of File                        ");
-  str = card.parse_string_whole_no_trim<dro::String>();
+  str = card.parse_string_whole_no_trim<dro::NullTerminatedString>();
   CHECK(
       str.data() ==
       "                                 Start of File                        ");
@@ -874,11 +874,16 @@ TEST_CASE("key_file_parseC++") {
 
 TEST_CASE("key_file_parse_with_callbackC++") {
   dro::KeyFile::parse_with_callback(
-      "test_data/key_file.k",
-      [](dro::String keyword_name, dro::Card card, size_t card_index) {
-        const auto card_str = card.parse_string_whole_no_trim<dro::String>();
-        std::cout << keyword_name << "[" << card_index << "]: " << card_str
-                  << std::endl;
+      "test_data/key_file.k", [](dro::NullTerminatedString keyword_name,
+                                 dro::Card card, size_t card_index) {
+        if (!card.is_valid()) {
+          return;
+        }
+
+        const auto card_str =
+            card.parse_string_whole_no_trim<dro::NullTerminatedString>();
+        std::cout << keyword_name.str() << "[" << card_index
+                  << "]: " << card_str.str() << std::endl;
       });
 }
 #endif

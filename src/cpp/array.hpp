@@ -228,38 +228,16 @@ bool operator==(const Array<T> &str1, const char *str2) noexcept {
   return true;
 }
 
-template <typename T>
-inline bool operator==(const char *str2, const Array<T> &str1) noexcept {
-  return str1 == str2;
-}
-
-template <typename T>
-inline bool operator==(const std::string &str2, const Array<T> &str1) noexcept {
-  return str1 == str2.c_str();
-}
-
-template <typename T>
-inline bool operator==(const Array<T> &str1, const std::string &str2) noexcept {
-  return str1 == str2.c_str();
-}
-
-template <typename T>
-inline std::ostream &operator<<(std::ostream &stream, const Array<T> &str) {
-  static_assert(std::is_same_v<T, char> || std::is_same_v<T, int8_t> ||
-                std::is_same_v<T, uint8_t>);
-
-  for (size_t i = 0; i < str.size() && str[i] != '\0'; i++) {
-    stream << static_cast<char>(str[i]);
-  }
-  return stream;
-}
-
-class String : public Array<char> {
+class NullTerminatedString : public Array<char> {
 public:
-  String(char *data, size_t size, bool delete_data = true) noexcept
-      : Array<char>(data, size, delete_data) {}
-  String(char *str, bool delete_data = true) noexcept
-      : Array<char>(str, strlen(str) + 1, delete_data) {}
+  NullTerminatedString(char *str, bool delete_data = true) noexcept
+      : Array<char>(str, strlen(str), delete_data) {}
+};
+
+class SizedString : public Array<char> {
+public:
+  SizedString(char *str, size_t size, bool delete_data = true) noexcept
+      : Array<char>(str, size, delete_data) {}
 };
 
 } // namespace dro

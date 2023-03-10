@@ -28,7 +28,7 @@
 
 namespace dro {
 
-Binout::Exception::Exception(String error_str) noexcept
+Binout::Exception::Exception(NullTerminatedString error_str) noexcept
     : m_error_str(std::move(error_str)) {}
 
 const char *Binout::Exception::what() const noexcept {
@@ -41,7 +41,7 @@ Binout::Binout(const std::filesystem::path &file_name) {
   if (open_error) {
     // Call binout_close since the destructor is not getting called
     binout_close(&m_handle);
-    throw Exception(String(open_error));
+    throw Exception(NullTerminatedString(open_error));
   }
 }
 
@@ -51,7 +51,7 @@ BinoutType Binout::get_type_id(const std::string &path_to_variable) const {
   const BinoutType type_id{static_cast<BinoutType>(binout_get_type_id(
       const_cast<binout_file *>(&m_handle), path_to_variable.c_str()))};
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string, false));
+    throw Exception(NullTerminatedString(m_handle.error_string, false));
   }
 
   return type_id;
@@ -63,7 +63,8 @@ bool Binout::variable_exists(
                                 path_to_variable.c_str());
 }
 
-std::vector<String> Binout::get_children(const std::string &path) const {
+std::vector<NullTerminatedString>
+Binout::get_children(const std::string &path) const {
   size_t num_children;
   char **children = binout_get_children(const_cast<binout_file *>(&m_handle),
                                         path.c_str(), &num_children);
@@ -72,12 +73,12 @@ std::vector<String> Binout::get_children(const std::string &path) const {
   if (children == nullptr && num_children == static_cast<size_t>(~0)) {
     char *msg = reinterpret_cast<char *>(malloc(256 + path.length()));
     sprintf(msg, "The path \"%s\" does not exist", path.c_str());
-    throw Exception(String(msg));
+    throw Exception(NullTerminatedString(msg));
   }
 
-  std::vector<String> children_vec;
+  std::vector<NullTerminatedString> children_vec;
   for (size_t i = 0; i < num_children; i++) {
-    children_vec.emplace_back(children[i], strlen(children[i]) + 1, false);
+    children_vec.emplace_back(children[i], false);
   }
 
   free(children);
@@ -88,7 +89,7 @@ size_t Binout::get_num_timesteps(const std::string &path) const {
   const size_t num_timesteps{binout_get_num_timesteps(&m_handle, path.c_str())};
 
   if (num_timesteps == (size_t)~0) {
-    throw Exception(String(
+    throw Exception(NullTerminatedString(
         const_cast<char *>("The path does not exist or has files as children"),
         false));
   }
@@ -101,7 +102,7 @@ template <> Array<int8_t> Binout::read(const std::string &path_to_variable) {
   int8_t *data =
       binout_read_i8(&m_handle, path_to_variable.c_str(), &data_size);
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string, false));
+    throw Exception(NullTerminatedString(m_handle.error_string, false));
   }
 
   return Array<int8_t>(data, data_size);
@@ -119,7 +120,7 @@ template <> Array<int32_t> Binout::read(const std::string &path_to_variable) {
   int32_t *data =
       binout_read_i32(&m_handle, path_to_variable.c_str(), &data_size);
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string, false));
+    throw Exception(NullTerminatedString(m_handle.error_string, false));
   }
 
   return Array<int32_t>(data, data_size);
@@ -130,7 +131,7 @@ template <> Array<int64_t> Binout::read(const std::string &path_to_variable) {
   int64_t *data =
       binout_read_i64(&m_handle, path_to_variable.c_str(), &data_size);
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string, false));
+    throw Exception(NullTerminatedString(m_handle.error_string, false));
   }
 
   return Array<int64_t>(data, data_size);
@@ -141,7 +142,7 @@ template <> Array<uint8_t> Binout::read(const std::string &path_to_variable) {
   uint8_t *data =
       binout_read_u8(&m_handle, path_to_variable.c_str(), &data_size);
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string, false));
+    throw Exception(NullTerminatedString(m_handle.error_string, false));
   }
 
   return Array<uint8_t>(data, data_size);
@@ -152,7 +153,7 @@ template <> Array<uint16_t> Binout::read(const std::string &path_to_variable) {
   uint16_t *data =
       binout_read_u16(&m_handle, path_to_variable.c_str(), &data_size);
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string, false));
+    throw Exception(NullTerminatedString(m_handle.error_string, false));
   }
 
   return Array<uint16_t>(data, data_size);
@@ -163,7 +164,7 @@ template <> Array<uint32_t> Binout::read(const std::string &path_to_variable) {
   uint32_t *data =
       binout_read_u32(&m_handle, path_to_variable.c_str(), &data_size);
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string, false));
+    throw Exception(NullTerminatedString(m_handle.error_string, false));
   }
 
   return Array<uint32_t>(data, data_size);
@@ -174,7 +175,7 @@ template <> Array<uint64_t> Binout::read(const std::string &path_to_variable) {
   uint64_t *data =
       binout_read_u64(&m_handle, path_to_variable.c_str(), &data_size);
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string, false));
+    throw Exception(NullTerminatedString(m_handle.error_string, false));
   }
 
   return Array<uint64_t>(data, data_size);
@@ -185,7 +186,7 @@ template <> Array<float> Binout::read(const std::string &path_to_variable) {
   float *data =
       binout_read_f32(&m_handle, path_to_variable.c_str(), &data_size);
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string, false));
+    throw Exception(NullTerminatedString(m_handle.error_string, false));
   }
 
   return Array<float>(data, data_size);
@@ -196,7 +197,7 @@ template <> Array<double> Binout::read(const std::string &path_to_variable) {
   double *data =
       binout_read_f64(&m_handle, path_to_variable.c_str(), &data_size);
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string, false));
+    throw Exception(NullTerminatedString(m_handle.error_string, false));
   }
 
   return Array<double>(data, data_size);
@@ -208,7 +209,7 @@ std::vector<Array<float>> Binout::read_timed(const std::string &variable) {
   float *data = binout_read_timed_f32(&m_handle, variable.c_str(), &num_values,
                                       &num_timesteps);
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string, false));
+    throw Exception(NullTerminatedString(m_handle.error_string, false));
   }
 
   std::vector<Array<float>> vec;
@@ -227,7 +228,7 @@ std::vector<Array<double>> Binout::read_timed(const std::string &variable) {
   double *data = binout_read_timed_f64(&m_handle, variable.c_str(), &num_values,
                                        &num_timesteps);
   if (m_handle.error_string) {
-    throw Exception(String(m_handle.error_string, false));
+    throw Exception(NullTerminatedString(m_handle.error_string, false));
   }
 
   std::vector<Array<double>> vec;
@@ -240,8 +241,9 @@ std::vector<Array<double>> Binout::read_timed(const std::string &variable) {
   return vec;
 }
 
-String Binout::simple_path_to_real(const std::string &simple,
-                                   BinoutType &type_id, bool &timed) const {
+std::string Binout::simple_path_to_real(const std::string &simple,
+                                        BinoutType &type_id,
+                                        bool &timed) const {
   uint8_t type_id_c;
   int timed_c;
 
@@ -250,13 +252,16 @@ String Binout::simple_path_to_real(const std::string &simple,
   if (!real_path) {
     char *msg = reinterpret_cast<char *>(malloc(256 + simple.length()));
     sprintf(msg, "The simple path \"%s\" can not be found", simple.c_str());
-    throw Exception(String(msg));
+    throw Exception(NullTerminatedString(msg));
   }
 
   type_id = static_cast<BinoutType>(type_id_c);
   timed = timed_c != 0;
 
-  return String(real_path);
+  std::string str(real_path);
+  free(real_path);
+
+  return str;
 }
 
 } // namespace dro

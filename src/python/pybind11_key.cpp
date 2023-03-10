@@ -42,8 +42,8 @@ py::list python_card_parse_whole(dro::Card &self, py::list value_widths) {
       value_width = DEFAULT_VALUE_WIDTH;
     } else {
       if (self.done()) {
-        dro::String card_string =
-            self.parse_string_whole_no_trim<dro::String>();
+        dro::NullTerminatedString card_string =
+            self.parse_string_whole_no_trim<dro::NullTerminatedString>();
 
         THROW_KEY_FILE_EXCEPTION(
             "Trying to parse %d values out of card \"%s\" with", i + 1,
@@ -61,7 +61,7 @@ py::list python_card_parse_whole(dro::Card &self, py::list value_widths) {
       rv.append(self.parse<double>(value_width));
       break;
     case CARD_PARSE_STRING:
-      rv.append(self.parse<dro::String>(value_width));
+      rv.append(self.parse<dro::NullTerminatedString>(value_width));
       break;
     }
 
@@ -109,9 +109,9 @@ void add_key_library_to_module(py::module_ &m) {
           "parse_str",
           [](const dro::Card &self, bool trim) {
             if (trim)
-              return self.parse<dro::String>();
+              return self.parse<dro::NullTerminatedString>();
             else
-              return self.parse_string_no_trim<dro::String>();
+              return self.parse_string_no_trim<dro::NullTerminatedString>();
           },
           py::arg("trim") = true)
       .def("parse_width_i64",
@@ -126,9 +126,10 @@ void add_key_library_to_module(py::module_ &m) {
           "parse_width_str",
           [](const dro::Card &self, uint8_t value_width, bool trim) {
             if (trim)
-              return self.parse<dro::String>(value_width);
+              return self.parse<dro::NullTerminatedString>(value_width);
             else
-              return self.parse_string_no_trim<dro::String>(value_width);
+              return self.parse_string_no_trim<dro::NullTerminatedString>(
+                  value_width);
           },
           py::arg("value_width"), py::arg("trim") = true)
       .def("parse_whole", &python_card_parse_whole,

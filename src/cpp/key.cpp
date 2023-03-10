@@ -56,8 +56,17 @@ char *Card::parse_string_no_trim<char *>(uint8_t value_width) const noexcept {
 }
 
 template <>
-String Card::parse_string_no_trim<String>(uint8_t value_width) const noexcept {
-  return String(card_parse_string_width_no_trim(m_handle, value_width));
+NullTerminatedString Card::parse_string_no_trim<NullTerminatedString>(
+    uint8_t value_width) const noexcept {
+  return NullTerminatedString(
+      card_parse_string_width_no_trim(m_handle, value_width));
+}
+
+template <>
+SizedString
+Card::parse_string_no_trim<SizedString>(uint8_t value_width) const noexcept {
+  char *value = card_parse_string_width_no_trim(m_handle, value_width);
+  return SizedString(value, strlen(value));
 }
 
 template <>
@@ -73,8 +82,15 @@ template <> char *Card::parse_string_whole<char *>() const noexcept {
   return card_parse_whole(m_handle);
 }
 
-template <> String Card::parse_string_whole<String>() const noexcept {
-  return String(card_parse_whole(m_handle));
+template <>
+NullTerminatedString
+Card::parse_string_whole<NullTerminatedString>() const noexcept {
+  return NullTerminatedString(card_parse_whole(m_handle));
+}
+
+template <> SizedString Card::parse_string_whole<SizedString>() const noexcept {
+  char *value = card_parse_whole(m_handle);
+  return SizedString(value, strlen(value));
 }
 
 template <> std::string Card::parse_string_whole<std::string>() const noexcept {
@@ -88,8 +104,16 @@ template <> char *Card::parse_string_whole_no_trim<char *>() const noexcept {
   return card_parse_whole_no_trim(m_handle);
 }
 
-template <> String Card::parse_string_whole_no_trim<String>() const noexcept {
-  return String(card_parse_whole_no_trim(m_handle));
+template <>
+NullTerminatedString
+Card::parse_string_whole_no_trim<NullTerminatedString>() const noexcept {
+  return NullTerminatedString(card_parse_whole_no_trim(m_handle));
+}
+
+template <>
+SizedString Card::parse_string_whole_no_trim<SizedString>() const noexcept {
+  char *value = card_parse_whole_no_trim(m_handle);
+  return SizedString(value, strlen(value));
 }
 
 template <>
@@ -148,7 +172,7 @@ KeywordSlice Keywords::operator[](const std::string &name) {
   return KeywordSlice(slice, slice_size);
 }
 
-KeyFile::Exception::Exception(String error_str) noexcept
+KeyFile::Exception::Exception(NullTerminatedString error_str) noexcept
     : m_error_str(std::move(error_str)) {}
 
 const char *KeyFile::Exception::what() const noexcept {
@@ -164,7 +188,7 @@ Keywords KeyFile::parse(const std::filesystem::path &file_name,
       key_file_parse(file_name.string().c_str(), &num_keywords,
                      static_cast<int>(parse_includes), &error_string);
   if (error_string) {
-    throw Exception(String(error_string));
+    throw Exception(NullTerminatedString(error_string));
   }
 
   return Keywords(keywords, num_keywords);
@@ -182,13 +206,14 @@ void KeyFile::parse_with_callback(const std::filesystem::path &file_name,
         KeyFile::Callback *callback =
             reinterpret_cast<KeyFile::Callback *>(user_data);
 
-        (*callback)(String(const_cast<char *>(keyword_name), false),
-                    Card(const_cast<card_t *>(card)), card_index);
+        (*callback)(
+            NullTerminatedString(const_cast<char *>(keyword_name), false),
+            Card(const_cast<card_t *>(card)), card_index);
       },
       static_cast<int>(parse_includes), &error_string, &callback, NULL, NULL);
 
   if (error_string) {
-    throw Exception(String(error_string));
+    throw Exception(NullTerminatedString(error_string));
   }
 }
 

@@ -52,12 +52,12 @@ class Binout {
 public:
   class Exception : public std::exception {
   public:
-    Exception(String error_str) noexcept;
+    Exception(NullTerminatedString error_str) noexcept;
 
     const char *what() const noexcept override;
 
   private:
-    const String m_error_str;
+    const NullTerminatedString m_error_str;
   };
 
   // Open a binout file (or multiple files by globbing) and parse its records to
@@ -74,15 +74,15 @@ public:
   // Returns whether a record with the given path and variable name exists
   bool variable_exists(const std::string &path_to_variable) const noexcept;
   // Returns the entries under a given path
-  std::vector<String> get_children(const std::string &path) const;
+  std::vector<NullTerminatedString> get_children(const std::string &path) const;
   // Returns the number of dxxxxxx folders inside of a given path
   size_t get_num_timesteps(const std::string &path) const;
 
   binout_file &get_handle() noexcept { return m_handle; }
   const binout_file &get_handle() const noexcept { return m_handle; }
 
-  String simple_path_to_real(const std::string &simple, BinoutType &type_id,
-                             bool &timed) const;
+  std::string simple_path_to_real(const std::string &simple,
+                                  BinoutType &type_id, bool &timed) const;
 
 private:
   // The underlying C handle of the binout file

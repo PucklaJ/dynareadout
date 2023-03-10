@@ -256,8 +256,7 @@ TEST_CASE("binout0000C++") {
 
   dro::BinoutType type_id;
   bool timed;
-  CHECK(bin_file.simple_path_to_real("nodout", type_id, timed).str() ==
-        "/nodout");
+  CHECK(bin_file.simple_path_to_real("nodout", type_id, timed) == "/nodout");
 
   try {
     bin_file.simple_path_to_real("/nodout/schinken", type_id, timed);

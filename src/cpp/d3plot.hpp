@@ -39,12 +39,12 @@ class D3plot {
 public:
   class Exception : public std::exception {
   public:
-    Exception(String error_str) noexcept;
+    Exception(NullTerminatedString error_str) noexcept;
 
     const char *what() const noexcept override;
 
   private:
-    const String m_error_str;
+    const NullTerminatedString m_error_str;
   };
 
   static size_t index_for_id(const Array<d3_word> &ids, d3_word id);
@@ -69,7 +69,8 @@ public:
   // Read all ids of the parts
   Array<d3_word> read_part_ids();
   // Returns a vector containing all part titles as null terminated strings
-  std::vector<String> read_part_titles();
+  // TODO: Convert to SizedString
+  std::vector<NullTerminatedString> read_part_titles();
 
   // Read the node coordinates of all nodes of a given state (time step)
   Array<dVec3> read_node_coordinates(size_t state);
@@ -110,7 +111,8 @@ public:
   // elements
   Array<d3plot_shell_con> read_shell_elements();
   // Returns a string holding the Title of the d3plot file
-  String read_title();
+  // TODO: Convert to SizedString
+  NullTerminatedString read_title();
   // Returns the time at which the simulation has been run as calender time
   struct tm *read_run_time();
   // Returns all elements of a part. The part_index can retrieved by iterating
