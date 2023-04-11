@@ -441,3 +441,64 @@ D3plotPart D3plot::read_part_by_id(size_t part_id,
 }
 
 } // namespace dro
+
+std::ostream &operator<<(std::ostream &stream, const d3plot_tensor &t) {
+  return stream << "(X: " << t.x << "; Y: " << t.y << "; Z: " << t.z
+                << "; XY: " << t.xy << "; YZ: " << t.yz << ": XZ: " << t.xz
+                << ")";
+}
+
+std::ostream &operator<<(std::ostream &stream, const d3plot_surface &s) {
+  return stream << "Stress: " << s.stress
+                << "; Effective Plastic Strain: " << s.effective_plastic_strain;
+}
+
+std::ostream &operator<<(std::ostream &stream, const d3plot_solid &s) {
+  return stream << "Stress: " << s.stress
+                << "; Effective Plastic Strain: " << s.effective_plastic_strain
+                << "; Extra1: " << s.extra1 << "; Extra2: " << s.extra2
+                << "; Strain: " << s.strain;
+}
+
+std::ostream &operator<<(std::ostream &stream, const d3plot_thick_shell &ts) {
+  return stream << "Mid: " << ts.mid << "; Inner: " << ts.inner
+                << "; Outer: " << ts.outer
+                << "; Inner Strain: " << ts.inner_strain
+                << "; Outer Strain: " << ts.outer_strain;
+}
+
+std::ostream &operator<<(std::ostream &stream, const d3plot_beam &b) {
+  return stream << "Axial Force: " << b.axial_force
+                << "; S Shear Resultant: " << b.s_shear_resultant
+                << "; T Shear Resultant: " << b.t_shear_resultant
+                << "; S Bending Moment: " << b.s_bending_moment
+                << "; T Bending Moment: " << b.t_bending_moment
+                << "; Torsional Resultant: " << b.torsional_resultant;
+}
+
+std::ostream &operator<<(std::ostream &stream, const d3plot_shell &s) {
+  return stream << "Mid: " << s.mid << "; Inner: " << s.inner
+                << "; Outer: " << s.outer
+                << "; Inner Strain: " << s.inner_strain
+                << "; Outer Strain: " << s.outer_strain
+                << "; Internal Energy: " << s.internal_energy;
+}
+
+std::ostream &operator<<(std::ostream &stream, const d3plot_solid_con &s) {
+  return stream << "(" << s.node_indices[0] << ", " << s.node_indices[1] << ", "
+                << s.node_indices[2] << ", " << s.node_indices[3] << ", "
+                << s.node_indices[4] << ", " << s.node_indices[5] << ", "
+                << s.node_indices[6] << ", " << s.node_indices[7] << "; "
+                << s.material_index << ")";
+}
+
+std::ostream &operator<<(std::ostream &stream, const d3plot_beam_con &b) {
+  return stream << "(" << b.node_indices[0] << ", " << b.node_indices[1] << "; "
+                << b.orientation_node_index << "; " << b.material_index << ")";
+}
+
+std::ostream &operator<<(std::ostream &stream, const d3plot_shell_con &s) {
+  return stream << "(" << s.node_indices[0] << ", " << s.node_indices[1] << ", "
+                << s.node_indices[2] << ", " << s.node_indices[3] << "; "
+                << s.material_index << ")";
+}

@@ -146,3 +146,15 @@ private:
 };
 
 } // namespace dro
+
+// Stream output operators for structs
+std::ostream &operator<<(std::ostream &stream, const d3plot_tensor &t);
+std::ostream &operator<<(std::ostream &stream, const d3plot_surface &s);
+std::ostream &operator<<(std::ostream &stream, const d3plot_solid &s);
+std::ostream &operator<<(std::ostream &stream, const d3plot_thick_shell &ts);
+std::ostream &operator<<(std::ostream &stream, const d3plot_beam &b);
+std::ostream &operator<<(std::ostream &stream, const d3plot_shell &s);
+
+std::ostream &operator<<(std::ostream &stream, const d3plot_solid_con &s);
+std::ostream &operator<<(std::ostream &stream, const d3plot_beam_con &b);
+std::ostream &operator<<(std::ostream &stream, const d3plot_shell_con &s);

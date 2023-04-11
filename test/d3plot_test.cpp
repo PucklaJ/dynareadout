@@ -727,6 +727,9 @@ TEST_CASE("d3plotC++") {
   {
     const auto solids = plot_file.read_solids_state(101);
     REQUIRE(solids.size() == 45000);
+    std::stringstream stream;
+    stream << solids[0];
+    CHECK(stream.str().length() != 0);
   }
 
   {
