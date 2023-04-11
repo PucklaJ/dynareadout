@@ -371,7 +371,10 @@ TEST_CASE("d3plot") {
   free(shell_ids);
   free(shell_cons);
 
+  const size_t part_num_node_ids = d3plot_part_get_num_nodes(&plot_file, &part);
+
   CHECK(num_part_node_ids == 7370);
+  CHECK(part_num_node_ids == 7370);
 
   CHECK(num_part_node_ids == num_part_node_indices);
   REQUIRE(node_ids != NULL);
@@ -653,8 +656,12 @@ TEST_CASE("d3plotC++") {
     const auto part_node_indices =
         part.get_node_indices(plot_file, nullptr, nullptr, &shell_ids, nullptr,
                               nullptr, nullptr, &shell_cons);
+    const auto part_num_nodes =
+        part.get_num_nodes(plot_file, nullptr, nullptr, &shell_ids, nullptr,
+                           nullptr, nullptr, &shell_cons);
 
     CHECK(part_node_ids.size() == 7370);
+    CHECK(part_num_nodes == 7370);
     REQUIRE(node_ids.size() == 114893);
     CHECK(node_ids[59530] == 84285019);
     CHECK(node_ids[0] == 10);

@@ -36,11 +36,15 @@ struct d3plot_file;
 #define d3plot_part_get_node_ids(plot_file, part, num_part_node_ids)           \
   d3plot_part_get_node_ids2(plot_file, part, num_part_node_ids, NULL, 0, NULL, \
                             0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL,    \
-                            NULL);
+                            NULL)
 #define d3plot_part_get_node_indices(plot_file, part, num_part_node_indices)   \
   d3plot_part_get_node_indices2(plot_file, part, num_part_node_indices, NULL,  \
                                 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL,      \
-                                NULL, NULL);
+                                NULL, NULL)
+
+#define d3plot_part_get_num_nodes(plot_file, part)                             \
+  d3plot_part_get_num_nodes2(plot_file, part, NULL, 0, NULL, 0, NULL, 0, NULL, \
+                             0, NULL, NULL, NULL, NULL)
 
 #ifdef __cplusplus
 extern "C" {
@@ -70,6 +74,16 @@ d3_word *d3plot_part_get_node_indices2(
     size_t num_shells, const d3_word *thick_shell_ids, size_t num_thick_shells,
     const d3plot_solid_con *solid_cons, const d3plot_beam_con *beam_cons,
     const d3plot_shell_con *shell_cons,
+    const d3plot_thick_shell_con *thick_shell_cons);
+
+/* Returns the number of nodes of a part. Internally it just calls
+ * d3plot_part_get_node_indices2 and returns the number of node indices.*/
+size_t d3plot_part_get_num_nodes2(
+    d3plot_file *plot_file, const d3plot_part *part, const d3_word *solid_ids,
+    size_t num_solids, const d3_word *beam_ids, size_t num_beams,
+    const d3_word *shell_ids, size_t num_shells, const d3_word *thick_shell_ids,
+    size_t num_thick_shells, const d3plot_solid_con *solid_cons,
+    const d3plot_beam_con *beam_cons, const d3plot_shell_con *shell_cons,
     const d3plot_thick_shell_con *thick_shell_cons);
 
 /* Returns the number of all elements of a part*/

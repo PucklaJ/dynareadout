@@ -76,6 +76,18 @@ public:
       const Array<d3plot_shell_con> *shell_cons = nullptr,
       const Array<d3plot_thick_shell_con> *thick_shell_cons = nullptr) const;
 
+  // Returns the number of nodes of a part. Internally it just calls
+  // get_node_indices and returns the number of node indices.
+  size_t get_num_nodes(
+      D3plot &plot_file, const Array<d3_word> *solid_ids = nullptr,
+      const Array<d3_word> *beam_ids = nullptr,
+      const Array<d3_word> *shell_ids = nullptr,
+      const Array<d3_word> *thick_shell_ids = nullptr,
+      const Array<d3plot_solid_con> *solid_cons = nullptr,
+      const Array<d3plot_beam_con> *beam_cons = nullptr,
+      const Array<d3plot_shell_con> *shell_cons = nullptr,
+      const Array<d3plot_thick_shell_con> *thick_shell_cons = nullptr) const;
+
   // Returns the number of all elements of a part
   size_t get_num_elements() const;
 

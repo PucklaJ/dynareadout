@@ -117,6 +117,28 @@ Array<d3_word> D3plotPart::get_node_indices(
   return Array<d3_word>(part_node_indices, num_part_node_indices);
 }
 
+size_t D3plotPart::get_num_nodes(
+    D3plot &plot_file, const Array<d3_word> *solid_ids,
+    const Array<d3_word> *beam_ids, const Array<d3_word> *shell_ids,
+    const Array<d3_word> *thick_shell_ids,
+    const Array<d3plot_solid_con> *solid_cons,
+    const Array<d3plot_beam_con> *beam_cons,
+    const Array<d3plot_shell_con> *shell_cons,
+    const Array<d3plot_thick_shell_con> *thick_shell_cons) const {
+  // TODO: Check for errors
+  return d3plot_part_get_num_nodes2(
+      &plot_file.get_handle(), &m_part, solid_ids ? solid_ids->data() : NULL,
+      solid_ids ? solid_ids->size() : 0, beam_ids ? beam_ids->data() : NULL,
+      beam_ids ? beam_ids->size() : 0, shell_ids ? shell_ids->data() : NULL,
+      shell_ids ? shell_ids->size() : 0,
+      thick_shell_ids ? thick_shell_ids->data() : NULL,
+      thick_shell_ids ? thick_shell_ids->size() : 0,
+      thick_shell_cons ? thick_shell_cons->data() : NULL,
+      beam_cons ? beam_cons->data() : NULL,
+      shell_cons ? shell_cons->data() : NULL,
+      thick_shell_cons ? thick_shell_cons->data() : NULL);
+}
+
 size_t D3plotPart::get_num_elements() const {
   return d3plot_part_get_num_elements(&m_part);
 }
