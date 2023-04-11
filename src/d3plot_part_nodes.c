@@ -107,3 +107,8 @@ d3_word *d3plot_part_get_node_indices2(
   END_PROFILE_FUNC();
   return part_node_indices;
 }
+
+size_t d3plot_part_get_num_elements(const d3plot_part *part) {
+  return part->num_solids + part->num_thick_shells + part->num_beams +
+         part->num_shells;
+}

@@ -72,6 +72,9 @@ d3_word *d3plot_part_get_node_indices2(
     const d3plot_shell_con *shell_cons,
     const d3plot_thick_shell_con *thick_shell_cons);
 
+/* Returns the number of all elements of a part*/
+size_t d3plot_part_get_num_elements(const d3plot_part *part);
+
 #ifdef __cplusplus
 }
 #endif

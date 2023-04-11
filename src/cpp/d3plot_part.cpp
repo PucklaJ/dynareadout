@@ -117,4 +117,8 @@ Array<d3_word> D3plotPart::get_node_indices(
   return Array<d3_word>(part_node_indices, num_part_node_indices);
 }
 
+size_t D3plotPart::get_num_elements() const {
+  return d3plot_part_get_num_elements(&m_part);
+}
+
 } // namespace dro

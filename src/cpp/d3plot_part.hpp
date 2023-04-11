@@ -76,6 +76,9 @@ public:
       const Array<d3plot_shell_con> *shell_cons = nullptr,
       const Array<d3plot_thick_shell_con> *thick_shell_cons = nullptr) const;
 
+  // Returns the number of all elements of a part
+  size_t get_num_elements() const;
+
 private:
   d3plot_part m_part;
 };

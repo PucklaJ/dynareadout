@@ -339,6 +339,7 @@ TEST_CASE("d3plot") {
 
   part = d3plot_read_part_by_id(&plot_file, 71000063, NULL, 0);
   CHECK(part.num_shells == 7368);
+  CHECK(d3plot_part_get_num_elements(&part) == 7368);
 
   size_t num_shell_ids;
   d3_word *shell_ids =
@@ -619,6 +620,7 @@ TEST_CASE("d3plotC++") {
 
   part = plot_file.read_part_by_id(71000063);
   CHECK(part.get_shell_elements().size() == 7368);
+  CHECK(part.get_num_elements() == 7368);
 
   {
     auto shell_ids = plot_file.read_shell_element_ids();
