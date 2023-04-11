@@ -341,6 +341,17 @@ TEST_CASE("d3plot") {
   CHECK(part.num_shells == 7368);
   CHECK(d3plot_part_get_num_elements(&part) == 7368);
 
+  size_t num_all_part_element_ids;
+  d3_word *all_part_element_ids =
+      d3plot_part_get_all_element_ids(&part, &num_all_part_element_ids);
+  CHECK(num_all_part_element_ids == 7368);
+  i = 0;
+  while (i < num_all_part_element_ids) {
+    CHECK(all_part_element_ids[i] == part.shell_ids[i]);
+
+    i++;
+  }
+
   size_t num_shell_ids;
   d3_word *shell_ids =
       d3plot_read_shell_element_ids(&plot_file, &num_shell_ids);
@@ -621,6 +632,14 @@ TEST_CASE("d3plotC++") {
   part = plot_file.read_part_by_id(71000063);
   CHECK(part.get_shell_elements().size() == 7368);
   CHECK(part.get_num_elements() == 7368);
+
+  {
+    const auto part_element_ids = part.get_all_element_ids();
+    CHECK(part_element_ids.size() == 7368);
+    for (size_t i = 0; i < part_element_ids.size(); i++) {
+      CHECK(part_element_ids[i] == part.get_shell_elements()[i]);
+    }
+  }
 
   {
     auto shell_ids = plot_file.read_shell_element_ids();

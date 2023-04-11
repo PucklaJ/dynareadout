@@ -121,4 +121,11 @@ size_t D3plotPart::get_num_elements() const {
   return d3plot_part_get_num_elements(&m_part);
 }
 
+Array<d3_word> D3plotPart::get_all_element_ids() const {
+  size_t num_ids;
+  d3_word *arr = d3plot_part_get_all_element_ids(&m_part, &num_ids);
+
+  return Array<d3_word>(arr, num_ids);
+}
+
 } // namespace dro

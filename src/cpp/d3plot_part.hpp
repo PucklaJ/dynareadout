@@ -79,6 +79,9 @@ public:
   // Returns the number of all elements of a part
   size_t get_num_elements() const;
 
+  // Returns an array containing all element ids
+  Array<d3_word> get_all_element_ids() const;
+
 private:
   d3plot_part m_part;
 };

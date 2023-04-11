@@ -75,6 +75,11 @@ d3_word *d3plot_part_get_node_indices2(
 /* Returns the number of all elements of a part*/
 size_t d3plot_part_get_num_elements(const d3plot_part *part);
 
+/* Returns an array containing all element ids and writes the size into num_ids.
+ * Needs to be deallocated by free.*/
+d3_word *d3plot_part_get_all_element_ids(const d3plot_part *part,
+                                         size_t *num_ids);
+
 #ifdef __cplusplus
 }
 #endif
