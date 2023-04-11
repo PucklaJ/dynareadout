@@ -72,7 +72,7 @@ public:
   std::vector<SizedString> read_part_titles();
 
   // Read the node coordinates of all nodes of a given state (time step)
-  Array<dVec3> read_node_coordinates(size_t state);
+  Array<dVec3> read_node_coordinates(size_t state = 0);
   // Reads all node coordinates of all time steps and returns it as one big
   // array
   std::vector<Array<dVec3>> read_all_node_coordinates();
