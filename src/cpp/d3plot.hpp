@@ -73,16 +73,26 @@ public:
 
   // Read the node coordinates of all nodes of a given state (time step)
   Array<dVec3> read_node_coordinates(size_t state);
+  // Reads all node coordinates of all time steps and returns it as one big
+  // array
+  std::vector<Array<dVec3>> read_all_node_coordinates();
   // Read the node velocity of all nodes of a given state (time step)
   Array<dVec3> read_node_velocity(size_t state);
+  std::vector<Array<dVec3>> read_all_node_velocity();
   // Read the node acceleration of all nodes of a given state (time step)
   Array<dVec3> read_node_acceleration(size_t state);
+  std::vector<Array<dVec3>> read_all_node_acceleration();
   // The same as read_node_coordinates but with floats instead of doubles
   Array<fVec3> read_node_coordinates_32(size_t state);
+  // Reads all node coordinates of all time steps and returns it as one big
+  // array
+  std::vector<Array<fVec3>> read_all_node_coordinates_32();
   // The same as read_node_velocity but with floats instead of doubles
   Array<fVec3> read_node_velocity_32(size_t state);
+  std::vector<Array<fVec3>> read_all_node_velocity_32();
   // The same as read_node_acceleration but with floats instead of doubles
   Array<fVec3> read_node_acceleration_32(size_t state);
+  std::vector<Array<fVec3>> read_all_node_acceleration_32();
   // Read the time of a given state (time step) in milliseconds
   double read_time(size_t state);
   // Returns stress, strain (if NEIPH >= 6) for a given state

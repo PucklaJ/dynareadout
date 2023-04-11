@@ -168,6 +168,18 @@ TEST_CASE("d3plot") {
     CHECK_APPROX(node_data[2], 0.0);
 
     free(node_data);
+
+    size_t num_time_steps;
+    node_data = d3plot_read_all_node_coordinates(&plot_file, &num_nodes,
+                                                 &num_time_steps);
+    REQUIRE(num_nodes == 114893);
+    REQUIRE(num_time_steps == 102);
+
+    CHECK_APPROX(node_data[0], 0.031293001);
+    CHECK_APPROX(node_data[1], -0.075000003);
+    CHECK_APPROX(node_data[2], 69.1887664795);
+
+    free(node_data);
   }
 
   {
@@ -193,6 +205,18 @@ TEST_CASE("d3plot") {
     CHECK_APPROX(node_data[0], 0.0f);
     CHECK_APPROX(node_data[1], 0.0f);
     CHECK_APPROX(node_data[2], 0.0f);
+
+    free(node_data);
+
+    size_t num_time_steps;
+    node_data = d3plot_read_all_node_coordinates_32(&plot_file, &num_nodes,
+                                                    &num_time_steps);
+    REQUIRE(num_nodes == 114893);
+    REQUIRE(num_time_steps == 102);
+
+    CHECK_APPROX(node_data[0], 0.031293001f);
+    CHECK_APPROX(node_data[1], -0.075000003f);
+    CHECK_APPROX(node_data[2], 69.1887664795f);
 
     free(node_data);
   }
@@ -501,6 +525,13 @@ TEST_CASE("d3plotC++") {
     CHECK_APPROX(node_data[0][0], 0.031293001);
     CHECK_APPROX(node_data[0][1], -0.075000003);
     CHECK_APPROX(node_data[0][2], 69.1887664795);
+
+    const auto all_node_data(plot_file.read_all_node_coordinates());
+    REQUIRE(all_node_data.size() == 102);
+    REQUIRE(all_node_data[0].size() == 114893);
+    CHECK_APPROX(all_node_data[0][0][0], 0.031293001);
+    CHECK_APPROX(all_node_data[0][0][1], -0.075000003);
+    CHECK_APPROX(all_node_data[0][0][2], 69.1887664795);
   }
 
   {

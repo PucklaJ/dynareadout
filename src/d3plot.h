@@ -97,28 +97,60 @@ char **d3plot_read_part_titles(d3plot_file *plot_file, size_t *num_parts);
  * with index 20: rv[20*3+0], rv[20*3+1], rv[20*3+2]*/
 double *d3plot_read_node_coordinates(d3plot_file *plot_file, size_t state,
                                      size_t *num_nodes);
+/* Reads all node coordinates of all time steps and returns it as one big
+ * array. Format TimeStep0(XYZXYZ...)TimeStep1(XYZXYZ...)...
+ * Example: Access the the node at index 20 and time step 60:
+ * X: rv[60*(num_nodes*3)+20*3+0]
+ * Y: rv[60*(num_nodes*3)+20*3+1]
+ * Z: rv[60*(num_nodes*3)+20*3+2]
+ * Needs to be deallocated by free.*/
+double *d3plot_read_all_node_coordinates(d3plot_file *plot_file,
+                                         size_t *num_nodes,
+                                         size_t *num_time_steps);
 /* Read the node velocity of all nodes of a given state (time step). The
  * return value needs to deallocated by free. Example: X,Y and Z values of node
  * with index 20: rv[20*3+0], rv[20*3+1], rv[20*3+2]*/
 double *d3plot_read_node_velocity(d3plot_file *plot_file, size_t state,
                                   size_t *num_nodes);
+double *d3plot_read_all_node_velocity(d3plot_file *plot_file, size_t *num_nodes,
+                                      size_t *num_time_steps);
 /* Read the node acceleration of all nodes of a given state (time step). The
  * return value needs to deallocated by free. Example: X,Y and Z values of node
  * with index 20: rv[20*3+0], rv[20*3+1], rv[20*3+2]*/
 double *d3plot_read_node_acceleration(d3plot_file *plot_file, size_t state,
                                       size_t *num_nodes);
+double *d3plot_read_all_node_acceleration(d3plot_file *plot_file,
+                                          size_t *num_nodes,
+                                          size_t *num_time_steps);
 /* The same as d3plot_read_node_coordinates but it does not convert floats to
  * double. It does the opposite if the word size is 8*/
 float *d3plot_read_node_coordinates_32(d3plot_file *plot_file, size_t state,
                                        size_t *num_nodes);
+
+/* Reads all node coordinates of all time steps and returns it as one big
+ * array. Format TimeStep0(XYZXYZ...)TimeStep1(XYZXYZ...)...
+ * Example: Access the the node at index 20 and time step 60:
+ * X: rv[60*(num_nodes*3)+20*3+0]
+ * Y: rv[60*(num_nodes*3)+20*3+1]
+ * Z: rv[60*(num_nodes*3)+20*3+2]
+ * Needs to be deallocated by free.*/
+float *d3plot_read_all_node_coordinates_32(d3plot_file *plot_file,
+                                           size_t *num_nodes,
+                                           size_t *num_time_steps);
 /* The same as d3plot_read_node_velocity but it does not convert floats to
  * double. It does the opposite if the word size is 8*/
 float *d3plot_read_node_velocity_32(d3plot_file *plot_file, size_t state,
                                     size_t *num_nodes);
+float *d3plot_read_all_node_velocity_32(d3plot_file *plot_file,
+                                        size_t *num_nodes,
+                                        size_t *num_time_steps);
 /* The same as d3plot_read_node_acceleration but it does not convert floats to
  * double. It does the opposite if the word size is 8*/
 float *d3plot_read_node_acceleration_32(d3plot_file *plot_file, size_t state,
                                         size_t *num_nodes);
+float *d3plot_read_all_node_acceleration_32(d3plot_file *plot_file,
+                                            size_t *num_nodes,
+                                            size_t *num_time_steps);
 /* Read the time of a given state (time step) in milliseconds*/
 double d3plot_read_time(d3plot_file *plot_file, size_t state);
 /* Returns stress, strain (if NEIPH >= 6) for a given state. The return value

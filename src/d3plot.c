@@ -591,6 +591,69 @@ double *d3plot_read_node_coordinates(d3plot_file *plot_file, size_t state,
   return data;
 }
 
+double *d3plot_read_all_node_coordinates(d3plot_file *plot_file,
+                                         size_t *num_nodes,
+                                         size_t *num_time_steps) {
+  BEGIN_PROFILE_FUNC();
+
+  if (plot_file->buffer.word_size == 4) {
+    float *big_data32 = d3plot_read_all_node_coordinates_32(
+        plot_file, num_nodes, num_time_steps);
+    if (plot_file->error_string) {
+      END_PROFILE_FUNC();
+      return NULL;
+    }
+
+    const size_t num_values = *num_nodes * *num_time_steps * 3;
+
+    double *big_data = malloc(num_values * sizeof(double));
+
+    size_t i = 0;
+    while (i < num_values) {
+      big_data[i + 0] = big_data32[i + 0];
+      big_data[i + 1] = big_data32[i + 1];
+      big_data[i + 2] = big_data32[i + 2];
+
+      i += 3;
+    }
+    free(big_data32);
+
+    END_PROFILE_FUNC();
+    return big_data;
+  }
+
+  CLEAR_ERROR_STRING();
+
+  *num_time_steps = plot_file->num_states;
+  *num_nodes = (size_t)plot_file->control_data.numnp;
+
+  double *big_data = malloc(*num_nodes * *num_time_steps * 3 * sizeof(double));
+
+  size_t current_pointer = 0;
+  size_t t = 0;
+  while (t < *num_time_steps) {
+    d3_buffer_read_words_at(
+        &plot_file->buffer, &big_data[current_pointer], *num_nodes * 3,
+        plot_file->data_pointers[D3PLT_PTR_STATES + t] +
+            plot_file->data_pointers[D3PLT_PTR_STATE_NODE_COORDS]);
+    if (plot_file->buffer.error_string) {
+      ERROR_AND_NO_RETURN_F_PTR("Failed to read words: %s",
+                                plot_file->buffer.error_string);
+      *num_nodes = 0;
+      *num_time_steps = 0;
+      free(big_data);
+      END_PROFILE_FUNC();
+      return NULL;
+    }
+
+    current_pointer += *num_nodes * 3;
+    t++;
+  }
+
+  END_PROFILE_FUNC();
+  return big_data;
+}
+
 double *d3plot_read_node_velocity(d3plot_file *plot_file, size_t state,
                                   size_t *num_nodes) {
   BEGIN_PROFILE_FUNC();
@@ -600,6 +663,68 @@ double *d3plot_read_node_velocity(d3plot_file *plot_file, size_t state,
 
   END_PROFILE_FUNC();
   return data;
+}
+
+double *d3plot_read_all_node_velocity(d3plot_file *plot_file, size_t *num_nodes,
+                                      size_t *num_time_steps) {
+  BEGIN_PROFILE_FUNC();
+
+  if (plot_file->buffer.word_size == 4) {
+    float *big_data32 =
+        d3plot_read_all_node_velocity_32(plot_file, num_nodes, num_time_steps);
+    if (plot_file->error_string) {
+      END_PROFILE_FUNC();
+      return NULL;
+    }
+
+    const size_t num_values = *num_nodes * *num_time_steps * 3;
+
+    double *big_data = malloc(num_values * sizeof(double));
+
+    size_t i = 0;
+    while (i < num_values) {
+      big_data[i + 0] = big_data32[i + 0];
+      big_data[i + 1] = big_data32[i + 1];
+      big_data[i + 2] = big_data32[i + 2];
+
+      i += 3;
+    }
+    free(big_data32);
+
+    END_PROFILE_FUNC();
+    return big_data;
+  }
+
+  CLEAR_ERROR_STRING();
+
+  *num_time_steps = plot_file->num_states;
+  *num_nodes = (size_t)plot_file->control_data.numnp;
+
+  double *big_data = malloc(*num_nodes * *num_time_steps * 3 * sizeof(double));
+
+  size_t current_pointer = 0;
+  size_t t = 0;
+  while (t < *num_time_steps) {
+    d3_buffer_read_words_at(
+        &plot_file->buffer, &big_data[current_pointer], *num_nodes * 3,
+        plot_file->data_pointers[D3PLT_PTR_STATES + t] +
+            plot_file->data_pointers[D3PLT_PTR_STATE_NODE_VEL]);
+    if (plot_file->buffer.error_string) {
+      ERROR_AND_NO_RETURN_F_PTR("Failed to read words: %s",
+                                plot_file->buffer.error_string);
+      *num_nodes = 0;
+      *num_time_steps = 0;
+      free(big_data);
+      END_PROFILE_FUNC();
+      return NULL;
+    }
+
+    current_pointer += *num_nodes * 3;
+    t++;
+  }
+
+  END_PROFILE_FUNC();
+  return big_data;
 }
 
 double *d3plot_read_node_acceleration(d3plot_file *plot_file, size_t state,
@@ -613,6 +738,69 @@ double *d3plot_read_node_acceleration(d3plot_file *plot_file, size_t state,
   return data;
 }
 
+double *d3plot_read_all_node_acceleration(d3plot_file *plot_file,
+                                          size_t *num_nodes,
+                                          size_t *num_time_steps) {
+  BEGIN_PROFILE_FUNC();
+
+  if (plot_file->buffer.word_size == 4) {
+    float *big_data32 = d3plot_read_all_node_acceleration_32(
+        plot_file, num_nodes, num_time_steps);
+    if (plot_file->error_string) {
+      END_PROFILE_FUNC();
+      return NULL;
+    }
+
+    const size_t num_values = *num_nodes * *num_time_steps * 3;
+
+    double *big_data = malloc(num_values * sizeof(double));
+
+    size_t i = 0;
+    while (i < num_values) {
+      big_data[i + 0] = big_data32[i + 0];
+      big_data[i + 1] = big_data32[i + 1];
+      big_data[i + 2] = big_data32[i + 2];
+
+      i += 3;
+    }
+    free(big_data32);
+
+    END_PROFILE_FUNC();
+    return big_data;
+  }
+
+  CLEAR_ERROR_STRING();
+
+  *num_time_steps = plot_file->num_states;
+  *num_nodes = (size_t)plot_file->control_data.numnp;
+
+  double *big_data = malloc(*num_nodes * *num_time_steps * 3 * sizeof(double));
+
+  size_t current_pointer = 0;
+  size_t t = 0;
+  while (t < *num_time_steps) {
+    d3_buffer_read_words_at(
+        &plot_file->buffer, &big_data[current_pointer], *num_nodes * 3,
+        plot_file->data_pointers[D3PLT_PTR_STATES + t] +
+            plot_file->data_pointers[D3PLT_PTR_STATE_NODE_ACC]);
+    if (plot_file->buffer.error_string) {
+      ERROR_AND_NO_RETURN_F_PTR("Failed to read words: %s",
+                                plot_file->buffer.error_string);
+      *num_nodes = 0;
+      *num_time_steps = 0;
+      free(big_data);
+      END_PROFILE_FUNC();
+      return NULL;
+    }
+
+    current_pointer += *num_nodes * 3;
+    t++;
+  }
+
+  END_PROFILE_FUNC();
+  return big_data;
+}
+
 float *d3plot_read_node_coordinates_32(d3plot_file *plot_file, size_t state,
                                        size_t *num_nodes) {
   BEGIN_PROFILE_FUNC();
@@ -622,6 +810,69 @@ float *d3plot_read_node_coordinates_32(d3plot_file *plot_file, size_t state,
 
   END_PROFILE_FUNC();
   return data;
+}
+
+float *d3plot_read_all_node_coordinates_32(d3plot_file *plot_file,
+                                           size_t *num_nodes,
+                                           size_t *num_time_steps) {
+  BEGIN_PROFILE_FUNC();
+
+  if (plot_file->buffer.word_size == 8) {
+    double *big_data64 =
+        d3plot_read_all_node_coordinates(plot_file, num_nodes, num_time_steps);
+    if (plot_file->error_string) {
+      END_PROFILE_FUNC();
+      return NULL;
+    }
+
+    const size_t num_values = *num_nodes * *num_time_steps * 3;
+
+    float *big_data = malloc(num_values * sizeof(float));
+
+    size_t i = 0;
+    while (i < num_values) {
+      big_data[i + 0] = big_data64[i + 0];
+      big_data[i + 1] = big_data64[i + 1];
+      big_data[i + 2] = big_data64[i + 2];
+
+      i += 3;
+    }
+    free(big_data64);
+
+    END_PROFILE_FUNC();
+    return big_data;
+  }
+
+  CLEAR_ERROR_STRING();
+
+  *num_time_steps = plot_file->num_states;
+  *num_nodes = (size_t)plot_file->control_data.numnp;
+
+  float *big_data = malloc(*num_nodes * *num_time_steps * 3 * sizeof(float));
+
+  size_t current_pointer = 0;
+  size_t t = 0;
+  while (t < *num_time_steps) {
+    d3_buffer_read_words_at(
+        &plot_file->buffer, &big_data[current_pointer], *num_nodes * 3,
+        plot_file->data_pointers[D3PLT_PTR_STATES + t] +
+            plot_file->data_pointers[D3PLT_PTR_STATE_NODE_COORDS]);
+    if (plot_file->buffer.error_string) {
+      ERROR_AND_NO_RETURN_F_PTR("Failed to read words: %s",
+                                plot_file->buffer.error_string);
+      *num_nodes = 0;
+      *num_time_steps = 0;
+      free(big_data);
+      END_PROFILE_FUNC();
+      return NULL;
+    }
+
+    current_pointer += *num_nodes * 3;
+    t++;
+  }
+
+  END_PROFILE_FUNC();
+  return big_data;
 }
 
 float *d3plot_read_node_velocity_32(d3plot_file *plot_file, size_t state,
@@ -635,6 +886,69 @@ float *d3plot_read_node_velocity_32(d3plot_file *plot_file, size_t state,
   return data;
 }
 
+float *d3plot_read_all_node_velocity_32(d3plot_file *plot_file,
+                                        size_t *num_nodes,
+                                        size_t *num_time_steps) {
+  BEGIN_PROFILE_FUNC();
+
+  if (plot_file->buffer.word_size == 8) {
+    double *big_data64 =
+        d3plot_read_all_node_velocity(plot_file, num_nodes, num_time_steps);
+    if (plot_file->error_string) {
+      END_PROFILE_FUNC();
+      return NULL;
+    }
+
+    const size_t num_values = *num_nodes * *num_time_steps * 3;
+
+    float *big_data = malloc(num_values * sizeof(float));
+
+    size_t i = 0;
+    while (i < num_values) {
+      big_data[i + 0] = big_data64[i + 0];
+      big_data[i + 1] = big_data64[i + 1];
+      big_data[i + 2] = big_data64[i + 2];
+
+      i += 3;
+    }
+    free(big_data64);
+
+    END_PROFILE_FUNC();
+    return big_data;
+  }
+
+  CLEAR_ERROR_STRING();
+
+  *num_time_steps = plot_file->num_states;
+  *num_nodes = (size_t)plot_file->control_data.numnp;
+
+  float *big_data = malloc(*num_nodes * *num_time_steps * 3 * sizeof(float));
+
+  size_t current_pointer = 0;
+  size_t t = 0;
+  while (t < *num_time_steps) {
+    d3_buffer_read_words_at(
+        &plot_file->buffer, &big_data[current_pointer], *num_nodes * 3,
+        plot_file->data_pointers[D3PLT_PTR_STATES + t] +
+            plot_file->data_pointers[D3PLT_PTR_STATE_NODE_VEL]);
+    if (plot_file->buffer.error_string) {
+      ERROR_AND_NO_RETURN_F_PTR("Failed to read words: %s",
+                                plot_file->buffer.error_string);
+      *num_nodes = 0;
+      *num_time_steps = 0;
+      free(big_data);
+      END_PROFILE_FUNC();
+      return NULL;
+    }
+
+    current_pointer += *num_nodes * 3;
+    t++;
+  }
+
+  END_PROFILE_FUNC();
+  return big_data;
+}
+
 float *d3plot_read_node_acceleration_32(d3plot_file *plot_file, size_t state,
                                         size_t *num_nodes) {
   BEGIN_PROFILE_FUNC();
@@ -644,6 +958,69 @@ float *d3plot_read_node_acceleration_32(d3plot_file *plot_file, size_t state,
 
   END_PROFILE_FUNC();
   return data;
+}
+
+float *d3plot_read_all_node_acceleration_32(d3plot_file *plot_file,
+                                            size_t *num_nodes,
+                                            size_t *num_time_steps) {
+  BEGIN_PROFILE_FUNC();
+
+  if (plot_file->buffer.word_size == 8) {
+    double *big_data64 =
+        d3plot_read_all_node_acceleration(plot_file, num_nodes, num_time_steps);
+    if (plot_file->error_string) {
+      END_PROFILE_FUNC();
+      return NULL;
+    }
+
+    const size_t num_values = *num_nodes * *num_time_steps * 3;
+
+    float *big_data = malloc(num_values * sizeof(float));
+
+    size_t i = 0;
+    while (i < num_values) {
+      big_data[i + 0] = big_data64[i + 0];
+      big_data[i + 1] = big_data64[i + 1];
+      big_data[i + 2] = big_data64[i + 2];
+
+      i += 3;
+    }
+    free(big_data64);
+
+    END_PROFILE_FUNC();
+    return big_data;
+  }
+
+  CLEAR_ERROR_STRING();
+
+  *num_time_steps = plot_file->num_states;
+  *num_nodes = (size_t)plot_file->control_data.numnp;
+
+  float *big_data = malloc(*num_nodes * *num_time_steps * 3 * sizeof(float));
+
+  size_t current_pointer = 0;
+  size_t t = 0;
+  while (t < *num_time_steps) {
+    d3_buffer_read_words_at(
+        &plot_file->buffer, &big_data[current_pointer], *num_nodes * 3,
+        plot_file->data_pointers[D3PLT_PTR_STATES + t] +
+            plot_file->data_pointers[D3PLT_PTR_STATE_NODE_ACC]);
+    if (plot_file->buffer.error_string) {
+      ERROR_AND_NO_RETURN_F_PTR("Failed to read words: %s",
+                                plot_file->buffer.error_string);
+      *num_nodes = 0;
+      *num_time_steps = 0;
+      free(big_data);
+      END_PROFILE_FUNC();
+      return NULL;
+    }
+
+    current_pointer += *num_nodes * 3;
+    t++;
+  }
+
+  END_PROFILE_FUNC();
+  return big_data;
 }
 
 double d3plot_read_time(d3plot_file *plot_file, size_t state) {

@@ -158,6 +158,21 @@ Array<dVec3> D3plot::read_node_coordinates(size_t state) {
   return Array<dVec3>(nodes, num_nodes);
 }
 
+std::vector<Array<dVec3>> D3plot::read_all_node_coordinates() {
+  size_t num_nodes, num_time_steps;
+  dVec3 *nodes = reinterpret_cast<dVec3 *>(
+      d3plot_read_all_node_coordinates(&m_handle, &num_nodes, &num_time_steps));
+  if (m_handle.error_string) {
+    throw Exception(String(m_handle.error_string, false));
+  }
+
+  std::vector<Array<dVec3>> time_steps(num_time_steps);
+  for (size_t t = 0; t < num_time_steps; t++) {
+    time_steps[t] = Array<dVec3>(&nodes[t * num_nodes], num_nodes, t == 0);
+  }
+  return time_steps;
+}
+
 Array<dVec3> D3plot::read_node_velocity(size_t state) {
   size_t num_nodes;
   dVec3 *nodes = reinterpret_cast<dVec3 *>(
@@ -167,6 +182,21 @@ Array<dVec3> D3plot::read_node_velocity(size_t state) {
   }
 
   return Array<dVec3>(nodes, num_nodes);
+}
+
+std::vector<Array<dVec3>> D3plot::read_all_node_velocity() {
+  size_t num_nodes, num_time_steps;
+  dVec3 *nodes = reinterpret_cast<dVec3 *>(
+      d3plot_read_all_node_velocity(&m_handle, &num_nodes, &num_time_steps));
+  if (m_handle.error_string) {
+    throw Exception(String(m_handle.error_string, false));
+  }
+
+  std::vector<Array<dVec3>> time_steps(num_time_steps);
+  for (size_t t = 0; t < num_time_steps; t++) {
+    time_steps[t] = Array<dVec3>(&nodes[t * num_nodes], num_nodes, t == 0);
+  }
+  return time_steps;
 }
 
 Array<dVec3> D3plot::read_node_acceleration(size_t state) {
@@ -180,6 +210,21 @@ Array<dVec3> D3plot::read_node_acceleration(size_t state) {
   return Array<dVec3>(nodes, num_nodes);
 }
 
+std::vector<Array<dVec3>> D3plot::read_all_node_acceleration() {
+  size_t num_nodes, num_time_steps;
+  dVec3 *nodes = reinterpret_cast<dVec3 *>(d3plot_read_all_node_acceleration(
+      &m_handle, &num_nodes, &num_time_steps));
+  if (m_handle.error_string) {
+    throw Exception(String(m_handle.error_string, false));
+  }
+
+  std::vector<Array<dVec3>> time_steps(num_time_steps);
+  for (size_t t = 0; t < num_time_steps; t++) {
+    time_steps[t] = Array<dVec3>(&nodes[t * num_nodes], num_nodes, t == 0);
+  }
+  return time_steps;
+}
+
 Array<fVec3> D3plot::read_node_coordinates_32(size_t state) {
   size_t num_nodes;
   fVec3 *nodes = reinterpret_cast<fVec3 *>(
@@ -189,6 +234,21 @@ Array<fVec3> D3plot::read_node_coordinates_32(size_t state) {
   }
 
   return Array<fVec3>(nodes, num_nodes);
+}
+
+std::vector<Array<fVec3>> D3plot::read_all_node_coordinates_32() {
+  size_t num_nodes, num_time_steps;
+  fVec3 *nodes = reinterpret_cast<fVec3 *>(d3plot_read_all_node_coordinates_32(
+      &m_handle, &num_nodes, &num_time_steps));
+  if (m_handle.error_string) {
+    throw Exception(String(m_handle.error_string, false));
+  }
+
+  std::vector<Array<fVec3>> time_steps(num_time_steps);
+  for (size_t t = 0; t < num_time_steps; t++) {
+    time_steps[t] = Array<fVec3>(&nodes[t * num_nodes], num_nodes, t == 0);
+  }
+  return time_steps;
 }
 
 Array<fVec3> D3plot::read_node_velocity_32(size_t state) {
@@ -202,6 +262,21 @@ Array<fVec3> D3plot::read_node_velocity_32(size_t state) {
   return Array<fVec3>(nodes, num_nodes);
 }
 
+std::vector<Array<fVec3>> D3plot::read_all_node_velocity_32() {
+  size_t num_nodes, num_time_steps;
+  fVec3 *nodes = reinterpret_cast<fVec3 *>(
+      d3plot_read_all_node_velocity_32(&m_handle, &num_nodes, &num_time_steps));
+  if (m_handle.error_string) {
+    throw Exception(String(m_handle.error_string, false));
+  }
+
+  std::vector<Array<fVec3>> time_steps(num_time_steps);
+  for (size_t t = 0; t < num_time_steps; t++) {
+    time_steps[t] = Array<fVec3>(&nodes[t * num_nodes], num_nodes, t == 0);
+  }
+  return time_steps;
+}
+
 Array<fVec3> D3plot::read_node_acceleration_32(size_t state) {
   size_t num_nodes;
   fVec3 *nodes = reinterpret_cast<fVec3 *>(
@@ -211,6 +286,21 @@ Array<fVec3> D3plot::read_node_acceleration_32(size_t state) {
   }
 
   return Array<fVec3>(nodes, num_nodes);
+}
+
+std::vector<Array<fVec3>> D3plot::read_all_node_acceleration_32() {
+  size_t num_nodes, num_time_steps;
+  fVec3 *nodes = reinterpret_cast<fVec3 *>(d3plot_read_all_node_acceleration_32(
+      &m_handle, &num_nodes, &num_time_steps));
+  if (m_handle.error_string) {
+    throw Exception(String(m_handle.error_string, false));
+  }
+
+  std::vector<Array<fVec3>> time_steps(num_time_steps);
+  for (size_t t = 0; t < num_time_steps; t++) {
+    time_steps[t] = Array<fVec3>(&nodes[t * num_nodes], num_nodes, t == 0);
+  }
+  return time_steps;
 }
 
 double D3plot::read_time(size_t state) {
