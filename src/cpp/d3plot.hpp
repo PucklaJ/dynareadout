@@ -63,8 +63,8 @@ public:
   // Read all ids of the shell elements
   Array<d3_word> read_shell_element_ids();
   // Read all ids of the solid shell elements
-  Array<d3_word> read_solid_shell_element_ids();
-  // Read all ids of the solid, beam, shell and solid shell elements
+  Array<d3_word> read_thick_shell_element_ids();
+  // Read all ids of the solid, beam, shell and thick shell elements
   Array<d3_word> read_all_element_ids();
   // Read all ids of the parts
   Array<d3_word> read_part_ids();

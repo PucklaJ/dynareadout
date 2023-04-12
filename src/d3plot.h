@@ -99,7 +99,7 @@ double *d3plot_read_node_coordinates(d3plot_file *plot_file, size_t state,
                                      size_t *num_nodes);
 /* Reads all node coordinates of all time steps and returns it as one big
  * array. Format TimeStep0(XYZXYZ...)TimeStep1(XYZXYZ...)...
- * Example: Access the the node at index 20 and time step 60:
+ * Example: Access the node at index 20 and time step 60:
  * X: rv[60*(num_nodes*3)+20*3+0]
  * Y: rv[60*(num_nodes*3)+20*3+1]
  * Z: rv[60*(num_nodes*3)+20*3+2]
@@ -196,14 +196,14 @@ char *d3plot_read_title(d3plot_file *plot_file);
 struct tm *d3plot_read_run_time(d3plot_file *plot_file);
 /* Returns all elements of a part. The part_index can retrieved by iterating
  * over the array returned by d3plot_read_part_ids. The return value needs to be
- * deallocated by _d3plot_free_part*/
+ * deallocated by d3plot_free_part*/
 d3plot_part d3plot_read_part(d3plot_file *plot_file, size_t part_index);
 /* The same as d3plot_read_part, but instead of an index into the parts, this
  * function takes an id. You can supply this function with the part ids returned
  * by d3plot_read_part_ids. If you set part_ids to NULL they will be read in
  * this function call. Which means that if you intend to call this function
  * multiple times, it is best to preload the part ids. The return value needs to
- * be deallocated by _d3plot_free_part.*/
+ * be deallocated by d3plot_free_part.*/
 d3plot_part d3plot_read_part_by_id(d3plot_file *plot_file, d3_word part_id,
                                    const d3_word *part_ids, size_t num_parts);
 
@@ -253,7 +253,7 @@ void d3plot_free_part(d3plot_part *part);
  * to reach their outputs, so be aware of    *
  * that if you use them                      */
 
-/* Read all ids of the solid, beam, shell and solid shell elements. The return
+/* Read all ids of the solid, beam, shell and thick shell elements. The return
  * value needs to be deallocated by free*/
 d3_word *d3plot_read_all_element_ids(d3plot_file *plot_file, size_t *num_ids);
 /* Returns the index of id in the array ids. If it cannot be found then

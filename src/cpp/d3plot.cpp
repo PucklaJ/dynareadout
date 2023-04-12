@@ -94,7 +94,7 @@ Array<d3_word> D3plot::read_shell_element_ids() {
   return Array<d3_word>(ids, num_ids);
 }
 
-Array<d3_word> D3plot::read_solid_shell_element_ids() {
+Array<d3_word> D3plot::read_thick_shell_element_ids() {
   size_t num_ids;
   d3_word *ids = d3plot_read_thick_shell_element_ids(&m_handle, &num_ids);
   if (m_handle.error_string) {
