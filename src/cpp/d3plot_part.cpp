@@ -36,6 +36,11 @@ D3plotPart::D3plotPart(D3plotPart &&rhs) : m_part(rhs.m_part) {
   rhs.m_part.thick_shell_ids = NULL;
   rhs.m_part.beam_ids = NULL;
   rhs.m_part.shell_ids = NULL;
+
+  rhs.m_part.solid_indices = NULL;
+  rhs.m_part.thick_shell_indices = NULL;
+  rhs.m_part.beam_indices = NULL;
+  rhs.m_part.shell_indices = NULL;
 }
 
 D3plotPart::~D3plotPart() { d3plot_free_part(&m_part); }
@@ -46,6 +51,11 @@ D3plotPart &D3plotPart::operator=(D3plotPart &&rhs) {
   rhs.m_part.thick_shell_ids = NULL;
   rhs.m_part.beam_ids = NULL;
   rhs.m_part.shell_ids = NULL;
+
+  rhs.m_part.solid_indices = NULL;
+  rhs.m_part.thick_shell_indices = NULL;
+  rhs.m_part.beam_indices = NULL;
+  rhs.m_part.shell_indices = NULL;
 
   return *this;
 }
@@ -64,6 +74,23 @@ Array<d3_word> D3plotPart::get_beam_elements() {
 
 Array<d3_word> D3plotPart::get_shell_elements() {
   return Array<d3_word>(m_part.shell_ids, m_part.num_shells, false);
+}
+
+Array<size_t> D3plotPart::get_solid_element_indices() {
+  return Array<size_t>(m_part.solid_indices, m_part.num_solids, false);
+}
+
+Array<size_t> D3plotPart::get_thick_shell_element_indices() {
+  return Array<size_t>(m_part.thick_shell_indices, m_part.num_thick_shells,
+                       false);
+}
+
+Array<size_t> D3plotPart::get_beam_element_indices() {
+  return Array<size_t>(m_part.beam_indices, m_part.num_beams, false);
+}
+
+Array<size_t> D3plotPart::get_shell_element_indices() {
+  return Array<size_t>(m_part.shell_indices, m_part.num_shells, false);
 }
 
 Array<d3_word> D3plotPart::get_node_ids(

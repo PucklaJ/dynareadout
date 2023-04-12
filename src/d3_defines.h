@@ -72,6 +72,11 @@ typedef struct {
   d3_word *beam_ids;
   d3_word *shell_ids;
 
+  size_t *solid_indices;
+  size_t *thick_shell_indices;
+  size_t *beam_indices;
+  size_t *shell_indices;
+
   size_t num_solids;
   size_t num_thick_shells;
   size_t num_beams;

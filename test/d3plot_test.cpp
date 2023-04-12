@@ -425,6 +425,7 @@ TEST_CASE("d3plot") {
 
   part = d3plot_read_part(&plot_file, 8);
   CHECK(part.num_solids == 45000);
+  CHECK(part.solid_indices != NULL);
   d3plot_free_part(&part);
 
   d3plot_solid *solids =
@@ -666,6 +667,7 @@ TEST_CASE("d3plotC++") {
   part = plot_file.read_part_by_id(71000063);
   CHECK(part.get_shell_elements().size() == 7368);
   CHECK(part.get_num_elements() == 7368);
+  CHECK(part.get_shell_element_indices().size() == 7368);
 
   {
     const auto part_element_ids = part.get_all_element_ids();
@@ -723,6 +725,7 @@ TEST_CASE("d3plotC++") {
 
   part = plot_file.read_part(8);
   CHECK(part.get_solid_elements().size() == 45000);
+  CHECK(part.get_solid_element_indices().size() == 45000);
 
   {
     const auto solids = plot_file.read_solids_state(101);

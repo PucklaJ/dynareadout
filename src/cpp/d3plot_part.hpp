@@ -49,6 +49,15 @@ public:
   // Returns all shell element ids of the part
   Array<d3_word> get_shell_elements();
 
+  // Returns all solid element indices of the part
+  Array<size_t> get_solid_element_indices();
+  // Returns all thick shell element indices of the part
+  Array<size_t> get_thick_shell_element_indices();
+  // Returns all beam element indices of the part
+  Array<size_t> get_beam_element_indices();
+  // Returns all shell element indices of the part
+  Array<size_t> get_shell_element_indices();
+
   // Returns all node ids of the part. All ids and connectivities of all
   // different elements can be provided to improve performance, since they would
   // not need to be loaded.

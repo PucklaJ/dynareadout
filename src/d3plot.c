@@ -2027,7 +2027,8 @@ struct tm *d3plot_read_run_time(d3plot_file *plot_file) {
   return time_value;
 }
 
-#define ADD_ELEMENTS_TO_PART(id_func, el_func, el_type, part_num, part_ids)    \
+#define ADD_ELEMENTS_TO_PART(id_func, el_func, el_type, part_num, part_ids,    \
+                             part_indices)                                     \
   ids = id_func(plot_file, &num_elements);                                     \
   if (plot_file->error_string) {                                               \
     /* Just ignore those elements*/                                            \
@@ -2046,7 +2047,10 @@ struct tm *d3plot_read_run_time(d3plot_file *plot_file) {
           part.part_num++;                                                     \
           part.part_ids =                                                      \
               realloc(part.part_ids, part.part_num * sizeof(d3_word));         \
+          part.part_indices =                                                  \
+              realloc(part.part_indices, part.part_num * sizeof(size_t));      \
           part.part_ids[part.part_num - 1] = ids[i];                           \
+          part.part_indices[part.part_num - 1] = i;                            \
         }                                                                      \
                                                                                \
         i++;                                                                   \
@@ -2066,6 +2070,10 @@ d3plot_part d3plot_read_part(d3plot_file *plot_file, size_t part_index) {
   part.thick_shell_ids = NULL;
   part.beam_ids = NULL;
   part.shell_ids = NULL;
+  part.solid_indices = NULL;
+  part.thick_shell_indices = NULL;
+  part.beam_indices = NULL;
+  part.shell_indices = NULL;
   part.num_solids = 0;
   part.num_thick_shells = 0;
   part.num_beams = 0;
@@ -2076,15 +2084,15 @@ d3plot_part d3plot_read_part(d3plot_file *plot_file, size_t part_index) {
 
   ADD_ELEMENTS_TO_PART(d3plot_read_solid_element_ids,
                        d3plot_read_solid_elements, d3plot_solid_con, num_solids,
-                       solid_ids);
+                       solid_ids, solid_indices);
   ADD_ELEMENTS_TO_PART(d3plot_read_thick_shell_element_ids,
                        d3plot_read_thick_shell_elements, d3plot_thick_shell_con,
-                       num_thick_shells, thick_shell_ids);
+                       num_thick_shells, thick_shell_ids, thick_shell_indices);
   ADD_ELEMENTS_TO_PART(d3plot_read_beam_element_ids, d3plot_read_beam_elements,
-                       d3plot_beam_con, num_beams, beam_ids);
+                       d3plot_beam_con, num_beams, beam_ids, beam_indices);
   ADD_ELEMENTS_TO_PART(d3plot_read_shell_element_ids,
                        d3plot_read_shell_elements, d3plot_shell_con, num_shells,
-                       shell_ids);
+                       shell_ids, shell_indices);
 
   /* If no elements have been found, this means that the part with the given
    * index does not exist*/
@@ -2404,10 +2412,19 @@ void d3plot_free_part(d3plot_part *part) {
   free(part->beam_ids);
   free(part->shell_ids);
 
+  free(part->solid_indices);
+  free(part->thick_shell_indices);
+  free(part->beam_indices);
+  free(part->shell_indices);
+
   part->solid_ids = NULL;
   part->thick_shell_ids = NULL;
   part->beam_ids = NULL;
   part->shell_ids = NULL;
+  part->solid_indices = NULL;
+  part->thick_shell_indices = NULL;
+  part->beam_indices = NULL;
+  part->shell_indices = NULL;
   part->num_solids = 0;
   part->num_thick_shells = 0;
   part->num_beams = 0;
