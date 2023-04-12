@@ -12,6 +12,10 @@ This library also supports bindings to other languages
 | Python   |      ✅      | [dynareadout_python](https://github.com/PucklaJ/dynareadout_python) |
 | Go       |      ✅      | [dynareadout_go](https://github.com/PucklaJ/dynareadout_go)         |
 
+## Wiki
+
+This library has a [wiki](https://github.com/PucklaJ/dynareadout/wiki) which includes the API documentation for all languages.
+
 ## Build
 
 You just need any C compiler and [xmake](https://xmake.io) as the build system. Just call `xmake` and the library will build. You can find the built binaries inside the build folder. To also build some of the bindings you need to call `xmake f` with one or more of the following flags. And then `xmake` again.
