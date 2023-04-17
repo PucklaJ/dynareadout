@@ -201,23 +201,29 @@ void d3_buffer_read_words(d3_buffer *buffer, void *words, size_t num_words) {
     END_PROFILE_FUNC();
     return;
   } else {
+    /* Read from as much files as necessary to read all number of words*/
     size_t words_read = 0;
     while (words_read < num_words) {
+
+      /* How much words can be read from the current file*/
       const size_t words_from_cur_file =
           (buffer->file_sizes[buffer->cur_file_handle] - cur_file_pos) /
           buffer->word_size;
 
-      if (words_from_cur_file >= num_words - words_read) {
+      const size_t words_left = num_words - words_read;
+      if (words_from_cur_file >= words_left) {
+        /* We can read all of the rest of the words from the current file*/
         if (fread(&words_ptr[words_read * buffer->word_size], buffer->word_size,
-                  num_words - words_read,
-                  buffer->file_handles[buffer->cur_file_handle]) <
-            num_words - words_read) {
+                  words_left,
+                  buffer->file_handles[buffer->cur_file_handle]) < words_left) {
           ERROR_AND_RETURN_BUFFER_PTR("Read Error");
         }
 
-        buffer->cur_word += num_words - words_read;
+        buffer->cur_word += words_left;
         words_read = num_words;
+        break;
       } else {
+        /* Read the rest of the current file*/
         if (fread(&words_ptr[words_read * buffer->word_size], buffer->word_size,
                   words_from_cur_file,
                   buffer->file_handles[buffer->cur_file_handle]) <
@@ -228,7 +234,12 @@ void d3_buffer_read_words(d3_buffer *buffer, void *words, size_t num_words) {
         buffer->cur_word += words_from_cur_file;
         words_read += words_from_cur_file;
         buffer->cur_file_handle++;
-        /* TODO: Check if out of bounds*/
+
+        /* Check if out of bounds*/
+        if (buffer->cur_file_handle >= buffer->num_file_handles) {
+          ERROR_AND_RETURN_BUFFER_PTR("Requested too much words");
+        }
+
         cur_file_pos = 0;
         if (fseek(buffer->file_handles[buffer->cur_file_handle], 0, SEEK_SET) !=
             0) {
@@ -273,7 +284,11 @@ void d3_buffer_read_words_at(d3_buffer *buffer, void *words, size_t num_words,
     } else {
       pos_in_bytes -= file_size;
       buffer->cur_file_handle++;
-      /* TODO: Check if out of bounds*/
+
+      /* Check if out of bounds*/
+      if (buffer->cur_file_handle >= buffer->num_file_handles) {
+        ERROR_AND_RETURN_BUFFER_PTR("Read position is out of bounds");
+      }
 
       if (pos_in_bytes == 0) {
         if (fseek(buffer->file_handles[buffer->cur_file_handle], 0, SEEK_SET) !=
