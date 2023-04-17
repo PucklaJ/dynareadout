@@ -144,8 +144,8 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def("read_solid_element_ids", &dro::D3plot::read_solid_element_ids)
       .def("read_beam_element_ids", &dro::D3plot::read_beam_element_ids)
       .def("read_shell_element_ids", &dro::D3plot::read_shell_element_ids)
-      .def("read_solid_shell_element_ids",
-           &dro::D3plot::read_solid_shell_element_ids)
+      .def("read_thick_shell_element_ids",
+           &dro::D3plot::read_thick_shell_element_ids)
       .def("read_all_element_ids", &dro::D3plot::read_all_element_ids)
       .def("read_part_ids", &dro::D3plot::read_part_ids)
 
