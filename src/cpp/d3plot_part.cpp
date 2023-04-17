@@ -114,7 +114,9 @@ Array<d3_word> D3plotPart::get_node_ids(
       beam_cons ? beam_cons->data() : NULL,
       shell_cons ? shell_cons->data() : NULL,
       thick_shell_cons ? thick_shell_cons->data() : NULL);
-  // TODO: Check for errors
+  if (plot_file.get_handle().error_string) {
+    throw D3plot::Exception(String(plot_file.get_handle().error_string, false));
+  }
 
   return Array<d3_word>(part_node_ids, num_part_node_ids);
 }
@@ -139,7 +141,9 @@ Array<d3_word> D3plotPart::get_node_indices(
       beam_cons ? beam_cons->data() : NULL,
       shell_cons ? shell_cons->data() : NULL,
       thick_shell_cons ? thick_shell_cons->data() : NULL);
-  // TODO: Check for errors
+  if (plot_file.get_handle().error_string) {
+    throw D3plot::Exception(String(plot_file.get_handle().error_string, false));
+  }
 
   return Array<d3_word>(part_node_indices, num_part_node_indices);
 }
@@ -152,8 +156,7 @@ size_t D3plotPart::get_num_nodes(
     const Array<d3plot_beam_con> *beam_cons,
     const Array<d3plot_shell_con> *shell_cons,
     const Array<d3plot_thick_shell_con> *thick_shell_cons) const {
-  // TODO: Check for errors
-  return d3plot_part_get_num_nodes2(
+  const size_t num_nodes = d3plot_part_get_num_nodes2(
       &plot_file.get_handle(), &m_part, solid_ids ? solid_ids->data() : NULL,
       solid_ids ? solid_ids->size() : 0, beam_ids ? beam_ids->data() : NULL,
       beam_ids ? beam_ids->size() : 0, shell_ids ? shell_ids->data() : NULL,
@@ -164,6 +167,11 @@ size_t D3plotPart::get_num_nodes(
       beam_cons ? beam_cons->data() : NULL,
       shell_cons ? shell_cons->data() : NULL,
       thick_shell_cons ? thick_shell_cons->data() : NULL);
+  if (plot_file.get_handle().error_string) {
+    throw D3plot::Exception(String(plot_file.get_handle().error_string, false));
+  }
+
+  return num_nodes;
 }
 
 size_t D3plotPart::get_num_elements() const {
