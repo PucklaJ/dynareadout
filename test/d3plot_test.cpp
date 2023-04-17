@@ -34,6 +34,7 @@
 #ifdef BUILD_CPP
 #include "main_test.hpp"
 #include <d3plot.hpp>
+#include <sstream>
 #endif
 
 #define CHECK_APPROX(lhs, rhs) CHECK_LT(fabs(lhs - rhs), 10e-6)

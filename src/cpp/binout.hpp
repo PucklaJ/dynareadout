@@ -74,7 +74,7 @@ public:
   // Returns whether a record with the given path and variable name exists
   bool variable_exists(const std::string &path_to_variable) const noexcept;
   // Returns the entries under a given path
-  std::vector<String> get_children(const std::string &path) const;
+  std::vector<String> get_children(const std::string &path = "/") const;
   // Returns the number of dxxxxxx folders inside of a given path
   size_t get_num_timesteps(const std::string &path) const;
 
