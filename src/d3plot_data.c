@@ -36,14 +36,17 @@
 #endif
 #define DT_PTR_SET(index)                                                      \
   plot_file->data_pointers[index] = plot_file->buffer.cur_word
+#define DT_PTR_SET_DPTR(index) plot_file->data_pointers[index] = data_pointer
 
 #include "d3plot_error_macros.h"
 
 int _d3plot_read_geometry_data(d3plot_file *plot_file) {
   BEGIN_PROFILE_FUNC();
 
-  /* TODO: We can skip the entire GEOMETRY DATA section since we already know
+  /* We can skip the entire GEOMETRY DATA section since we already know
    * how big it is and where to find the data*/
+  const size_t geometry_start_word = plot_file->buffer.cur_word;
+  size_t data_pointer = geometry_start_word;
 
   if (CDP.element_connectivity_packed) {
     ERROR_AND_NO_RETURN_PTR("Packed Element Connectivity is not supported");
@@ -52,33 +55,36 @@ int _d3plot_read_geometry_data(d3plot_file *plot_file) {
   }
 
   /* Here are the node coordinates*/
-  DT_PTR_SET(D3PLT_PTR_NODE_COORDS);
+  DT_PTR_SET_DPTR(D3PLT_PTR_NODE_COORDS);
 
-  d3_buffer_skip_words(&plot_file->buffer, CDP.numnp * CDP.ndim);
+  data_pointer += CDP.numnp * CDP.ndim;
 
   if (CDP.nel8 > 0) {
-    DT_PTR_SET(D3PLT_PTR_EL8_CONNECT);
-    d3_buffer_skip_words(&plot_file->buffer, 9 * CDP.nel8);
+    DT_PTR_SET_DPTR(D3PLT_PTR_EL8_CONNECT);
+    data_pointer += 9 * CDP.nel8;
   } else if (CDP.nel8 < 0) {
     const int64_t nel8 = CDP.nel8 * -1;
-    d3_buffer_skip_words(&plot_file->buffer, 2 * nel8);
+    data_pointer += 2 * nel8;
     /* TODO: read function for -nel8 data*/
   }
 
   if (CDP.nelt > 0) {
-    DT_PTR_SET(D3PLT_PTR_ELT_CONNECT);
-    d3_buffer_skip_words(&plot_file->buffer, 9 * CDP.nelt);
+    DT_PTR_SET_DPTR(D3PLT_PTR_ELT_CONNECT);
+    data_pointer += 9 * CDP.nelt;
   }
 
   if (CDP.nel2 > 0) {
-    DT_PTR_SET(D3PLT_PTR_EL2_CONNECT);
-    d3_buffer_skip_words(&plot_file->buffer, 6 * CDP.nel2);
+    DT_PTR_SET_DPTR(D3PLT_PTR_EL2_CONNECT);
+    data_pointer += 6 * CDP.nel2;
   }
 
   if (CDP.nel4 > 0) {
-    DT_PTR_SET(D3PLT_PTR_EL4_CONNECT);
-    d3_buffer_skip_words(&plot_file->buffer, 5 * CDP.nel4);
+    DT_PTR_SET_DPTR(D3PLT_PTR_EL4_CONNECT);
+    data_pointer += 5 * CDP.nel4;
   }
+
+  /* Skip the entire geometry section*/
+  d3_buffer_skip_words(&plot_file->buffer, data_pointer - geometry_start_word);
 
   if (plot_file->buffer.error_string) {
     ERROR_AND_NO_RETURN_F_PTR("Failed to skip words: %s",
@@ -155,25 +161,29 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
     }
   }
 
-  DT_PTR_SET(D3PLT_PTR_NODE_IDS);
-  d3_buffer_skip_words(&plot_file->buffer, nsortd); /* nusern*/
-  DT_PTR_SET(D3PLT_PTR_EL8_IDS);
-  d3_buffer_skip_words(&plot_file->buffer, nsrhd); /* nuserh*/
-  DT_PTR_SET(D3PLT_PTR_EL2_IDS);
-  d3_buffer_skip_words(&plot_file->buffer, nsrbd); /* nuserb*/
-  DT_PTR_SET(D3PLT_PTR_EL4_IDS);
-  d3_buffer_skip_words(&plot_file->buffer, nsrsd); /* nusers*/
-  DT_PTR_SET(D3PLT_PTR_ELT_IDS);
-  d3_buffer_skip_words(&plot_file->buffer, nsrtd); /* nusert*/
+  const size_t data_pointer_start = plot_file->buffer.cur_word;
+  size_t data_pointer = plot_file->buffer.cur_word;
+  DT_PTR_SET_DPTR(D3PLT_PTR_NODE_IDS);
+  data_pointer += nsortd; /* nusern*/
+  DT_PTR_SET_DPTR(D3PLT_PTR_EL8_IDS);
+  data_pointer += nsrhd; /* nuserh*/
+  DT_PTR_SET_DPTR(D3PLT_PTR_EL2_IDS);
+  data_pointer += nsrbd; /* nuserb*/
+  DT_PTR_SET_DPTR(D3PLT_PTR_EL4_IDS);
+  data_pointer += nsrsd; /* nusers*/
+  DT_PTR_SET_DPTR(D3PLT_PTR_ELT_IDS);
+  data_pointer += nsrtd; /* nusert*/
   if (nsort < 0) {
-    DT_PTR_SET(D3PLT_PTR_PART_IDS);
-    d3_buffer_skip_words(&plot_file->buffer, nmmat); /* norder*/
-    d3_buffer_skip_words(&plot_file->buffer, 2 * nmmat);
+    DT_PTR_SET_DPTR(D3PLT_PTR_PART_IDS);
+    data_pointer += 3 * nmmat; /* norder + ?*/
     /* TODO: Find out what NSRMU and NSRMP is for*/
   } else {
     /* These values are not used when nsort >= 0*/
-    d3_buffer_skip_words(&plot_file->buffer, 3 * nmmat);
+    data_pointer += 3 * nmmat;
   }
+
+  /* Skip multiple values at once*/
+  d3_buffer_skip_words(&plot_file->buffer, data_pointer - data_pointer_start);
 
   if (plot_file->buffer.error_string) {
     ERROR_AND_NO_RETURN_F_PTR("Failed to skip words: %s",
@@ -201,21 +211,26 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file) {
 int _d3plot_read_extra_node_connectivity(d3plot_file *plot_file) {
   BEGIN_PROFILE_FUNC();
 
+  const size_t data_pointer_start = plot_file->buffer.cur_word;
+  size_t data_pointer = data_pointer_start;
   if (CDP.nel8 < 0) {
     const int64_t nel8 = CDP.nel8 * -1;
-    d3_buffer_skip_words(&plot_file->buffer, 2 * nel8);
+    data_pointer += 2 * nel8;
     /* TODO: read function for -nel8 data*/
   }
 
   if (CDP.nel48 > 0) {
-    d3_buffer_skip_words(&plot_file->buffer, 5 * CDP.nel48);
+    data_pointer += 5 * CDP.nel48;
     /* TODO: read function for nel48 data*/
   }
 
   if (CDP.nel20 > 0) {
-    d3_buffer_skip_words(&plot_file->buffer, 13 * CDP.nel20);
+    data_pointer += 13 * CDP.nel20;
     /* TODO: read function for nel20 data*/
   }
+
+  /* Skip everything at once*/
+  d3_buffer_skip_words(&plot_file->buffer, data_pointer - data_pointer_start);
 
   if (plot_file->buffer.error_string) {
     ERROR_AND_NO_RETURN_F_PTR("Failed to skip words: %s",
