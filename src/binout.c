@@ -352,7 +352,7 @@ uint8_t binout_get_type_id(binout_file *bin_file,
   const binout_file_t *file =
       binout_directory_get_file(&bin_file->directory, &path);
   if (!file) {
-    NEW_ERROR_STRING("The given variable has not been found");
+    NEW_ERROR_STRING_F("\"%s\" has not been found", path_to_variable);
     END_PROFILE_FUNC();
     return BINOUT_TYPE_INVALID;
   }

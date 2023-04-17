@@ -38,16 +38,14 @@ void *_binout_read(binout_file *bin_file, const char *path_to_variable,
   const binout_file_t *file =
       binout_directory_get_file(&bin_file->directory, &path);
   if (!file) {
-    NEW_ERROR_STRING("The given variable has not been found");
+    NEW_ERROR_STRING_F("\"%s\" has not been found", path_to_variable);
     return NULL;
   }
 
   if (file->var_type != binout_type) {
-    char buffer[50];
-    sprintf(buffer, "The data is of type %s instead of %s",
-            _binout_get_type_name(file->var_type),
-            _binout_get_type_name((uint64_t)binout_type));
-    NEW_ERROR_STRING(buffer);
+    NEW_ERROR_STRING_F("\"%s\" is of type %s instead of %s", path_to_variable,
+                       _binout_get_type_name(file->var_type),
+                       _binout_get_type_name((uint64_t)binout_type));
     return NULL;
   }
 
@@ -55,14 +53,15 @@ void *_binout_read(binout_file *bin_file, const char *path_to_variable,
   FILE *file_handle = bin_file->file_handles[file->file_index];
 
   if (fseek(file_handle, file->file_pos, SEEK_SET) != 0) {
-    NEW_ERROR_STRING("Failed to seek to the position of the data");
+    NEW_ERROR_STRING_F("Failed to seek to the position of \"%s\"",
+                       path_to_variable);
     return NULL;
   }
 
   void *data = malloc(file->size);
   if (fread(data, file->size, 1, file_handle) != 1) {
     free(data);
-    NEW_ERROR_STRING("Failed to read the data");
+    NEW_ERROR_STRING_F("Failed to read \"%s\"", path_to_variable);
     return NULL;
   }
 
@@ -82,7 +81,7 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
 
   path_view_t path = path_view_new(variable);
   if (!path_view_advance(&path)) {
-    NEW_ERROR_STRING("The variable path is too short");
+    NEW_ERROR_STRING_F("The path \"%s\" is too short", variable);
     return NULL;
   }
 
@@ -91,18 +90,18 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
       &path);
 
   if (folder_index == (size_t)~0) {
-    NEW_ERROR_STRING("The folder of the variable does not exist");
+    NEW_ERROR_STRING_F("The folder of \"%s\" does not exist", variable);
     return NULL;
   }
 
   if (BINOUT_FOLDER_CHILDREN_GET_TYPE(
           (&bin_file->directory.children[folder_index])) != BINOUT_FOLDER) {
-    NEW_ERROR_STRING("The folder contains files");
+    NEW_ERROR_STRING_F("The folder of \"%s\" contains files", variable);
     return NULL;
   }
 
   if (!path_view_advance(&path)) {
-    NEW_ERROR_STRING("The variable path is too short");
+    NEW_ERROR_STRING_F("The path \"%s\" is too short", variable);
     return NULL;
   }
 
@@ -113,7 +112,7 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
       bin_file->directory.children[folder_index].num_children;
 
   if (num_folders == 0) {
-    NEW_ERROR_STRING("The folder is empty");
+    NEW_ERROR_STRING_F("The folder of \"%s\" is empty", variable);
     return NULL;
   }
 
@@ -127,7 +126,8 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
 
   /* If no dxxxxxx folders are found*/
   if (start_index == num_folders) {
-    NEW_ERROR_STRING("The folder does not contain timed data");
+    NEW_ERROR_STRING_F("The folder of \"%s\" does not contain timed data",
+                       variable);
     return NULL;
   }
 
@@ -149,14 +149,17 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
 
     if (current_d_folder->num_children == 0) {
       free(data);
-      NEW_ERROR_STRING("The folder which should contain the data is empty");
+      NEW_ERROR_STRING_F(
+          "The folder of \"%s\" which should contain the data is empty",
+          variable);
       return NULL;
     }
 
     if (BINOUT_FOLDER_CHILDREN_GET_TYPE(current_d_folder) != BINOUT_FILE) {
       free(data);
-      NEW_ERROR_STRING(
-          "The folder which should contain the data does contain more folders");
+      NEW_ERROR_STRING_F("The folder of \"%s\" which should contain the data "
+                         "does contain more folders",
+                         variable);
       return NULL;
     }
 
@@ -167,7 +170,7 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
           current_d_folder->num_children - 1, &path);
 
       if (file_index == (size_t)~0) {
-        NEW_ERROR_STRING("The variable has not been found");
+        NEW_ERROR_STRING_F("\"%s\" has not been found", variable);
         return NULL;
       }
 
@@ -175,7 +178,9 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
           &((const binout_file_t *)current_d_folder->children)[file_index];
 
       if (file->var_type != binout_type) {
-        NEW_ERROR_STRING("The variable is of the wrong type");
+        NEW_ERROR_STRING_F("\"%s\" is of the type %s instead of %s", variable,
+                           _binout_get_type_name(file->var_type),
+                           _binout_get_type_name(binout_type));
         return NULL;
       }
 
@@ -195,7 +200,7 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
 
       if (file_index == (size_t)~0) {
         free(data);
-        NEW_ERROR_STRING("The variable has not been found");
+        NEW_ERROR_STRING_F("\"%s\" has not been found", variable);
         return NULL;
       }
 
@@ -205,14 +210,14 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
     FILE *file_handle = bin_file->file_handles[file->file_index];
     if (fseek(file_handle, file->file_pos, SEEK_SET) != 0) {
       free(data);
-      NEW_ERROR_STRING("Failed to seek to the data");
+      NEW_ERROR_STRING_F("Failed to seek to the data of \"%s\"", variable);
       return NULL;
     }
 
     if (fread(&((uint8_t *)data)[(i - start_index) * file->size], file->size, 1,
               file_handle) != 1) {
       free(data);
-      NEW_ERROR_STRING("Failed to read the data");
+      NEW_ERROR_STRING_F("Failed to read the data of \"%s\"", variable);
       return NULL;
     }
 
