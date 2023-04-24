@@ -2179,7 +2179,7 @@ time_t d3plot_read_epoch_run_time(d3plot_file *plot_file) {
   if (plot_file->buffer.error_string) {
     ERROR_AND_NO_RETURN_F_PTR("Failed to read words: %s",
                               plot_file->buffer.error_string);
-    return NULL;
+    return (time_t)0;
   }
   const time_t epoch_time = run_time;
 
