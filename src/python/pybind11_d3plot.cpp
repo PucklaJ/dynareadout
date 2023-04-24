@@ -25,6 +25,7 @@
 
 #include "conversions.hpp"
 #include <d3plot.hpp>
+#include <pybind11/chrono.h>
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
@@ -175,7 +176,7 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def("read_beam_elements", &dro::D3plot::read_beam_elements)
       .def("read_shell_elements", &dro::D3plot::read_shell_elements)
       .def("read_title", &dro::D3plot::read_title)
-      /*TODO: read_run_time*/
+      .def("read_run_time", &dro::D3plot::read_run_time)
       .def("read_part", &dro::D3plot::read_part)
       .def("read_part_by_id", &dro::D3plot::read_part_by_id, py::arg("part_id"),
            py::arg("part_ids") = dro::Array<d3_word>())

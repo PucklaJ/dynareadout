@@ -440,12 +440,12 @@ SizedString D3plot::read_title() {
   return SizedString(title, j);
 }
 
-struct tm *D3plot::read_run_time() {
-  struct tm *run_time = d3plot_read_run_time(&m_handle);
+std::chrono::system_clock::time_point D3plot::read_run_time() {
+  const time_t run_time = d3plot_read_epoch_run_time(&m_handle);
   if (m_handle.error_string) {
     throw Exception(String(m_handle.error_string, false));
   }
-  return run_time;
+  return std::chrono::system_clock::time_point{std::chrono::seconds{run_time}};
 }
 
 D3plotPart D3plot::read_part(size_t part_index) {

@@ -203,6 +203,8 @@ d3plot_shell_con *d3plot_read_shell_elements(d3plot_file *plot_file,
 char *d3plot_read_title(d3plot_file *plot_file);
 /* Returns the time at which the simulation has been run as calender time*/
 struct tm *d3plot_read_run_time(d3plot_file *plot_file);
+/* Returns the time at which the simulation has been run as epoch time*/
+time_t d3plot_read_epoch_run_time(d3plot_file *plot_file);
 /* Returns all elements of a part. The part_index can retrieved by iterating
  * over the array returned by d3plot_read_part_ids. The return value needs to be
  * deallocated by d3plot_free_part*/

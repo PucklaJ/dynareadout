@@ -467,15 +467,17 @@ TEST_CASE("d3plotC++") {
     CHECK(title == "Pouch_macro_37Ah");
   }
 
-  struct tm *run_time = plot_file.read_run_time();
-  REQUIRE(run_time != NULL);
-  CHECK(run_time->tm_wday == 3);
-  CHECK(run_time->tm_mday == 10);
-  CHECK(run_time->tm_mon == 10);
-  CHECK(run_time->tm_year == 121);
-  CHECK(run_time->tm_hour == 12);
-  CHECK(run_time->tm_min == 1);
-  CHECK(run_time->tm_sec == 42);
+  const std::chrono::system_clock::time_point run_time =
+      plot_file.read_run_time();
+  const time_t run_time_epoch = std::chrono::system_clock::to_time_t(run_time);
+  struct tm *run_time_c = localtime(&run_time_epoch);
+  CHECK(run_time_c->tm_wday == 3);
+  CHECK(run_time_c->tm_mday == 10);
+  CHECK(run_time_c->tm_mon == 10);
+  CHECK(run_time_c->tm_year == 121);
+  CHECK(run_time_c->tm_hour == 12);
+  CHECK(run_time_c->tm_min == 1);
+  CHECK(run_time_c->tm_sec == 42);
 
   REQUIRE(plot_file.num_time_steps() == 102);
 

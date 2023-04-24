@@ -2169,6 +2169,24 @@ struct tm *d3plot_read_run_time(d3plot_file *plot_file) {
   return time_value;
 }
 
+time_t d3plot_read_epoch_run_time(d3plot_file *plot_file) {
+  BEGIN_PROFILE_FUNC();
+  CLEAR_ERROR_STRING();
+
+  d3_word run_time = 0;
+  d3_buffer_read_words_at(&plot_file->buffer, &run_time, 1,
+                          plot_file->data_pointers[D3PLT_PTR_RUN_TIME]);
+  if (plot_file->buffer.error_string) {
+    ERROR_AND_NO_RETURN_F_PTR("Failed to read words: %s",
+                              plot_file->buffer.error_string);
+    return NULL;
+  }
+  const time_t epoch_time = run_time;
+
+  END_PROFILE_FUNC();
+  return epoch_time;
+}
+
 #define ADD_ELEMENTS_TO_PART(id_func, el_func, el_type, part_num, part_ids,    \
                              part_indices)                                     \
   ids = id_func(plot_file, &num_elements);                                     \

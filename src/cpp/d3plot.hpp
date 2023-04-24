@@ -27,6 +27,7 @@
 #include "array.hpp"
 #include "d3plot_part.hpp"
 #include "vec.hpp"
+#include <chrono>
 #include <d3plot.h>
 #include <exception>
 #include <filesystem>
@@ -128,7 +129,7 @@ public:
   // Returns a string holding the Title of the d3plot file
   SizedString read_title();
   // Returns the time at which the simulation has been run as calender time
-  struct tm *read_run_time();
+  std::chrono::system_clock::time_point read_run_time();
   // Returns all elements of a part. The part_index can retrieved by iterating
   // over the array returned by read_part_ids
   D3plotPart read_part(size_t part_index);
