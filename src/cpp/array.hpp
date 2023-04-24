@@ -25,6 +25,7 @@
 
 #pragma once
 #include <cerrno>
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
