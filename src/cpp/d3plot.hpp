@@ -95,6 +95,12 @@ public:
   std::vector<Array<fVec3>> read_all_node_acceleration_32();
   // Read the time of a given state (time step) in milliseconds
   double read_time(size_t state);
+  // Reads all time of every state (time step) in milliseconds
+  Array<double> read_all_time();
+  // Read the time of a given state (time step) in milliseconds
+  float read_time_32(size_t state);
+  // Reads all time of every state (time step) in milliseconds
+  Array<float> read_all_time_32();
   // Returns stress, strain (if NEIPH >= 6) for a given state
   Array<d3plot_solid> read_solids_state(size_t state);
   // Returns stress, strain (if ISTRN == 1) for a given state

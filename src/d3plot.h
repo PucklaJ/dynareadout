@@ -153,6 +153,15 @@ float *d3plot_read_all_node_acceleration_32(d3plot_file *plot_file,
                                             size_t *num_time_steps);
 /* Read the time of a given state (time step) in milliseconds*/
 double d3plot_read_time(d3plot_file *plot_file, size_t state);
+/* Reads all time of every state (time step) in milliseconds. Needs to be
+ * deallocated by free*/
+double *d3plot_read_all_time(d3plot_file *plot_file, size_t *num_states);
+/* Read the time of a given state (time step) in milliseconds*/
+float d3plot_read_time_32(d3plot_file *plot_file, size_t state);
+/* Reads all time of every state (time step) in milliseconds. Needs to be
+ * deallocated by free*/
+float *d3plot_read_all_time_32(d3plot_file *plot_file, size_t *num_states);
+
 /* Returns stress, strain (if NEIPH >= 6) for a given state. The return value
  * needs to be deallocated by free.*/
 d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,

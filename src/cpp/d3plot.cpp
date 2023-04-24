@@ -311,6 +311,32 @@ double D3plot::read_time(size_t state) {
   return time;
 }
 
+Array<double> D3plot::read_all_time() {
+  size_t num_states;
+  double *times = d3plot_read_all_time(&m_handle, &num_states);
+  if (m_handle.error_string) {
+    throw Exception(String(m_handle.error_string, false));
+  }
+  return Array<double>(times, num_states);
+}
+
+float D3plot::read_time_32(size_t state) {
+  float time{d3plot_read_time_32(&m_handle, state)};
+  if (m_handle.error_string) {
+    throw Exception(String(m_handle.error_string, false));
+  }
+  return time;
+}
+
+Array<float> D3plot::read_all_time_32() {
+  size_t num_states;
+  float *times = d3plot_read_all_time_32(&m_handle, &num_states);
+  if (m_handle.error_string) {
+    throw Exception(String(m_handle.error_string, false));
+  }
+  return Array<float>(times, num_states);
+}
+
 Array<d3plot_solid> D3plot::read_solids_state(size_t state) {
   size_t num_elements;
   d3plot_solid *elements =

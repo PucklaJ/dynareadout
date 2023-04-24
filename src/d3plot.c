@@ -1040,7 +1040,7 @@ double d3plot_read_time(d3plot_file *plot_file, size_t state) {
     d3_buffer_read_words_at(&plot_file->buffer, &time32, 1,
                             plot_file->data_pointers[D3PLT_PTR_STATES + state] +
                                 plot_file->data_pointers[D3PLT_PTR_STATE_TIME]);
-    time = time32;
+    time = (double)time32;
   } else {
     d3_buffer_read_words_at(&plot_file->buffer, &time, 1,
                             plot_file->data_pointers[D3PLT_PTR_STATES + state] +
@@ -1057,6 +1057,148 @@ double d3plot_read_time(d3plot_file *plot_file, size_t state) {
 
   END_PROFILE_FUNC();
   return time;
+}
+
+double *d3plot_read_all_time(d3plot_file *plot_file, size_t *num_states) {
+  BEGIN_PROFILE_FUNC();
+  CLEAR_ERROR_STRING();
+
+  *num_states = plot_file->num_states;
+  double *times = malloc(plot_file->num_states * sizeof(double));
+
+  if (plot_file->buffer.word_size == 4) {
+    float time32;
+
+    size_t i = 0;
+    while (i < plot_file->num_states) {
+      d3_buffer_read_words_at(
+          &plot_file->buffer, &time32, 1,
+          plot_file->data_pointers[D3PLT_PTR_STATES + i] +
+              plot_file->data_pointers[D3PLT_PTR_STATE_TIME]);
+      if (plot_file->buffer.error_string) {
+        ERROR_AND_NO_RETURN_F_PTR("Failed to read words: %s",
+                                  plot_file->buffer.error_string);
+        *num_states = 0;
+        free(times);
+        times = NULL;
+        break;
+      }
+
+      times[i] = (double)time32;
+
+      i++;
+    }
+  } else {
+    size_t i = 0;
+    while (i < plot_file->num_states) {
+      d3_buffer_read_words_at(
+          &plot_file->buffer, &times[i], 1,
+          plot_file->data_pointers[D3PLT_PTR_STATES + i] +
+              plot_file->data_pointers[D3PLT_PTR_STATE_TIME]);
+      if (plot_file->buffer.error_string) {
+        ERROR_AND_NO_RETURN_F_PTR("Failed to read words: %s",
+                                  plot_file->buffer.error_string);
+        *num_states = 0;
+        free(times);
+        times = NULL;
+        break;
+      }
+
+      i++;
+    }
+  }
+
+  END_PROFILE_FUNC();
+  return times;
+}
+
+float d3plot_read_time_32(d3plot_file *plot_file, size_t state) {
+  BEGIN_PROFILE_FUNC();
+  CLEAR_ERROR_STRING();
+
+  if (state >= plot_file->num_states) {
+    ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
+
+    END_PROFILE_FUNC();
+    return -1.0f;
+  }
+
+  float time;
+  if (plot_file->buffer.word_size == 8) {
+    double time64;
+    d3_buffer_read_words_at(&plot_file->buffer, &time64, 1,
+                            plot_file->data_pointers[D3PLT_PTR_STATES + state] +
+                                plot_file->data_pointers[D3PLT_PTR_STATE_TIME]);
+    time = (float)time64;
+  } else {
+    d3_buffer_read_words_at(&plot_file->buffer, &time, 1,
+                            plot_file->data_pointers[D3PLT_PTR_STATES + state] +
+                                plot_file->data_pointers[D3PLT_PTR_STATE_TIME]);
+  }
+
+  if (plot_file->buffer.error_string) {
+    ERROR_AND_NO_RETURN_F_PTR("Failed to read words: %s",
+                              plot_file->buffer.error_string);
+
+    END_PROFILE_FUNC();
+    return -1.0f;
+  }
+
+  END_PROFILE_FUNC();
+  return time;
+}
+
+float *d3plot_read_all_time_32(d3plot_file *plot_file, size_t *num_states) {
+  BEGIN_PROFILE_FUNC();
+  CLEAR_ERROR_STRING();
+
+  *num_states = plot_file->num_states;
+  float *times = malloc(plot_file->num_states * sizeof(float));
+
+  if (plot_file->buffer.word_size == 8) {
+    double time64;
+
+    size_t i = 0;
+    while (i < plot_file->num_states) {
+      d3_buffer_read_words_at(
+          &plot_file->buffer, &time64, 1,
+          plot_file->data_pointers[D3PLT_PTR_STATES + i] +
+              plot_file->data_pointers[D3PLT_PTR_STATE_TIME]);
+      if (plot_file->buffer.error_string) {
+        ERROR_AND_NO_RETURN_F_PTR("Failed to read words: %s",
+                                  plot_file->buffer.error_string);
+        *num_states = 0;
+        free(times);
+        times = NULL;
+        break;
+      }
+
+      times[i] = (float)time64;
+
+      i++;
+    }
+  } else {
+    size_t i = 0;
+    while (i < plot_file->num_states) {
+      d3_buffer_read_words_at(
+          &plot_file->buffer, &times[i], 1,
+          plot_file->data_pointers[D3PLT_PTR_STATES + i] +
+              plot_file->data_pointers[D3PLT_PTR_STATE_TIME]);
+      if (plot_file->buffer.error_string) {
+        ERROR_AND_NO_RETURN_F_PTR("Failed to read words: %s",
+                                  plot_file->buffer.error_string);
+        *num_states = 0;
+        free(times);
+        times = NULL;
+        break;
+      }
+
+      i++;
+    }
+  }
+
+  END_PROFILE_FUNC();
+  return times;
 }
 
 d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,

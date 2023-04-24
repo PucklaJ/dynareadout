@@ -165,6 +165,7 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def("read_all_node_acceleration",
            &dro::D3plot::read_all_node_acceleration)
       .def("read_time", &dro::D3plot::read_time)
+      .def("read_all_time", &dro::D3plot::read_all_time)
       .def("read_solids_state", &dro::D3plot::read_solids_state)
       .def("read_beams_state", &dro::D3plot::read_beams_state)
       .def("read_shells_state", &dro::D3plot::read_shells_state)
