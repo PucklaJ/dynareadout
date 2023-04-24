@@ -27,8 +27,7 @@
 #define D3PLOT_H
 #include "d3_buffer.h"
 #include "d3_defines.h"
-
-struct tm;
+#include <time.h>
 
 /* This holds all data needed to read d3plot files*/
 typedef struct {
