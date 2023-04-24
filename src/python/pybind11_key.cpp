@@ -26,6 +26,7 @@
 #include <key.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl/filesystem.h>
+#include <sstream>
 
 namespace py = pybind11;
 
@@ -133,6 +134,7 @@ void add_key_library_to_module(py::module_ &m) {
           py::arg("value_width"), py::arg("trim") = true)
       .def("parse_whole", &python_card_parse_whole,
            py::arg("value_widths") = py::list())
+      .def("__str__", &dro::Card::parse_string_whole_no_trim<dro::String>)
 
       ;
 }

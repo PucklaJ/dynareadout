@@ -38,11 +38,7 @@ inline void add_d3plot_arrays_to_module(py::module_ &m) {
   dro::add_array_type_to_module<d3plot_beam>(m);
   dro::add_array_type_to_module<d3plot_shell>(m);
   dro::add_array_type_to_module<dro::dVec3>(m).def(
-      "__repr__", [](dro::Array<dro::dVec3> &arr) {
-        std::stringstream stream;
-        stream << arr;
-        return stream.str();
-      });
+      "__repr__", dro::stream_to_string<dro::dVec3>);
 }
 
 void add_d3plot_library_to_module(py::module_ &m) {
@@ -51,6 +47,7 @@ void add_d3plot_library_to_module(py::module_ &m) {
   py::class_<d3plot_solid_con>(m, "d3plot_solid_con")
       .def_readonly("node_indices", &d3plot_solid_con::node_indices)
       .def_readonly("material_index", &d3plot_solid_con::material_index)
+      .def("__str__", &dro::stream_to_string<d3plot_solid_con>)
 
       ;
 
@@ -59,12 +56,14 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def_readonly("orientation_node_index",
                     &d3plot_beam_con::orientation_node_index)
       .def_readonly("material_index", &d3plot_beam_con::material_index)
+      .def("__str__", &dro::stream_to_string<d3plot_beam_con>)
 
       ;
 
   py::class_<d3plot_shell_con>(m, "d3plot_shell_con")
       .def_readonly("node_indices", &d3plot_shell_con::node_indices)
       .def_readonly("material_index", &d3plot_shell_con::material_index)
+      .def("__str__", &dro::stream_to_string<d3plot_shell_con>)
 
       ;
 
@@ -78,6 +77,7 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def_readonly("zy", &d3plot_tensor::zy)
       .def_readonly("xz", &d3plot_tensor::xz)
       .def_readonly("zx", &d3plot_tensor::zx)
+      .def("__str__", &dro::stream_to_string<d3plot_tensor>)
 
       ;
 
@@ -88,6 +88,7 @@ void add_d3plot_library_to_module(py::module_ &m) {
                     &d3plot_surface::effective_plastic_strain)
       .def_readonly("material_dependent_value",
                     &d3plot_surface::material_dependent_value)
+      .def("__str__", &dro::stream_to_string<d3plot_surface>)
 
       ;
 
@@ -102,6 +103,7 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def_readonly("extra1", &d3plot_solid::extra2)
       .def_readonly("epsilon", &d3plot_solid::epsilon)
       .def_readonly("strain", &d3plot_solid::strain)
+      .def("__str__", &dro::stream_to_string<d3plot_solid>)
 
       ;
 
@@ -113,6 +115,7 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def_readonly("inner_strain", &d3plot_thick_shell::inner_strain)
       .def_readonly("outer_epsilon", &d3plot_thick_shell::outer_epsilon)
       .def_readonly("outer_strain", &d3plot_thick_shell::outer_strain)
+      .def("__str__", &dro::stream_to_string<d3plot_thick_shell>)
 
       ;
 
@@ -123,6 +126,7 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def_readonly("s_bending_moment", &d3plot_beam::s_bending_moment)
       .def_readonly("t_bending_moment", &d3plot_beam::t_bending_moment)
       .def_readonly("torsional_resultant", &d3plot_beam::torsional_resultant)
+      .def("__str__", &dro::stream_to_string<d3plot_beam>)
 
       ;
 
@@ -135,6 +139,7 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def_readonly("outer_epsilon", &d3plot_shell::outer_epsilon)
       .def_readonly("outer_strain", &d3plot_shell::outer_strain)
       .def_readonly("internal_energy", &d3plot_shell::internal_energy)
+      .def("__str__", &dro::stream_to_string<d3plot_shell>)
 
       ;
 
@@ -151,9 +156,14 @@ void add_d3plot_library_to_module(py::module_ &m) {
 
       .def("read_part_titles", &dro::D3plot::read_part_titles)
 
-      .def("read_node_coordinates", &dro::D3plot::read_node_coordinates)
+      .def("read_node_coordinates", &dro::D3plot::read_node_coordinates,
+           py::arg("state") = static_cast<size_t>(0))
+      .def("read_all_node_coordinates", &dro::D3plot::read_all_node_coordinates)
       .def("read_node_velocity", &dro::D3plot::read_node_velocity)
+      .def("read_all_node_velocity", &dro::D3plot::read_all_node_velocity)
       .def("read_node_acceleration", &dro::D3plot::read_node_acceleration)
+      .def("read_all_node_acceleration",
+           &dro::D3plot::read_all_node_acceleration)
       .def("read_time", &dro::D3plot::read_time)
       .def("read_solids_state", &dro::D3plot::read_solids_state)
       .def("read_beams_state", &dro::D3plot::read_beams_state)
@@ -179,6 +189,14 @@ void add_d3plot_library_to_module(py::module_ &m) {
            &dro::D3plotPart::get_thick_shell_elements)
       .def("get_beam_elements", &dro::D3plotPart::get_beam_elements)
       .def("get_shell_elements", &dro::D3plotPart::get_shell_elements)
+      .def("get_solid_element_indices",
+           &dro::D3plotPart::get_solid_element_indices)
+      .def("get_thick_shell_element_indices",
+           &dro::D3plotPart::get_thick_shell_element_indices)
+      .def("get_beam_element_indices",
+           &dro::D3plotPart::get_beam_element_indices)
+      .def("get_shell_element_indices",
+           &dro::D3plotPart::get_shell_element_indices)
       .def("get_node_ids", &dro::D3plotPart::get_node_ids, py::arg("plot_file"),
            py::arg("solid_ids") = static_cast<dro::Array<d3_word> *>(nullptr),
            py::arg("beam_ids") = static_cast<dro::Array<d3_word> *>(nullptr),
@@ -209,6 +227,23 @@ void add_d3plot_library_to_module(py::module_ &m) {
                static_cast<dro::Array<d3plot_shell_con> *>(nullptr),
            py::arg("thick_shell_cons") =
                static_cast<dro::Array<d3plot_thick_shell_con> *>(nullptr))
+      .def("get_num_nodes", &dro::D3plotPart::get_num_nodes,
+           py::arg("plot_file"),
+           py::arg("solid_ids") = static_cast<dro::Array<d3_word> *>(nullptr),
+           py::arg("beam_ids") = static_cast<dro::Array<d3_word> *>(nullptr),
+           py::arg("shell_ids") = static_cast<dro::Array<d3_word> *>(nullptr),
+           py::arg("thick_shell_ids") =
+               static_cast<dro::Array<d3_word> *>(nullptr),
+           py::arg("solid_cons") =
+               static_cast<dro::Array<d3plot_solid_con> *>(nullptr),
+           py::arg("beam_cons") =
+               static_cast<dro::Array<d3plot_beam_con> *>(nullptr),
+           py::arg("shell_cons") =
+               static_cast<dro::Array<d3plot_shell_con> *>(nullptr),
+           py::arg("thick_shell_cons") =
+               static_cast<dro::Array<d3plot_thick_shell_con> *>(nullptr))
+      .def("get_num_elements", &dro::D3plotPart::get_num_elements)
+      .def("get_all_element_ids", &dro::D3plotPart::get_all_element_ids)
 
       ;
 }

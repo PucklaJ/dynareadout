@@ -442,6 +442,12 @@ inline void add_array_to_module(py::module_ &m) {
       .def("__repr__", [](SizedString &arr) { return "'" + arr.str() + "'"; })
 
       ;
+};
+
+template <typename T> std::string stream_to_string(const T &value) {
+  std::stringstream stream;
+  stream << value;
+  return stream.str();
 }
 
 } // namespace dro
