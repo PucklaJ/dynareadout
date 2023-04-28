@@ -1701,6 +1701,7 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
 
   *num_shells = plot_file->control_data.nel4;
   if (*num_shells == 0) {
+    *num_history_variables = 0;
     END_PROFILE_FUNC();
     return NULL;
   }
@@ -1753,7 +1754,8 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
       /* Define NEIPS additional history values here for mid surface*/
       if (plot_file->control_data.neips != 0) {
         shells[i].mid.history_variables =
-            &history_variables[i * *num_history_variables];
+            &history_variables[i * 3 * *num_history_variables +
+                               0 * *num_history_variables];
         size_t j = 0;
         while (j < *num_history_variables) {
           shells[i].mid.history_variables[j++] = data[o++];
@@ -1773,7 +1775,8 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
       /* Define NEIPS additional history values here for inner surface*/
       if (plot_file->control_data.neips != 0) {
         shells[i].inner.history_variables =
-            &history_variables[i * *num_history_variables];
+            &history_variables[i * 3 * *num_history_variables +
+                               1 * *num_history_variables];
         size_t j = 0;
         while (j < *num_history_variables) {
           shells[i].inner.history_variables[j++] = data[o++];
@@ -1793,7 +1796,8 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
       /* Define NEIPS additional history values here for outer surface*/
       if (plot_file->control_data.neips != 0) {
         shells[i].outer.history_variables =
-            &history_variables[i * *num_history_variables];
+            &history_variables[i * 3 * *num_history_variables +
+                               2 * *num_history_variables];
         size_t j = 0;
         while (j < *num_history_variables) {
           shells[i].outer.history_variables[j++] = data[o++];
@@ -1884,7 +1888,8 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
       /* Define NEIPS additional history values here for mid surface*/
       if (plot_file->control_data.neips != 0) {
         shells[i].mid.history_variables =
-            &history_variables[i * *num_history_variables];
+            &history_variables[i * 3 * *num_history_variables +
+                               0 * *num_history_variables];
         memcpy(shells[i].mid.history_variables, &data[o],
                *num_history_variables * sizeof(double));
       } else {
@@ -1900,7 +1905,8 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
       /* Define NEIPS additional history values here for inner surface*/
       if (plot_file->control_data.neips != 0) {
         shells[i].inner.history_variables =
-            &history_variables[i * *num_history_variables];
+            &history_variables[i * 3 * *num_history_variables +
+                               1 * *num_history_variables];
         memcpy(shells[i].inner.history_variables, &data[o],
                *num_history_variables * sizeof(double));
       } else {
@@ -1916,7 +1922,8 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
       /* Define NEIPS additional history values here for outer surface*/
       if (plot_file->control_data.neips != 0) {
         shells[i].outer.history_variables =
-            &history_variables[i * *num_history_variables];
+            &history_variables[i * 3 * *num_history_variables +
+                               2 * *num_history_variables];
         memcpy(shells[i].outer.history_variables, &data[o],
                *num_history_variables * sizeof(double));
       } else {
