@@ -157,6 +157,8 @@ private:
 
 // Stream output operators for structs
 std::ostream &operator<<(std::ostream &stream, const d3plot_tensor &t);
+std::ostream &operator<<(std::ostream &stream, const d3plot_x_y &x);
+std::ostream &operator<<(std::ostream &stream, const d3plot_x_y_xy &x);
 std::ostream &operator<<(std::ostream &stream, const d3plot_surface &s);
 std::ostream &operator<<(std::ostream &stream, const d3plot_solid &s);
 std::ostream &operator<<(std::ostream &stream, const d3plot_thick_shell &ts);

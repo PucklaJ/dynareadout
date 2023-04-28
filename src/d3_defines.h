@@ -185,7 +185,11 @@ typedef struct {
   d3plot_x_y shear_resultant;
   d3plot_x_y_xy normal_resultant;
   double thickness;
+#ifdef __cplusplus
+  std::array<double, 2> element_dependent_variables;
+#else
   double element_dependent_variables[2];
+#endif
   double internal_energy;
 } d3plot_shell;
 

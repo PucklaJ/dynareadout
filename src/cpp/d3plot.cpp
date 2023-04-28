@@ -476,6 +476,14 @@ std::ostream &operator<<(std::ostream &stream, const d3plot_tensor &t) {
                 << ")";
 }
 
+std::ostream &operator<<(std::ostream &stream, const d3plot_x_y &x) {
+  return stream << "(" << x.x << "; " << x.y << ")";
+}
+
+std::ostream &operator<<(std::ostream &stream, const d3plot_x_y_xy &x) {
+  return stream << "(" << x.x << "; " << x.y << "; " << x.xy << ")";
+}
+
 std::ostream &operator<<(std::ostream &stream, const d3plot_surface &s) {
   return stream << "Stress: " << s.stress
                 << "; Effective Plastic Strain: " << s.effective_plastic_strain;
@@ -509,6 +517,13 @@ std::ostream &operator<<(std::ostream &stream, const d3plot_shell &s) {
                 << "; Outer: " << s.outer
                 << "; Inner Strain: " << s.inner_strain
                 << "; Outer Strain: " << s.outer_strain
+                << "; Bending Moment: " << s.bending_moment
+                << "; Shear Resultant: " << s.shear_resultant
+                << "; Normal Resultant: " << s.normal_resultant
+                << "; Thickness: " << s.thickness
+                << "; Element Dependent Variables: ("
+                << s.element_dependent_variables[0] << ", "
+                << s.element_dependent_variables[1] << ")"
                 << "; Internal Energy: " << s.internal_energy;
 }
 

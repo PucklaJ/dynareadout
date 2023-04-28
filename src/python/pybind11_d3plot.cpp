@@ -35,11 +35,48 @@ inline void add_d3plot_arrays_to_module(py::module_ &m) {
   dro::add_array_type_to_module<d3plot_beam_con>(m);
   dro::add_array_type_to_module<d3plot_shell_con>(m);
   dro::add_array_type_to_module<d3plot_solid>(m);
-  dro::add_array_type_to_module<d3plot_thick_shell>(m);
   dro::add_array_type_to_module<d3plot_beam>(m);
-  dro::add_array_type_to_module<d3plot_shell>(m);
   dro::add_array_type_to_module<dro::dVec3>(m).def(
       "__repr__", dro::stream_to_string<dro::dVec3>);
+
+  py::class_<dro::D3plotShellsState>(m, dro::get_array_name<d3plot_shell>())
+      .def("__len__", &dro::D3plotShellsState::size)
+      .def("__getitem__",
+           [](dro::D3plotShellsState &self, size_t index) {
+             try {
+               return self[index];
+             } catch (const std::runtime_error &) {
+               throw py::index_error("Index out of range");
+             }
+           })
+      .def("get_mid_history_variables",
+           &dro::D3plotShellsState::get_mid_history_variables)
+      .def("get_inner_history_variables",
+           &dro::D3plotShellsState::get_inner_history_variables)
+      .def("get_outer_history_variables",
+           &dro::D3plotShellsState::get_outer_history_variables)
+
+      ;
+
+  py::class_<dro::D3plotThickShellsState>(
+      m, dro::get_array_name<d3plot_thick_shell>())
+      .def("__len__", &dro::D3plotThickShellsState::size)
+      .def("__getitem__",
+           [](dro::D3plotThickShellsState &self, size_t index) {
+             try {
+               return self[index];
+             } catch (const std::runtime_error &) {
+               throw py::index_error("Index out of range");
+             }
+           })
+      .def("get_mid_history_variables",
+           &dro::D3plotThickShellsState::get_mid_history_variables)
+      .def("get_inner_history_variables",
+           &dro::D3plotThickShellsState::get_inner_history_variables)
+      .def("get_outer_history_variables",
+           &dro::D3plotThickShellsState::get_outer_history_variables)
+
+      ;
 }
 
 void add_d3plot_library_to_module(py::module_ &m) {
@@ -79,6 +116,21 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def_readonly("xz", &d3plot_tensor::xz)
       .def_readonly("zx", &d3plot_tensor::zx)
       .def("__str__", &dro::stream_to_string<d3plot_tensor>)
+
+      ;
+
+  py::class_<d3plot_x_y>(m, "d3plot_x_y")
+      .def_readonly("x", &d3plot_x_y::x)
+      .def_readonly("y", &d3plot_x_y::y)
+      .def("__str__", &dro::stream_to_string<d3plot_x_y>)
+
+      ;
+
+  py::class_<d3plot_x_y_xy>(m, "d3plot_x_y_xy")
+      .def_readonly("x", &d3plot_x_y_xy::x)
+      .def_readonly("y", &d3plot_x_y_xy::y)
+      .def_readonly("xy", &d3plot_x_y_xy::xy)
+      .def("__str__", &dro::stream_to_string<d3plot_x_y_xy>)
 
       ;
 
@@ -139,6 +191,12 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def_readonly("inner_strain", &d3plot_shell::inner_strain)
       .def_readonly("outer_epsilon", &d3plot_shell::outer_epsilon)
       .def_readonly("outer_strain", &d3plot_shell::outer_strain)
+      .def_readonly("bending_moment", &d3plot_shell::bending_moment)
+      .def_readonly("shear_resultant", &d3plot_shell::shear_resultant)
+      .def_readonly("normal_resultant", &d3plot_shell::normal_resultant)
+      .def_readonly("thickness", &d3plot_shell::thickness)
+      .def_readonly("element_dependent_variables",
+                    &d3plot_shell::element_dependent_variables)
       .def_readonly("internal_energy", &d3plot_shell::internal_energy)
       .def("__str__", &dro::stream_to_string<d3plot_shell>)
 
