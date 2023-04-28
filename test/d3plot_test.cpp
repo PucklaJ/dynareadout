@@ -434,16 +434,17 @@ TEST_CASE("d3plot") {
   REQUIRE(num_elements == 45000);
   free(solids);
 
-  d3plot_thick_shell *thick_shells =
-      d3plot_read_thick_shells_state(&plot_file, 101, &num_elements);
+  size_t num_history_variables;
+  d3plot_thick_shell *thick_shells = d3plot_read_thick_shells_state(
+      &plot_file, 101, &num_elements, &num_history_variables);
   REQUIRE(num_elements == 0);
+  CHECK(num_history_variables == 0);
   free(thick_shells);
 
   d3plot_beam *beams = d3plot_read_beams_state(&plot_file, 101, &num_elements);
   REQUIRE(num_elements == 0);
   free(beams);
 
-  size_t num_history_variables;
   d3plot_shell *shells = d3plot_read_shells_state(
       &plot_file, 101, &num_elements, &num_history_variables);
   REQUIRE(num_elements == 88456);

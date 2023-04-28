@@ -348,15 +348,16 @@ Array<d3plot_solid> D3plot::read_solids_state(size_t state) {
   return Array<d3plot_solid>(elements, num_elements);
 }
 
-Array<d3plot_thick_shell> D3plot::read_thick_shells_state(size_t state) {
+D3plotThickShellsState D3plot::read_thick_shells_state(size_t state) {
   size_t num_elements;
-  d3plot_thick_shell *elements =
-      d3plot_read_thick_shells_state(&m_handle, state, &num_elements);
+  size_t num_history_variables;
+  d3plot_thick_shell *elements = d3plot_read_thick_shells_state(
+      &m_handle, state, &num_elements, &num_history_variables);
   if (m_handle.error_string) {
     throw Exception(String(m_handle.error_string, false));
   }
 
-  return Array<d3plot_thick_shell>(elements, num_elements);
+  return D3plotThickShellsState(elements, num_elements, num_history_variables);
 }
 
 Array<d3plot_beam> D3plot::read_beams_state(size_t state) {

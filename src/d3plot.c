@@ -1348,14 +1348,16 @@ d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
   return solids;
 }
 
-d3plot_thick_shell *d3plot_read_thick_shells_state(d3plot_file *plot_file,
-                                                   size_t state,
-                                                   size_t *num_thick_shells) {
+d3plot_thick_shell *
+d3plot_read_thick_shells_state(d3plot_file *plot_file, size_t state,
+                               size_t *num_thick_shells,
+                               size_t *num_history_variables) {
   BEGIN_PROFILE_FUNC();
   CLEAR_ERROR_STRING();
 
   *num_thick_shells = plot_file->control_data.nelt;
   if (*num_thick_shells == 0) {
+    *num_history_variables = 0;
     END_PROFILE_FUNC();
     return NULL;
   }
@@ -1367,6 +1369,11 @@ d3plot_thick_shell *d3plot_read_thick_shells_state(d3plot_file *plot_file,
     END_PROFILE_FUNC();
     return NULL;
   }
+
+  /* Allocate memory for all history variables of all thick shells*/
+  *num_history_variables = plot_file->control_data.neips;
+  double *history_variables =
+      malloc(*num_thick_shells * 3 * *num_history_variables * sizeof(double));
 
   d3plot_thick_shell *thick_shells =
       malloc(*num_thick_shells * sizeof(d3plot_thick_shell));
@@ -1400,8 +1407,20 @@ d3plot_thick_shell *d3plot_read_thick_shells_state(d3plot_file *plot_file,
       thick_shells[i].mid.sigma.yz = data[o++];
       thick_shells[i].mid.sigma.zx = data[o++];
       thick_shells[i].mid.effective_plastic_strain = data[o++];
-      /* TODO: Define NEIPS additional history values here for mid surface*/
-      o += plot_file->control_data.neips;
+
+      /* Define NEIPS additional history values here for mid surface*/
+      if (plot_file->control_data.neips != 0) {
+        thick_shells[i].mid.history_variables =
+            &history_variables[i * 3 * *num_history_variables +
+                               0 * *num_history_variables];
+        size_t j = 0;
+        while (j < *num_history_variables) {
+          thick_shells[i].mid.history_variables[j++] = data[o++];
+        }
+      } else {
+        thick_shells[i].mid.history_variables = NULL;
+      }
+
       thick_shells[i].inner.sigma.x = data[o++];
       thick_shells[i].inner.sigma.y = data[o++];
       thick_shells[i].inner.sigma.z = data[o++];
@@ -1409,8 +1428,20 @@ d3plot_thick_shell *d3plot_read_thick_shells_state(d3plot_file *plot_file,
       thick_shells[i].inner.sigma.yz = data[o++];
       thick_shells[i].inner.sigma.zx = data[o++];
       thick_shells[i].inner.effective_plastic_strain = data[o++];
-      /* TODO: Define NEIPS additional history values here for inner surface*/
-      o += plot_file->control_data.neips;
+
+      /* Define NEIPS additional history values here for inner surface*/
+      if (plot_file->control_data.neips != 0) {
+        thick_shells[i].inner.history_variables =
+            &history_variables[i * 3 * *num_history_variables +
+                               1 * *num_history_variables];
+        size_t j = 0;
+        while (j < *num_history_variables) {
+          thick_shells[i].inner.history_variables[j++] = data[o++];
+        }
+      } else {
+        thick_shells[i].inner.history_variables = NULL;
+      }
+
       thick_shells[i].outer.sigma.x = data[o++];
       thick_shells[i].outer.sigma.y = data[o++];
       thick_shells[i].outer.sigma.z = data[o++];
@@ -1418,8 +1449,20 @@ d3plot_thick_shell *d3plot_read_thick_shells_state(d3plot_file *plot_file,
       thick_shells[i].outer.sigma.yz = data[o++];
       thick_shells[i].outer.sigma.zx = data[o++];
       thick_shells[i].outer.effective_plastic_strain = data[o++];
-      /* TODO: Define NEIPS additional history values here for outer surface*/
-      o += plot_file->control_data.neips;
+
+      /* Define NEIPS additional history values here for outer surface*/
+      if (plot_file->control_data.neips != 0) {
+        thick_shells[i].outer.history_variables =
+            &history_variables[i * 3 * *num_history_variables +
+                               2 * *num_history_variables];
+        size_t j = 0;
+        while (j < *num_history_variables) {
+          thick_shells[i].outer.history_variables[j++] = data[o++];
+        }
+      } else {
+        thick_shells[i].outer.history_variables = NULL;
+      }
+
       if (plot_file->control_data.istrn == 1) {
         thick_shells[i].inner_epsilon.x = data[o++];
         thick_shells[i].inner_epsilon.y = data[o++];
@@ -1474,18 +1517,54 @@ d3plot_thick_shell *d3plot_read_thick_shells_state(d3plot_file *plot_file,
     size_t i = 0;
     size_t o = 0;
     while (i < *num_thick_shells) {
-      memcpy(&thick_shells[i].mid, &data[o], 7 * sizeof(double));
-      o += 7;
-      /* TODO: Define NEIPS additional history values here for mid surface*/
+      memcpy(&thick_shells[i].mid, &data[o],
+             sizeof(d3plot_tensor) + sizeof(double));
+      o += (sizeof(d3plot_tensor) + sizeof(double)) / sizeof(double);
+
+      /* Define NEIPS additional history values here for mid surface*/
+      if (plot_file->control_data.neips != 0) {
+        thick_shells[i].mid.history_variables =
+            &history_variables[i * 3 * *num_history_variables +
+                               0 * *num_history_variables];
+        memcpy(thick_shells[i].mid.history_variables, &data[o],
+               *num_history_variables * sizeof(double));
+      } else {
+        thick_shells[i].mid.history_variables = NULL;
+      }
       o += plot_file->control_data.neips;
-      memcpy(&thick_shells[i].inner, &data[o], 7 * sizeof(double));
-      o += 7;
-      /* TODO: Define NEIPS additional history values here for inner surface*/
+
+      memcpy(&thick_shells[i].inner, &data[o],
+             sizeof(d3plot_tensor) + sizeof(double));
+      o += (sizeof(d3plot_tensor) + sizeof(double)) / sizeof(double);
+
+      /* Define NEIPS additional history values here for inner surface*/
+      if (plot_file->control_data.neips != 0) {
+        thick_shells[i].inner.history_variables =
+            &history_variables[i * 3 * *num_history_variables +
+                               1 * *num_history_variables];
+        memcpy(thick_shells[i].inner.history_variables, &data[o],
+               *num_history_variables * sizeof(double));
+      } else {
+        thick_shells[i].inner.history_variables = NULL;
+      }
       o += plot_file->control_data.neips;
-      memcpy(&thick_shells[i].outer, &data[o], 7 * sizeof(double));
-      o += 7;
-      /* TODO: Define NEIPS additional history values here for outer surface*/
+
+      memcpy(&thick_shells[i].outer, &data[o],
+             sizeof(d3plot_tensor) + sizeof(double));
+      o += (sizeof(d3plot_tensor) + sizeof(double)) / sizeof(double);
+
+      /* Define NEIPS additional history values here for outer surface*/
+      if (plot_file->control_data.neips != 0) {
+        thick_shells[i].outer.history_variables =
+            &history_variables[i * 3 * *num_history_variables +
+                               2 * *num_history_variables];
+        memcpy(thick_shells[i].outer.history_variables, &data[o],
+               *num_history_variables * sizeof(double));
+      } else {
+        thick_shells[i].outer.history_variables = NULL;
+      }
       o += plot_file->control_data.neips;
+
       if (plot_file->control_data.istrn == 1) {
         memcpy(&thick_shells[i].inner_epsilon, &data[o], 6 * sizeof(double));
         o += 6;
@@ -2672,6 +2751,15 @@ void d3plot_free_shells_state(d3plot_shell *shells) {
 
   free(shells->mid.history_variables);
   free(shells);
+
+  END_PROFILE_FUNC();
+}
+
+void d3plot_free_thick_shells_state(d3plot_thick_shell *thick_shells) {
+  BEGIN_PROFILE_FUNC();
+
+  free(thick_shells->mid.history_variables);
+  free(thick_shells);
 
   END_PROFILE_FUNC();
 }

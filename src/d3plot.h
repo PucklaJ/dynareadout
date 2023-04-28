@@ -165,11 +165,13 @@ float *d3plot_read_all_time_32(d3plot_file *plot_file, size_t *num_states);
  * needs to be deallocated by free.*/
 d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
                                        size_t *num_solids);
-/* Returns stress, strain (if ISTRN == 1) for a given state. The return value
- * needs to be deallocated by free.*/
-d3plot_thick_shell *d3plot_read_thick_shells_state(d3plot_file *plot_file,
-                                                   size_t state,
-                                                   size_t *num_thick_shells);
+/* Returns stress, strain (if ISTRN == 1) for a given state. The number of
+ * history variables is the same for every surface of every thick shell. The
+ * return value needs to be deallocated by d3plot_free_thick_shells_state.*/
+d3plot_thick_shell *
+d3plot_read_thick_shells_state(d3plot_file *plot_file, size_t state,
+                               size_t *num_thick_shells,
+                               size_t *num_history_variables);
 /* Returns Axial Force, S shear resultant, T shear resultant, S bending moment,
  * T bending moment and Torsional resultant of all beams for a given state. The
  * return value needs to be deallocated by free.*/
@@ -260,6 +262,8 @@ d3_word *_insert_sorted(d3_word *dst, size_t dst_size, const d3_word *src,
 void d3plot_free_part(d3plot_part *part);
 /* Deallocates all memory returned by d3plot_read_shells_state*/
 void d3plot_free_shells_state(d3plot_shell *shells);
+/* Deallocate all memory returned by d3plot_read_thick_shells_state*/
+void d3plot_free_thick_shells_state(d3plot_thick_shell *thick_shells);
 /********************************/
 
 /*********** Utility Functions ***************/
