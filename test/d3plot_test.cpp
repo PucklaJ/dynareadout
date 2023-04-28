@@ -443,10 +443,18 @@ TEST_CASE("d3plot") {
   REQUIRE(num_elements == 0);
   free(beams);
 
-  d3plot_shell *shells =
-      d3plot_read_shells_state(&plot_file, 101, &num_elements);
+  size_t num_history_variables;
+  d3plot_shell *shells = d3plot_read_shells_state(
+      &plot_file, 101, &num_elements, &num_history_variables);
   REQUIRE(num_elements == 88456);
-  free(shells);
+
+  for (size_t i = 0; i < num_elements; i++) {
+    CHECK(shells[i].mid.history_variables == NULL);
+    CHECK(shells[i].inner.history_variables == NULL);
+    CHECK(shells[i].outer.history_variables == NULL);
+  }
+
+  d3plot_free_shells_state(shells);
 
   d3plot_close(&plot_file);
 }
@@ -751,6 +759,12 @@ TEST_CASE("d3plotC++") {
   {
     const auto shells = plot_file.read_shells_state(101);
     REQUIRE(shells.size() == 88456);
+
+    for (size_t i = 0; i < shells.size(); i++) {
+      CHECK(shells.get_mid_history_variables(i).empty());
+      CHECK(shells.get_inner_history_variables(i).empty());
+      CHECK(shells.get_outer_history_variables(i).empty());
+    }
   }
 }
 #endif

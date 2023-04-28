@@ -26,6 +26,7 @@
 #pragma once
 #include "array.hpp"
 #include "d3plot_part.hpp"
+#include "d3plot_state.hpp"
 #include "vec.hpp"
 #include <chrono>
 #include <d3plot.h>
@@ -112,7 +113,7 @@ public:
   Array<d3plot_beam> read_beams_state(size_t state);
   // Returns stress, strain (if ISTRN == 1) and some other variables (see docs
   // pg. 36) of all shells for a given state
-  Array<d3plot_shell> read_shells_state(size_t state);
+  D3plotShellsState read_shells_state(size_t state);
 
   // Returns the node connectivity + material number of all 8 node solid
   // elements

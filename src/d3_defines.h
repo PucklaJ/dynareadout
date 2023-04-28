@@ -128,6 +128,10 @@ typedef struct {
     double effective_plastic_strain;
     double material_dependent_value;
   };
+
+  /* All history variables of all elements are allocated in one big array and
+   * this is a pointer somewhere into said array*/
+  double *history_variables;
 } d3plot_surface;
 
 typedef struct {
