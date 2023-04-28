@@ -102,6 +102,17 @@ typedef struct {
 } d3plot_tensor;
 
 typedef struct {
+  double x;
+  double y;
+} d3plot_x_y;
+
+typedef struct {
+  double x;
+  double y;
+  double xy;
+} d3plot_x_y_xy;
+
+typedef struct {
   union {
     d3plot_tensor sigma;
     d3plot_tensor stress;
@@ -169,6 +180,12 @@ typedef struct {
     d3plot_tensor outer_epsilon;
     d3plot_tensor outer_strain;
   };
+
+  d3plot_x_y_xy bending_moment;
+  d3plot_x_y shear_resultant;
+  d3plot_x_y_xy normal_resultant;
+  double thickness;
+  double element_dependent_variables[2];
   double internal_energy;
 } d3plot_shell;
 

@@ -1816,19 +1816,19 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
               4 * plot_file->control_data.ioshl[3] +
               plot_file->control_data.neips);
       }
-      /* TODO:
-       * Bending moment-Mx (local shell coordinate system)
-       * Bending moment-My
-       * Bending moment-Mxy
-       * Shear resultant-Qx
-       * Shear resultant-Qy
-       * Normal resultant-Nx
-       * Normal resultant-Ny
-       * Normal resultant-Nxy
-       * Thickness
-       * Element dependent variable
-       * Element dependent variable*/
-      o += 11;
+
+      shells[i].bending_moment.x = data[o++];
+      shells[i].bending_moment.y = data[o++];
+      shells[i].bending_moment.xy = data[o++];
+      shells[i].shear_resultant.x = data[o++];
+      shells[i].shear_resultant.y = data[o++];
+      shells[i].normal_resultant.x = data[o++];
+      shells[i].normal_resultant.y = data[o++];
+      shells[i].normal_resultant.xy = data[o++];
+      shells[i].thickness = data[o++];
+      shells[i].element_dependent_variables[0] = data[o++];
+      shells[i].element_dependent_variables[1] = data[o++];
+
       if (plot_file->control_data.istrn == 0) {
         shells[i].internal_energy = data[o++];
         memset(&shells[i].inner_epsilon, 0, 2 * sizeof(d3plot_tensor));
@@ -1941,19 +1941,16 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
               4 * plot_file->control_data.ioshl[3] +
               plot_file->control_data.neips);
       }
-      /* TODO:
-       * Bending moment-Mx (local shell coordinate system)
-       * Bending moment-My
-       * Bending moment-Mxy
-       * Shear resultant-Qx
-       * Shear resultant-Qy
-       * Normal resultant-Nx
-       * Normal resultant-Ny
-       * Normal resultant-Nxy
-       * Thickness
-       * Element dependent variable
-       * Element dependent variable*/
-      o += 11;
+      memcpy(&shells[i].bending_moment, &data[o],
+             sizeof(d3plot_x_y_xy) +     /* Bending moment (Mx, My, Mxy)*/
+                 sizeof(d3plot_x_y) +    /* Shear resultant (Qx, Qy)*/
+                 sizeof(d3plot_x_y_xy) + /* Normal resultant (Nx, Ny, Nxy)*/
+                 sizeof(double) +        /* Thickness*/
+                 sizeof(double) * 2      /* 2 Element dependent variables*/
+      );
+      o += (sizeof(d3plot_x_y_xy) + sizeof(d3plot_x_y) + sizeof(d3plot_x_y_xy) +
+            sizeof(double) + sizeof(double) * 2) /
+           sizeof(double);
       if (plot_file->control_data.istrn == 0) {
         shells[i].internal_energy = data[o++];
         memset(&shells[i].inner_epsilon, 0, 2 * sizeof(d3plot_tensor));
