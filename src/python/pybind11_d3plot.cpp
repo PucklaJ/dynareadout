@@ -203,61 +203,140 @@ void add_d3plot_library_to_module(py::module_ &m) {
       ;
 
   py::class_<dro::D3plot>(m, "D3plot")
-      .def(py::init<const std::string &>())
-      .def("read_node_ids", &dro::D3plot::read_node_ids)
-      .def("read_solid_element_ids", &dro::D3plot::read_solid_element_ids)
-      .def("read_beam_element_ids", &dro::D3plot::read_beam_element_ids)
-      .def("read_shell_element_ids", &dro::D3plot::read_shell_element_ids)
+      .def(py::init<const std::string &>(),
+           "Open a d3plot file family by giving the root file name\nExample: "
+           "d3plot of d3plot01, d3plot02, d3plot03, etc.",
+           py::arg("root_file_name"))
+      .def("read_node_ids", &dro::D3plot::read_node_ids,
+           "Read all ids of the nodes.")
+      .def("read_solid_element_ids", &dro::D3plot::read_solid_element_ids,
+           "Read all ids of the solid elements.")
+      .def("read_beam_element_ids", &dro::D3plot::read_beam_element_ids,
+           "Read all ids of the beam elements.")
+      .def("read_shell_element_ids", &dro::D3plot::read_shell_element_ids,
+           "Read all ids of the shell elements.")
       .def("read_thick_shell_element_ids",
-           &dro::D3plot::read_thick_shell_element_ids)
-      .def("read_all_element_ids", &dro::D3plot::read_all_element_ids)
-      .def("read_part_ids", &dro::D3plot::read_part_ids)
+           &dro::D3plot::read_thick_shell_element_ids,
+           "Read all ids of the thick shell elements.")
+      .def("read_all_element_ids", &dro::D3plot::read_all_element_ids,
+           "Read all ids of the solid, beam, shell and thick shell elements.")
+      .def("read_part_ids", &dro::D3plot::read_part_ids,
+           "Read all ids of the parts.")
 
-      .def("read_part_titles", &dro::D3plot::read_part_titles)
+      .def("read_part_titles", &dro::D3plot::read_part_titles,
+           "Returns a list containing all part titles as sized strings.")
 
-      .def("read_node_coordinates", &dro::D3plot::read_node_coordinates,
-           py::arg("state") = static_cast<size_t>(0))
-      .def("read_all_node_coordinates", &dro::D3plot::read_all_node_coordinates)
-      .def("read_node_velocity", &dro::D3plot::read_node_velocity)
-      .def("read_all_node_velocity", &dro::D3plot::read_all_node_velocity)
-      .def("read_node_acceleration", &dro::D3plot::read_node_acceleration)
+      .def(
+          "read_node_coordinates", &dro::D3plot::read_node_coordinates,
+          "Read the node coordinates of all nodes of a given state (time step)",
+          py::arg("state") = static_cast<size_t>(0))
+      .def("read_all_node_coordinates", &dro::D3plot::read_all_node_coordinates,
+           "Reads all node coordinates of all time steps and returns them as "
+           "one big array.")
+      .def("read_node_velocity", &dro::D3plot::read_node_velocity,
+           "Read the node velocity of all nodes of a given state (time step).",
+           py::arg("state"))
+      .def("read_all_node_velocity", &dro::D3plot::read_all_node_velocity,
+           "Reads all node velocities of all time steps and returns them as "
+           "one big array.")
+      .def("read_node_acceleration", &dro::D3plot::read_node_acceleration,
+           "Read the node acceleration of all nodes of a given state (time "
+           "step).",
+           py::arg("state"))
       .def("read_all_node_acceleration",
-           &dro::D3plot::read_all_node_acceleration)
-      .def("read_time", &dro::D3plot::read_time)
-      .def("read_all_time", &dro::D3plot::read_all_time)
-      .def("read_solids_state", &dro::D3plot::read_solids_state)
-      .def("read_beams_state", &dro::D3plot::read_beams_state)
-      .def("read_shells_state", &dro::D3plot::read_shells_state)
+           &dro::D3plot::read_all_node_acceleration,
+           "Read all node accelerations of all time steps and returns the as "
+           "one big array.")
+      .def("read_time", &dro::D3plot::read_time,
+           "Read the time of a given state (time step) in milliseconds.",
+           py::arg("state"))
+      .def("read_all_time", &dro::D3plot::read_all_time,
+           "Reads all time of every state (time step) in milliseconds.")
+      .def("read_solids_state", &dro::D3plot::read_solids_state,
+           "Returns stress, strain (if NEIPH >= 6) for a given state.",
+           py::arg("state"))
+      .def("read_thick_shells_state", &dro::D3plot::read_thick_shells_state,
+           "Returns stress, strain (if ISTRN == 1) for a given state.",
+           py::arg("state"))
+      .def("read_beams_state", &dro::D3plot::read_beams_state,
+           "Returns Axial Force, S shear resultant, T shear resultant, S "
+           "bending moment, T bending moment and Torsional resultant of all "
+           "beams for a given state.",
+           py::arg("state"))
+      .def("read_shells_state", &dro::D3plot::read_shells_state,
+           "Returns stress, strain (if ISTRN == 1) and some other variables "
+           "(see docs pg. 36) of all shells for a given state.",
+           py::arg("state"))
 
-      .def("read_solid_elements", &dro::D3plot::read_solid_elements)
-      .def("read_thick_shell_elements", &dro::D3plot::read_thick_shell_elements)
-      .def("read_beam_elements", &dro::D3plot::read_beam_elements)
-      .def("read_shell_elements", &dro::D3plot::read_shell_elements)
-      .def("read_title", &dro::D3plot::read_title)
-      .def("read_run_time", &dro::D3plot::read_run_time)
-      .def("read_part", &dro::D3plot::read_part)
-      .def("read_part_by_id", &dro::D3plot::read_part_by_id, py::arg("part_id"),
-           py::arg("part_ids") = dro::Array<d3_word>())
+      .def("read_solid_elements", &dro::D3plot::read_solid_elements,
+           "Returns the node connectivity + material number of all 8 node "
+           "solid elements.")
+      .def(
+          "read_thick_shell_elements", &dro::D3plot::read_thick_shell_elements,
+          "Returns the node connectivity + material number of all 8 node thick "
+          "shell elements. Technically it returns a SolidConArray, since the "
+          "connectivity is the same between solids and thick shells.")
+      .def("read_beam_elements", &dro::D3plot::read_beam_elements,
+           "Returns the node connectivity + orientation node + material number "
+           "of all beam elements.")
+      .def("read_shell_elements", &dro::D3plot::read_shell_elements,
+           "Returns the node connectivity + material number of all shell "
+           "elements.")
+      .def("read_title", &dro::D3plot::read_title,
+           "Returns a string holding the Title of the d3plot file.")
+      .def("read_run_time", &dro::D3plot::read_run_time,
+           "Returns the time at which the simulation has been run as calender "
+           "time.")
+      .def("read_part", &dro::D3plot::read_part,
+           "Returns all elements (solid, thick shell, beam, shell) of a part. "
+           "The part_index can retrieved by iterating over the array returned "
+           "by read_part_ids.",
+           py::arg("part_index"))
+      .def(
+          "read_part_by_id", &dro::D3plot::read_part_by_id,
+          "The same as read_part, but instead of an index into the parts, this "
+          "functions takes an id. You can supply this function with the part "
+          "ids returned by read_part_ids. If you do not do this, they will be "
+          "read in this function call. Which means that if you intend to call "
+          "this function multiple times, it is best to preload the part ids.",
+          py::arg("part_id"), py::arg("part_ids") = dro::Array<d3_word>())
 
-      .def("num_time_steps", &dro::D3plot::num_time_steps)
+      .def("num_time_steps", &dro::D3plot::num_time_steps,
+           "Returns the number of states (time steps).")
 
       ;
 
   py::class_<dro::D3plotPart>(m, "D3plotPart")
-      .def("get_solid_elements", &dro::D3plotPart::get_solid_elements)
+      .def("get_solid_elements", &dro::D3plotPart::get_solid_elements,
+           "Returns all solid element ids of the part.")
       .def("get_thick_shell_elements",
-           &dro::D3plotPart::get_thick_shell_elements)
-      .def("get_beam_elements", &dro::D3plotPart::get_beam_elements)
-      .def("get_shell_elements", &dro::D3plotPart::get_shell_elements)
+           &dro::D3plotPart::get_thick_shell_elements,
+           "Returns all thick shell element ids of the part.")
+      .def("get_beam_elements", &dro::D3plotPart::get_beam_elements,
+           "Returns all beam element ids of the part.")
+      .def("get_shell_elements", &dro::D3plotPart::get_shell_elements,
+           "Returns all shell element ids of the part.")
       .def("get_solid_element_indices",
-           &dro::D3plotPart::get_solid_element_indices)
+           &dro::D3plotPart::get_solid_element_indices,
+           "Returns all solid element indices (into the array returned by "
+           "dynareadout.D3plot.read_solid_element_ids) of the part.")
       .def("get_thick_shell_element_indices",
-           &dro::D3plotPart::get_thick_shell_element_indices)
+           &dro::D3plotPart::get_thick_shell_element_indices,
+           "Returns all thick shell element indices (into the array returned "
+           "by dynareadout.D3plot.read_solid_element_ids) of the part.")
       .def("get_beam_element_indices",
-           &dro::D3plotPart::get_beam_element_indices)
+           &dro::D3plotPart::get_beam_element_indices,
+           "Returns all beam element indices (into the array returned by "
+           "dynareadout.D3plot.read_solid_element_ids) of the part.")
       .def("get_shell_element_indices",
-           &dro::D3plotPart::get_shell_element_indices)
-      .def("get_node_ids", &dro::D3plotPart::get_node_ids, py::arg("plot_file"),
+           &dro::D3plotPart::get_shell_element_indices,
+           "Returns all shell element indices (into the array returned by "
+           "dynareadout.D3plot.read_solid_element_ids) of the part.")
+      .def("get_node_ids", &dro::D3plotPart::get_node_ids,
+           "Returns all node ids of the part. All ids and connectivities of "
+           "all different elements can be provided to improve performance, "
+           "since they would not need to be loaded.",
+           py::arg("plot_file"),
            py::arg("solid_ids") = static_cast<dro::Array<d3_word> *>(nullptr),
            py::arg("beam_ids") = static_cast<dro::Array<d3_word> *>(nullptr),
            py::arg("shell_ids") = static_cast<dro::Array<d3_word> *>(nullptr),
@@ -273,6 +352,10 @@ void add_d3plot_library_to_module(py::module_ &m) {
            py::arg("thick_shell_cons") =
                static_cast<dro::Array<d3plot_thick_shell_con> *>(nullptr))
       .def("get_node_indices", &dro::D3plotPart::get_node_indices,
+           "Returns all node indices of the part. All ids and connectivities "
+           "of all different elements can be provided to improve performance, "
+           "since they would not need to be loaded. This returns indices into "
+           "the node ids array returned by dynareadout.D3plot.read_node_ids.",
            py::arg("plot_file"),
            py::arg("solid_ids") = static_cast<dro::Array<d3_word> *>(nullptr),
            py::arg("beam_ids") = static_cast<dro::Array<d3_word> *>(nullptr),
@@ -288,6 +371,8 @@ void add_d3plot_library_to_module(py::module_ &m) {
            py::arg("thick_shell_cons") =
                static_cast<dro::Array<d3plot_thick_shell_con> *>(nullptr))
       .def("get_num_nodes", &dro::D3plotPart::get_num_nodes,
+           "Returns the number of nodes of a part. Internally it just calls "
+           "get_node_indices and returns the number of node indices.",
            py::arg("plot_file"),
            py::arg("solid_ids") = static_cast<dro::Array<d3_word> *>(nullptr),
            py::arg("beam_ids") = static_cast<dro::Array<d3_word> *>(nullptr),
@@ -302,8 +387,10 @@ void add_d3plot_library_to_module(py::module_ &m) {
                static_cast<dro::Array<d3plot_shell_con> *>(nullptr),
            py::arg("thick_shell_cons") =
                static_cast<dro::Array<d3plot_thick_shell_con> *>(nullptr))
-      .def("get_num_elements", &dro::D3plotPart::get_num_elements)
-      .def("get_all_element_ids", &dro::D3plotPart::get_all_element_ids)
+      .def("get_num_elements", &dro::D3plotPart::get_num_elements,
+           "Returns the number of all elements of a part.")
+      .def("get_all_element_ids", &dro::D3plotPart::get_all_element_ids,
+           "Returns an array containing all element ids.")
 
       ;
 }

@@ -40,7 +40,7 @@ D3plotShellsState::D3plotShellsState(D3plotShellsState &&rhs) noexcept
   m_size = rhs.m_size;
   m_delete_data = rhs.m_delete_data;
 
-  rhs.m_data = NULL;
+  rhs.m_data = nullptr;
   rhs.m_size = 0;
   rhs.m_delete_data = false;
 }
@@ -76,6 +76,17 @@ D3plotThickShellsState::D3plotThickShellsState(d3plot_thick_shell *data,
                                                bool delete_data) noexcept
     : Array(data, size, delete_data),
       m_num_history_variables(num_history_variables) {}
+
+D3plotThickShellsState::D3plotThickShellsState(
+    D3plotThickShellsState &&rhs) noexcept {
+  m_data = rhs.m_data;
+  m_size = rhs.m_size;
+  m_delete_data = rhs.m_delete_data;
+
+  rhs.m_data = nullptr;
+  rhs.m_size = 0;
+  rhs.m_delete_data = false;
+}
 
 D3plotThickShellsState::~D3plotThickShellsState() noexcept {
   if (m_data && m_delete_data) {
