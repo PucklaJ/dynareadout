@@ -11,7 +11,7 @@ option("build_cpp")
 option("build_python")
     set_default(false)
     set_showmenu(true)
-    
+
 option("profiling")
     set_default(false)
     set_showmenu(true)
@@ -61,6 +61,7 @@ if get_config("build_cpp") or get_config("build_python") then
         set_languages("cxx17")
         if is_plat("linux") then
             add_cxxflags("-fPIC")
+            add_syslinks("stdc++fs")
         end
         add_deps("dynareadout")
         add_includedirs("src")
