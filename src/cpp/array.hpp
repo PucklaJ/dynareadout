@@ -289,11 +289,14 @@ Array<T>::Array(Array<T> &&rhs) noexcept
     : m_data(rhs.m_data), m_size(rhs.m_size), m_delete_data(rhs.m_delete_data) {
   rhs.m_data = nullptr;
   rhs.m_size = 0;
+  rhs.m_delete_data = false;
 }
 
 template <typename T> Array<T>::~Array() noexcept {
-  if (m_delete_data && m_data)
+  if (m_delete_data && m_data) {
     free(m_data);
+    m_data = nullptr;
+  }
 }
 
 template <typename T> T &Array<T>::operator[](size_t index) {
@@ -318,6 +321,7 @@ template <typename T> Array<T> &Array<T>::operator=(Array<T> &&rhs) noexcept {
   m_delete_data = rhs.m_delete_data;
   rhs.m_data = nullptr;
   rhs.m_size = 0;
+  rhs.m_delete_data = false;
   return *this;
 }
 
