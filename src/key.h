@@ -26,7 +26,7 @@
 #ifndef KEY_H
 #define KEY_H
 
-#include <stddef.h>
+#include "extra_string.h"
 #include <stdint.h>
 
 #define DEFAULT_VALUE_WIDTH 10
@@ -186,6 +186,13 @@ void _card_cpy(const card_t *card, char *dst, size_t len);
  * wether to multi line string has been completely parsed.*/
 int _parse_multi_line_string(char **multi_line_string, size_t *multi_line_index,
                              const card_t *card, size_t line_length);
+void _parse_include_file_name_card(
+    const card_t *card, size_t *card_index, const extra_string *line,
+    size_t line_length, char **current_multi_line_string,
+    size_t *current_multi_line_index, size_t *num_include_paths,
+    char ***include_paths, key_file_callback callback, void *user_data,
+    char **error_stack, size_t *error_stack_size, size_t *error_ptr,
+    const char *file_name, size_t line_count);
 /* -----------------------------*/
 
 #ifdef __cplusplus
