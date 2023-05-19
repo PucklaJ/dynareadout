@@ -463,13 +463,28 @@ void key_file_parse_with_callback(const char *file_name,
           continue;
         } else if (extra_string_compare(&current_keyword_name,
                                         "INCLUDE_PATH") == 0) {
-          /* TODO: Support multi line path names (Remark 3)*/
-          char *include_path_name = card_parse_whole(&card);
+          /* Support multi line file names (LS Dyna Manual Volume I
+           * *INCLUDE Remark 2, p. 2690)*/
+          if (!_parse_multi_line_string(&current_multi_line_string,
+                                        &current_multi_line_index, &card,
+                                        line_length)) {
+            /* continue without calling the callback for the card*/
+            if (card.string != line.buffer) {
+              free(card.string);
+            }
+
+            card_index++;
+            continue;
+          }
 
           (*num_include_paths_ptr)++;
           *include_paths_ptr = realloc(*include_paths_ptr,
                                        *num_include_paths_ptr * sizeof(char *));
-          (*include_paths_ptr)[*num_include_paths_ptr - 1] = include_path_name;
+          (*include_paths_ptr)[*num_include_paths_ptr - 1] =
+              current_multi_line_string;
+
+          current_multi_line_string = NULL;
+          current_multi_line_index = 0;
 
           /* continue without calling the callback for the card*/
           if (card.string != line.buffer) {
@@ -480,8 +495,19 @@ void key_file_parse_with_callback(const char *file_name,
           continue;
         } else if (extra_string_compare(&current_keyword_name,
                                         "INCLUDE_PATH_RELATIVE") == 0) {
-          /* TODO: Support multi line path names (Remark 3)*/
-          char *include_path_name = card_parse_whole(&card);
+          /* Support multi line file names (LS Dyna Manual Volume I
+           * *INCLUDE Remark 2, p. 2690)*/
+          if (!_parse_multi_line_string(&current_multi_line_string,
+                                        &current_multi_line_index, &card,
+                                        line_length)) {
+            /* continue without calling the callback for the card*/
+            if (card.string != line.buffer) {
+              free(card.string);
+            }
+
+            card_index++;
+            continue;
+          }
 
           if (!file_parent_path) {
             /* TODO: The relative path probably needs to be relative to the
@@ -506,8 +532,10 @@ void key_file_parse_with_callback(const char *file_name,
           }
 
           char *full_include_path_name =
-              path_join(file_parent_path, include_path_name);
-          free(include_path_name);
+              path_join(file_parent_path, current_multi_line_string);
+          free(current_multi_line_string);
+          current_multi_line_string = NULL;
+          current_multi_line_index = 0;
 
           (*num_include_paths_ptr)++;
           *include_paths_ptr = realloc(*include_paths_ptr,
