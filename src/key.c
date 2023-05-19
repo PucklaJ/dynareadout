@@ -409,8 +409,6 @@ void key_file_parse_with_callback(const char *file_name,
             if (card.string != line.buffer) {
               free(card.string);
             }
-
-            card_index++;
             continue;
           }
 
@@ -472,8 +470,6 @@ void key_file_parse_with_callback(const char *file_name,
             if (card.string != line.buffer) {
               free(card.string);
             }
-
-            card_index++;
             continue;
           }
 
@@ -504,8 +500,6 @@ void key_file_parse_with_callback(const char *file_name,
             if (card.string != line.buffer) {
               free(card.string);
             }
-
-            card_index++;
             continue;
           }
 
@@ -556,8 +550,75 @@ void key_file_parse_with_callback(const char *file_name,
           ERROR_KEYWORD_NOT_IMPLEMENTED("INCLUDE_BINARY");
         } else if (extra_string_compare(&current_keyword_name,
                                         "INCLUDE_NASTRAN") == 0) {
-          /* TODO*/
-          ERROR_KEYWORD_NOT_IMPLEMENTED("INCLUDE_NASTRAN");
+          /* Parse the first card like a normal INCLUDE*/
+          if (card_index == 0) {
+            /* Support multi line file names (LS Dyna Manual Volume I
+             * *INCLUDE Remark 2, p. 2690)*/
+            if (!_parse_multi_line_string(&current_multi_line_string,
+                                          &current_multi_line_index, &card,
+                                          line_length)) {
+              /* continue without calling the callback for the card*/
+              if (card.string != line.buffer) {
+                free(card.string);
+              }
+              continue;
+            }
+
+            char *final_include_file_name = NULL;
+
+            /* Loop over all include paths and look for file*/
+            i = 0;
+            while (i < *num_include_paths_ptr) {
+              char *full_include_file_name =
+                  path_join((*include_paths_ptr)[i], current_multi_line_string);
+
+              if (path_is_file(full_include_file_name)) {
+                final_include_file_name = full_include_file_name;
+                break;
+              }
+
+              free(full_include_file_name);
+
+              i++;
+            }
+
+            if (final_include_file_name) {
+              char *include_error;
+              /* Call the function recursively*/
+              key_file_parse_with_callback(
+                  final_include_file_name, callback, 1, &include_error,
+                  user_data, include_paths_ptr, num_include_paths_ptr);
+              free(final_include_file_name);
+
+              /* Add the error to the error stack if an error occurred in the
+               * recursive call*/
+              if (include_error != NULL) {
+                ERROR_MSG(include_error);
+                free(include_error);
+              }
+            } else {
+              ERROR_F("%s:%lu: \"%s\" could not be found", file_name,
+                      line_count, current_multi_line_string);
+            }
+            free(current_multi_line_string);
+            current_multi_line_string = NULL;
+            current_multi_line_index = 0;
+
+          } else if (card_index == 1) {
+            /* Ignore the card it is irrelevant for the parsing*/
+          } else {
+            ERROR_F(
+                "%s:%lu: Invalid number of cards for INCLUDE_NASTRAN keyword",
+                file_name, line_count);
+          }
+
+          /* continue without calling the callback for the card*/
+          if (card.string != line.buffer) {
+            free(card.string);
+          }
+
+          card_index++;
+          continue;
         } else if (extra_string_compare(&current_keyword_name,
                                         "INCLUDE_STAMPED_SET") == 0) {
           /* TODO*/
