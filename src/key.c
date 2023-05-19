@@ -541,18 +541,6 @@ void key_file_parse_with_callback(const char *file_name,
 
           card_index++;
           continue;
-        } else if (extra_string_compare(&current_keyword_name,
-                                        "INCLUDE_STAMPED_SET") == 0) {
-          /* TODO*/
-          ERROR_KEYWORD_NOT_IMPLEMENTED("INCLUDE_STAMPED_SET");
-        } else if (extra_string_starts_with(&current_keyword_name,
-                                            "INCLUDE_TRANSFORM") != 0) {
-          /* TODO*/
-          ERROR_KEYWORD_NOT_IMPLEMENTED(current_keyword_name.buffer);
-        } else if (extra_string_starts_with(&current_keyword_name,
-                                            "INCLUDE_STAMPED_PART") != 0) {
-          /* TODO*/
-          ERROR_KEYWORD_NOT_IMPLEMENTED(current_keyword_name.buffer);
         } else {
           char *keyword_name;
           if (current_keyword_length < EXTRA_STRING_BUFFER_SIZE) {
@@ -564,7 +552,7 @@ void key_file_parse_with_callback(const char *file_name,
             keyword_name[current_keyword_length] = '\0';
           }
 
-          ERROR_F("%s:%lu: Invalid INCLUDE keyword: \"%s\"", file_name,
+          ERROR_F("%s:%lu: Unsupported INCLUDE keyword: \"%s\"", file_name,
                   current_keyword_line, keyword_name);
 
           if (keyword_name != current_keyword_name.buffer) {
