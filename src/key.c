@@ -135,7 +135,7 @@ keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
 
   key_file_parse_with_callback(file_name, key_file_parse_callback,
                                parse_includes, &internal_error_string, &data,
-                               NULL, NULL);
+                               NULL, NULL, NULL);
 
   /* Deallocate the memory if an error occurred*/
   if (internal_error_string) {
@@ -159,7 +159,8 @@ void key_file_parse_with_callback(const char *file_name,
                                   key_file_callback callback,
                                   int parse_includes, char **error_string,
                                   void *user_data, char ***include_paths,
-                                  size_t *num_include_paths) {
+                                  size_t *num_include_paths,
+                                  const char *root_folder) {
   BEGIN_PROFILE_FUNC();
 
   /* Variables to stack multiple errors*/
@@ -181,6 +182,9 @@ void key_file_parse_with_callback(const char *file_name,
   /* This points to the include paths*/
   char ***include_paths_ptr;
   size_t *num_include_paths_ptr;
+  /* Stores the parent directory of the first file passed to
+   * key_file_parse_with_callback*/
+  char *root_folder_ptr;
 
   if (!include_paths) {
     include_paths_ptr = malloc(sizeof(char **));
@@ -196,16 +200,34 @@ void key_file_parse_with_callback(const char *file_name,
     num_include_paths_ptr = num_include_paths;
   }
 
-  /* Add the current directory to the include paths*/
-  char *current_wd = path_working_directory();
+  if (!root_folder) {
+    const size_t index = path_move_up_real(file_name);
+    if (index == (size_t)~0) {
+      root_folder_ptr = path_working_directory();
+    } else {
+      if (path_is_abs(file_name)) {
+        root_folder_ptr = malloc(index + 1 + 1);
+        memcpy(root_folder_ptr, file_name, index + 1);
+        root_folder_ptr[index + 1] = '\0';
+      } else {
+        char *current_wd = path_working_directory();
+        root_folder_ptr = path_join(current_wd, file_name);
+        root_folder_ptr[path_move_up_real(root_folder_ptr) + 1] = '\0';
+        free(current_wd);
+      }
+    }
+  } else {
+    root_folder_ptr = (char *)root_folder;
+  }
 
-  (*num_include_paths_ptr)++;
-  *include_paths_ptr =
-      realloc(*include_paths_ptr, *num_include_paths_ptr * sizeof(char *));
-  (*include_paths_ptr)[*num_include_paths_ptr - 1] = current_wd;
-
-  /* Store the parent path of the file if need by INCLUDE_PATH_RELATIVE*/
-  char *file_parent_path = NULL;
+  if (*num_include_paths_ptr == 0) {
+    /* Add the current working directory (local directory) to the
+     * include paths*/
+    (*num_include_paths_ptr)++;
+    *include_paths_ptr =
+        realloc(*include_paths_ptr, *num_include_paths_ptr * sizeof(char *));
+    (*include_paths_ptr)[*num_include_paths_ptr - 1] = path_working_directory();
+  }
 
   extra_string line;
   extra_string current_keyword_name;
@@ -404,7 +426,7 @@ void key_file_parse_with_callback(const char *file_name,
               &current_multi_line_string, &current_multi_line_index,
               num_include_paths_ptr, include_paths_ptr, callback, user_data,
               &error_stack, &error_stack_size, &error_ptr, file_name,
-              line_count);
+              line_count, root_folder_ptr);
           continue;
         } else if (extra_string_compare(&current_keyword_name,
                                         "INCLUDE_PATH") == 0) {
@@ -450,30 +472,8 @@ void key_file_parse_with_callback(const char *file_name,
             continue;
           }
 
-          if (!file_parent_path) {
-            /* TODO: The relative path probably needs to be relative to the
-             * FIRST input given to LS Dyna by the command line
-             * 'i=parent_folder/file_name.k'*/
-            const size_t index = path_move_up_real(file_name);
-            if (index == (size_t)~0) {
-              const size_t current_wd_len = strlen(current_wd);
-              file_parent_path = malloc(current_wd_len + 1);
-              memcpy(file_parent_path, current_wd, current_wd_len + 1);
-            } else {
-              if (path_is_abs(file_name)) {
-                file_parent_path = malloc(index + 1 + 1);
-                memcpy(file_parent_path, file_name, index + 1);
-                file_parent_path[index + 1] = '\0';
-              } else {
-                file_parent_path = path_join(current_wd, file_name);
-                file_parent_path[path_move_up_real(file_parent_path) + 1] =
-                    '\0';
-              }
-            }
-          }
-
           char *full_include_path_name =
-              path_join(file_parent_path, current_multi_line_string);
+              path_join(root_folder_ptr, current_multi_line_string);
           free(current_multi_line_string);
           current_multi_line_string = NULL;
           current_multi_line_index = 0;
@@ -500,7 +500,7 @@ void key_file_parse_with_callback(const char *file_name,
                 &current_multi_line_string, &current_multi_line_index,
                 num_include_paths_ptr, include_paths_ptr, callback, user_data,
                 &error_stack, &error_stack_size, &error_ptr, file_name,
-                line_count);
+                line_count, root_folder_ptr);
             continue;
           } else {
             ERROR_F(
@@ -524,7 +524,7 @@ void key_file_parse_with_callback(const char *file_name,
                 &current_multi_line_string, &current_multi_line_index,
                 num_include_paths_ptr, include_paths_ptr, callback, user_data,
                 &error_stack, &error_stack_size, &error_ptr, file_name,
-                line_count);
+                line_count, root_folder_ptr);
             continue;
           } else if (card_index == 1) {
             /* Ignore the card it is irrelevant for the parsing*/
@@ -627,8 +627,10 @@ void key_file_parse_with_callback(const char *file_name,
   if (!num_include_paths) {
     free(num_include_paths_ptr);
   }
+  if (!root_folder) {
+    free(root_folder_ptr);
+  }
 
-  free(file_parent_path);
   free(line.extra);
   free(current_keyword_name.extra);
 
@@ -1557,7 +1559,7 @@ void _parse_include_file_name_card(
     size_t *current_multi_line_index, size_t *num_include_paths,
     char ***include_paths, key_file_callback callback, void *user_data,
     char **error_stack, size_t *error_stack_size, size_t *error_ptr,
-    const char *file_name, size_t line_count) {
+    const char *file_name, size_t line_count, const char *root_folder) {
   /* Support multi line file names (LS Dyna Manual Volume I
    * *INCLUDE Remark 2, p. 2690)*/
   if (!_parse_multi_line_string(current_multi_line_string,
@@ -1592,7 +1594,7 @@ void _parse_include_file_name_card(
     /* Call the function recursively*/
     key_file_parse_with_callback(final_include_file_name, callback, 1,
                                  &include_error, user_data, include_paths,
-                                 num_include_paths);
+                                 num_include_paths, root_folder);
     free(final_include_file_name);
 
     /* Add the error to the error stack if an error occurred in the

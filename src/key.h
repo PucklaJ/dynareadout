@@ -84,7 +84,8 @@ void key_file_parse_with_callback(const char *file_name,
                                   key_file_callback callback,
                                   int parse_includes, char **error_string,
                                   void *user_data, char ***include_paths,
-                                  size_t *num_include_paths);
+                                  size_t *num_include_paths,
+                                  const char *root_folder);
 /* Deallocates the data returned by key_file_parse*/
 void key_file_free(keyword_t *keywords, size_t num_keywords);
 /* Returns a certain keyword with name. If the key file contains more keywords
@@ -192,7 +193,7 @@ void _parse_include_file_name_card(
     size_t *current_multi_line_index, size_t *num_include_paths,
     char ***include_paths, key_file_callback callback, void *user_data,
     char **error_stack, size_t *error_stack_size, size_t *error_ptr,
-    const char *file_name, size_t line_count);
+    const char *file_name, size_t line_count, const char *root_folder);
 /* -----------------------------*/
 
 #ifdef __cplusplus

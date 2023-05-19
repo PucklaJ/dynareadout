@@ -203,7 +203,8 @@ void KeyFile::parse_with_callback(const std::filesystem::path &file_name,
         (*callback)(String(const_cast<char *>(keyword_name), false),
                     Card(const_cast<card_t *>(card)), card_index);
       },
-      static_cast<int>(parse_includes), &error_string, &callback, NULL, NULL);
+      static_cast<int>(parse_includes), &error_string, &callback, NULL, NULL,
+      NULL);
 
   if (error_string) {
     throw Exception(String(error_string));

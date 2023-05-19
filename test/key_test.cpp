@@ -488,7 +488,7 @@ TEST_CASE("key_file_parse_with_callback") {
           CHECK(nid == (j + 1));
         }
       },
-      1, &error_string, NULL, NULL, NULL);
+      1, &error_string, NULL, NULL, NULL, NULL);
   if (error_string) {
     FAIL(error_string);
     free(error_string);
