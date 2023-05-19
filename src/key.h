@@ -179,6 +179,15 @@ card_parse_type card_parse_get_type(const card_t *card);
 card_parse_type card_parse_get_type_width(const card_t *card,
                                           uint8_t value_width);
 
+/* ----- Private Functions -----*/
+/* Copy the contents of the card as a string directly into dst.*/
+void _card_cpy(const card_t *card, char *dst, size_t len);
+/* Handles the parsing of multi line string for include file names. Returns
+ * wether to multi line string has been completely parsed.*/
+int _parse_multi_line_string(char **multi_line_string, size_t *multi_line_index,
+                             const card_t *card, size_t line_length);
+/* -----------------------------*/
+
 #ifdef __cplusplus
 }
 #endif

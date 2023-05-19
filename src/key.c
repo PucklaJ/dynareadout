@@ -219,6 +219,9 @@ void key_file_parse_with_callback(const char *file_name,
   size_t card_index = 0;
   size_t line_count = 0;
 
+  char *current_multi_line_string = NULL;
+  size_t current_multi_line_index = 0;
+
   /* Loop until all lines have been read or an error occurred*/
   while (1) {
     /* Clear extra without freeing the memory*/
@@ -397,15 +400,27 @@ void key_file_parse_with_callback(const char *file_name,
           extra_string_starts_with(&current_keyword_name, "INCLUDE")) {
         /* Parse all the different INCLUDE keywords*/
         if (extra_string_compare(&current_keyword_name, "INCLUDE") == 0) {
-          /* TODO: Support multi line file names (Remark 3)*/
-          char *include_file_name = card_parse_whole(&card);
+          /* Support multi line file names (LS Dyna Manual Volume I
+           * *INCLUDE Remark 2, p. 2690)*/
+          if (!_parse_multi_line_string(&current_multi_line_string,
+                                        &current_multi_line_index, &card,
+                                        line_length)) {
+            /* continue without calling the callback for the card*/
+            if (card.string != line.buffer) {
+              free(card.string);
+            }
+
+            card_index++;
+            continue;
+          }
+
           char *final_include_file_name = NULL;
 
           /* Loop over all include paths and look for file*/
           i = 0;
           while (i < *num_include_paths_ptr) {
             char *full_include_file_name =
-                path_join((*include_paths_ptr)[i], include_file_name);
+                path_join((*include_paths_ptr)[i], current_multi_line_string);
 
             if (path_is_file(full_include_file_name)) {
               final_include_file_name = full_include_file_name;
@@ -433,9 +448,11 @@ void key_file_parse_with_callback(const char *file_name,
             }
           } else {
             ERROR_F("%s:%lu: \"%s\" could not be found", file_name, line_count,
-                    include_file_name);
+                    current_multi_line_string);
           }
-          free(include_file_name);
+          free(current_multi_line_string);
+          current_multi_line_string = NULL;
+          current_multi_line_index = 0;
 
           /* continue without calling the callback for the card*/
           if (card.string != line.buffer) {
@@ -1337,7 +1354,7 @@ char *card_parse_whole(const card_t *card) {
 char *card_parse_whole_no_trim(const card_t *card) {
   BEGIN_PROFILE_FUNC();
 
-  const int len = strlen(card->string);
+  const size_t len = strlen(card->string);
   char *value = malloc(len + 1);
   memcpy(value, card->string, len + 1);
 
@@ -1469,4 +1486,68 @@ card_parse_type card_parse_get_type_width(const card_t *card,
 
   END_PROFILE_FUNC();
   return CARD_PARSE_STRING;
+}
+
+void _card_cpy(const card_t *card, char *dst, size_t len) {
+  BEGIN_PROFILE_FUNC();
+
+  memcpy(dst, card->string, len);
+
+  END_PROFILE_FUNC();
+}
+
+int _parse_multi_line_string(char **multi_line_string, size_t *multi_line_index,
+                             const card_t *card, size_t line_length) {
+  BEGIN_PROFILE_FUNC();
+
+  size_t card_string_index = 0;
+
+  if (!*multi_line_string) {
+    /* The maximum size of an include file name is 236 (+ null
+     * terminator)*/
+    *multi_line_string = malloc(237 * sizeof(char));
+    /* Trim leading white space*/
+    while (card_string_index != line_length &&
+           card->string[card_string_index] == ' ') {
+      card_string_index++;
+    }
+    if (card_string_index == line_length) {
+      (*multi_line_string)[0] = '\0';
+
+      END_PROFILE_FUNC();
+      return 1;
+    }
+  }
+
+  line_length -= card_string_index;
+
+  /* Support multi line strings which are longer than 236 (out of spec)*/
+  if (*multi_line_index + line_length > 236) {
+    *multi_line_string =
+        realloc(*multi_line_string,
+                (*multi_line_index + line_length + 1) * sizeof(char));
+  }
+
+  memcpy(&(*multi_line_string)[*multi_line_index],
+         &card->string[card_string_index], line_length);
+  *multi_line_index += line_length;
+  if ((*multi_line_string)[*multi_line_index - 2] == ' ' &&
+      (*multi_line_string)[*multi_line_index - 1] == '+') {
+    /* We have a multi line file name*/
+    *multi_line_index -= 2;
+
+    END_PROFILE_FUNC();
+    return 0;
+  }
+
+  /* Trim trailing white space*/
+  while ((*multi_line_string)[*multi_line_index - 1] == ' ' &&
+         *multi_line_index != 0) {
+    (*multi_line_index)--;
+  }
+
+  (*multi_line_string)[*multi_line_index] = '\0';
+
+  END_PROFILE_FUNC();
+  return 1;
 }

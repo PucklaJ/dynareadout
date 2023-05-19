@@ -428,6 +428,9 @@ TEST_CASE("key_file_parse") {
   CHECK(slice_size == 1);
   CHECK(keyword->num_cards == 30);
 
+  CHECK(key_file_get(keywords, num_keywords, "LONG_KEYWORD", 0) != NULL);
+  CHECK(key_file_get(keywords, num_keywords, "VERY_LONG_KEYWORD", 0) != NULL);
+
   key_file_free(keywords, num_keywords);
 }
 
