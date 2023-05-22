@@ -180,7 +180,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
 
   /* Quit immediately if NDIM is not supported*/
   if (CDA.ndim != 3) {
-    ERROR_AND_RETURN_F("A ndim value of %lu is not supported", CDA.ndim);
+    ERROR_AND_RETURN_F("A ndim value of %llu is not supported", CDA.ndim);
   }
 
   i = 0;
@@ -241,7 +241,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
     CDA.mdlopt = 1;
     CDA.maxint *= -1;
   } else {
-    ERROR_AND_RETURN_F("Invalid value for MAXINT: %ld", CDA.maxint);
+    ERROR_AND_RETURN_F("Invalid value for MAXINT: %lld", CDA.maxint);
   }
 
   if (idtdt < 100) {
@@ -339,7 +339,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
 
   if (eof_marker != D3_EOF) {
     ERROR_AND_RETURN_F(
-        "Here (before header) 'd3plot':(%lu) should be the EOF marker",
+        "Here (before header) 'd3plot':(%zu) should be the EOF marker",
         plot_file.buffer.cur_word - 1);
   }
 
@@ -1028,7 +1028,7 @@ double d3plot_read_time(d3plot_file *plot_file, size_t state) {
   CLEAR_ERROR_STRING();
 
   if (state >= plot_file->num_states) {
-    ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
+    ERROR_AND_NO_RETURN_F_PTR("%zu is out of bounds for the states", state);
 
     END_PROFILE_FUNC();
     return -1.0;
@@ -1117,7 +1117,7 @@ float d3plot_read_time_32(d3plot_file *plot_file, size_t state) {
   CLEAR_ERROR_STRING();
 
   if (state >= plot_file->num_states) {
-    ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
+    ERROR_AND_NO_RETURN_F_PTR("%zu is out of bounds for the states", state);
 
     END_PROFILE_FUNC();
     return -1.0f;
@@ -1213,7 +1213,7 @@ d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
   }
 
   if (state >= plot_file->num_states) {
-    ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
+    ERROR_AND_NO_RETURN_F_PTR("%zu is out of bounds for the states", state);
     *num_solids = 0;
 
     END_PROFILE_FUNC();
@@ -1363,7 +1363,7 @@ d3plot_read_thick_shells_state(d3plot_file *plot_file, size_t state,
   }
 
   if (state >= plot_file->num_states) {
-    ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
+    ERROR_AND_NO_RETURN_F_PTR("%zu is out of bounds for the states", state);
     *num_thick_shells = 0;
 
     END_PROFILE_FUNC();
@@ -1605,7 +1605,7 @@ d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
   }
 
   if (state >= plot_file->num_states) {
-    ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
+    ERROR_AND_NO_RETURN_F_PTR("%zu is out of bounds for the states", state);
     *num_beams = 0;
 
     END_PROFILE_FUNC();
@@ -1707,7 +1707,7 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
   }
 
   if (state >= plot_file->num_states) {
-    ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
+    ERROR_AND_NO_RETURN_F_PTR("%zu is out of bounds for the states", state);
     *num_shells = 0;
 
     END_PROFILE_FUNC();
@@ -2415,7 +2415,7 @@ d3plot_part d3plot_read_part(d3plot_file *plot_file, size_t part_index) {
    * index does not exist*/
   if (part.num_solids == 0 && part.num_thick_shells == 0 &&
       part.num_beams == 0 && part.num_shells == 0) {
-    ERROR_AND_NO_RETURN_F_PTR("The part with index %lu does not exist",
+    ERROR_AND_NO_RETURN_F_PTR("The part with index %zu does not exist",
                               part_index);
     END_PROFILE_FUNC();
     return part;
@@ -2430,7 +2430,7 @@ d3plot_part d3plot_read_part_by_id(d3plot_file *plot_file, d3_word part_id,
   BEGIN_PROFILE_FUNC();
   CLEAR_ERROR_STRING();
 
-  d3plot_part part;
+  d3plot_part part = {0};
 
   d3_word *p_part_ids = part_ids ? (d3_word *)part_ids
                                  : d3plot_read_part_ids(plot_file, &num_parts);
@@ -2452,7 +2452,7 @@ d3plot_part d3plot_read_part_by_id(d3plot_file *plot_file, d3_word part_id,
   }
 
   if (index == ~0) {
-    ERROR_AND_NO_RETURN_F_PTR("The part id %lu has not been found", part_id);
+    ERROR_AND_NO_RETURN_F_PTR("The part id %llu has not been found", part_id);
     END_PROFILE_FUNC();
     return part;
   }
@@ -2558,7 +2558,7 @@ double *_d3plot_read_node_data(d3plot_file *plot_file, size_t state,
   }
 
   if (state >= plot_file->num_states) {
-    ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
+    ERROR_AND_NO_RETURN_F_PTR("%zu is out of bounds for the states", state);
     return NULL;
   }
 
@@ -2606,7 +2606,7 @@ float *_d3plot_read_node_data_32(d3plot_file *plot_file, size_t state,
   }
 
   if (state >= plot_file->num_states) {
-    ERROR_AND_NO_RETURN_F_PTR("%lu is out of bounds for the states", state);
+    ERROR_AND_NO_RETURN_F_PTR("%zu is out of bounds for the states", state);
     return NULL;
   }
 

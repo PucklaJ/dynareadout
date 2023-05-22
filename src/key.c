@@ -504,7 +504,7 @@ void key_file_parse_with_callback(const char *file_name,
             continue;
           } else {
             ERROR_F(
-                "%s:%lu: Invalid number of cards for INCLUDE_BINARY keyword",
+                "%s:%zu: Invalid number of cards for INCLUDE_BINARY keyword",
                 file_name, line_count);
           }
 
@@ -530,7 +530,7 @@ void key_file_parse_with_callback(const char *file_name,
             /* Ignore the card it is irrelevant for the parsing*/
           } else {
             ERROR_F(
-                "%s:%lu: Invalid number of cards for INCLUDE_NASTRAN keyword",
+                "%s:%zu: Invalid number of cards for INCLUDE_NASTRAN keyword",
                 file_name, line_count);
           }
 
@@ -552,7 +552,7 @@ void key_file_parse_with_callback(const char *file_name,
             keyword_name[current_keyword_length] = '\0';
           }
 
-          ERROR_F("%s:%lu: Unsupported INCLUDE keyword: \"%s\"", file_name,
+          ERROR_F("%s:%zu: Unsupported INCLUDE keyword: \"%s\"", file_name,
                   current_keyword_line, keyword_name);
 
           if (keyword_name != current_keyword_name.buffer) {
@@ -1611,11 +1611,11 @@ void _parse_include_file_name_card(
     }
   } else {
     const int error_buffer_size =
-        snprintf(((void *)0), 0, "%s:%lu: \"%s\" could not be found", file_name,
+        snprintf(((void *)0), 0, "%s:%zu: \"%s\" could not be found", file_name,
                  line_count, *current_multi_line_string);
     *error_stack_size += error_buffer_size + 1;
     *error_stack = realloc(*error_stack, *error_stack_size);
-    sprintf(&(*error_stack)[*error_ptr], "%s:%lu: \"%s\" could not be found",
+    sprintf(&(*error_stack)[*error_ptr], "%s:%zu: \"%s\" could not be found",
             file_name, line_count, *current_multi_line_string);
     *error_ptr += error_buffer_size;
     (*error_stack)[*error_ptr] = '\n';
