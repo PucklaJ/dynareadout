@@ -89,6 +89,10 @@ TEST_CASE("d3_buffer_seek") {
       }
 
       FILE *file = fopen(file_name, "wb");
+      if (!file) {
+        FAIL("Couldn't create test file(", i, "): ", strerror(errno));
+        return;
+      }
       if (i == 0) {
         char data[64];
         uint32_t ndim = 3;
