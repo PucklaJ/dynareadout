@@ -33,14 +33,53 @@
 typedef struct {
   struct {
     /* These are all the values inside the CONTROL DATA section of the first
-     * d3plot file (root file)*/
-    d3_word ndim, numnp, nglbv, it, iu, iv, ia, nummat8, nv3d, nel2, nummat2,
-        nv1d, nel4, nummat4, nv2d, neiph, neips, nmsph, narbs, nelt, nummatt,
-        nv3dt, ioshl[4], ialemat, ncfdv1, nadapt, nmmat, nel48, nel20, nt3d;
+     * d3plot file (root file) pg. 7*/
+
+    d3_word ndim, /* Number of dimensions */
+        numnp,    /* Number of nodal points*/
+        nglbv,    /* Number of global variable to be read with each state*/
+        it,       /* Flag for temperatures*/
+        iu,       /* Flag for current geometry*/
+        iv,       /* Flag for velocities*/
+        ia,       /* Flag for accelerations*/
+        nummat8,  /* Number of materials used by the 8 node solids*/
+        nv3d,     /* Number of values in database for each solid element*/
+        nel2,     /* Number of 2 node one-dimensional elements (beams)*/
+        nummat2,  /* Number of materials used by the 2 node 1D elements*/
+        nv1d,     /* Number of values in database for each 1D element*/
+        nel4,     /* Number of four node shells (2D or 3D) elements*/
+        nummat4,  /* Number of materials used by the 4 node 2D elements*/
+        nv2d,     /* Number of values in database for each 2D element*/
+        neiph,    /* Number of additional values per solid element to written in
+                     the type 6 database (history variables)*/
+        neips,    /* Number of additional values per integration point to be
+                     written into the type 6 database for shell elements (history
+                     variables)*/
+        nmsph,    /* Number of SPH Nodes*/
+        narbs,    /* Additional storage required for arbitrary node and element
+                     numbering in type 6 database*/
+        nelt,     /* Number of 8 node thick shell elements*/
+        nummatt,  /* Number of materials used for the 8 node thick shell
+                     elements*/
+        nv3dt,    /* Number of values in database for each thick shell*/
+        ioshl[4],
+        /* 0. 6 stress components flag, 1. Plastic strain flag, 2. Shell force
+           resultants flag, 3. Shell thickness, energy+2 others*/
+        ialemat, /* Size of array containing solid element parts numbers used as
+                    ALE material*/
+        ncfdv1,  /* Bit flags for CFD nodal values*/
+        nadapt,  /* Number of adapted element to parent pairs*/
+        nmmat,   /* Total number of materials*/
+        nel48,   /* Number of 8 node Shells*/
+        nel20,   /* Number of 20 Node Solid Elements*/
+        nt3d /* Number of Thermal Element Variables*/;
     /* This will be calculated*/
     d3_word numrbs;
     /* These variables can by negative*/
-    int64_t nel8, maxint;
+    int64_t nel8, /* Number of 8 node solid elements*/
+        maxint    /* Number of integration points dumped for each shell and the
+                     MDLOPT flag*/
+        ;
     /* These values will also be calculated*/
     uint8_t mdlopt, istrn;
 
