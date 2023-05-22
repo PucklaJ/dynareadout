@@ -49,7 +49,7 @@ TEST_CASE("d3_buffer") {
   }
 
   CHECK((buffer.word_size == 4));
-  CHECK(buffer.num_file_handles == 28);
+  CHECK(buffer.num_files == 28);
 
   char title[10 * 4 + 1];
   title[10 * 4] = '\0';
@@ -73,6 +73,123 @@ TEST_CASE("d3_buffer") {
   CHECK(probe[0x08BD2FFF] == 0x00);
 
   delete[] probe;
+
+  d3_buffer_close(&buffer);
+}
+
+TEST_CASE("d3_buffer_seek") {
+  // Create test data
+  if (!path_is_file("test_data/d3_buffer_seek")) {
+    for (size_t i = 0; i < 1000; i++) {
+      char file_name[2048];
+      if (i == 0) {
+        sprintf(file_name, "test_data/d3_buffer_seek");
+      } else {
+        sprintf(file_name, "test_data/d3_buffer_seek%02zu", i);
+      }
+
+      FILE *file = fopen(file_name, "wb");
+      if (i == 0) {
+        char data[64];
+        uint32_t ndim = 3;
+        memcpy(&data[60], &ndim, sizeof(ndim));
+        fwrite(data, 1, 64, file);
+      } else {
+        const uint32_t data = (uint32_t)i;
+        fwrite(&data, sizeof(data), 1, file);
+      }
+      fclose(file);
+    }
+  }
+
+  d3_buffer buffer = d3_buffer_open("test_data/d3_buffer_seek");
+  if (buffer.error_string) {
+    FAIL(buffer.error_string);
+    d3_buffer_close(&buffer);
+    return;
+  }
+
+  CHECK(buffer.num_files == 1000);
+
+  size_t i = 1;
+  d3_buffer_skip_words(&buffer, 16);
+  while (i < 1000) {
+    uint32_t data;
+    d3_buffer_read_words(&buffer, &data, 1);
+    if (buffer.error_string) {
+      FAIL(buffer.error_string);
+      d3_buffer_close(&buffer);
+      return;
+    }
+    CHECK(data == (uint32_t)i);
+
+    i++;
+  }
+
+  uint32_t data = 0;
+  d3_buffer_read_words_at(&buffer, &data, 1, 15 + 999);
+  if (buffer.error_string) {
+    FAIL(buffer.error_string);
+    d3_buffer_close(&buffer);
+    return;
+  }
+  CHECK(data == 999);
+  d3_buffer_read_words_at(&buffer, &data, 1, 15 + 600);
+  if (buffer.error_string) {
+    FAIL(buffer.error_string);
+    d3_buffer_close(&buffer);
+    return;
+  }
+  CHECK(data == 600);
+  d3_buffer_read_words_at(&buffer, &data, 1, 15 + 400);
+  if (buffer.error_string) {
+    FAIL(buffer.error_string);
+    d3_buffer_close(&buffer);
+    return;
+  }
+  CHECK(data == 400);
+  d3_buffer_read_words_at(&buffer, &data, 1, 15 + 300);
+  if (buffer.error_string) {
+    FAIL(buffer.error_string);
+    d3_buffer_close(&buffer);
+    return;
+  }
+  CHECK(data == 300);
+  d3_buffer_read_words_at(&buffer, &data, 1, 15 + 100);
+  if (buffer.error_string) {
+    FAIL(buffer.error_string);
+    d3_buffer_close(&buffer);
+    return;
+  }
+  CHECK(data == 100);
+  d3_buffer_read_words_at(&buffer, &data, 1, 15 + 1);
+  if (buffer.error_string) {
+    FAIL(buffer.error_string);
+    d3_buffer_close(&buffer);
+    return;
+  }
+  CHECK(data == 1);
+  d3_buffer_read_words_at(&buffer, &data, 1, 15 + 999);
+  if (buffer.error_string) {
+    FAIL(buffer.error_string);
+    d3_buffer_close(&buffer);
+    return;
+  }
+  CHECK(data == 999);
+  d3_buffer_read_words_at(&buffer, &data, 1, 15 + 544);
+  if (buffer.error_string) {
+    FAIL(buffer.error_string);
+    d3_buffer_close(&buffer);
+    return;
+  }
+  CHECK(data == 544);
+  d3_buffer_read_words_at(&buffer, &data, 1, 15 + 2);
+  if (buffer.error_string) {
+    FAIL(buffer.error_string);
+    d3_buffer_close(&buffer);
+    return;
+  }
+  CHECK(data == 2);
 
   d3_buffer_close(&buffer);
 }
@@ -999,20 +1116,3 @@ TEST_CASE("binary_search") {
   idx = d3_word_binary_search(arr, 0, arr_size - 1, 5);
   CHECK(idx == UINT64_MAX);
 }
-
-// #ifdef PROFILING
-// int main(int args, char *argv[]) {
-// doctest::Context ctx;
-//
-// ctx.addFilter("test-case", "d3plot");
-// ctx.applyCommandLine(args, argv);
-//
-// const int res = ctx.run();
-//
-// if (ctx.shouldExit()) {
-// return res;
-// }
-//
-// END_PROFILING("test_data/d3plot_profiling.txt");
-// }
-// #endif

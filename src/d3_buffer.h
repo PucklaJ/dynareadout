@@ -28,13 +28,22 @@
 #include <stdint.h>
 #include <stdio.h>
 
+typedef struct {
+  char index_string[4];
+  uint64_t file_size;
+  FILE *file_handle;
+} d3_file;
+
 /* Represents a whole family of d3 files*/
 typedef struct {
-  FILE **file_handles;
-  size_t *file_sizes;
-  size_t num_file_handles;
-  size_t cur_file_handle;
+  char *root_file_name;
+  size_t root_file_name_length;
+  d3_file *files;
+  size_t num_files;
+  size_t cur_file;
   size_t cur_word;
+  size_t first_open_file;
+  size_t last_open_file;
 
   uint8_t word_size; /* 4 byte for single precision and 8 byte for double
                         precision*/
@@ -73,6 +82,8 @@ void d3_buffer_skip_bytes(d3_buffer *buffer, size_t num_bytes);
 /* Skip to the next file. Especially needed a the end of the first file when
  * done with all the headers. Sets error_string on error*/
 int d3_buffer_next_file(d3_buffer *buffer);
+/* Jumps to the word position indicated by word pos*/
+void d3_buffer_seek(d3_buffer *buffer, size_t word_pos);
 
 #ifdef __cplusplus
 }
