@@ -215,3 +215,32 @@ int path_is_abs(const char *path_name) {
   END_PROFILE_FUNC();
   return rv;
 }
+
+#ifdef _WIN32
+uint64_t path_get_file_size(const char *path_name) {
+  BEGIN_PROFILE_FUNC();
+
+  ULONGLONG file_size = 0;
+  WIN32_FILE_ATTRIBUTE_DATA file_info;
+  if (GetFileAttributesEx(path_name, GetFileExInfoStandard, &file_info)) {
+    file_size =
+        ((ULONGLONG)file_info.nFileSizeHigh << 32) | file_info.nFileSizeLow;
+  }
+
+  END_PROFILE_FUNC();
+  return (uint64_t)file_size;
+}
+#else
+uint64_t path_get_file_size(const char *path_name) {
+  BEGIN_PROFILE_FUNC();
+
+  uint64_t size = 0;
+  struct stat st;
+  if (stat(path_name, &st) == 0) {
+    size = (uint64_t)st.st_size;
+  }
+
+  END_PROFILE_FUNC();
+  return size;
+}
+#endif

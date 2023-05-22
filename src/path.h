@@ -25,6 +25,7 @@
 
 #ifndef PATH_H
 #define PATH_H
+#include <stdint.h>
 #include <stdlib.h>
 
 /* TODO: Make sure to use the correct PATH_SEP on windows when working with the
@@ -61,6 +62,10 @@ char *path_working_directory();
 
 /* Returns wether a path is absolute*/
 int path_is_abs(const char *path_name);
+
+/* Returns the size of the file given by path_name in bytes. If the retrieval
+ * fails it returns 0.*/
+uint64_t path_get_file_size(const char *path_name);
 
 #ifdef __cplusplus
 }
