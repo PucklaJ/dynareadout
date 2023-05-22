@@ -353,7 +353,7 @@ void d3_buffer_skip_bytes(d3_buffer *buffer, size_t num_bytes) {
     const size_t advanced = num_bytes / buffer->word_size;
     if (advanced * buffer->word_size != num_bytes) {
       ERROR_AND_RETURN_BUFFER_F_PTR(
-          "The number of bytes %lu is not divisible by the word size %d",
+          "The number of bytes %zu is not divisible by the word size %d",
           num_bytes, buffer->word_size);
     }
     buffer->cur_word += advanced;
@@ -368,7 +368,7 @@ void d3_buffer_skip_bytes(d3_buffer *buffer, size_t num_bytes) {
     const size_t advanced = bytes_skipped / buffer->word_size;
     if (advanced * buffer->word_size != bytes_skipped) {
       ERROR_AND_RETURN_BUFFER_F_PTR(
-          "The number of bytes %lu is not divisible by the word size %d",
+          "The number of bytes %zu is not divisible by the word size %d",
           bytes_skipped, buffer->word_size);
     }
     buffer->cur_word += bytes_skipped;

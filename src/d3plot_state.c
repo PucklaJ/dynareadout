@@ -184,7 +184,7 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   const size_t global_size = global_end - global_start;
 
   if (global_size != CDP.nglbv) {
-    ERROR_AND_NO_RETURN_F_PTR("Size of GLOBAL is %lu instead of %lu",
+    ERROR_AND_NO_RETURN_F_PTR("Size of GLOBAL is %zu instead of %llu",
                               global_size, CDP.nglbv);
     END_PROFILE_FUNC();
     return 0;
@@ -248,7 +248,7 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   const size_t node_data_end = plot_file->buffer.cur_word;
   const size_t node_data_size = node_data_end - node_data_start;
   if (node_data_size != NND) {
-    ERROR_AND_NO_RETURN_F_PTR("NODEDATA should be %lu instead of %lu", NND,
+    ERROR_AND_NO_RETURN_F_PTR("NODEDATA should be %zu instead of %zu", NND,
                               node_data_size);
     END_PROFILE_FUNC();
     return 0;
@@ -298,7 +298,7 @@ int _d3plot_read_state_data(d3plot_file *plot_file) {
   const size_t elem_data_end = plot_file->buffer.cur_word;
   const size_t elem_data_size = elem_data_end - elem_data_start;
   if (elem_data_size < ENN) {
-    ERROR_AND_NO_RETURN_F_PTR("ELEMDATA should be %lu instead of %lu", ENN,
+    ERROR_AND_NO_RETURN_F_PTR("ELEMDATA should be %zu instead of %zu", ENN,
                               elem_data_size);
     END_PROFILE_FUNC();
     return 0;
