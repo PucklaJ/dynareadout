@@ -59,14 +59,16 @@ int _d3plot_read_geometry_data(d3plot_file *plot_file) {
 
   data_pointer += CDP.numnp * CDP.ndim;
 
+  DT_PTR_SET_DPTR(D3PLT_PTR_EL8_CONNECT);
+  int64_t nel8;
   if (CDP.nel8 > 0) {
-    DT_PTR_SET_DPTR(D3PLT_PTR_EL8_CONNECT);
-    data_pointer += 9 * CDP.nel8;
-  } else if (CDP.nel8 < 0) {
-    const int64_t nel8 = CDP.nel8 * -1;
+    nel8 = CDP.nel8;
+  } else {
+    nel8 = -CDP.nel8;
     data_pointer += 2 * nel8;
     /* TODO: read function for -nel8 data*/
   }
+  data_pointer += 9 * nel8;
 
   if (CDP.nelt > 0) {
     DT_PTR_SET_DPTR(D3PLT_PTR_ELT_CONNECT);

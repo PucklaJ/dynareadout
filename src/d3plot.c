@@ -2006,16 +2006,15 @@ d3plot_solid_con *d3plot_read_solid_elements(d3plot_file *plot_file,
 
     size_t i = 0;
     while (i < *num_solids) {
-      size_t j = 0;
-      while (j < 8) {
-        /* Subtract 1 because Fortran starts by 1 and C starts by 0*/
-        solids[i].node_indices[j + 0] = solids32[i * 9 + j + 0] - 1;
-        solids[i].node_indices[j + 1] = solids32[i * 9 + j + 1] - 1;
-        solids[i].node_indices[j + 2] = solids32[i * 9 + j + 2] - 1;
-        solids[i].node_indices[j + 3] = solids32[i * 9 + j + 3] - 1;
-
-        j += 4;
-      }
+      /* Subtract 1 because Fortran starts by 1 and C starts by 0*/
+      solids[i].node_indices[0] = solids32[i * 9 + 0] - 1;
+      solids[i].node_indices[1] = solids32[i * 9 + 1] - 1;
+      solids[i].node_indices[2] = solids32[i * 9 + 2] - 1;
+      solids[i].node_indices[3] = solids32[i * 9 + 3] - 1;
+      solids[i].node_indices[4] = solids32[i * 9 + 4] - 1;
+      solids[i].node_indices[5] = solids32[i * 9 + 5] - 1;
+      solids[i].node_indices[6] = solids32[i * 9 + 6] - 1;
+      solids[i].node_indices[7] = solids32[i * 9 + 7] - 1;
       solids[i].material_index = solids32[i * 9 + 8] - 1;
 
       i++;
@@ -2037,16 +2036,15 @@ d3plot_solid_con *d3plot_read_solid_elements(d3plot_file *plot_file,
 
     size_t i = 0;
     while (i < *num_solids) {
-      size_t j = 0;
-      while (j < 8) {
-        /* Subtract 1 because Fortran starts by 1 and C starts by 0*/
-        solids[i].node_indices[j + 0] -= 1;
-        solids[i].node_indices[j + 1] -= 1;
-        solids[i].node_indices[j + 2] -= 1;
-        solids[i].node_indices[j + 3] -= 1;
-
-        j += 4;
-      }
+      /* Subtract 1 because Fortran starts by 1 and C starts by 0*/
+      solids[i].node_indices[0] -= 1;
+      solids[i].node_indices[1] -= 1;
+      solids[i].node_indices[2] -= 1;
+      solids[i].node_indices[3] -= 1;
+      solids[i].node_indices[4] -= 1;
+      solids[i].node_indices[5] -= 1;
+      solids[i].node_indices[6] -= 1;
+      solids[i].node_indices[7] -= 1;
       solids[i].material_index -= 1;
 
       i++;
