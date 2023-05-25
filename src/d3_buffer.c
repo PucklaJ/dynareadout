@@ -73,7 +73,7 @@ d3_buffer d3_buffer_open(const char *root_file_name) {
   buffer.cur_file = 0;
   buffer.cur_word = 0;
   buffer.first_open_file = 0;
-  buffer.last_open_file = 0;
+  buffer.last_open_file = ~0;
   buffer.files = NULL;
   buffer.error_string = NULL;
 
@@ -135,6 +135,11 @@ d3_buffer d3_buffer_open(const char *root_file_name) {
   if (buffer.num_files == 0) {
     ERROR_AND_RETURN_BUFFER_F("No files with the name %s do exist",
                               root_file_name);
+  }
+
+  if (buffer.last_open_file == ~0) {
+    ERROR_AND_RETURN_BUFFER(
+        "No files could be opened because too many files are open");
   }
 
   /* Shrink to fit*/
