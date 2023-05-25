@@ -426,7 +426,7 @@ void d3_buffer_seek(d3_buffer *buffer, size_t word_pos) {
       /* Close all files*/
       size_t file_range = 0;
       i = buffer->first_open_file;
-      while (i < buffer->last_open_file) {
+      while (i <= buffer->last_open_file) {
         fclose(buffer->files[i].file_handle);
         buffer->files[i].file_handle = NULL;
 
@@ -437,11 +437,12 @@ void d3_buffer_seek(d3_buffer *buffer, size_t word_pos) {
       /* Make sure that first_open_file < last_open_file*/
       size_t start_offset = 0;
       if (buffer->num_files - buffer->cur_file < file_range) {
-        start_offset = buffer->num_files - buffer->cur_file;
+        start_offset = buffer->cur_file - (buffer->num_files - file_range);
       }
 
       /* Open all files from the new position*/
       i = buffer->cur_file - start_offset;
+      buffer->first_open_file = i;
       while (file_range > 0) {
         memcpy(&buffer->root_file_name[buffer->root_file_name_length],
                buffer->files[i].index_string, 4);
@@ -455,6 +456,7 @@ void d3_buffer_seek(d3_buffer *buffer, size_t word_pos) {
         i++;
         file_range--;
       }
+      buffer->last_open_file = i - 1;
     } else {
       if (buffer->first_open_file < buffer->last_open_file) {
         if (buffer->cur_file < buffer->first_open_file) {
