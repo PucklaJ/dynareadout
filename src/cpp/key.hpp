@@ -302,7 +302,7 @@ template <typename T> T Card::parse(uint8_t value_width) const {
   if constexpr (std::is_integral_v<T>) {
     const auto value = card_parse_int_width(m_handle, value_width);
     if (value < 0 && std::is_unsigned_v<T>) {
-      THROW_KEY_FILE_EXCEPTION("Can not convert %ld into %s because of sign",
+      THROW_KEY_FILE_EXCEPTION("Can not convert %lld into %s because of sign",
                                value, typeid(T).name());
     }
     return value;
