@@ -389,6 +389,40 @@ TEST_CASE("Array") {
     CHECK(v1[3] == 9);
     CHECK(v1[4] == 10);
   }
+
+  SUBCASE("binary_search") {
+    {
+      int *is_arr = (int *)malloc(10 * sizeof(int));
+      is_arr[0] = 0;
+      is_arr[1] = 6;
+      is_arr[3] = 7;
+      is_arr[4] = 8;
+      is_arr[5] = 9;
+      is_arr[6] = 20;
+      is_arr[7] = 56;
+      is_arr[8] = 178;
+      is_arr[9] = 290;
+
+      const dro::Array<int> is(is_arr, 10);
+
+      CHECK(std::binary_search(is.begin(), is.end(), 8) == true);
+      CHECK(std::binary_search(is.begin(), is.end(), 177) == false);
+    }
+
+    auto is = dro::Array<int>::New(10);
+    is[0] = 0;
+    is[1] = 6;
+    is[3] = 7;
+    is[4] = 8;
+    is[5] = 9;
+    is[6] = 20;
+    is[7] = 56;
+    is[8] = 178;
+    is[9] = 290;
+
+    CHECK(std::binary_search(is.begin(), is.end(), 8) == true);
+    CHECK(std::binary_search(is.begin(), is.end(), 177) == false);
+  }
 }
 #endif
 

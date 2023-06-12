@@ -71,7 +71,7 @@ public:
     difference_type operator-(const ConstIterator &rhs) const {
       return m_index - rhs.m_index;
     }
-    const reference operator*() { return m_data[m_index]; }
+    const reference operator*() const { return m_data[m_index]; }
     const pointer operator->() const { return &m_data[m_index]; }
 
   public:
@@ -80,18 +80,42 @@ public:
   };
 
   // An Iterator which can write the array
-  class Iterator : public ConstIterator {
+  class Iterator {
   public:
-    Iterator(typename ConstIterator::pointer data,
-             typename ConstIterator::difference_type index) noexcept
-        : ConstIterator(data, index) {}
+    using iterator_category = std::input_iterator_tag;
+    using difference_type = std::ptrdiff_t;
+    using value_type = T;
+    using pointer = T *;   // or also value_type*
+    using reference = T &; // or also value_type&
 
-    typename ConstIterator::reference operator*() {
-      return ConstIterator::m_data[ConstIterator::m_index];
+    explicit Iterator(pointer data, difference_type index) noexcept
+        : m_data(data), m_index(index) {}
+    Iterator operator++() noexcept {
+      m_index++;
+      return *this;
     }
-    typename ConstIterator::pointer operator->() {
-      return &ConstIterator::m_data[ConstIterator::m_index];
+    Iterator operator++(int) noexcept {
+      auto rv = *this;
+      ++(*this);
+      return rv;
     }
+    bool operator==(const Iterator &rhs) const noexcept {
+      return m_index == rhs.m_index;
+    }
+    bool operator!=(const Iterator &rhs) const noexcept {
+      return m_index != rhs.m_index;
+    }
+    difference_type operator-(const Iterator &rhs) const {
+      return m_index - rhs.m_index;
+    }
+    const reference operator*() const { return m_data[m_index]; }
+    const pointer operator->() const { return &m_data[m_index]; }
+    reference operator*() { return m_data[m_index]; }
+    pointer operator->() { return &m_data[m_index]; }
+
+  public:
+    pointer m_data;
+    difference_type m_index;
   };
 
   // Allocates memory and creates a new array with it
