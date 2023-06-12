@@ -38,6 +38,10 @@ public:
   D3plotShellsState(D3plotShellsState &&rhs) noexcept;
   ~D3plotShellsState() noexcept override;
 
+  inline size_t get_num_history_variables() const noexcept {
+    return m_num_history_variables;
+  }
+
   const Array<double> get_mid_history_variables(size_t index) const;
   const Array<double> get_inner_history_variables(size_t index) const;
   const Array<double> get_outer_history_variables(size_t index) const;
@@ -53,6 +57,10 @@ public:
                          bool delete_data = true) noexcept;
   D3plotThickShellsState(D3plotThickShellsState &&rhs) noexcept;
   ~D3plotThickShellsState() noexcept override;
+
+  inline size_t get_num_history_variables() const noexcept {
+    return m_num_history_variables;
+  }
 
   const Array<double> get_mid_history_variables(size_t index) const;
   const Array<double> get_inner_history_variables(size_t index) const;
