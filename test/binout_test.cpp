@@ -430,7 +430,7 @@ TEST_CASE("glob") {
   size_t num_files;
   char **globed_files = binout_glob("src/*.c", &num_files);
 
-  CHECK(num_files == 15);
+  CHECK(num_files == 17);
   CHECK(strarr_contains(globed_files, num_files, "src/binary_search.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/binout_glob.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/binout_read.c"));
@@ -442,6 +442,8 @@ TEST_CASE("glob") {
   CHECK(strarr_contains(globed_files, num_files, "src/d3plot_state.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/d3plot.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/extra_string.c"));
+  CHECK(strarr_contains(globed_files, num_files, "src/multi_file.c"));
+  CHECK(strarr_contains(globed_files, num_files, "src/sync.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/key.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/path.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/path_view.c"));
