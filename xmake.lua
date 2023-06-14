@@ -58,7 +58,7 @@ target("dynareadout")
         remove_files("src/profiling.c")
     end
     if not get_config("thread_safe") then
-        remove_files("src/sync.c")
+        remove_files("src/sync.c", "src/multi_file.c")
     end
     add_headerfiles("src/*.h")
     if is_kind("shared") then
