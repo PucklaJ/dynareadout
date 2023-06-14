@@ -25,6 +25,7 @@
 
 #define DOCTEST_CONFIG_TREAT_CHAR_STAR_AS_STRING
 #include <binary_search.h>
+#include <cerrno>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
