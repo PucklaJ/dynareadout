@@ -41,6 +41,7 @@
     ERROR_AND_NO_RETURN_PTR(format_buffer);                                    \
   }
 #define ERROR_AND_RETURN(msg)                                                  \
+  d3_pointer_close(&plot_file.buffer, &d3_ptr);                                \
   if (plot_file.error_string)                                                  \
     free(plot_file.error_string);                                              \
   plot_file.error_string = malloc(strlen(msg) + 1);                            \
