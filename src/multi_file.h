@@ -29,6 +29,7 @@
 #include "sync.h"
 #include <stdio.h>
 
+#ifdef THREAD_SAFE
 typedef struct {
   FILE *file_handle;
   sync_t mutex;
@@ -44,6 +45,11 @@ typedef struct {
 
   sync_t file_handles_mutex;
 } multi_file_t;
+
+#else
+typedef FILE *multi_file_t;
+
+#endif
 
 #ifdef __cplusplus
 extern "C" {

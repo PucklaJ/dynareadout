@@ -25,6 +25,8 @@
 
 #include "multi_file.h"
 #include "profiling.h"
+
+#ifdef THREAD_SAFE
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
@@ -173,3 +175,63 @@ size_t multi_file_read(multi_file_t *f, size_t index, void *ptr, size_t size) {
   END_PROFILE_FUNC();
   return rv;
 }
+
+#else
+
+multi_file_t multi_file_open(const char *path) {
+  BEGIN_PROFILE_FUNC();
+
+  multi_file_t f = (multi_file_t)fopen(path, "r");
+
+  END_PROFILE_FUNC();
+  return f;
+}
+
+void multi_file_close(multi_file_t *f) {
+  BEGIN_PROFILE_FUNC();
+
+  fclose(*((FILE **)f));
+
+  END_PROFILE_FUNC();
+}
+
+size_t multi_file_access(multi_file_t *f) {
+  BEGIN_PROFILE_FUNC();
+  END_PROFILE_FUNC();
+  return 0;
+}
+
+void multi_file_return(multi_file_t *f, size_t index) {
+  BEGIN_PROFILE_FUNC();
+  END_PROFILE_FUNC();
+}
+
+int multi_file_seek(multi_file_t *f, size_t index, long offset, int whence) {
+  BEGIN_PROFILE_FUNC();
+
+  const int rv = fseek(*((FILE **)f), offset, whence);
+
+  END_PROFILE_FUNC();
+  return rv;
+}
+
+long multi_file_tell(multi_file_t *f, size_t index) {
+  BEGIN_PROFILE_FUNC();
+
+  const long rv = ftell(*((FILE **)f));
+
+  END_PROFILE_FUNC();
+  return rv;
+}
+
+size_t multi_file_read(multi_file_t *f, size_t index, void *ptr, size_t size) {
+  BEGIN_PROFILE_FUNC();
+
+  size_t rv = fread(ptr, size, 1, *((FILE **)f));
+  rv *= size;
+
+  END_PROFILE_FUNC();
+  return rv;
+}
+
+#endif
