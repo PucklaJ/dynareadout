@@ -229,39 +229,40 @@ void d3_buffer_read_words(d3_buffer *buffer, d3_pointer *ptr, void *words,
     return;
   } else {
     /* Read from as much files as necessary to read all number of words*/
-    size_t words_read = 0;
-    while (words_read < num_words) {
+    const size_t num_bytes = num_words * buffer->word_size;
+    size_t bytes_read = 0;
+    while (bytes_read < num_bytes) {
 
       /* How much words can be read from the current file*/
-      const size_t words_from_cur_file =
-          (file_size - cur_file_pos) / buffer->word_size;
+      const size_t bytes_from_cur_file = file_size - cur_file_pos;
 
-      const size_t words_left = num_words - words_read;
-      if (words_from_cur_file >= words_left) {
+      const size_t bytes_left = num_bytes - bytes_read;
+      if (bytes_from_cur_file >= bytes_left) {
         /* We can read all of the rest of the words from the current file*/
-        if (multi_file_read(file, ptr->multi_file_index,
-                            &words_ptr[words_read * (size_t)buffer->word_size],
-                            buffer->word_size, words_left) != words_left) {
+        if (multi_file_read(file, ptr->multi_file_index, &words_ptr[bytes_read],
+                            1, bytes_left) != bytes_left) {
           ERROR_AND_RETURN_BUFFER_PTR("Read Error");
         }
 
-        ptr->cur_word += words_left;
-        words_read = num_words;
+        /* TODO: If bytes_left is not divisible by word size this adds an
+         * invalid value, but this doesn't really matter*/
+        ptr->cur_word += bytes_left / buffer->word_size;
+        bytes_read = num_bytes;
         break;
       } else {
 
-        if (words_from_cur_file != 0) {
+        if (bytes_from_cur_file != 0) {
           /* Read the rest of the current file*/
-          if (multi_file_read(
-                  file, ptr->multi_file_index,
-                  &words_ptr[words_read * (size_t)buffer->word_size],
-                  buffer->word_size,
-                  words_from_cur_file) != words_from_cur_file) {
+          if (multi_file_read(file, ptr->multi_file_index,
+                              &words_ptr[bytes_read], 1,
+                              bytes_from_cur_file) != bytes_from_cur_file) {
             ERROR_AND_RETURN_BUFFER_PTR("Read Error");
           }
 
-          ptr->cur_word += words_from_cur_file;
-          words_read += words_from_cur_file;
+          /* TODO: If bytes_left is not divisible by word size this adds an
+           * invalid value, but this doesn't really matter*/
+          ptr->cur_word += bytes_from_cur_file / buffer->word_size;
+          bytes_read += bytes_from_cur_file;
         }
 
         if (!d3_buffer_next_file(buffer, ptr)) {
