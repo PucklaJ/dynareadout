@@ -25,6 +25,9 @@ option("thread_safe")
     set_default(true)
     set_showmenu(true)
     add_defines("THREAD_SAFE")
+    if not is_plat("windows") then
+        add_syslinks("pthread")
+    end
 option_end()
 
 add_rules("mode.debug", "mode.release")
@@ -53,6 +56,9 @@ target("dynareadout")
     add_files("src/*.c")
     if not get_config("profiling") then
         remove_files("src/profiling.c")
+    end
+    if not get_config("thread_safe") then
+        remove_files("src/sync.c")
     end
     add_headerfiles("src/*.h")
     if is_kind("shared") then
