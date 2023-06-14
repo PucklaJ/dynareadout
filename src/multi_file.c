@@ -81,7 +81,7 @@ size_t multi_file_access(multi_file_t *f) {
     if (sync_trylock(&f->file_handles[i].mutex) == 0) {
       if (!f->file_handles[i].file_handle) {
         /* If the file is not yet open*/
-        f->file_handles[i].file_handle = fopen(f->file_path, "r");
+        f->file_handles[i].file_handle = fopen(f->file_path, "rb");
         if (!f->file_handles[i].file_handle) {
           sync_unlock(&f->file_handles[i].mutex);
         } else {
@@ -108,7 +108,7 @@ size_t multi_file_access(multi_file_t *f) {
   sync_file_t *new_file = &f->file_handles[f->num_file_handles - 1];
 
   new_file->mutex = sync_create();
-  new_file->file_handle = fopen(f->file_path, "r");
+  new_file->file_handle = fopen(f->file_path, "rb");
   if (!new_file->file_handle) {
     sync_unlock(&f->file_handles_mutex);
     END_PROFILE_FUNC();
@@ -181,7 +181,7 @@ size_t multi_file_read(multi_file_t *f, size_t index, void *ptr, size_t size) {
 multi_file_t multi_file_open(const char *path) {
   BEGIN_PROFILE_FUNC();
 
-  multi_file_t f = (multi_file_t)fopen(path, "r");
+  multi_file_t f = (multi_file_t)fopen(path, "rb");
 
   END_PROFILE_FUNC();
   return f;
