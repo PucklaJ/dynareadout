@@ -1,3 +1,28 @@
+/***********************************************************************************
+ *                         This file is part of dynareadout
+ *                    https://github.com/PucklaJ/dynareadout
+ ***********************************************************************************
+ * Copyright (c) 2022 Jonas Pucher
+ *
+ * This software is provided 'as-is', without any express or implied warranty.
+ * In no event will the authors be held liable for any damages arising from the
+ * use of this software.
+ *
+ * Permission is granted to anyone to use this software for any purpose,
+ * including commercial applications, and to alter it and redistribute it
+ * freely, subject to the following restrictions:
+ *
+ * 1. The origin of this software must not be misrepresented; you must not claim
+ * that you wrote the original software. If you use this software in a product,
+ * an acknowledgment in the product documentation would be appreciated but is
+ * not required.
+ *
+ * 2. Altered source versions must be plainly marked as such, and must not be
+ * misrepresented as being the original software.
+ *
+ * 3. This notice may not be removed or altered from any source distribution.
+ ************************************************************************************/
+
 #include "multi_file.h"
 #include "profiling.h"
 #include <limits.h>
@@ -25,6 +50,15 @@ void multi_file_close(multi_file_t *f) {
   BEGIN_PROFILE_FUNC();
 
   free(f->file_path);
+
+  size_t i = 0;
+  while (i < f->num_file_handles) {
+    if (f->file_handles[i].file_handle)
+      fclose(f->file_handles[i].file_handle);
+
+    i++;
+  }
+
   free(f->file_handles);
   sync_destroy(&f->file_handles_mutex);
 
@@ -89,6 +123,13 @@ size_t multi_file_access(multi_file_t *f) {
 void multi_file_return(multi_file_t *f, size_t index) {
   BEGIN_PROFILE_FUNC();
   sync_lock(&f->file_handles_mutex);
+
+  /* Keep at least one file open at all times and close all other ones if
+   * returned*/
+  if (index != 0) {
+    fclose(f->file_handles[index].file_handle);
+    f->file_handles[index].file_handle = NULL;
+  }
 
   sync_unlock(&f->file_handles[index].mutex);
 
