@@ -381,7 +381,6 @@ d3plot_file d3plot_open(const char *root_file_name) {
     }
   }
 
-  d3_pointer_close(&plot_file.buffer, &d3_ptr);
   END_PROFILE_FUNC();
   return plot_file;
 }
