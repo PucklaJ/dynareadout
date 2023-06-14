@@ -20,6 +20,11 @@ option("profiling")
 option("build_gen")
     set_default(false)
     set_showmenu(true)
+
+option("thread_safe")
+    set_default(true)
+    set_showmenu(true)
+    add_defines("THREAD_SAFE")
 option_end()
 
 add_rules("mode.debug", "mode.release")
@@ -44,7 +49,7 @@ target("dynareadout")
     if is_plat("linux") then
         add_cflags("-fPIC")
     end
-    add_options("profiling")
+    add_options("profiling", "thread_safe")
     add_files("src/*.c")
     if not get_config("profiling") then
         remove_files("src/profiling.c")
@@ -63,6 +68,7 @@ if get_config("build_cpp") or get_config("build_python") then
             add_cxxflags("-fPIC")
             add_syslinks("stdc++fs")
         end
+        add_options("thread_safe")
         add_deps("dynareadout")
         add_includedirs("src")
         add_files("src/cpp/*.cpp")
@@ -89,7 +95,7 @@ if get_config("build_test") then
         end
         add_packages("doctest")
         add_includedirs("src")
-        add_options("profiling")
+        add_options("profiling", "thread_safe")
         add_files("test/*.cpp")
     target_end()
 end
@@ -104,7 +110,7 @@ if get_config("build_python") then
         end
         add_deps("dynareadout_cpp")
         add_packages("pybind11")
-        add_options("profiling")
+        add_options("profiling", "thread_safe")
         add_files("src/python/*.cpp")
         add_headerfiles("src/python/*.hpp")
         add_includedirs("src", "src/cpp")
