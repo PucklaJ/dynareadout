@@ -56,11 +56,11 @@ TEST_CASE("multi_file") {
   char data[13];
   data[12] = '\0';
 
-  multi_file_read(&f, is[0], data, 12);
+  multi_file_read(&f, is[0], data, 1, 12);
   CHECK(data == "Hello World!");
-  multi_file_read(&f, is[1], data, 12);
+  multi_file_read(&f, is[1], data, 1, 12);
   CHECK(data == "Hello World!");
-  multi_file_read(&f, is[2], data, 12);
+  multi_file_read(&f, is[2], data, 1, 12);
   CHECK(data == "Hello World!");
 
   CHECK(multi_file_tell(&f, is[0]) == 12);
@@ -71,15 +71,15 @@ TEST_CASE("multi_file") {
   multi_file_seek(&f, is[1], 0, SEEK_SET);
   multi_file_seek(&f, is[2], 0, SEEK_SET);
 
-  CHECK(multi_file_read(&f, is[0], data, 5) == 5);
+  CHECK(multi_file_read(&f, is[0], data, 1, 5) == 5);
   data[5] = '\0';
   CHECK(data == "Hello");
 
   multi_file_seek(&f, is[1], 6, SEEK_SET);
-  CHECK(multi_file_read(&f, is[1], data, 5) == 5);
+  CHECK(multi_file_read(&f, is[1], data, 1, 5) == 5);
   CHECK(data == "World");
 
-  multi_file_read(&f, is[2], data, 2);
+  multi_file_read(&f, is[2], data, 1, 2);
   data[2] = '\0';
   CHECK(data == "He");
 

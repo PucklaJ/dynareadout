@@ -76,7 +76,8 @@ int multi_file_seek(multi_file_t *f, size_t index, long offset, int whence);
 long multi_file_tell(multi_file_t *f, size_t index);
 /* Similar to fread, but it just uses size to specify the number of bytes
  * instead of size and nmemb*/
-size_t multi_file_read(multi_file_t *f, size_t index, void *ptr, size_t size);
+size_t multi_file_read(multi_file_t *f, size_t index, void *ptr, size_t size,
+                       size_t nmemb);
 
 #ifdef __cplusplus
 }

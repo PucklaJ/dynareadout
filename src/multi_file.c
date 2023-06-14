@@ -163,14 +163,14 @@ long multi_file_tell(multi_file_t *f, size_t index) {
   return rv;
 }
 
-size_t multi_file_read(multi_file_t *f, size_t index, void *ptr, size_t size) {
+size_t multi_file_read(multi_file_t *f, size_t index, void *ptr, size_t size,
+                       size_t nmemb) {
   BEGIN_PROFILE_FUNC();
   sync_lock(&f->file_handles_mutex);
   FILE *file_handle = f->file_handles[index].file_handle;
   sync_unlock(&f->file_handles_mutex);
 
-  size_t rv = fread(ptr, size, 1, file_handle);
-  rv *= size;
+  const size_t rv = fread(ptr, size, nmemb, file_handle);
 
   END_PROFILE_FUNC();
   return rv;
@@ -224,11 +224,11 @@ long multi_file_tell(multi_file_t *f, size_t index) {
   return rv;
 }
 
-size_t multi_file_read(multi_file_t *f, size_t index, void *ptr, size_t size) {
+size_t multi_file_read(multi_file_t *f, size_t index, void *ptr, size_t size,
+                       size_t nmemb) {
   BEGIN_PROFILE_FUNC();
 
-  size_t rv = fread(ptr, size, 1, *((FILE **)f));
-  rv *= size;
+  const size_t rv = fread(ptr, size, nmemb, *((FILE **)f));
 
   END_PROFILE_FUNC();
   return rv;
