@@ -354,6 +354,12 @@ int d3_buffer_next_file(d3_buffer *buffer, d3_pointer *ptr) {
 
   const long cur_file_pos = multi_file_tell(file, ptr->multi_file_index);
   ptr->cur_word += (file_size - cur_file_pos) / buffer->word_size;
+
+  /* Give the current pointer back*/
+  const size_t cur_word = ptr->cur_word;
+  const size_t cur_file = ptr->cur_file;
+  d3_pointer_close(buffer, ptr);
+
   ptr->cur_file++;
 
   if (ptr->cur_file == buffer->num_files) {
@@ -362,10 +368,6 @@ int d3_buffer_next_file(d3_buffer *buffer, d3_pointer *ptr) {
   }
 
   /* Switch to the next file*/
-  const size_t cur_word = ptr->cur_word;
-  const size_t cur_file = ptr->cur_file;
-  d3_pointer_close(buffer, ptr);
-
   file = &buffer->files[cur_file].file;
 
   ptr->multi_file_index = multi_file_access(file);

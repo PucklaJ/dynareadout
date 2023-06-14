@@ -49,17 +49,21 @@ TEST_CASE("d3_buffer") {
     return;
   }
 
+  d3_pointer d3_ptr = d3_buffer_seek(&buffer, 0);
+
   CHECK((buffer.word_size == 4));
   CHECK(buffer.num_files == 28);
 
   char title[10 * 4 + 1];
   title[10 * 4] = '\0';
-  d3_buffer_read_words(&buffer, title, 10);
+  d3_buffer_read_words(&buffer, &d3_ptr, title, 10);
+  d3_pointer_close(&buffer, &d3_ptr);
 
   CHECK(title == "Pouch_macro_37Ah                        ");
 
   uint8_t *probe = new uint8_t[40 * 1000 * 1000 * 4];
-  d3_buffer_read_words_at(&buffer, probe, 40 * 1000 * 1000, 0);
+  d3_ptr = d3_buffer_read_words_at(&buffer, probe, 40 * 1000 * 1000, 0);
+  d3_pointer_close(&buffer, &d3_ptr);
 
   // d3plot
   CHECK(probe[0x00000000] == 0x50);
@@ -114,13 +118,15 @@ TEST_CASE("d3_buffer_seek") {
     return;
   }
 
+  d3_pointer d3_ptr = d3_buffer_seek(&buffer, 0);
+
   CHECK(buffer.num_files == 1000);
 
   size_t i = 1;
-  d3_buffer_skip_words(&buffer, 16);
+  d3_buffer_skip_words(&buffer, &d3_ptr, 16);
   while (i < 1000) {
     uint32_t data;
-    d3_buffer_read_words(&buffer, &data, 1);
+    d3_buffer_read_words(&buffer, &d3_ptr, &data, 1);
     if (buffer.error_string) {
       FAIL(buffer.error_string);
       d3_buffer_close(&buffer);

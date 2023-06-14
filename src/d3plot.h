@@ -262,18 +262,21 @@ d3plot_part d3plot_read_part_by_id(d3plot_file *plot_file, d3_word part_id,
 
 /***** Data sections *******/
 /* GEOMETRY DATA pg. 17*/
-int _d3plot_read_geometry_data(d3plot_file *plot_file);
+int _d3plot_read_geometry_data(d3plot_file *plot_file, d3_pointer *d3_ptr);
 /* USER MATERIAL, NODE, AND ELEMENT IDENTIFICATION NUMBERS pg. 18*/
-int _d3plot_read_user_identification_numbers(d3plot_file *plot_file);
+int _d3plot_read_user_identification_numbers(d3plot_file *plot_file,
+                                             d3_pointer *d3_ptr);
 /* EXTRA 2, 4, 12 NODE CONNECTIVITY FOR 10, 8, 20 NODE TETRAHEDRON, SHELL, SOLID
  * ELEMENTS pg. 19*/
-int _d3plot_read_extra_node_connectivity(d3plot_file *plot_file);
+int _d3plot_read_extra_node_connectivity(d3plot_file *plot_file,
+                                         d3_pointer *d3_ptr);
 /* ADAPTED ELEMENT PARENT LIST (not implemented) pg. 19*/
-int _d3plot_read_adapted_element_parent_list(d3plot_file *plot_file);
+int _d3plot_read_adapted_element_parent_list(d3plot_file *plot_file,
+                                             d3_pointer *d3_ptr);
 /* HEADER, PART & CONTACT INTERFACE TITLES pg. 22*/
-int _d3plot_read_header(d3plot_file *plot_file);
+int _d3plot_read_header(d3plot_file *plot_file, d3_pointer *d3_ptr);
 /* STATE DATA pg. 31*/
-int _d3plot_read_state_data(d3plot_file *plot_file);
+int _d3plot_read_state_data(d3plot_file *plot_file, d3_pointer *d3_ptr);
 /***************************/
 
 /***** Private Functions ********/

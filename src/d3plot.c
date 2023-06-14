@@ -305,22 +305,22 @@ d3plot_file d3plot_open(const char *root_file_name) {
     ERROR_AND_RETURN("PARTICLE DATA is not implemented");
   }
 
-  if (!_d3plot_read_geometry_data(&plot_file)) {
+  if (!_d3plot_read_geometry_data(&plot_file, &d3_ptr)) {
     END_PROFILE_FUNC();
     return plot_file;
   }
 
-  if (!_d3plot_read_user_identification_numbers(&plot_file)) {
+  if (!_d3plot_read_user_identification_numbers(&plot_file, &d3_ptr)) {
     END_PROFILE_FUNC();
     return plot_file;
   }
 
-  if (!_d3plot_read_extra_node_connectivity(&plot_file)) {
+  if (!_d3plot_read_extra_node_connectivity(&plot_file, &d3_ptr)) {
     END_PROFILE_FUNC();
     return plot_file;
   }
 
-  if (!_d3plot_read_adapted_element_parent_list(&plot_file)) {
+  if (!_d3plot_read_adapted_element_parent_list(&plot_file, &d3_ptr)) {
     END_PROFILE_FUNC();
     return plot_file;
   }
@@ -348,7 +348,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
         d3_ptr.cur_word - 1);
   }
 
-  if (!_d3plot_read_header(&plot_file)) {
+  if (!_d3plot_read_header(&plot_file, &d3_ptr)) {
     END_PROFILE_FUNC();
     return plot_file;
   }
@@ -369,7 +369,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
 
   int result = 1;
   while (result) {
-    result = _d3plot_read_state_data(&plot_file);
+    result = _d3plot_read_state_data(&plot_file, &d3_ptr);
     if (result == 2) {
       if (!d3_buffer_next_file(&plot_file.buffer, &d3_ptr)) {
         break;
