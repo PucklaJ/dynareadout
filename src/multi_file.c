@@ -71,7 +71,7 @@ void multi_file_close(multi_file_t *f) {
   END_PROFILE_FUNC();
 }
 
-size_t multi_file_access(multi_file_t *f) {
+multi_file_index_t multi_file_access(multi_file_t *f) {
   BEGIN_PROFILE_FUNC();
   sync_lock(&f->file_handles_mutex);
 
@@ -85,15 +85,23 @@ size_t multi_file_access(multi_file_t *f) {
         if (!f->file_handles[i].file_handle) {
           sync_unlock(&f->file_handles[i].mutex);
         } else {
+          multi_file_index_t index;
+          index.file_handle = f->file_handles[i].file_handle;
+          index.index = i;
+
           sync_unlock(&f->file_handles_mutex);
           END_PROFILE_FUNC();
-          return i;
+          return index;
         }
       } else {
         /* If the file is already open*/
+        multi_file_index_t index;
+        index.file_handle = f->file_handles[i].file_handle;
+        index.index = i;
+
         sync_unlock(&f->file_handles_mutex);
         END_PROFILE_FUNC();
-        return i;
+        return index;
       }
     }
 
@@ -110,67 +118,67 @@ size_t multi_file_access(multi_file_t *f) {
   new_file->mutex = sync_create();
   new_file->file_handle = fopen(f->file_path, "rb");
   if (!new_file->file_handle) {
+    multi_file_index_t index;
+    index.file_handle = NULL;
+    index.index = ULONG_MAX;
+
     sync_unlock(&f->file_handles_mutex);
     END_PROFILE_FUNC();
-    return ULONG_MAX;
+    return index;
   }
 
   sync_lock(&new_file->mutex);
 
+  multi_file_index_t index;
+  index.file_handle = new_file->file_handle;
+  index.index = f->num_file_handles - 1;
+
   sync_unlock(&f->file_handles_mutex);
   END_PROFILE_FUNC();
-  return f->num_file_handles - 1;
+  return index;
 }
 
-void multi_file_return(multi_file_t *f, size_t index) {
+void multi_file_return(multi_file_t *f, multi_file_index_t *index) {
   BEGIN_PROFILE_FUNC();
   sync_lock(&f->file_handles_mutex);
 
   /* Keep at least one file open at all times and close all other ones if
    * returned*/
-  if (index != 0) {
-    fclose(f->file_handles[index].file_handle);
-    f->file_handles[index].file_handle = NULL;
+  if (index->index != 0) {
+    fclose(index->file_handle);
+    f->file_handles[index->index].file_handle = NULL;
   }
 
-  sync_unlock(&f->file_handles[index].mutex);
+  sync_unlock(&f->file_handles[index->index].mutex);
 
   sync_unlock(&f->file_handles_mutex);
   END_PROFILE_FUNC();
 }
 
-int multi_file_seek(multi_file_t *f, size_t index, long offset, int whence) {
+int multi_file_seek(multi_file_t *f, multi_file_index_t *index, long offset,
+                    int whence) {
   BEGIN_PROFILE_FUNC();
-  sync_lock(&f->file_handles_mutex);
-  FILE *file_handle = f->file_handles[index].file_handle;
-  sync_unlock(&f->file_handles_mutex);
 
-  const int rv = fseek(file_handle, offset, whence);
+  const int rv = fseek(index->file_handle, offset, whence);
 
   END_PROFILE_FUNC();
   return rv;
 }
 
-long multi_file_tell(multi_file_t *f, size_t index) {
+long multi_file_tell(multi_file_t *f, multi_file_index_t *index) {
   BEGIN_PROFILE_FUNC();
-  sync_lock(&f->file_handles_mutex);
-  FILE *file_handle = f->file_handles[index].file_handle;
-  sync_unlock(&f->file_handles_mutex);
 
-  const long rv = ftell(file_handle);
+  const long rv = ftell(index->file_handle);
 
   END_PROFILE_FUNC();
   return rv;
 }
 
-size_t multi_file_read(multi_file_t *f, size_t index, void *ptr, size_t size,
-                       size_t nmemb) {
+size_t multi_file_read(multi_file_t *f, multi_file_index_t *index, void *ptr,
+                       size_t size, size_t nmemb) {
   BEGIN_PROFILE_FUNC();
-  sync_lock(&f->file_handles_mutex);
-  FILE *file_handle = f->file_handles[index].file_handle;
-  sync_unlock(&f->file_handles_mutex);
 
-  const size_t rv = fread(ptr, size, nmemb, file_handle);
+  const size_t rv = fread(ptr, size, nmemb, index->file_handle);
 
   END_PROFILE_FUNC();
   return rv;

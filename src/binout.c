@@ -40,7 +40,7 @@
   continue
 
 #define BIN_FILE_READ(dst, size, count, message)                               \
-  read_count = multi_file_read(file, file_index, &dst, size, count);           \
+  read_count = multi_file_read(file, &file_index, &dst, size, count);          \
   if (read_count != count) {                                                   \
     cur_file_failed = 1;                                                       \
     _binout_add_file_error(&bin_file, file_names[cur_file_index], message);    \
@@ -48,7 +48,7 @@
   }
 
 #define BIN_FILE_READ_FREE(dst, size, count, obj, message)                     \
-  read_count = multi_file_read(file, file_index, dst, size, count);            \
+  read_count = multi_file_read(file, &file_index, dst, size, count);           \
   if (read_count != count) {                                                   \
     free(obj);                                                                 \
     _binout_add_file_error(&bin_file, file_names[cur_file_index], message);    \
@@ -94,11 +94,11 @@ binout_file binout_open(const char *file_name) {
   cur_file_index = 0;
   while (cur_file_index < bin_file.num_files) {
     multi_file_t *file = &bin_file.files[cur_file_index];
-    const size_t file_index = multi_file_access(file);
+    multi_file_index_t file_index = multi_file_access(file);
 
     /* Just ignore the file if it failed to open*/
 #ifdef THREAD_SAFE
-    if (file_index == ULONG_MAX) {
+    if (file_index.index == ULONG_MAX) {
       FILE_FAILED(strerror(errno));
     }
 #else
@@ -112,7 +112,7 @@ binout_file binout_open(const char *file_name) {
 
     /* Read header */
     size_t read_count =
-        multi_file_read(file, file_index, &header, sizeof(binout_header), 1);
+        multi_file_read(file, &file_index, &header, sizeof(binout_header), 1);
     if (read_count == 0) {
       FILE_FAILED("Failed to read header");
     }
@@ -156,7 +156,7 @@ binout_file binout_open(const char *file_name) {
     /* We cannot use EOF, so we use this*/
     while (1) {
       /* Check if we are already at the end or if an error occurred in ftell*/
-      const long current_file_pos = multi_file_tell(file, file_index);
+      const long current_file_pos = multi_file_tell(file, &file_index);
       if (current_file_pos == -1 || current_file_pos == file_size) {
         break;
       }
@@ -251,10 +251,10 @@ binout_file binout_open(const char *file_name) {
         const uint64_t data_length =
             record_data_length - header.record_typeid_field_size -
             BINOUT_DATA_NAME_LENGTH - variable_name_length;
-        const long file_pos = multi_file_tell(file, file_index);
+        const long file_pos = multi_file_tell(file, &file_index);
         /* Skip the data since we will read it at a later point, if it is
          * requested by the programmer*/
-        if (multi_file_seek(file, file_index, data_length, SEEK_CUR) != 0) {
+        if (multi_file_seek(file, &file_index, data_length, SEEK_CUR) != 0) {
           free(variable_name);
           cur_file_failed = 1;
           _binout_add_file_error(&bin_file, file_names[cur_file_index],
@@ -267,7 +267,7 @@ binout_file binout_open(const char *file_name) {
                                   (uint8_t)cur_file_index, file_pos);
       } else {
         /* Just skip the record and ignore its data*/
-        if (multi_file_seek(file, file_index, record_data_length, SEEK_CUR) !=
+        if (multi_file_seek(file, &file_index, record_data_length, SEEK_CUR) !=
             0) {
           cur_file_failed = 1;
           _binout_add_file_error(&bin_file, file_names[cur_file_index],
@@ -277,7 +277,7 @@ binout_file binout_open(const char *file_name) {
       }
     }
 
-    multi_file_return(file, file_index);
+    multi_file_return(file, &file_index);
 
     if (cur_file_failed) {
       multi_file_close(file);

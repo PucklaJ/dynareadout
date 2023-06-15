@@ -61,50 +61,56 @@ TEST_CASE("multi_file") {
 
   multi_file_t f = multi_file_open("test_data/multi_file_test");
 
-  size_t is[3] = {multi_file_access(&f), multi_file_access(&f),
-                  multi_file_access(&f)};
+  multi_file_index_t is[3] = {multi_file_access(&f), multi_file_access(&f),
+                              multi_file_access(&f)};
 
+#ifdef THREAD_SAFE
+  CHECK(is[0].index != is[1].index);
+  CHECK(is[1].index != is[2].index);
+  CHECK(is[0].index != is[2].index);
+#else
   CHECK(is[0] != is[1]);
   CHECK(is[1] != is[2]);
   CHECK(is[0] != is[2]);
+#endif
 
   char data[13];
   data[12] = '\0';
 
-  multi_file_read(&f, is[0], data, 1, 12);
+  multi_file_read(&f, &is[0], data, 1, 12);
   CHECK(data == "Hello World!");
-  multi_file_read(&f, is[1], data, 1, 12);
+  multi_file_read(&f, &is[1], data, 1, 12);
   CHECK(data == "Hello World!");
-  multi_file_read(&f, is[2], data, 1, 12);
+  multi_file_read(&f, &is[2], data, 1, 12);
   CHECK(data == "Hello World!");
 
-  CHECK(multi_file_tell(&f, is[0]) == 12);
-  CHECK(multi_file_tell(&f, is[1]) == 12);
-  CHECK(multi_file_tell(&f, is[2]) == 12);
+  CHECK(multi_file_tell(&f, &is[0]) == 12);
+  CHECK(multi_file_tell(&f, &is[1]) == 12);
+  CHECK(multi_file_tell(&f, &is[2]) == 12);
 
-  multi_file_seek(&f, is[0], 0, SEEK_SET);
-  multi_file_seek(&f, is[1], 0, SEEK_SET);
-  multi_file_seek(&f, is[2], 0, SEEK_SET);
+  multi_file_seek(&f, &is[0], 0, SEEK_SET);
+  multi_file_seek(&f, &is[1], 0, SEEK_SET);
+  multi_file_seek(&f, &is[2], 0, SEEK_SET);
 
-  CHECK(multi_file_read(&f, is[0], data, 1, 5) == 5);
+  CHECK(multi_file_read(&f, &is[0], data, 1, 5) == 5);
   data[5] = '\0';
   CHECK(data == "Hello");
 
-  multi_file_seek(&f, is[1], 6, SEEK_SET);
-  CHECK(multi_file_read(&f, is[1], data, 1, 5) == 5);
+  multi_file_seek(&f, &is[1], 6, SEEK_SET);
+  CHECK(multi_file_read(&f, &is[1], data, 1, 5) == 5);
   CHECK(data == "World");
 
-  multi_file_read(&f, is[2], data, 1, 2);
+  multi_file_read(&f, &is[2], data, 1, 2);
   data[2] = '\0';
   CHECK(data == "He");
 
-  CHECK(multi_file_tell(&f, is[0]) == 5);
-  CHECK(multi_file_tell(&f, is[1]) == 11);
-  CHECK(multi_file_tell(&f, is[2]) == 2);
+  CHECK(multi_file_tell(&f, &is[0]) == 5);
+  CHECK(multi_file_tell(&f, &is[1]) == 11);
+  CHECK(multi_file_tell(&f, &is[2]) == 2);
 
-  multi_file_return(&f, is[0]);
-  multi_file_return(&f, is[1]);
-  multi_file_return(&f, is[2]);
+  multi_file_return(&f, &is[0]);
+  multi_file_return(&f, &is[1]);
+  multi_file_return(&f, &is[2]);
 
   multi_file_close(&f);
 }

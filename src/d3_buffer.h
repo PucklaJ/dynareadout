@@ -30,7 +30,7 @@
 #include <stdio.h>
 
 typedef struct {
-  size_t multi_file_index;
+  multi_file_index_t multi_file_index;
   size_t cur_file;
   size_t cur_word;
 } d3_pointer;

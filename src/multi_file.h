@@ -32,6 +32,11 @@
 #ifdef THREAD_SAFE
 typedef struct {
   FILE *file_handle;
+  size_t index;
+} multi_file_index_t;
+
+typedef struct {
+  FILE *file_handle;
   sync_t mutex;
 } sync_file_t;
 
@@ -47,6 +52,7 @@ typedef struct {
 } multi_file_t;
 
 #else
+typedef size_t multi_file_index_t;
 typedef FILE *multi_file_t;
 
 #endif
@@ -64,20 +70,21 @@ void multi_file_close(multi_file_t *f);
 /* Returns an index for a file handle of which the calling threads takes
  * ownership. Returns ULONG_MAX if it fails to open a new file. Needs to be
  * returned with multi_file_return*/
-size_t multi_file_access(multi_file_t *f);
+multi_file_index_t multi_file_access(multi_file_t *f);
 
 /* Returns the file accessed by multi_file_access and releases it to be used by
  * other threads*/
-void multi_file_return(multi_file_t *f, size_t index);
+void multi_file_return(multi_file_t *f, multi_file_index_t *index);
 
 /* Same as fseek, but for a file of multi file*/
-int multi_file_seek(multi_file_t *f, size_t index, long offset, int whence);
+int multi_file_seek(multi_file_t *f, multi_file_index_t *index, long offset,
+                    int whence);
 /* Same as ftell, but for a file of multi file*/
-long multi_file_tell(multi_file_t *f, size_t index);
+long multi_file_tell(multi_file_t *f, multi_file_index_t *index);
 /* Similar to fread, but it just uses size to specify the number of bytes
  * instead of size and nmemb*/
-size_t multi_file_read(multi_file_t *f, size_t index, void *ptr, size_t size,
-                       size_t nmemb);
+size_t multi_file_read(multi_file_t *f, multi_file_index_t *index, void *ptr,
+                       size_t size, size_t nmemb);
 
 #ifdef __cplusplus
 }

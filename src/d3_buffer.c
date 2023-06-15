@@ -214,12 +214,12 @@ void d3_buffer_read_words(d3_buffer *buffer, d3_pointer *ptr, void *words,
   multi_file_t *file = &buffer->files[ptr->cur_file].file;
   size_t file_size = buffer->files[ptr->cur_file].file_size;
 
-  long cur_file_pos = multi_file_tell(file, ptr->multi_file_index);
+  long cur_file_pos = multi_file_tell(file, &ptr->multi_file_index);
   uint8_t *words_ptr = (uint8_t *)words;
 
   if (file_size - cur_file_pos >= num_words * buffer->word_size) {
     /* We can read everything from the current file*/
-    if (multi_file_read(file, ptr->multi_file_index, words, buffer->word_size,
+    if (multi_file_read(file, &ptr->multi_file_index, words, buffer->word_size,
                         num_words) != num_words) {
       ERROR_AND_RETURN_BUFFER_PTR("Read Error");
     }
@@ -239,8 +239,9 @@ void d3_buffer_read_words(d3_buffer *buffer, d3_pointer *ptr, void *words,
       const size_t bytes_left = num_bytes - bytes_read;
       if (bytes_from_cur_file >= bytes_left) {
         /* We can read all of the rest of the words from the current file*/
-        if (multi_file_read(file, ptr->multi_file_index, &words_ptr[bytes_read],
-                            1, bytes_left) != bytes_left) {
+        if (multi_file_read(file, &ptr->multi_file_index,
+                            &words_ptr[bytes_read], 1,
+                            bytes_left) != bytes_left) {
           ERROR_AND_RETURN_BUFFER_PTR("Read Error");
         }
 
@@ -253,7 +254,7 @@ void d3_buffer_read_words(d3_buffer *buffer, d3_pointer *ptr, void *words,
 
         if (bytes_from_cur_file != 0) {
           /* Read the rest of the current file*/
-          if (multi_file_read(file, ptr->multi_file_index,
+          if (multi_file_read(file, &ptr->multi_file_index,
                               &words_ptr[bytes_read], 1,
                               bytes_from_cur_file) != bytes_from_cur_file) {
             ERROR_AND_RETURN_BUFFER_PTR("Read Error");
@@ -354,7 +355,7 @@ int d3_buffer_next_file(d3_buffer *buffer, d3_pointer *ptr) {
   size_t file_size = buffer->files[ptr->cur_file].file_size;
   multi_file_t *file = &buffer->files[ptr->cur_file].file;
 
-  const long cur_file_pos = multi_file_tell(file, ptr->multi_file_index);
+  const long cur_file_pos = multi_file_tell(file, &ptr->multi_file_index);
   const size_t cur_word =
       ptr->cur_word + (file_size - cur_file_pos) / buffer->word_size;
   const size_t cur_file = ptr->cur_file + 1;
@@ -373,7 +374,7 @@ int d3_buffer_next_file(d3_buffer *buffer, d3_pointer *ptr) {
 
   ptr->multi_file_index = multi_file_access(file);
 #ifdef THREAD_SAFE
-  if (ptr->multi_file_index == ULONG_MAX) {
+  if (ptr->multi_file_index.index == ULONG_MAX) {
     if (errno == EMFILE) {
       /* Quick hack to solve the issue of having too many open files*/
       _d3_buffer_kill_idle_files(buffer);
@@ -381,7 +382,7 @@ int d3_buffer_next_file(d3_buffer *buffer, d3_pointer *ptr) {
       ptr->multi_file_index = multi_file_access(file);
     }
 
-    if (ptr->multi_file_index == ULONG_MAX) {
+    if (ptr->multi_file_index.index == ULONG_MAX) {
       ERROR_AND_NO_RETURN_BUFFER_F_PTR("Failed to open next file(%zu): %s",
                                        cur_file, strerror(errno));
       ptr->cur_file = ULONG_MAX;
@@ -415,7 +416,7 @@ int d3_buffer_next_file(d3_buffer *buffer, d3_pointer *ptr) {
   }
 #endif
 
-  if (multi_file_seek(file, ptr->multi_file_index, 0, SEEK_SET) != 0) {
+  if (multi_file_seek(file, &ptr->multi_file_index, 0, SEEK_SET) != 0) {
     ERROR_AND_NO_RETURN_BUFFER_PTR("Seek Error");
     END_PROFILE_FUNC();
     return 0;
@@ -449,7 +450,12 @@ d3_pointer d3_buffer_seek(d3_buffer *buffer, size_t word_pos) {
   if (i == buffer->num_files) {
     /* Out of bounds*/
     ERROR_AND_NO_RETURN_BUFFER_PTR("Out of bounds");
+#ifdef THREAD_SAFE
+    ptr.multi_file_index.file_handle = NULL;
+    ptr.multi_file_index.index = ULONG_MAX;
+#else
     ptr.multi_file_index = ULONG_MAX;
+#endif
     ptr.cur_file = ULONG_MAX;
     ptr.cur_word = ULONG_MAX;
     return ptr;
@@ -459,7 +465,7 @@ d3_pointer d3_buffer_seek(d3_buffer *buffer, size_t word_pos) {
   multi_file_t *file = &buffer->files[ptr.cur_file].file;
   ptr.multi_file_index = multi_file_access(file);
 #ifdef THREAD_SAFE
-  if (ptr.multi_file_index == ULONG_MAX) {
+  if (ptr.multi_file_index.index == ULONG_MAX) {
     if (errno == EMFILE) {
       /* Quick hack to solve the issue of having too many open files*/
       _d3_buffer_kill_idle_files(buffer);
@@ -467,7 +473,7 @@ d3_pointer d3_buffer_seek(d3_buffer *buffer, size_t word_pos) {
       ptr.multi_file_index = multi_file_access(file);
     }
 
-    if (ptr.multi_file_index == ULONG_MAX) {
+    if (ptr.multi_file_index.index == ULONG_MAX) {
       ERROR_AND_NO_RETURN_BUFFER_F_PTR("Failed to open next file(%zu): %s",
                                        ptr.cur_file, strerror(errno));
       END_PROFILE_FUNC();
@@ -527,9 +533,6 @@ d3_pointer d3_buffer_seek(d3_buffer *buffer, size_t word_pos) {
               "Error when opening file(%zu): %s: %s", i, buffer->root_file_name,
               strerror(errno));
           d3_pointer_close(buffer, &ptr);
-          ptr.multi_file_index = ULONG_MAX;
-          ptr.cur_file = ULONG_MAX;
-          ptr.cur_word = ULONG_MAX;
           return ptr;
         }
 
@@ -561,9 +564,6 @@ d3_pointer d3_buffer_seek(d3_buffer *buffer, size_t word_pos) {
                   "Error when opening file(%zu): %s: %s", i,
                   buffer->root_file_name, strerror(errno));
               d3_pointer_close(buffer, &ptr);
-              ptr.multi_file_index = ULONG_MAX;
-              ptr.cur_file = ULONG_MAX;
-              ptr.cur_word = ULONG_MAX;
               return ptr;
             }
             i--;
@@ -609,7 +609,7 @@ d3_pointer d3_buffer_seek(d3_buffer *buffer, size_t word_pos) {
   /* Seek to the correct location in the file*/
   const long seek_pos = (long)byte_pos;
 
-  if (multi_file_seek(file, ptr.multi_file_index, seek_pos, SEEK_SET) != 0) {
+  if (multi_file_seek(file, &ptr.multi_file_index, seek_pos, SEEK_SET) != 0) {
     ERROR_AND_NO_RETURN_BUFFER_PTR("Seek Error");
     d3_pointer_close(buffer, &ptr);
     return ptr;
@@ -623,10 +623,15 @@ void d3_pointer_close(d3_buffer *buffer, d3_pointer *ptr) {
   BEGIN_PROFILE_FUNC();
 
   multi_file_t *file = &buffer->files[ptr->cur_file].file;
-  multi_file_return(file, ptr->multi_file_index);
+  multi_file_return(file, &ptr->multi_file_index);
+#ifdef THREAD_SAFE
+  ptr->multi_file_index.index = ULONG_MAX;
+  ptr->multi_file_index.file_handle = NULL;
+#else
+  ptr->multi_file_index = ULONG_MAX;
+#endif
   ptr->cur_file = ULONG_MAX;
   ptr->cur_word = ULONG_MAX;
-  ptr->multi_file_index = ULONG_MAX;
 
   END_PROFILE_FUNC();
 }
