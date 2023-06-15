@@ -373,13 +373,22 @@ int d3_buffer_next_file(d3_buffer *buffer, d3_pointer *ptr) {
 
   ptr->multi_file_index = multi_file_access(file);
   if (ptr->multi_file_index == ULONG_MAX) {
-    ERROR_AND_NO_RETURN_BUFFER_F_PTR("Failed to open next file(%zu): %s: %s",
-                                     cur_file, file->file_path,
-                                     strerror(errno));
-    ptr->cur_file = ULONG_MAX;
-    ptr->cur_word = ULONG_MAX;
-    END_PROFILE_FUNC();
-    return 0;
+    if (errno == EMFILE) {
+      /* Quick hack to solve the issue of having too many open files*/
+      _d3_buffer_kill_idle_files(buffer);
+
+      ptr->multi_file_index = multi_file_access(file);
+    }
+
+    if (ptr->multi_file_index == ULONG_MAX) {
+      ERROR_AND_NO_RETURN_BUFFER_F_PTR("Failed to open next file(%zu): %s: %s",
+                                       cur_file, file->file_path,
+                                       strerror(errno));
+      ptr->cur_file = ULONG_MAX;
+      ptr->cur_word = ULONG_MAX;
+      END_PROFILE_FUNC();
+      return 0;
+    }
   }
   ptr->cur_file = cur_file;
   ptr->cur_word = cur_word;
@@ -450,13 +459,22 @@ d3_pointer d3_buffer_seek(d3_buffer *buffer, size_t word_pos) {
   multi_file_t *file = &buffer->files[ptr.cur_file].file;
   ptr.multi_file_index = multi_file_access(file);
   if (ptr.multi_file_index == ULONG_MAX) {
-    ERROR_AND_NO_RETURN_BUFFER_F_PTR("Failed to open file(%zu): %s: %s",
-                                     ptr.cur_file, file->file_path,
-                                     strerror(errno));
-    ptr.cur_file = ULONG_MAX;
-    ptr.cur_word = ULONG_MAX;
-    END_PROFILE_FUNC();
-    return ptr;
+    if (errno == EMFILE) {
+      /* Quick hack to solve the issue of having too many open files*/
+      _d3_buffer_kill_idle_files(buffer);
+
+      ptr.multi_file_index = multi_file_access(file);
+    }
+
+    if (ptr.multi_file_index == ULONG_MAX) {
+      ERROR_AND_NO_RETURN_BUFFER_F_PTR("Failed to open next file(%zu): %s: %s",
+                                       ptr.cur_file, file->file_path,
+                                       strerror(errno));
+      END_PROFILE_FUNC();
+      ptr.cur_file = ULONG_MAX;
+      ptr.cur_word = ULONG_MAX;
+      return ptr;
+    }
   }
 
 #ifndef THREAD_SAFE
@@ -611,6 +629,36 @@ void d3_pointer_close(d3_buffer *buffer, d3_pointer *ptr) {
   ptr->cur_file = ULONG_MAX;
   ptr->cur_word = ULONG_MAX;
   ptr->multi_file_index = ULONG_MAX;
+
+  END_PROFILE_FUNC();
+}
+
+void _d3_buffer_kill_idle_files(d3_buffer *buffer) {
+  BEGIN_PROFILE_FUNC();
+
+  size_t i = 0;
+  while (i < buffer->num_files) {
+    multi_file_t *file = &buffer->files[i].file;
+    sync_lock(&file->file_handles_mutex);
+
+    size_t j = 0;
+    while (j < file->num_file_handles) {
+      if (sync_trylock(&file->file_handles[j].mutex) == 0) {
+        if (file->file_handles[j].file_handle) {
+          fclose(file->file_handles[j].file_handle);
+          file->file_handles[j].file_handle = NULL;
+        }
+
+        sync_unlock(&file->file_handles[j].mutex);
+      }
+
+      j++;
+    }
+
+    sync_unlock(&file->file_handles_mutex);
+
+    i++;
+  }
 
   END_PROFILE_FUNC();
 }
