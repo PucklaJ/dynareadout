@@ -50,20 +50,31 @@ void *_binout_read(binout_file *bin_file, const char *path_to_variable,
   }
 
   const size_t type_size = (size_t)_binout_get_type_size((uint64_t)binout_type);
-  FILE *file_handle = bin_file->file_handles[file->file_index];
+  multi_file_t *multi_file = &bin_file->files[file->file_index];
 
-  if (fseek(file_handle, file->file_pos, SEEK_SET) != 0) {
+  const size_t multi_file_index = multi_file_access(multi_file);
+  if (multi_file_index == ULONG_MAX) {
+    NEW_ERROR_STRING_F("Failed to access file of \"%s\": %s", path_to_variable,
+                       strerror(errno));
+    return NULL;
+  }
+
+  if (multi_file_seek(multi_file, multi_file_index, file->file_pos, SEEK_SET) !=
+      0) {
+    multi_file_return(multi_file, multi_file_index);
     NEW_ERROR_STRING_F("Failed to seek to the position of \"%s\"",
                        path_to_variable);
     return NULL;
   }
 
   void *data = malloc(file->size);
-  if (fread(data, file->size, 1, file_handle) != 1) {
+  if (multi_file_read(multi_file, multi_file_index, data, file->size, 1) != 1) {
     free(data);
+    multi_file_return(multi_file, multi_file_index);
     NEW_ERROR_STRING_F("Failed to read \"%s\"", path_to_variable);
     return NULL;
   }
+  multi_file_return(multi_file, multi_file_index);
 
   *data_size = file->size / type_size;
   return data;
@@ -207,19 +218,33 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
       file = &((const binout_file_t *)current_d_folder->children)[file_index];
     }
 
-    FILE *file_handle = bin_file->file_handles[file->file_index];
-    if (fseek(file_handle, file->file_pos, SEEK_SET) != 0) {
+    multi_file_t *multi_file = &bin_file->files[file->file_index];
+    const size_t multi_file_index = multi_file_access(multi_file);
+    if (multi_file_index == ULONG_MAX) {
       free(data);
+      NEW_ERROR_STRING_F("Failed to access the file of \"%s\": %s", variable,
+                         strerror(errno));
+      return NULL;
+    }
+
+    if (multi_file_seek(multi_file, multi_file_index, file->file_pos,
+                        SEEK_SET) != 0) {
+      free(data);
+      multi_file_return(multi_file, multi_file_index);
       NEW_ERROR_STRING_F("Failed to seek to the data of \"%s\"", variable);
       return NULL;
     }
 
-    if (fread(&((uint8_t *)data)[(i - start_index) * file->size], file->size, 1,
-              file_handle) != 1) {
+    if (multi_file_read(multi_file, multi_file_index,
+                        &((uint8_t *)data)[(i - start_index) * file->size],
+                        file->size, 1) != 1) {
       free(data);
+      multi_file_return(multi_file, multi_file_index);
       NEW_ERROR_STRING_F("Failed to read the data of \"%s\"", variable);
       return NULL;
     }
+
+    multi_file_return(multi_file, multi_file_index);
 
     i++;
   }

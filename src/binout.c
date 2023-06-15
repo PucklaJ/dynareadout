@@ -34,14 +34,13 @@
 #include <string.h>
 
 #define FILE_FAILED(message)                                                   \
-  fclose(file_handle);                                                         \
-  bin_file.file_handles[cur_file_index] = NULL;                                \
+  multi_file_close(file);                                                      \
   _binout_add_file_error(&bin_file, file_names[cur_file_index], message);      \
   cur_file_index++;                                                            \
   continue
 
 #define BIN_FILE_READ(dst, size, count, message)                               \
-  read_count = fread(&dst, size, count, file_handle);                          \
+  read_count = multi_file_read(file, file_index, &dst, size, count);           \
   if (read_count != count) {                                                   \
     cur_file_failed = 1;                                                       \
     _binout_add_file_error(&bin_file, file_names[cur_file_index], message);    \
@@ -49,7 +48,7 @@
   }
 
 #define BIN_FILE_READ_FREE(dst, size, count, obj, message)                     \
-  read_count = fread(dst, size, count, file_handle);                           \
+  read_count = multi_file_read(file, file_index, dst, size, count);            \
   if (read_count != count) {                                                   \
     free(obj);                                                                 \
     _binout_add_file_error(&bin_file, file_names[cur_file_index], message);    \
@@ -63,46 +62,57 @@ binout_file binout_open(const char *file_name) {
   binout_file bin_file;
   bin_file.directory.children = NULL;
   bin_file.directory.num_children = 0;
-  bin_file.file_handles = NULL;
+  bin_file.files = NULL;
   bin_file.file_errors = NULL;
   bin_file.error_string = NULL;
-  bin_file.num_file_handles = 0;
+  bin_file.num_files = 0;
   bin_file.num_file_errors = 0;
 
-  char **file_names = binout_glob(file_name, &bin_file.num_file_handles);
-  if (bin_file.num_file_handles == 0) {
+  char **file_names = binout_glob(file_name, &bin_file.num_files);
+  if (bin_file.num_files == 0) {
     _binout_add_file_error(&bin_file, file_name, "No files have been found");
     END_PROFILE_FUNC();
     return bin_file;
   }
 
-  bin_file.file_handles = malloc(bin_file.num_file_handles * sizeof(FILE *));
+  bin_file.files = malloc(bin_file.num_files * sizeof(multi_file_t));
 
   size_t cur_file_index = 0;
-  while (cur_file_index < bin_file.num_file_handles) {
-    bin_file.file_handles[cur_file_index] =
-        fopen(file_names[cur_file_index], "rb");
-    if (!bin_file.file_handles[cur_file_index]) {
+  while (cur_file_index < bin_file.num_files) {
+    bin_file.files[cur_file_index] =
+        multi_file_open(file_names[cur_file_index]);
+#ifndef THREAD_SAFE
+    if (!bin_file.files[cur_file_index]) {
       _binout_add_file_error(&bin_file, file_names[cur_file_index],
                              strerror(errno));
     }
+#endif
 
     cur_file_index++;
   }
 
   cur_file_index = 0;
-  while (cur_file_index < bin_file.num_file_handles) {
-    FILE *file_handle = bin_file.file_handles[cur_file_index];
+  while (cur_file_index < bin_file.num_files) {
+    multi_file_t *file = &bin_file.files[cur_file_index];
+    const size_t file_index = multi_file_access(file);
+
     /* Just ignore the file if it failed to open*/
-    if (!file_handle) {
+#ifdef THREAD_SAFE
+    if (file_index == ULONG_MAX) {
+      FILE_FAILED(strerror(errno));
+    }
+#else
+    if (!(*file)) {
       cur_file_index++;
       continue;
     }
+#endif
 
     binout_header header;
 
     /* Read header */
-    size_t read_count = fread(&header, sizeof(binout_header), 1, file_handle);
+    size_t read_count =
+        multi_file_read(file, file_index, &header, sizeof(binout_header), 1);
     if (read_count == 0) {
       FILE_FAILED("Failed to read header");
     }
@@ -126,15 +136,7 @@ binout_file binout_open(const char *file_name) {
     }
 
     /* Get the file size*/
-    const long cur_pos = ftell(file_handle);
-    if (fseek(file_handle, 0, SEEK_END) != 0) {
-      FILE_FAILED("Failed to get the file size");
-    }
-
-    const long file_size = ftell(file_handle);
-    if (fseek(file_handle, cur_pos, SEEK_SET) != 0) {
-      FILE_FAILED("Failed to get the file size");
-    }
+    const long file_size = (long)path_get_file_size(file_names[cur_file_index]);
 
     /* Parse all records */
 
@@ -154,7 +156,7 @@ binout_file binout_open(const char *file_name) {
     /* We cannot use EOF, so we use this*/
     while (1) {
       /* Check if we are already at the end or if an error occurred in ftell*/
-      const long current_file_pos = ftell(file_handle);
+      const long current_file_pos = multi_file_tell(file, file_index);
       if (current_file_pos == -1 || current_file_pos == file_size) {
         break;
       }
@@ -182,8 +184,8 @@ binout_file binout_open(const char *file_name) {
         if (PATH_IS_ABS(path_buffer)) {
           memcpy(current_path_string, path_buffer, record_data_length + 1);
           current_path = path_view_new(current_path_string);
-          /* Only insert the current folder if the current path is not the root
-           * folder*/
+          /* Only insert the current folder if the current path is not the
+           * root folder*/
           if (path_view_advance(&current_path)) {
             current_folder = binout_directory_insert_folder(&bin_file.directory,
                                                             &current_path);
@@ -249,10 +251,10 @@ binout_file binout_open(const char *file_name) {
         const uint64_t data_length =
             record_data_length - header.record_typeid_field_size -
             BINOUT_DATA_NAME_LENGTH - variable_name_length;
-        const long file_pos = ftell(file_handle);
+        const long file_pos = multi_file_tell(file, file_index);
         /* Skip the data since we will read it at a later point, if it is
          * requested by the programmer*/
-        if (fseek(file_handle, data_length, SEEK_CUR) != 0) {
+        if (multi_file_seek(file, file_index, data_length, SEEK_CUR) != 0) {
           free(variable_name);
           cur_file_failed = 1;
           _binout_add_file_error(&bin_file, file_names[cur_file_index],
@@ -265,7 +267,8 @@ binout_file binout_open(const char *file_name) {
                                   (uint8_t)cur_file_index, file_pos);
       } else {
         /* Just skip the record and ignore its data*/
-        if (fseek(file_handle, record_data_length, SEEK_CUR) != 0) {
+        if (multi_file_seek(file, file_index, record_data_length, SEEK_CUR) !=
+            0) {
           cur_file_failed = 1;
           _binout_add_file_error(&bin_file, file_names[cur_file_index],
                                  "Failed to skip data of a record");
@@ -274,28 +277,32 @@ binout_file binout_open(const char *file_name) {
       }
     }
 
+    multi_file_return(file, file_index);
+
     if (cur_file_failed) {
-      fclose(file_handle);
-      bin_file.file_handles[cur_file_index] = NULL;
+      multi_file_close(file);
     }
 
     cur_file_index++;
   }
 
-  binout_free_glob(file_names, bin_file.num_file_handles);
+  binout_free_glob(file_names, bin_file.num_files);
 
   /* Clean up failed files*/
   cur_file_index = 0;
-  while (cur_file_index < bin_file.num_file_handles) {
-    if (!bin_file.file_handles[cur_file_index]) {
+  while (cur_file_index < bin_file.num_files) {
+#ifdef THREAD_SAFE
+    if (bin_file.files[cur_file_index].file_handles == NULL) {
+#else
+    if (!bin_file.files[cur_file_index]) {
+#endif
       /* Swap with the last element*/
-      bin_file.file_handles[cur_file_index] =
-          bin_file.file_handles[bin_file.num_file_handles - 1];
+      bin_file.files[cur_file_index] = bin_file.files[bin_file.num_files - 1];
 
       /* Reallocate memory*/
-      bin_file.num_file_handles--;
-      bin_file.file_handles = realloc(
-          bin_file.file_handles, bin_file.num_file_handles * sizeof(FILE *));
+      bin_file.num_files--;
+      bin_file.files =
+          realloc(bin_file.files, bin_file.num_files * sizeof(multi_file_t));
 
       cur_file_index--;
     }
@@ -313,9 +320,8 @@ void binout_close(binout_file *bin_file) {
 
   /* Free all files*/
   size_t cur_file_index = 0;
-  while (cur_file_index < bin_file->num_file_handles) {
-    if (fclose(bin_file->file_handles[cur_file_index]) != 0) {
-    }
+  while (cur_file_index < bin_file->num_files) {
+    multi_file_close(&bin_file->files[cur_file_index]);
 
     cur_file_index++;
   }
@@ -334,10 +340,10 @@ void binout_close(binout_file *bin_file) {
    * binout_close*/
   bin_file->directory.children = NULL;
   bin_file->directory.num_children = 0;
-  bin_file->file_handles = NULL;
+  bin_file->files = NULL;
   bin_file->file_errors = NULL;
   bin_file->error_string = NULL;
-  bin_file->num_file_handles = 0;
+  bin_file->num_files = 0;
   bin_file->num_file_errors = 0;
 
   END_PROFILE_FUNC();
@@ -458,8 +464,8 @@ size_t binout_get_num_timesteps(const binout_file *bin_file, const char *path) {
 
   const binout_folder_t *folders = (const binout_folder_t *)folder_or_file;
 
-  /* Loop until the first dxxxxxx string has been found. It's probably the first
-   * one.*/
+  /* Loop until the first dxxxxxx string has been found. It's probably the
+   * first one.*/
   size_t start_index = 0;
   while (start_index < num_children &&
          !_binout_is_d_string(folders[start_index].name)) {

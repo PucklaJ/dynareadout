@@ -26,6 +26,7 @@
 #ifndef BINOUT_H
 #define BINOUT_H
 #include "binout_directory.h"
+#include "multi_file.h"
 #include "path.h"
 #include <stdint.h>
 #include <stdio.h>
@@ -47,8 +48,8 @@ typedef struct {
   /* A data structure which holds the structure of the files*/
   binout_directory_t directory;
 
-  FILE **file_handles;
-  size_t num_file_handles;
+  multi_file_t *files;
+  size_t num_files;
 
   char **file_errors;
   size_t num_file_errors;
