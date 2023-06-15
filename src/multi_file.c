@@ -190,7 +190,10 @@ multi_file_t multi_file_open(const char *path) {
 void multi_file_close(multi_file_t *f) {
   BEGIN_PROFILE_FUNC();
 
-  fclose(*((FILE **)f));
+  if (*f) {
+    fclose(*((FILE **)f));
+    *f = NULL;
+  }
 
   END_PROFILE_FUNC();
 }

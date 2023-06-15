@@ -94,9 +94,11 @@ d3_pointer d3_buffer_seek(d3_buffer *buffer, size_t word_pos);
 
 void d3_pointer_close(d3_buffer *buffer, d3_pointer *ptr);
 
+#ifdef THREAD_SAFE
 /* Panic and close all open file handles of all multi files that are currently
  * unused*/
 void _d3_buffer_kill_idle_files(d3_buffer *buffer);
+#endif
 
 #ifdef __cplusplus
 }

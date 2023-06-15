@@ -31,6 +31,7 @@
 #include <multi_file.h>
 #include <path.h>
 
+#ifdef THREAD_SAFE
 TEST_CASE("sync") {
   sync_t snc = sync_create();
   CHECK(sync_lock(&snc) == 0);
@@ -43,6 +44,7 @@ TEST_CASE("sync") {
   CHECK(sync_unlock(&snc) == 0);
   sync_destroy(&snc);
 }
+#endif
 
 TEST_CASE("multi_file") {
   if (!path_is_file("test_data/multi_file_test")) {

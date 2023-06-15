@@ -372,6 +372,7 @@ int d3_buffer_next_file(d3_buffer *buffer, d3_pointer *ptr) {
   file_size = buffer->files[cur_file].file_size;
 
   ptr->multi_file_index = multi_file_access(file);
+#ifdef THREAD_SAFE
   if (ptr->multi_file_index == ULONG_MAX) {
     if (errno == EMFILE) {
       /* Quick hack to solve the issue of having too many open files*/
@@ -381,23 +382,22 @@ int d3_buffer_next_file(d3_buffer *buffer, d3_pointer *ptr) {
     }
 
     if (ptr->multi_file_index == ULONG_MAX) {
-      ERROR_AND_NO_RETURN_BUFFER_F_PTR("Failed to open next file(%zu): %s: %s",
-                                       cur_file, file->file_path,
-                                       strerror(errno));
+      ERROR_AND_NO_RETURN_BUFFER_F_PTR("Failed to open next file(%zu): %s",
+                                       cur_file, strerror(errno));
       ptr->cur_file = ULONG_MAX;
       ptr->cur_word = ULONG_MAX;
       END_PROFILE_FUNC();
       return 0;
     }
   }
+#endif
   ptr->cur_file = cur_file;
   ptr->cur_word = cur_word;
 
 #ifndef THREAD_SAFE
   /* Open the next file if it isn't open and close the first opened file*/
   if (!buffer->files[ptr->cur_file].file) {
-    multi_file_close(file);
-    buffer->files[buffer->first_open_file].file = NULL;
+    multi_file_close(&buffer->files[buffer->first_open_file].file);
     buffer->first_open_file++;
     buffer->last_open_file++;
 
@@ -458,6 +458,7 @@ d3_pointer d3_buffer_seek(d3_buffer *buffer, size_t word_pos) {
   ptr.cur_file = i;
   multi_file_t *file = &buffer->files[ptr.cur_file].file;
   ptr.multi_file_index = multi_file_access(file);
+#ifdef THREAD_SAFE
   if (ptr.multi_file_index == ULONG_MAX) {
     if (errno == EMFILE) {
       /* Quick hack to solve the issue of having too many open files*/
@@ -467,15 +468,15 @@ d3_pointer d3_buffer_seek(d3_buffer *buffer, size_t word_pos) {
     }
 
     if (ptr.multi_file_index == ULONG_MAX) {
-      ERROR_AND_NO_RETURN_BUFFER_F_PTR("Failed to open next file(%zu): %s: %s",
-                                       ptr.cur_file, file->file_path,
-                                       strerror(errno));
+      ERROR_AND_NO_RETURN_BUFFER_F_PTR("Failed to open next file(%zu): %s",
+                                       ptr.cur_file, strerror(errno));
       END_PROFILE_FUNC();
       ptr.cur_file = ULONG_MAX;
       ptr.cur_word = ULONG_MAX;
       return ptr;
     }
   }
+#endif
 
 #ifndef THREAD_SAFE
   /* If the file is not yet open close enough files so that it can be opened*/
@@ -503,7 +504,6 @@ d3_pointer d3_buffer_seek(d3_buffer *buffer, size_t word_pos) {
       i = buffer->first_open_file;
       while (i <= buffer->last_open_file) {
         multi_file_close(&buffer->files[i].file);
-        buffer->files[i].file = NULL;
 
         file_range++;
         i++;
@@ -545,7 +545,6 @@ d3_pointer d3_buffer_seek(d3_buffer *buffer, size_t word_pos) {
           i = buffer->last_open_file;
           while (i > buffer->last_open_file - files_to_close) {
             multi_file_close(&buffer->files[i].file);
-            buffer->files[i].file = NULL;
             i--;
           }
           buffer->last_open_file -= files_to_close;
@@ -577,7 +576,6 @@ d3_pointer d3_buffer_seek(d3_buffer *buffer, size_t word_pos) {
           i = buffer->first_open_file;
           while (i < buffer->first_open_file + files_to_close) {
             multi_file_close(&buffer->files[i].file);
-            buffer->files[i].file = NULL;
             i++;
           }
           buffer->first_open_file += files_to_close;
@@ -633,6 +631,7 @@ void d3_pointer_close(d3_buffer *buffer, d3_pointer *ptr) {
   END_PROFILE_FUNC();
 }
 
+#ifdef THREAD_SAFE
 void _d3_buffer_kill_idle_files(d3_buffer *buffer) {
   BEGIN_PROFILE_FUNC();
 
@@ -662,3 +661,4 @@ void _d3_buffer_kill_idle_files(d3_buffer *buffer) {
 
   END_PROFILE_FUNC();
 }
+#endif
