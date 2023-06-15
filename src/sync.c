@@ -31,7 +31,7 @@
 sync_t sync_create() {
   BEGIN_PROFILE_FUNC();
 
-  sync_t snc = (sync_t)CreateMutexW(NULL, FALSE, NULL);
+  sync_t snc = (sync_t)CreateEventW(NULL, FALSE, TRUE, NULL);
 
   END_PROFILE_FUNC();
   return snc;
@@ -82,7 +82,7 @@ int sync_trylock(sync_t *snc) {
 int sync_unlock(sync_t *snc) {
   BEGIN_PROFILE_FUNC();
 
-  const BOOL win_rv = ReleaseMutex(*((HANDLE *)snc));
+  const BOOL win_rv = SetEvent(*((HANDLE *)snc));
   const int rv = win_rv != 0 ? 0 : EINVAL;
 
   END_PROFILE_FUNC();

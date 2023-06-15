@@ -31,6 +31,19 @@
 #include <multi_file.h>
 #include <path.h>
 
+TEST_CASE("sync") {
+  sync_t snc = sync_create();
+  CHECK(sync_lock(&snc) == 0);
+  CHECK(sync_unlock(&snc) == 0);
+
+  CHECK(sync_trylock(&snc) == 0);
+  CHECK(sync_trylock(&snc) == EBUSY);
+  CHECK(sync_trylock(&snc) == EBUSY);
+
+  CHECK(sync_unlock(&snc) == 0);
+  sync_destroy(&snc);
+}
+
 TEST_CASE("multi_file") {
   if (!path_is_file("test_data/multi_file_test")) {
     FILE *file = fopen("test_data/multi_file_test", "wb");
