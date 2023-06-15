@@ -372,7 +372,15 @@ int d3_buffer_next_file(d3_buffer *buffer, d3_pointer *ptr) {
   file_size = buffer->files[cur_file].file_size;
 
   ptr->multi_file_index = multi_file_access(file);
-  /* TODO: Check for errors*/
+  if (ptr->multi_file_index == ULONG_MAX) {
+    ERROR_AND_NO_RETURN_BUFFER_F_PTR("Failed to open next file(%zu): %s: %s",
+                                     cur_file, file->file_path,
+                                     strerror(errno));
+    ptr->cur_file = ULONG_MAX;
+    ptr->cur_word = ULONG_MAX;
+    END_PROFILE_FUNC();
+    return 0;
+  }
   ptr->cur_file = cur_file;
   ptr->cur_word = cur_word;
 
@@ -441,7 +449,15 @@ d3_pointer d3_buffer_seek(d3_buffer *buffer, size_t word_pos) {
   ptr.cur_file = i;
   multi_file_t *file = &buffer->files[ptr.cur_file].file;
   ptr.multi_file_index = multi_file_access(file);
-  /* TODO: Check for errors*/
+  if (ptr.multi_file_index == ULONG_MAX) {
+    ERROR_AND_NO_RETURN_BUFFER_F_PTR("Failed to open file(%zu): %s: %s",
+                                     ptr.cur_file, file->file_path,
+                                     strerror(errno));
+    ptr.cur_file = ULONG_MAX;
+    ptr.cur_word = ULONG_MAX;
+    END_PROFILE_FUNC();
+    return ptr;
+  }
 
 #ifndef THREAD_SAFE
   /* If the file is not yet open close enough files so that it can be opened*/
