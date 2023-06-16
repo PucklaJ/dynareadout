@@ -27,6 +27,7 @@
 #include "binout.h"
 #include "binout_defines.h"
 #include "profiling.h"
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
