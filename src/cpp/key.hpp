@@ -266,7 +266,8 @@ public:
 
   // TODO: Card is sometimes NULL
   using Callback =
-      std::function<void(String keyword_name, Card card, size_t card_index)>;
+      std::function<void(String file_name, size_t line_number,
+                         String keyword_name, Card card, size_t card_index)>;
 
   // Parses a LS Dyna key file for keywords and their respective cards. Returns
   // an array keywords

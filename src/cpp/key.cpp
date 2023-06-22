@@ -195,12 +195,13 @@ void KeyFile::parse_with_callback(const std::filesystem::path &file_name,
 
   key_file_parse_with_callback(
       file_name.string().c_str(),
-      [](const char *keyword_name, const card_t *card, size_t card_index,
-         void *user_data) {
+      [](const char *file_name, size_t line_number, const char *keyword_name,
+         const card_t *card, size_t card_index, void *user_data) {
         KeyFile::Callback *callback =
             reinterpret_cast<KeyFile::Callback *>(user_data);
 
-        (*callback)(String(const_cast<char *>(keyword_name), false),
+        (*callback)(String(const_cast<char *>(file_name), false), line_number,
+                    String(const_cast<char *>(keyword_name), false),
                     Card(const_cast<card_t *>(card)), card_index);
       },
       static_cast<int>(parse_includes), &error_string, &callback, NULL, NULL,

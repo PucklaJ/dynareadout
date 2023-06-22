@@ -328,6 +328,7 @@ TEST_CASE("key_file_parse") {
 
   keyword = key_file_get(keywords, num_keywords, "TEST_KEYWORD", 0);
   REQUIRE(keyword != NULL);
+  REQUIRE(keyword->num_cards == 9);
   card = &keyword->cards[0];
   card_parse_begin(card, DEFAULT_VALUE_WIDTH);
   CHECK(card_parse_float32(card) == 7.89f);
@@ -442,8 +443,9 @@ TEST_CASE("key_file_parse_with_callback") {
 
   key_file_parse_with_callback(
       "test_data/key_file.k",
-      [](const char *keyword_name, const card_t *card, size_t card_index,
-         void *user_data) {
+      [](const char *file_name, size_t line_number, const char *keyword_name,
+         const card_t *card, size_t card_index, void *user_data) {
+        CHECK(file_name == "test_data/key_file.k");
         CHECK(user_data == NULL);
         REQUIRE(keyword_name != NULL);
 
@@ -880,7 +882,10 @@ TEST_CASE("key_file_parseC++") {
 TEST_CASE("key_file_parse_with_callbackC++") {
   dro::KeyFile::parse_with_callback(
       "test_data/key_file.k",
-      [](dro::String keyword_name, dro::Card card, size_t card_index) {
+      [](dro::String file_name, size_t line_number, dro::String keyword_name,
+         dro::Card card, size_t card_index) {
+        CHECK(file_name == "test_data/key_file.k");
+
         if (!card.is_valid()) {
           return;
         }

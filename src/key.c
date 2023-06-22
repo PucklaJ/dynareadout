@@ -62,7 +62,8 @@ typedef struct {
   size_t *num_keywords;
 } key_file_parse_data;
 
-void key_file_parse_callback(const char *keyword_name, const card_t *card,
+void key_file_parse_callback(const char *file_name, size_t line_number,
+                             const char *keyword_name, const card_t *card,
                              size_t card_index, void *user_data) {
   key_file_parse_data *data = (key_file_parse_data *)user_data;
 
@@ -375,7 +376,8 @@ void key_file_parse_with_callback(const char *file_name,
           keyword_name[current_keyword_length] = '\0';
         }
 
-        callback(keyword_name, NULL, (size_t)~0, user_data);
+        callback(file_name, line_count, keyword_name, NULL, (size_t)~0,
+                 user_data);
 
         if (keyword_name != current_keyword_name.buffer) {
           free(keyword_name);
@@ -572,7 +574,8 @@ void key_file_parse_with_callback(const char *file_name,
         keyword_name[current_keyword_length] = '\0';
       }
 
-      callback(keyword_name, &card, card_index, user_data);
+      callback(file_name, line_count, keyword_name, &card, card_index,
+               user_data);
 
       if (card.string != line.buffer) {
         free(card.string);
@@ -605,7 +608,8 @@ void key_file_parse_with_callback(const char *file_name,
         keyword_name[current_keyword_length] = '\0';
       }
 
-      callback(keyword_name, NULL, (size_t)~0, user_data);
+      callback(file_name, line_count, keyword_name, NULL, (size_t)~0,
+               user_data);
 
       if (keyword_name != current_keyword_name.buffer) {
         free(keyword_name);
