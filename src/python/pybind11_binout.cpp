@@ -24,11 +24,76 @@
  ************************************************************************************/
 
 #include "conversions.hpp"
+#include <algorithm>
 #include <binout.hpp>
+#include <cstring>
 #include <pybind11/pybind11.h>
 #include <tuple>
+#include <variant>
 
 namespace py = pybind11;
+
+std::variant<dro::Array<int8_t>, dro::Array<int16_t>, dro::Array<int32_t>,
+             dro::Array<int64_t>, dro::Array<uint8_t>, dro::Array<uint16_t>,
+             dro::Array<uint32_t>, dro::Array<uint64_t>, dro::Array<float>,
+             dro::Array<double>, std::vector<dro::Array<float>>,
+             std::vector<dro::Array<double>>, std::vector<dro::String>>
+Binout_read(dro::Binout &self, std::string path) {
+  dro::BinoutType type_id;
+  bool timed;
+  const auto real_path = self.simple_path_to_real(path, type_id, timed);
+
+  switch (type_id) {
+  case dro::BinoutType::Int8:
+    return self.read<int8_t>(real_path);
+  case dro::BinoutType::Int16:
+    return self.read<int16_t>(real_path);
+  case dro::BinoutType::Int32:
+    return self.read<int32_t>(real_path);
+  case dro::BinoutType::Int64:
+    return self.read<int64_t>(real_path);
+  case dro::BinoutType::Uint8:
+    return self.read<uint8_t>(real_path);
+  case dro::BinoutType::Uint16:
+    return self.read<uint16_t>(real_path);
+  case dro::BinoutType::Uint32:
+    return self.read<uint32_t>(real_path);
+  case dro::BinoutType::Uint64:
+    return self.read<uint64_t>(real_path);
+  case dro::BinoutType::Float32:
+    if (timed) {
+      return self.read_timed<float>(real_path);
+    }
+    return self.read<float>(real_path);
+  case dro::BinoutType::Float64:
+    if (timed) {
+      return self.read_timed<double>(real_path);
+    }
+    return self.read<double>(real_path);
+  default:
+    auto children = self.get_children(real_path);
+    if (children[children.size() - 1] == "metadata" &&
+        children[0] == "d000001") {
+      const auto metadata = real_path + "metadata";
+      const auto d000001 = real_path + "/d000001";
+
+      auto metadata_children = self.get_children(metadata);
+      auto d000001_children = self.get_children(d000001);
+
+      std::move(std::make_move_iterator(d000001_children.begin()),
+                std::make_move_iterator(d000001_children.end()),
+                std::back_inserter(metadata_children));
+
+      std::sort(metadata_children.begin(), metadata_children.end(),
+                [](const auto &lhs, const auto &rhs) {
+                  return strcmp(lhs.data(), rhs.data()) < 0;
+                });
+
+      return metadata_children;
+    }
+    return children;
+  }
+}
 
 void add_binout_library_to_module(py::module_ &m) {
   py::enum_<dro::BinoutType>(m, "BinoutType")
@@ -48,6 +113,7 @@ void add_binout_library_to_module(py::module_ &m) {
 
   py::class_<dro::Binout>(m, "Binout")
       .def(py::init<const std::string &>())
+      .def("read", &Binout_read)
       .def("read_i8", &dro::Binout::read<int8_t>, "For internal use",
            py::arg("path_to_variable"))
       .def("read_u8", &dro::Binout::read<uint8_t>, "For internal use",
