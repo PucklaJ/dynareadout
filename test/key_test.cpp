@@ -620,6 +620,38 @@ TEST_CASE("card_parse_get_type") {
   CHECK(card_parse_get_type(&card) == CARD_PARSE_STRING);
 }
 
+TEST_CASE("key_file_parse_no_includes") {
+  size_t num_keywords;
+  char *error_string;
+  keyword_t *keywords =
+      key_file_parse("test_data/key_file.k", &num_keywords, 0, &error_string);
+  if (error_string) {
+    FAIL(error_string);
+    free(error_string);
+    return;
+  }
+
+  keyword_t *keyword = key_file_get(keywords, num_keywords, "INCLUDE", 0);
+  REQUIRE(keyword != NULL);
+  REQUIRE(keyword->num_cards == 1);
+  CHECK(card_parse_whole_no_trim(&keyword->cards[0]) ==
+        "includeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        "eeeeeeeeeeeeeeeeeeeeeeeeee");
+
+  keyword = key_file_get(keywords, num_keywords, "INCLUDE_NASTRAN", 0);
+  REQUIRE(keyword != NULL);
+  REQUIRE(keyword->num_cards == 1);
+  CHECK(card_parse_whole_no_trim(&keyword->cards[0]) ==
+        "includaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaa");
+
+  key_file_free(keywords, num_keywords);
+}
+
 #ifdef BUILD_CPP
 #define FABS(x) ((x) > 0 ? (x) : -(x))
 

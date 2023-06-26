@@ -79,8 +79,8 @@ keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
 /* Same as key_file_parse, but instead of returning an array it calls an
  * callback every time a card (or empty keyword) is encountered.
  * user_data: will be given to the callback untouched.
- * include_paths and num_include_paths: this is only used for recursion and both
- * should be set to NULL*/
+ * include_paths, num_include_paths, root_folder: these are only used for
+ * recursion and should be set to NULL*/
 void key_file_parse_with_callback(const char *file_name,
                                   key_file_callback callback,
                                   int parse_includes, char **error_string,
@@ -194,7 +194,7 @@ card_parse_type card_parse_get_type_width(const card_t *card,
 /* Copy the contents of the card as a string directly into dst.*/
 void _card_cpy(const card_t *card, char *dst, size_t len);
 /* Handles the parsing of multi line string for include file names. Returns
- * wether to multi line string has been completely parsed.*/
+ * wether the multi line string has been completely parsed.*/
 int _parse_multi_line_string(char **multi_line_string, size_t *multi_line_index,
                              const card_t *card, size_t line_length);
 void _parse_include_file_name_card(

@@ -118,8 +118,9 @@ void key_file_parse_callback(const char *file_name, size_t line_number,
               data->current_keyword->num_cards * sizeof(card_t));
   card_t *keyword_card =
       &data->current_keyword->cards[data->current_keyword->num_cards - 1];
-  keyword_card->string = malloc(LINE_WIDTH + 1);
-  memcpy(keyword_card->string, card->string, LINE_WIDTH + 1);
+  const size_t card_len = strlen(card->string);
+  keyword_card->string = malloc(card_len + 1);
+  memcpy(keyword_card->string, card->string, card_len + 1);
 }
 
 keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
@@ -419,84 +420,12 @@ void key_file_parse_with_callback(const char *file_name,
       }
 
       /* -------- ⛅ Include Parsing ⛅ -------*/
-      if (parse_includes &&
-          extra_string_starts_with(&current_keyword_name, "INCLUDE")) {
-        /* Parse all the different INCLUDE keywords*/
-        if (extra_string_compare(&current_keyword_name, "INCLUDE") == 0) {
-          _parse_include_file_name_card(
-              &card, &card_index, &line, line_length,
-              &current_multi_line_string, &current_multi_line_index,
-              num_include_paths_ptr, include_paths_ptr, callback, user_data,
-              &error_stack, &error_stack_size, &error_ptr, file_name,
-              line_count, root_folder_ptr);
-          continue;
-        } else if (extra_string_compare(&current_keyword_name,
-                                        "INCLUDE_PATH") == 0) {
-          /* Support multi line file names (LS Dyna Manual Volume I
-           * *INCLUDE Remark 2, p. 2690)*/
-          if (!_parse_multi_line_string(&current_multi_line_string,
-                                        &current_multi_line_index, &card,
-                                        line_length)) {
-            /* continue without calling the callback for the card*/
-            if (card.string != line.buffer) {
-              free(card.string);
-            }
-            continue;
-          }
-
-          (*num_include_paths_ptr)++;
-          *include_paths_ptr = realloc(*include_paths_ptr,
-                                       *num_include_paths_ptr * sizeof(char *));
-          (*include_paths_ptr)[*num_include_paths_ptr - 1] =
-              current_multi_line_string;
-
-          current_multi_line_string = NULL;
-          current_multi_line_index = 0;
-
-          /* continue without calling the callback for the card*/
-          if (card.string != line.buffer) {
-            free(card.string);
-          }
-
-          card_index++;
-          continue;
-        } else if (extra_string_compare(&current_keyword_name,
-                                        "INCLUDE_PATH_RELATIVE") == 0) {
-          /* Support multi line file names (LS Dyna Manual Volume I
-           * *INCLUDE Remark 2, p. 2690)*/
-          if (!_parse_multi_line_string(&current_multi_line_string,
-                                        &current_multi_line_index, &card,
-                                        line_length)) {
-            /* continue without calling the callback for the card*/
-            if (card.string != line.buffer) {
-              free(card.string);
-            }
-            continue;
-          }
-
-          char *full_include_path_name =
-              path_join(root_folder_ptr, current_multi_line_string);
-          free(current_multi_line_string);
-          current_multi_line_string = NULL;
-          current_multi_line_index = 0;
-
-          (*num_include_paths_ptr)++;
-          *include_paths_ptr = realloc(*include_paths_ptr,
-                                       *num_include_paths_ptr * sizeof(char *));
-          (*include_paths_ptr)[*num_include_paths_ptr - 1] =
-              full_include_path_name;
-
-          /* continue without calling the callback for the card*/
-          if (card.string != line.buffer) {
-            free(card.string);
-          }
-
-          card_index++;
-          continue;
-        } else if (extra_string_compare(&current_keyword_name,
-                                        "INCLUDE_BINARY") == 0) {
-          /* Parse the first card like a normal INCLUDE*/
-          if (card_index == 0) {
+      if (extra_string_starts_with(&current_keyword_name, "INCLUDE")) {
+        /* Also parse the INCLUDE keywords even when parse_includes is set to 0
+         * to support multi line include file names*/
+        if (parse_includes) {
+          /* Parse all the different INCLUDE keywords*/
+          if (extra_string_compare(&current_keyword_name, "INCLUDE") == 0) {
             _parse_include_file_name_card(
                 &card, &card_index, &line, line_length,
                 &current_multi_line_string, &current_multi_line_index,
@@ -504,65 +433,183 @@ void key_file_parse_with_callback(const char *file_name,
                 &error_stack, &error_stack_size, &error_ptr, file_name,
                 line_count, root_folder_ptr);
             continue;
-          } else {
-            ERROR_F(
-                "%s:%zu: Invalid number of cards for INCLUDE_BINARY keyword",
-                file_name, line_count);
-          }
+          } else if (extra_string_compare(&current_keyword_name,
+                                          "INCLUDE_PATH") == 0) {
+            /* Support multi line file names (LS Dyna Manual Volume I
+             * *INCLUDE Remark 2, p. 2690)*/
+            if (!_parse_multi_line_string(&current_multi_line_string,
+                                          &current_multi_line_index, &card,
+                                          line_length)) {
+              /* continue without calling the callback for the card*/
+              if (card.string != line.buffer) {
+                free(card.string);
+              }
+              continue;
+            }
 
-          /* continue without calling the callback for the card*/
-          if (card.string != line.buffer) {
-            free(card.string);
-          }
+            (*num_include_paths_ptr)++;
+            *include_paths_ptr = realloc(
+                *include_paths_ptr, *num_include_paths_ptr * sizeof(char *));
+            (*include_paths_ptr)[*num_include_paths_ptr - 1] =
+                current_multi_line_string;
 
-          card_index++;
-          continue;
-        } else if (extra_string_compare(&current_keyword_name,
-                                        "INCLUDE_NASTRAN") == 0) {
-          /* Parse the first card like a normal INCLUDE*/
-          if (card_index == 0) {
-            _parse_include_file_name_card(
-                &card, &card_index, &line, line_length,
-                &current_multi_line_string, &current_multi_line_index,
-                num_include_paths_ptr, include_paths_ptr, callback, user_data,
-                &error_stack, &error_stack_size, &error_ptr, file_name,
-                line_count, root_folder_ptr);
+            current_multi_line_string = NULL;
+            current_multi_line_index = 0;
+
+            /* continue without calling the callback for the card*/
+            if (card.string != line.buffer) {
+              free(card.string);
+            }
+
+            card_index++;
             continue;
-          } else if (card_index == 1) {
-            /* Ignore the card it is irrelevant for the parsing*/
+          } else if (extra_string_compare(&current_keyword_name,
+                                          "INCLUDE_PATH_RELATIVE") == 0) {
+            /* Support multi line file names (LS Dyna Manual Volume I
+             * *INCLUDE Remark 2, p. 2690)*/
+            if (!_parse_multi_line_string(&current_multi_line_string,
+                                          &current_multi_line_index, &card,
+                                          line_length)) {
+              /* continue without calling the callback for the card*/
+              if (card.string != line.buffer) {
+                free(card.string);
+              }
+              continue;
+            }
+
+            char *full_include_path_name =
+                path_join(root_folder_ptr, current_multi_line_string);
+            free(current_multi_line_string);
+            current_multi_line_string = NULL;
+            current_multi_line_index = 0;
+
+            (*num_include_paths_ptr)++;
+            *include_paths_ptr = realloc(
+                *include_paths_ptr, *num_include_paths_ptr * sizeof(char *));
+            (*include_paths_ptr)[*num_include_paths_ptr - 1] =
+                full_include_path_name;
+
+            /* continue without calling the callback for the card*/
+            if (card.string != line.buffer) {
+              free(card.string);
+            }
+
+            card_index++;
+            continue;
+          } else if (extra_string_compare(&current_keyword_name,
+                                          "INCLUDE_BINARY") == 0) {
+            /* Parse the first card like a normal INCLUDE*/
+            if (card_index == 0) {
+              _parse_include_file_name_card(
+                  &card, &card_index, &line, line_length,
+                  &current_multi_line_string, &current_multi_line_index,
+                  num_include_paths_ptr, include_paths_ptr, callback, user_data,
+                  &error_stack, &error_stack_size, &error_ptr, file_name,
+                  line_count, root_folder_ptr);
+              continue;
+            } else {
+              ERROR_F(
+                  "%s:%zu: Invalid number of cards for INCLUDE_BINARY keyword",
+                  file_name, line_count);
+            }
+
+            /* continue without calling the callback for the card*/
+            if (card.string != line.buffer) {
+              free(card.string);
+            }
+
+            card_index++;
+            continue;
+          } else if (extra_string_compare(&current_keyword_name,
+                                          "INCLUDE_NASTRAN") == 0) {
+            /* Parse the first card like a normal INCLUDE*/
+            if (card_index == 0) {
+              _parse_include_file_name_card(
+                  &card, &card_index, &line, line_length,
+                  &current_multi_line_string, &current_multi_line_index,
+                  num_include_paths_ptr, include_paths_ptr, callback, user_data,
+                  &error_stack, &error_stack_size, &error_ptr, file_name,
+                  line_count, root_folder_ptr);
+              continue;
+            } else if (card_index == 1) {
+              /* Ignore the card it is irrelevant for the parsing*/
+            } else {
+              ERROR_F(
+                  "%s:%zu: Invalid number of cards for INCLUDE_NASTRAN keyword",
+                  file_name, line_count);
+            }
+
+            /* continue without calling the callback for the card*/
+            if (card.string != line.buffer) {
+              free(card.string);
+            }
+
+            card_index++;
+            continue;
           } else {
-            ERROR_F(
-                "%s:%zu: Invalid number of cards for INCLUDE_NASTRAN keyword",
-                file_name, line_count);
-          }
+            char *keyword_name;
+            if (current_keyword_length < EXTRA_STRING_BUFFER_SIZE) {
+              keyword_name = current_keyword_name.buffer;
+            } else {
+              keyword_name = malloc(current_keyword_length + 1);
+              extra_string_copy_to_string(keyword_name, &current_keyword_name,
+                                          current_keyword_length);
+              keyword_name[current_keyword_length] = '\0';
+            }
 
-          /* continue without calling the callback for the card*/
-          if (card.string != line.buffer) {
-            free(card.string);
-          }
+            ERROR_F("%s:%zu: Unsupported INCLUDE keyword: \"%s\"", file_name,
+                    current_keyword_line, keyword_name);
 
-          card_index++;
-          continue;
+            if (keyword_name != current_keyword_name.buffer) {
+              free(keyword_name);
+            }
+          }
         } else {
-          char *keyword_name;
-          if (current_keyword_length < EXTRA_STRING_BUFFER_SIZE) {
-            keyword_name = current_keyword_name.buffer;
-          } else {
-            keyword_name = malloc(current_keyword_length + 1);
-            extra_string_copy_to_string(keyword_name, &current_keyword_name,
-                                        current_keyword_length);
-            keyword_name[current_keyword_length] = '\0';
-          }
-
-          ERROR_F("%s:%zu: Unsupported INCLUDE keyword: \"%s\"", file_name,
-                  current_keyword_line, keyword_name);
-
-          if (keyword_name != current_keyword_name.buffer) {
-            free(keyword_name);
+          if (extra_string_compare(&current_keyword_name, "INCLUDE") == 0 ||
+              extra_string_compare(&current_keyword_name, "INCLUDE_PATH") ==
+                  0 ||
+              extra_string_compare(&current_keyword_name,
+                                   "INCLUDE_PATH_RELATIVE") == 0) {
+            if (!_parse_multi_line_string(&current_multi_line_string,
+                                          &current_multi_line_index, &card,
+                                          line_length)) {
+              /* continue without calling the callback for the card*/
+              if (card.string != line.buffer) {
+                free(card.string);
+              }
+              continue;
+            }
+          } else if (extra_string_compare(&current_keyword_name,
+                                          "INCLUDE_BINARY") == 0 ||
+                     extra_string_compare(&current_keyword_name,
+                                          "INCLUDE_NASTRAN") == 0 ||
+                     extra_string_compare(&current_keyword_name,
+                                          "INCLUDE_TRANSFORM") == 0 ||
+                     extra_string_compare(&current_keyword_name,
+                                          "INCLUDE_TRANSFORM_BINARY") == 0) {
+            /* Parse the first card like a normal INCLUDE*/
+            if (card_index == 0) {
+              if (!_parse_multi_line_string(&current_multi_line_string,
+                                            &current_multi_line_index, &card,
+                                            line_length)) {
+                /* continue without calling the callback for the card*/
+                if (card.string != line.buffer) {
+                  free(card.string);
+                }
+                continue;
+              }
+            }
           }
         }
       }
       /* ------- ⛅ End of Include Parsing ⛅ -------*/
+
+      if (current_multi_line_string) {
+        if (card.string != line.buffer) {
+          free(card.string);
+        }
+        card.string = current_multi_line_string;
+      }
 
       char *keyword_name;
       if (current_keyword_length < EXTRA_STRING_BUFFER_SIZE) {
@@ -579,10 +626,12 @@ void key_file_parse_with_callback(const char *file_name,
 
       if (card.string != line.buffer) {
         free(card.string);
+        current_multi_line_string = NULL;
       }
       if (keyword_name != current_keyword_name.buffer) {
         free(keyword_name);
       }
+      current_multi_line_index = 0;
 
       card_index++;
     }
@@ -608,11 +657,21 @@ void key_file_parse_with_callback(const char *file_name,
         keyword_name[current_keyword_length] = '\0';
       }
 
-      callback(file_name, line_count, keyword_name, NULL, (size_t)~0,
-               user_data);
+      card_t card;
+      if (current_multi_line_string) {
+        card.string = current_multi_line_string;
+      } else {
+        card.string = NULL;
+      }
+
+      callback(file_name, line_count, keyword_name, card.string ? &card : NULL,
+               (size_t)~0, user_data);
 
       if (keyword_name != current_keyword_name.buffer) {
         free(keyword_name);
+      }
+      if (card.string) {
+        free(card.string);
       }
     }
   }
