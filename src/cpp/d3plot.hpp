@@ -41,12 +41,27 @@ class D3plot {
 public:
   class Exception : public std::exception {
   public:
-    Exception(String error_str) noexcept;
+#ifdef _WIN32
+    // On windows python scripts crash when deallocated the memory of a thrown
+    // exception
+    class ErrorString : public std::string {
+    public:
+      ErrorString(char *str, bool delete_data = true) noexcept
+          : std::string(str) {
+        if (delete_data)
+          free(str);
+      }
+    };
+#else
+    using ErrorString = String;
+#endif
+
+    Exception(ErrorString error_str) noexcept;
 
     const char *what() const noexcept override;
 
   private:
-    const String m_error_str;
+    const ErrorString m_error_str;
   };
 
   static size_t index_for_id(const Array<d3_word> &ids, d3_word id);

@@ -44,7 +44,8 @@
   const int error_buffer_size = snprintf(NULL, 0, msg, __VA_ARGS__);           \
   char *error_buffer = reinterpret_cast<char *>(malloc(error_buffer_size));    \
   sprintf(error_buffer, msg, __VA_ARGS__);                                     \
-  throw dro::KeyFile::Exception(dro::String(error_buffer))
+  throw dro::KeyFile::Exception(                                               \
+      dro::KeyFile::Exception::ErrorString(error_buffer))
 
 namespace dro {
 // A Card inside of a LS Dyna key file (input deck)
@@ -254,12 +255,27 @@ class KeyFile {
 public:
   class Exception : public std::exception {
   public:
-    Exception(String error_str) noexcept;
+#ifdef _WIN32
+    // On windows python scripts crash when deallocated the memory of a thrown
+    // exception
+    class ErrorString : public std::string {
+    public:
+      ErrorString(char *str, bool delete_data = true) noexcept
+          : std::string(str) {
+        if (delete_data)
+          free(str);
+      }
+    };
+#else
+    using ErrorString = String;
+#endif
+
+    Exception(ErrorString error_str) noexcept;
 
     const char *what() const noexcept override;
 
   private:
-    const String m_error_str;
+    const ErrorString m_error_str;
   };
 
   using Callback = std::function<void(

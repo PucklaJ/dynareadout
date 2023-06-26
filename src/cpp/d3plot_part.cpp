@@ -115,7 +115,8 @@ Array<d3_word> D3plotPart::get_node_ids(
       shell_cons ? shell_cons->data() : NULL,
       thick_shell_cons ? thick_shell_cons->data() : NULL);
   if (plot_file.get_handle().error_string) {
-    throw D3plot::Exception(String(plot_file.get_handle().error_string, false));
+    throw D3plot::Exception(D3plot::Exception::ErrorString(
+        plot_file.get_handle().error_string, false));
   }
 
   return Array<d3_word>(part_node_ids, num_part_node_ids);
@@ -142,7 +143,8 @@ Array<d3_word> D3plotPart::get_node_indices(
       shell_cons ? shell_cons->data() : NULL,
       thick_shell_cons ? thick_shell_cons->data() : NULL);
   if (plot_file.get_handle().error_string) {
-    throw D3plot::Exception(String(plot_file.get_handle().error_string, false));
+    throw D3plot::Exception(D3plot::Exception::ErrorString(
+        plot_file.get_handle().error_string, false));
   }
 
   return Array<d3_word>(part_node_indices, num_part_node_indices);
@@ -168,7 +170,8 @@ size_t D3plotPart::get_num_nodes(
       shell_cons ? shell_cons->data() : NULL,
       thick_shell_cons ? thick_shell_cons->data() : NULL);
   if (plot_file.get_handle().error_string) {
-    throw D3plot::Exception(String(plot_file.get_handle().error_string, false));
+    throw D3plot::Exception(D3plot::Exception::ErrorString(
+        plot_file.get_handle().error_string, false));
   }
 
   return num_nodes;

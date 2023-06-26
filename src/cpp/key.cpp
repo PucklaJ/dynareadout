@@ -166,7 +166,8 @@ KeywordSlice Keywords::operator[](const std::string &name) {
   return KeywordSlice(slice, slice_size);
 }
 
-KeyFile::Exception::Exception(String error_str) noexcept
+KeyFile::Exception::Exception(
+    KeyFile::Exception::ErrorString error_str) noexcept
     : m_error_str(std::move(error_str)) {}
 
 const char *KeyFile::Exception::what() const noexcept {
@@ -182,7 +183,7 @@ Keywords KeyFile::parse(const std::filesystem::path &file_name,
       key_file_parse(file_name.string().c_str(), &num_keywords,
                      static_cast<int>(parse_includes), &error_string);
   if (error_string) {
-    throw Exception(String(error_string));
+    throw Exception(Exception::ErrorString(error_string));
   }
 
   return Keywords(keywords, num_keywords);
@@ -210,7 +211,7 @@ void KeyFile::parse_with_callback(const std::filesystem::path &file_name,
       NULL);
 
   if (error_string) {
-    throw Exception(String(error_string));
+    throw Exception(Exception::ErrorString(error_string));
   }
 }
 
