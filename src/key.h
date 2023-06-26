@@ -129,19 +129,28 @@ void card_parse_next_width(card_t *card, uint8_t value_width);
  * widths have been supplied*/
 int card_parse_done(const card_t *card);
 /* Parses the current value as an int. Uses the value width from
- * card_parse_begin.*/
+ * card_parse_begin. Note: This does not handle overflow, since the width of key
+ * file values is too small to reach the maximum of int64_t*/
 int64_t card_parse_int(const card_t *card);
-/* Parses the current value as an int. Uses the value width provided here.*/
+/* Parses the current value as an int. Uses the value width provided here. Note:
+ * This does not handle overflow, since the width of key file values is too
+ * small to reach the maximum of int64_t*/
 int64_t card_parse_int_width(const card_t *card, uint8_t value_width);
 /* Parses the current value as an float. Uses the value width from
- * card_parse_begin.*/
+ * card_parse_begin. Note: This does not handle overflow, since the width of key
+ * file values is too small to reach the maximum of float*/
 float card_parse_float32(const card_t *card);
-/* Parses the current value as an float. Uses the value width provided here.*/
+/* Parses the current value as an float. Uses the value width provided here.
+ * Note: This does not handle overflow, since the width of key file values is
+ * too small to reach the maximum of float*/
 float card_parse_float32_width(const card_t *card, uint8_t value_width);
 /* Parses the current value as an double. Uses the value width from
- * card_parse_begin.*/
+ * card_parse_begin. Note: This does not handle overflow, since the width of key
+ * file values is too small to reach the maximum of double*/
 double card_parse_float64(const card_t *card);
-/* Parses the current value as an double. Uses the value width provided here.*/
+/* Parses the current value as an double. Uses the value width provided here.
+ * Note: This does not handle overflow, since the width of key file values is
+ * too small to reach the maximum of double*/
 double card_parse_float64_width(const card_t *card, uint8_t value_width);
 /* Parses the current value as an string (which means no parsing at all).
  * Trims trailing and leading spaces. Uses the value width from

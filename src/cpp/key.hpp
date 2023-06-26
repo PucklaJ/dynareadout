@@ -296,14 +296,26 @@ template <typename T> T Card::parse() const {
 }
 
 template <typename T> T Card::parse(uint8_t value_width) const {
-  /* TODO: Bounds check*/
   if constexpr (std::is_integral_v<T>) {
     const auto value = card_parse_int_width(m_handle, value_width);
     if (value < 0 && std::is_unsigned_v<T>) {
       THROW_KEY_FILE_EXCEPTION("Can not convert %lld into %s because of sign",
                                value, typeid(T).name());
     }
-    return value;
+
+    if (value < 0 && value < std::numeric_limits<T>::min()) {
+      THROW_KEY_FILE_EXCEPTION(
+          "Can not convert %lld into %s because it is too small", value,
+          typeid(T).name());
+    }
+
+    if (value > 0 && value > std::numeric_limits<T>::max()) {
+      THROW_KEY_FILE_EXCEPTION(
+          "Can not convert %lld into %s because it is too large", value,
+          typeid(T).name());
+    }
+
+    return static_cast<T>(value);
   } else if constexpr (std::is_floating_point_v<T>) {
     if constexpr (sizeof(T) == sizeof(float)) {
       const auto value = card_parse_float32_width(m_handle, value_width);
