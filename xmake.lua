@@ -151,6 +151,6 @@ if get_config("build_python") then
                 end
                 ext_name = ".cpython-" .. version .. "-" .. target:arch() .. "-" .. platform .. suffix
             end
-            target:set("filename", "dynareadout_c" .. (is_mode("debug") and "_d" or "") .. ext_name)
+            target:set("filename", "dynareadout" .. (is_mode("debug") and "_d" or "") .. ext_name)
         end)
 end
