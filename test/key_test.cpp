@@ -444,7 +444,7 @@ TEST_CASE("key_file_parse_with_callback") {
   key_file_parse_with_callback(
       "test_data/key_file.k",
       [](const char *file_name, size_t line_number, const char *keyword_name,
-         const card_t *card, size_t card_index, void *user_data) {
+         card_t *card, size_t card_index, void *user_data) {
         CHECK(file_name == "test_data/key_file.k");
         CHECK(user_data == NULL);
         REQUIRE(keyword_name != NULL);
@@ -455,20 +455,15 @@ TEST_CASE("key_file_parse_with_callback") {
 
         if (strcmp(keyword_name, "NODE") == 0) {
           const size_t j = card_index;
-          card_t node;
-          node.string = card->string;
 
-          card_parse_begin(&node, NODE_VALUE_WIDTH);
-          const int nid = card_parse_int(&node);
-          card_parse_next(&node);
-          const double x =
-              card_parse_float64_width(&node, NODE_VALUE_WIDTH * 2);
-          card_parse_next_width(&node, NODE_VALUE_WIDTH * 2);
-          const double y =
-              card_parse_float64_width(&node, NODE_VALUE_WIDTH * 2);
-          card_parse_next_width(&node, NODE_VALUE_WIDTH * 2);
-          const double z =
-              card_parse_float64_width(&node, NODE_VALUE_WIDTH * 2);
+          card_parse_begin(card, NODE_VALUE_WIDTH);
+          const int nid = card_parse_int(card);
+          card_parse_next(card);
+          const double x = card_parse_float64_width(card, NODE_VALUE_WIDTH * 2);
+          card_parse_next_width(card, NODE_VALUE_WIDTH * 2);
+          const double y = card_parse_float64_width(card, NODE_VALUE_WIDTH * 2);
+          card_parse_next_width(card, NODE_VALUE_WIDTH * 2);
+          const double z = card_parse_float64_width(card, NODE_VALUE_WIDTH * 2);
 
           if (j <= 8 && j >= 0) {
             CHECK(y == -10.0);
@@ -883,14 +878,14 @@ TEST_CASE("key_file_parse_with_callbackC++") {
   dro::KeyFile::parse_with_callback(
       "test_data/key_file.k",
       [](dro::String file_name, size_t line_number, dro::String keyword_name,
-         dro::Card card, size_t card_index) {
+         std::optional<dro::Card> card, size_t card_index) {
         CHECK(file_name == "test_data/key_file.k");
 
-        if (!card.is_valid()) {
+        if (!card) {
           return;
         }
 
-        const auto card_str = card.parse_string_whole_no_trim<dro::String>();
+        const auto card_str = card->parse_string_whole_no_trim<dro::String>();
         std::cout << keyword_name.str() << "[" << card_index
                   << "]: " << card_str.str() << std::endl;
       });

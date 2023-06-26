@@ -58,7 +58,7 @@ typedef struct {
 
 /* The type of the callback that is called in key_file_parse_with_callback*/
 typedef void (*key_file_callback)(const char *file_name, size_t line_number,
-                                  const char *keyword_name, const card_t *card,
+                                  const char *keyword_name, card_t *card,
                                   size_t card_index, void *user_data);
 
 #ifdef __cplusplus

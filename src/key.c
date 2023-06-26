@@ -63,7 +63,7 @@ typedef struct {
 } key_file_parse_data;
 
 void key_file_parse_callback(const char *file_name, size_t line_number,
-                             const char *keyword_name, const card_t *card,
+                             const char *keyword_name, card_t *card,
                              size_t card_index, void *user_data) {
   key_file_parse_data *data = (key_file_parse_data *)user_data;
 

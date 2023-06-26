@@ -34,6 +34,7 @@
 #include <functional>
 #include <key.h>
 #include <limits>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <type_traits>
@@ -119,9 +120,6 @@ public:
   // 8});
   template <typename... T>
   std::tuple<T...> parse_whole(std::array<uint8_t, sizeof...(T)> value_widths);
-
-  // Returns wether the card can be parsed
-  inline bool is_valid() const noexcept { return m_handle != nullptr; }
 
 private:
   card_t *m_handle;
@@ -264,10 +262,9 @@ public:
     const String m_error_str;
   };
 
-  // TODO: Card is sometimes NULL
-  using Callback =
-      std::function<void(String file_name, size_t line_number,
-                         String keyword_name, Card card, size_t card_index)>;
+  using Callback = std::function<void(
+      String file_name, size_t line_number, String keyword_name,
+      std::optional<Card> card, size_t card_index)>;
 
   // Parses a LS Dyna key file for keywords and their respective cards. Returns
   // an array keywords
