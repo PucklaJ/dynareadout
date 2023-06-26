@@ -36,12 +36,29 @@ namespace py = pybind11;
 std::variant<dro::Array<int8_t>, dro::Array<int16_t>, dro::Array<int32_t>,
              dro::Array<int64_t>, dro::Array<uint8_t>, dro::Array<uint16_t>,
              dro::Array<uint32_t>, dro::Array<uint64_t>, dro::Array<float>,
-             dro::Array<double>, std::vector<dro::Array<float>>,
+             dro::Array<double>, std::vector<dro::Array<int8_t>>,
+             std::vector<dro::Array<int16_t>>, std::vector<dro::Array<int32_t>>,
+             std::vector<dro::Array<int64_t>>, std::vector<dro::Array<uint8_t>>,
+             std::vector<dro::Array<uint16_t>>,
+             std::vector<dro::Array<uint32_t>>,
+             std::vector<dro::Array<uint64_t>>, std::vector<dro::Array<float>>,
              std::vector<dro::Array<double>>, std::vector<dro::String>>
 Binout_read(dro::Binout &self, std::string path) {
   dro::BinoutType type_id;
   bool timed;
   const auto real_path = self.simple_path_to_real(path, type_id, timed);
+
+  // TODO: Create read_timed implementations for all types
+  if (timed && (type_id != dro::BinoutType::Float32 &&
+                type_id != dro::BinoutType::Float64)) {
+    char buffer[1024];
+    sprintf(buffer,
+            "Only float and double values can be read as timed. \"%s\" is %s",
+            path.c_str(),
+            _binout_get_type_name(static_cast<uint64_t>(type_id)));
+    throw dro::Binout::Exception(
+        dro::Binout::Exception::ErrorString(buffer, false));
+  }
 
   switch (type_id) {
   case dro::BinoutType::Int8:
@@ -71,10 +88,12 @@ Binout_read(dro::Binout &self, std::string path) {
     }
     return self.read<double>(real_path);
   default:
+    // If the type is invalid it's likely to be a folder and then the children
+    // should be returned
     auto children = self.get_children(real_path);
     if (children[children.size() - 1] == "metadata" &&
         children[0] == "d000001") {
-      const auto metadata = real_path + "metadata";
+      const auto metadata = real_path + "/metadata";
       const auto d000001 = real_path + "/d000001";
 
       auto metadata_children = self.get_children(metadata);

@@ -33,9 +33,9 @@ void add_d3plot_library_to_module(py::module_ &m);
 void add_key_library_to_module(py::module_ &m);
 
 #ifdef NDEBUG
-PYBIND11_MODULE(dynareadout_c, m) {
+PYBIND11_MODULE(dynareadout, m) {
 #else
-PYBIND11_MODULE(dynareadout_c_d, m) {
+PYBIND11_MODULE(dynareadout_d, m) {
 #endif
   dro::add_array_to_module(m);
   add_binout_library_to_module(m);
