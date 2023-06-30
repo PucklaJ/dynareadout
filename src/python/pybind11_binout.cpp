@@ -51,13 +51,12 @@ Binout_read(dro::Binout &self, std::string path) {
   // TODO: Create read_timed implementations for all types
   if (timed && (type_id != dro::BinoutType::Float32 &&
                 type_id != dro::BinoutType::Float64)) {
-    char buffer[1024];
+    char *buffer = (char *)malloc(1024);
     sprintf(buffer,
             "Only float and double values can be read as timed. \"%s\" is %s",
             path.c_str(),
             _binout_get_type_name(static_cast<uint64_t>(type_id)));
-    throw dro::Binout::Exception(
-        dro::Binout::Exception::ErrorString(buffer, false));
+    throw dro::Binout::Exception(dro::Binout::Exception::ErrorString(buffer));
   }
 
   switch (type_id) {
