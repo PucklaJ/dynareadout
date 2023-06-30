@@ -41,6 +41,7 @@ int read_line(line_reader_t *lr) {
   BEGIN_PROFILE_FUNC();
 
   lr->line_length = 0;
+  lr->comment_index = (size_t)~0;
 
   if ((feof(lr->file) || ferror(lr->file)) &&
       lr->buffer_index >= lr->bytes_read) {
@@ -52,7 +53,7 @@ int read_line(line_reader_t *lr) {
 
   while (1) {
     if (lr->bytes_read == 0 || lr->buffer_index >= lr->bytes_read) {
-      lr->bytes_read = fread(lr->buffer, 1, EXTRA_STRING_BUFFER_SIZE, lr->file);
+      lr->bytes_read = fread(lr->buffer, 1, LINE_READER_BUFFER_SIZE, lr->file);
       if (lr->bytes_read == 0) {
         break;
       }
@@ -61,6 +62,10 @@ int read_line(line_reader_t *lr) {
 
     while (lr->buffer_index < lr->bytes_read) {
       *cursor = lr->buffer[lr->buffer_index++];
+
+      if (lr->comment_index == (size_t)~0 && *cursor == '$') {
+        lr->comment_index = lr->line_length;
+      }
 
       if (*cursor == '\r') {
         continue;

@@ -249,23 +249,12 @@ void key_file_parse_with_callback(const char *file_name,
   while (read_line(&line_reader)) {
     line_count++;
 
-    /* Look for a comment character*/
-    size_t comment_index = (size_t)~0;
-    size_t i = 0;
-    while (i < line_reader.line_length) {
-      if (extra_string_get(&line_reader.line, i) == KEY_COMMENT) {
-        comment_index = i;
-        break;
-      }
-      i++;
-    }
-
     /* Check if the line starts with a comment or contains a comment character*/
-    if (comment_index == 0) {
+    if (line_reader.comment_index == 0) {
       /* The entire line is a comment. Ignore it.*/
       continue;
-    } else if (comment_index != (size_t)~0) {
-      extra_string_set(&line_reader.line, comment_index, '\0');
+    } else if (line_reader.comment_index != (size_t)~0) {
+      extra_string_set(&line_reader.line, line_reader.comment_index, '\0');
     }
 
     /* ------- 🐉 Here be parsings 🐉 --------- */
@@ -273,8 +262,8 @@ void key_file_parse_with_callback(const char *file_name,
     /* Check if the line is a keyword (starts with '*')
      * Support lines being preceded by ' ' */
     int is_keyword = 0;
+    size_t i = 0;
     if (line_reader.line_length != 0) {
-      i = 0;
       while (extra_string_get(&line_reader.line, i) == ' ') {
         i++;
       }

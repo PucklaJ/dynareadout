@@ -29,12 +29,15 @@
 #include "extra_string.h"
 #include <stdio.h>
 
+#define LINE_READER_BUFFER_SIZE (1024 * 1024)
+
 typedef struct {
   FILE *file;
   extra_string line;
   size_t line_length;
+  size_t comment_index;
 
-  char buffer[EXTRA_STRING_BUFFER_SIZE];
+  char buffer[LINE_READER_BUFFER_SIZE];
   size_t buffer_index;
   size_t bytes_read;
   size_t extra_capacity;
