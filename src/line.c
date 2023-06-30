@@ -28,12 +28,18 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#define KEY_COMMENT '$'
+
 line_reader_t new_line_reader(FILE *file) {
+  BEGIN_PROFILE_FUNC();
+
   line_reader_t lr;
   lr.file = file;
   lr.line.extra = NULL;
   lr.bytes_read = 0;
   lr.extra_capacity = 0;
+
+  END_PROFILE_FUNC();
   return lr;
 }
 
@@ -49,10 +55,16 @@ int read_line(line_reader_t *lr) {
     return 0;
   }
 
+  /* Points where to write the next character*/
   char *cursor = lr->line.buffer;
 
+  /* Loop until a new line has been encountered or EOF is reached or an error
+   * occurred*/
   while (1) {
+    /* Only read from the file if the buffer has been completely read or it's
+     * the first read_line call*/
     if (lr->bytes_read == 0 || lr->buffer_index >= lr->bytes_read) {
+      /* Read the file in LINE_READER_BUFFER_SIZE sized chunks*/
       lr->bytes_read = fread(lr->buffer, 1, LINE_READER_BUFFER_SIZE, lr->file);
       if (lr->bytes_read == 0) {
         break;
@@ -60,13 +72,15 @@ int read_line(line_reader_t *lr) {
       lr->buffer_index = 0;
     }
 
+    /* Read bytes from the buffer*/
     while (lr->buffer_index < lr->bytes_read) {
       *cursor = lr->buffer[lr->buffer_index++];
 
-      if (lr->comment_index == (size_t)~0 && *cursor == '$') {
+      if (lr->comment_index == (size_t)~0 && *cursor == KEY_COMMENT) {
         lr->comment_index = lr->line_length;
       }
 
+      /* Ignore carriage return*/
       if (*cursor == '\r') {
         continue;
       } else if (*cursor == '\n') {
@@ -75,6 +89,8 @@ int read_line(line_reader_t *lr) {
 
       lr->line_length++;
 
+      /* Switch to extra if too much characters have been read and make sure
+       * that enough memory is allocated*/
       if (lr->line_length >= EXTRA_STRING_BUFFER_SIZE &&
           (lr->extra_capacity == 0 ||
            lr->line_length - EXTRA_STRING_BUFFER_SIZE > lr->extra_capacity)) {

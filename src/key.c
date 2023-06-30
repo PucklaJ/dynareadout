@@ -33,9 +33,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define KEY_COMMENT '$'
-#define LINE_WIDTH 80
-
 #define ERROR_MSG(msg)                                                         \
   const size_t error_msg_len = strlen(msg);                                    \
   error_stack_size += error_msg_len + 1;                                       \

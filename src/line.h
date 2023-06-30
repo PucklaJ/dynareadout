@@ -29,13 +29,15 @@
 #include "extra_string.h"
 #include <stdio.h>
 
-#define LINE_READER_BUFFER_SIZE (1024 * 1024)
+#define LINE_READER_BUFFER_SIZE (1024 * 1024) /* 1MB */
 
+/* All the state for the read_line function*/
 typedef struct {
   FILE *file;
-  extra_string line;
+  extra_string line; /* This stores the read line after a read_line call*/
   size_t line_length;
-  size_t comment_index;
+  size_t comment_index; /* An index into line to where a comment can be found.
+                           Is ~0 if no comment has been found*/
 
   char buffer[LINE_READER_BUFFER_SIZE];
   size_t buffer_index;
@@ -47,6 +49,7 @@ typedef struct {
 extern "C" {
 #endif
 
+/* Initialise all variables of the line reader*/
 line_reader_t new_line_reader(FILE *file);
 
 /* Reads from file until it encounters the next new line and stores the
