@@ -180,6 +180,46 @@ Binout_read_timed(Binout &bin_file,
 }
 
 template <>
+std::vector<Array<int8_t>> Binout::read_timed(const std::string &variable) {
+  return Binout_read_timed<int8_t>(*this, binout_read_timed_i8, variable);
+}
+
+template <>
+std::vector<Array<int16_t>> Binout::read_timed(const std::string &variable) {
+  return Binout_read_timed<int16_t>(*this, binout_read_timed_i16, variable);
+}
+
+template <>
+std::vector<Array<int32_t>> Binout::read_timed(const std::string &variable) {
+  return Binout_read_timed<int32_t>(*this, binout_read_timed_i32, variable);
+}
+
+template <>
+std::vector<Array<int64_t>> Binout::read_timed(const std::string &variable) {
+  return Binout_read_timed<int64_t>(*this, binout_read_timed_i64, variable);
+}
+
+template <>
+std::vector<Array<uint8_t>> Binout::read_timed(const std::string &variable) {
+  return Binout_read_timed<uint8_t>(*this, binout_read_timed_u8, variable);
+}
+
+template <>
+std::vector<Array<uint16_t>> Binout::read_timed(const std::string &variable) {
+  return Binout_read_timed<uint16_t>(*this, binout_read_timed_u16, variable);
+}
+
+template <>
+std::vector<Array<uint32_t>> Binout::read_timed(const std::string &variable) {
+  return Binout_read_timed<uint32_t>(*this, binout_read_timed_u32, variable);
+}
+
+template <>
+std::vector<Array<uint64_t>> Binout::read_timed(const std::string &variable) {
+  return Binout_read_timed<uint64_t>(*this, binout_read_timed_u64, variable);
+}
+
+template <>
 std::vector<Array<float>> Binout::read_timed(const std::string &variable) {
   return Binout_read_timed<float>(*this, binout_read_timed_f32, variable);
 }
