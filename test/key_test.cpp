@@ -686,9 +686,11 @@ TEST_CASE("carriage_return") {
   card = &kw->cards[0];
   char *keyword_value = card_parse_whole_no_trim(card);
   CHECK(keyword_value ==
-        "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii"
-        "iiiioooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
-        "ooooooooooooooooooo");
+        "Hello World this is a file that is used to test the line reader "
+        "and also if it supports carriage return which is necessary for "
+        "windows because this operating system uses carriage return plus "
+        "newline at their end of lines in files instead of just new line "
+        "like unix based operating system are doing");
   free(keyword_value);
 
   key_file_free(keywords, num_keywords);

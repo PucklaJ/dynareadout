@@ -40,12 +40,14 @@ line_reader_t new_line_reader(FILE *file) {
 int read_line(line_reader_t *lr) {
   BEGIN_PROFILE_FUNC();
 
-  if (feof(lr->file) && lr->buffer_index >= lr->bytes_read) {
+  lr->line_length = 0;
+
+  if ((feof(lr->file) || ferror(lr->file)) &&
+      lr->buffer_index >= lr->bytes_read) {
     END_PROFILE_FUNC();
     return 0;
   }
 
-  size_t line_length = 0;
   char *cursor = lr->line.buffer;
 
   while (1) {
@@ -66,15 +68,15 @@ int read_line(line_reader_t *lr) {
         break;
       }
 
-      line_length++;
+      lr->line_length++;
 
-      if (line_length >= EXTRA_STRING_BUFFER_SIZE &&
+      if (lr->line_length >= EXTRA_STRING_BUFFER_SIZE &&
           (lr->extra_capacity == 0 ||
-           line_length - EXTRA_STRING_BUFFER_SIZE > lr->extra_capacity)) {
+           lr->line_length - EXTRA_STRING_BUFFER_SIZE > lr->extra_capacity)) {
         lr->extra_capacity += EXTRA_STRING_BUFFER_SIZE;
         lr->line.extra = realloc(lr->line.extra, lr->extra_capacity);
-        cursor = &lr->line.extra[line_length - EXTRA_STRING_BUFFER_SIZE];
-      } else if (line_length == EXTRA_STRING_BUFFER_SIZE) {
+        cursor = &lr->line.extra[lr->line_length - EXTRA_STRING_BUFFER_SIZE];
+      } else if (lr->line_length == EXTRA_STRING_BUFFER_SIZE) {
         cursor = lr->line.extra;
       } else {
         cursor++;

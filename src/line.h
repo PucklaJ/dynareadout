@@ -32,6 +32,7 @@
 typedef struct {
   FILE *file;
   extra_string line;
+  size_t line_length;
 
   char buffer[EXTRA_STRING_BUFFER_SIZE];
   size_t buffer_index;
