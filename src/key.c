@@ -333,6 +333,13 @@ void key_file_parse_with_callback(const char *file_name,
         break;
       }
     }
+
+    /* Handle carriage return because of windows*/
+    if (line_length != 0 && extra_string_get(&line, line_length - 1) == '\r') {
+      extra_string_set(&line, line_length - 1, '\0');
+      line_length--;
+    }
+
     /* -------------------------------------------- */
 
     if ((line_length == 0 && n == 0 && feof(file)) || ferror(file)) {

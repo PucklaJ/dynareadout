@@ -652,6 +652,47 @@ TEST_CASE("key_file_parse_no_includes") {
   key_file_free(keywords, num_keywords);
 }
 
+TEST_CASE("carriage_return") {
+  size_t num_keywords;
+  char *error_string;
+  keyword_t *keywords = key_file_parse("test_data/carriage_return.k",
+                                       &num_keywords, 0, &error_string);
+  if (error_string) {
+    FAIL(error_string);
+    free(error_string);
+    return;
+  }
+
+  CHECK(key_file_get(keywords, num_keywords, "TEST_KEYWORD_CPP", 0) != NULL);
+  CHECK(key_file_get(keywords, num_keywords, "I_AM_NOT_HERE", 0) == NULL);
+
+  keyword_t *kw = key_file_get(keywords, num_keywords, "TEST_KEYWORD", 0);
+  REQUIRE(kw != NULL);
+  REQUIRE(kw->num_cards >= 2);
+
+  card_t *card = &kw->cards[0];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  CHECK(card_parse_float32(card) == 7.89f);
+
+  card = &kw->cards[1];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  CHECK(card_parse_float32(card) == 12E1f);
+
+  kw = key_file_get(keywords, num_keywords, "KEYWORD", 0);
+  REQUIRE(kw != NULL);
+  REQUIRE(kw->num_cards >= 1);
+
+  card = &kw->cards[0];
+  char *keyword_value = card_parse_whole_no_trim(card);
+  CHECK(keyword_value ==
+        "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii"
+        "iiiioooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
+        "ooooooooooooooooooo");
+  free(keyword_value);
+
+  key_file_free(keywords, num_keywords);
+}
+
 #ifdef BUILD_CPP
 #define FABS(x) ((x) > 0 ? (x) : -(x))
 

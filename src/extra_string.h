@@ -33,7 +33,8 @@ extern "C" {
 
 /* A string which allocates a part on the stack and allocates more on the heap
  * if it needs "extra" memory*/
-#define EXTRA_STRING_BUFFER_SIZE (80 + 1)
+#define EXTRA_STRING_BUFFER_SIZE                                               \
+  (80 + 2) /* LENGTH_OF_DYNA_LINE + carriage return (\r) and newline (\n)*/
 typedef struct {
   char buffer[EXTRA_STRING_BUFFER_SIZE];
   char *extra;
