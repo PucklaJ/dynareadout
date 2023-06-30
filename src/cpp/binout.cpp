@@ -25,6 +25,7 @@
 
 #include "binout.hpp"
 #include <cstring>
+#include <functional>
 
 namespace dro {
 
@@ -96,148 +97,96 @@ size_t Binout::get_num_timesteps(const std::string &path) const {
   return num_timesteps;
 }
 
-template <> Array<int8_t> Binout::read(const std::string &path_to_variable) {
+template <typename T>
+inline Array<T>
+Binout_read(Binout &bin_file,
+            std::function<T *(binout_file *handle, const char *path_to_variable,
+                              size_t *data_size)>
+                load_func,
+            const std::string &path_to_variable) {
   size_t data_size;
-  int8_t *data =
-      binout_read_i8(&m_handle, path_to_variable.c_str(), &data_size);
-  if (m_handle.error_string) {
-    throw Exception(Exception::ErrorString(m_handle.error_string, false));
+  T *data =
+      load_func(&bin_file.get_handle(), path_to_variable.c_str(), &data_size);
+  if (bin_file.get_handle().error_string) {
+    throw Binout::Exception(Binout::Exception::ErrorString(
+        bin_file.get_handle().error_string, false));
   }
 
-  return Array<int8_t>(data, data_size);
+  return Array<T>(data, data_size);
+}
+
+template <> Array<int8_t> Binout::read(const std::string &path_to_variable) {
+  return Binout_read<int8_t>(*this, binout_read_i8, path_to_variable);
 }
 
 template <> Array<int16_t> Binout::read(const std::string &path_to_variable) {
-  size_t data_size;
-  int16_t *data =
-      binout_read_i16(&m_handle, path_to_variable.c_str(), &data_size);
-  return Array<int16_t>(data, data_size);
+  return Binout_read<int16_t>(*this, binout_read_i16, path_to_variable);
 }
 
 template <> Array<int32_t> Binout::read(const std::string &path_to_variable) {
-  size_t data_size;
-  int32_t *data =
-      binout_read_i32(&m_handle, path_to_variable.c_str(), &data_size);
-  if (m_handle.error_string) {
-    throw Exception(Exception::ErrorString(m_handle.error_string, false));
-  }
-
-  return Array<int32_t>(data, data_size);
+  return Binout_read<int32_t>(*this, binout_read_i32, path_to_variable);
 }
 
 template <> Array<int64_t> Binout::read(const std::string &path_to_variable) {
-  size_t data_size;
-  int64_t *data =
-      binout_read_i64(&m_handle, path_to_variable.c_str(), &data_size);
-  if (m_handle.error_string) {
-    throw Exception(Exception::ErrorString(m_handle.error_string, false));
-  }
-
-  return Array<int64_t>(data, data_size);
+  return Binout_read<int64_t>(*this, binout_read_i64, path_to_variable);
 }
 
 template <> Array<uint8_t> Binout::read(const std::string &path_to_variable) {
-  size_t data_size;
-  uint8_t *data =
-      binout_read_u8(&m_handle, path_to_variable.c_str(), &data_size);
-  if (m_handle.error_string) {
-    throw Exception(Exception::ErrorString(m_handle.error_string, false));
-  }
-
-  return Array<uint8_t>(data, data_size);
+  return Binout_read<uint8_t>(*this, binout_read_u8, path_to_variable);
 }
 
 template <> Array<uint16_t> Binout::read(const std::string &path_to_variable) {
-  size_t data_size;
-  uint16_t *data =
-      binout_read_u16(&m_handle, path_to_variable.c_str(), &data_size);
-  if (m_handle.error_string) {
-    throw Exception(Exception::ErrorString(m_handle.error_string, false));
-  }
-
-  return Array<uint16_t>(data, data_size);
+  return Binout_read<uint16_t>(*this, binout_read_u16, path_to_variable);
 }
 
 template <> Array<uint32_t> Binout::read(const std::string &path_to_variable) {
-  size_t data_size;
-  uint32_t *data =
-      binout_read_u32(&m_handle, path_to_variable.c_str(), &data_size);
-  if (m_handle.error_string) {
-    throw Exception(Exception::ErrorString(m_handle.error_string, false));
-  }
-
-  return Array<uint32_t>(data, data_size);
+  return Binout_read<uint32_t>(*this, binout_read_u32, path_to_variable);
 }
 
 template <> Array<uint64_t> Binout::read(const std::string &path_to_variable) {
-  size_t data_size;
-  uint64_t *data =
-      binout_read_u64(&m_handle, path_to_variable.c_str(), &data_size);
-  if (m_handle.error_string) {
-    throw Exception(Exception::ErrorString(m_handle.error_string, false));
-  }
-
-  return Array<uint64_t>(data, data_size);
+  return Binout_read<uint64_t>(*this, binout_read_u64, path_to_variable);
 }
 
 template <> Array<float> Binout::read(const std::string &path_to_variable) {
-  size_t data_size;
-  float *data =
-      binout_read_f32(&m_handle, path_to_variable.c_str(), &data_size);
-  if (m_handle.error_string) {
-    throw Exception(Exception::ErrorString(m_handle.error_string, false));
-  }
-
-  return Array<float>(data, data_size);
+  return Binout_read<float>(*this, binout_read_f32, path_to_variable);
 }
 
 template <> Array<double> Binout::read(const std::string &path_to_variable) {
-  size_t data_size;
-  double *data =
-      binout_read_f64(&m_handle, path_to_variable.c_str(), &data_size);
-  if (m_handle.error_string) {
-    throw Exception(Exception::ErrorString(m_handle.error_string, false));
+  return Binout_read<double>(*this, binout_read_f64, path_to_variable);
+}
+
+template <typename T>
+inline std::vector<Array<T>>
+Binout_read_timed(Binout &bin_file,
+                  std::function<T *(binout_file *handle, const char *variable,
+                                    size_t *num_values, size_t *num_timesteps)>
+                      load_func,
+                  const std::string &variable) {
+  size_t num_values, num_timesteps;
+  T *data = load_func(&bin_file.get_handle(), variable.c_str(), &num_values,
+                      &num_timesteps);
+  if (bin_file.get_handle().error_string) {
+    throw Binout::Exception(Binout::Exception::ErrorString(
+        bin_file.get_handle().error_string, false));
   }
 
-  return Array<double>(data, data_size);
+  std::vector<Array<T>> vec(num_timesteps);
+
+  for (size_t t = 0; t < num_timesteps; t++) {
+    vec[t] = Array<T>(&data[t * num_values], num_values, t == 0);
+  }
+
+  return vec;
 }
 
 template <>
 std::vector<Array<float>> Binout::read_timed(const std::string &variable) {
-  size_t num_values, num_timesteps;
-  float *data = binout_read_timed_f32(&m_handle, variable.c_str(), &num_values,
-                                      &num_timesteps);
-  if (m_handle.error_string) {
-    throw Exception(Exception::ErrorString(m_handle.error_string, false));
-  }
-
-  std::vector<Array<float>> vec;
-  vec.resize(num_timesteps);
-
-  for (size_t t = 0; t < num_timesteps; t++) {
-    vec[t] = Array<float>(&data[t * num_values], num_values, t == 0);
-  }
-
-  return vec;
+  return Binout_read_timed<float>(*this, binout_read_timed_f32, variable);
 }
 
 template <>
 std::vector<Array<double>> Binout::read_timed(const std::string &variable) {
-  size_t num_values, num_timesteps;
-  double *data = binout_read_timed_f64(&m_handle, variable.c_str(), &num_values,
-                                       &num_timesteps);
-  if (m_handle.error_string) {
-    throw Exception(Exception::ErrorString(m_handle.error_string, false));
-  }
-
-  std::vector<Array<double>> vec;
-  vec.resize(num_timesteps);
-
-  for (size_t t = 0; t < num_timesteps; t++) {
-    vec[t] = Array<double>(&data[t * num_values], num_values, t == 0);
-  }
-
-  return vec;
+  return Binout_read_timed<double>(*this, binout_read_timed_f64, variable);
 }
 
 std::string Binout::simple_path_to_real(const std::string &simple,
