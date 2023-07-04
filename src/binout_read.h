@@ -84,6 +84,22 @@ double *binout_read_f64(binout_file *bin_file, const char *path_to_variable,
  * "/nodout/x_displacement". The shape of the array is num_timesteps *
  * num_values which means to get a value you need to index like [timestep *
  * num_values + value]*/
+int8_t *binout_read_timed_i8(binout_file *bin_file, const char *variable,
+                             size_t *num_values, size_t *num_timesteps);
+int16_t *binout_read_timed_i16(binout_file *bin_file, const char *variable,
+                               size_t *num_values, size_t *num_timesteps);
+int32_t *binout_read_timed_i32(binout_file *bin_file, const char *variable,
+                               size_t *num_values, size_t *num_timesteps);
+int64_t *binout_read_timed_i64(binout_file *bin_file, const char *variable,
+                               size_t *num_values, size_t *num_timesteps);
+uint8_t *binout_read_timed_u8(binout_file *bin_file, const char *variable,
+                              size_t *num_values, size_t *num_timesteps);
+uint16_t *binout_read_timed_u16(binout_file *bin_file, const char *variable,
+                                size_t *num_values, size_t *num_timesteps);
+uint32_t *binout_read_timed_u32(binout_file *bin_file, const char *variable,
+                                size_t *num_values, size_t *num_timesteps);
+uint64_t *binout_read_timed_u64(binout_file *bin_file, const char *variable,
+                                size_t *num_values, size_t *num_timesteps);
 float *binout_read_timed_f32(binout_file *bin_file, const char *variable,
                              size_t *num_values, size_t *num_timesteps);
 double *binout_read_timed_f64(binout_file *bin_file, const char *variable,

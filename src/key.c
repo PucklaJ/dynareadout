@@ -25,15 +25,13 @@
 
 #include "key.h"
 #include "binary_search.h"
+#include "line.h"
 #include "profiling.h"
 #include <errno.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#define KEY_COMMENT '$'
-#define LINE_WIDTH 80
 
 #define ERROR_MSG(msg)                                                         \
   const size_t error_msg_len = strlen(msg);                                    \
@@ -231,11 +229,10 @@ void key_file_parse_with_callback(const char *file_name,
     (*include_paths_ptr)[*num_include_paths_ptr - 1] = path_working_directory();
   }
 
-  extra_string line;
+  line_reader_t line_reader = new_line_reader(file);
   extra_string current_keyword_name;
   current_keyword_name.buffer[0] = '\0';
   current_keyword_name.extra = NULL;
-  line.extra = NULL;
 
   size_t current_keyword_length = 0;
   size_t current_keyword_line = (size_t)~0;
@@ -246,107 +243,15 @@ void key_file_parse_with_callback(const char *file_name,
   size_t current_multi_line_index = 0;
 
   /* Loop until all lines have been read or an error occurred*/
-  while (1) {
-    /* Clear extra without freeing the memory*/
-    if (line.extra) {
-      line.extra[0] = '\0';
-    }
-
-    size_t line_length = 0;
-
-    /* Find the new line*/
-    /* Read more data from the file until a new line has been found*/
-    size_t i = 0;
-    size_t comment_index = (size_t)~0;
-    /* Read the file in LINE_WIDTH sized chunks, but read LINE_WIDTH + 1
-     * characters for the first read, because a lot of lines will be exactly
-     * LINE_WIDTH characters long, therefore we read the new line directly in
-     * the first read chunk*/
-    int n = fread(line.buffer, 1, EXTRA_STRING_BUFFER_SIZE, file);
-    if ((n == 0 && feof(file)) || ferror(file)) {
-      break;
-    } else if (n < EXTRA_STRING_BUFFER_SIZE) {
-      line.buffer[n] = '\0';
-    }
-
-    /* ------------ LINE READING ------------*/
-    /* Loop until the next line has been read. After this loop the file is
-     * either at the beginning of the line after the
-     * next one, at EOF or has an error.*/
-    while (1) {
-      /* Look for the new line character and also look for the comment
-       * character*/
-      size_t j = 0;
-      while (j < (size_t)n) {
-        const char c = extra_string_get(&line, i);
-        if (c == '\n') {
-          break;
-        }
-        if (c == KEY_COMMENT && comment_index == (size_t)~0) {
-          comment_index = i;
-        }
-
-        i++;
-        j++;
-      }
-
-      line_length = i;
-
-      if (j == (size_t)n) {
-        /* New line is exactly after the line (perfect!)*/
-        if ((i < EXTRA_STRING_BUFFER_SIZE || line.extra != NULL) &&
-            extra_string_get(&line, i) == '\n') {
-          extra_string_set(&line, i, '\0');
-          break;
-        }
-
-        /* We still need to read more to find the new line*/
-      } else if (j != 0) {
-        /* New line is somewhere within LINE_WIDTH (or EXTRA_STRING_BUFFER_SIZE)
-         * characters*/
-        /* Seek back to the beginning of the line that has been "accidentally"
-         * read*/
-        fseek(file, j - n + 1, SEEK_CUR);
-        extra_string_set(&line, i, '\0');
-        break;
-      } else {
-        /* The first character that we read is a new line. Most of the time this
-         * means that
-         * 1. The line is exactly EXTRA_STRING_BUFFER_SIZE characters long or
-         * 2. The line is empty*/
-        fseek(file, 1 - n, SEEK_CUR);
-        extra_string_set(&line, i, '\0');
-        break;
-      }
-
-      /* The file ends without a new line*/
-      if (n < EXTRA_STRING_BUFFER_SIZE) {
-        break;
-      }
-
-      /* Read the next chunk of the file*/
-      line.extra = realloc(line.extra, i * sizeof(char));
-      n = fread(&line.extra[i - EXTRA_STRING_BUFFER_SIZE], 1,
-                EXTRA_STRING_BUFFER_SIZE, file);
-      if ((n == 0 && feof(file)) || ferror(file)) {
-        line.extra[i - EXTRA_STRING_BUFFER_SIZE] = '\0';
-        break;
-      }
-    }
-    /* -------------------------------------------- */
-
-    if ((line_length == 0 && n == 0 && feof(file)) || ferror(file)) {
-      break;
-    }
-
+  while (read_line(&line_reader)) {
     line_count++;
 
     /* Check if the line starts with a comment or contains a comment character*/
-    if (comment_index == 0) {
+    if (line_reader.comment_index == 0) {
       /* The entire line is a comment. Ignore it.*/
       continue;
-    } else if (comment_index != (size_t)~0) {
-      extra_string_set(&line, comment_index, '\0');
+    } else if (line_reader.comment_index != (size_t)~0) {
+      extra_string_set(&line_reader.line, line_reader.comment_index, '\0');
     }
 
     /* ------- 🐉 Here be parsings 🐉 --------- */
@@ -354,12 +259,12 @@ void key_file_parse_with_callback(const char *file_name,
     /* Check if the line is a keyword (starts with '*')
      * Support lines being preceded by ' ' */
     int is_keyword = 0;
-    if (line_length != 0) {
-      i = 0;
-      while (extra_string_get(&line, i) == ' ') {
+    size_t i = 0;
+    if (line_reader.line_length != 0) {
+      while (extra_string_get(&line_reader.line, i) == ' ') {
         i++;
       }
-      is_keyword = extra_string_get(&line, i) == '*';
+      is_keyword = extra_string_get(&line_reader.line, i) == '*';
     }
 
     /* ------ 🔑 Keyword Parsing 🔑 --------- */
@@ -385,7 +290,8 @@ void key_file_parse_with_callback(const char *file_name,
         }
       }
 
-      extra_string_copy(&current_keyword_name, &line, line_length, i + 1);
+      extra_string_copy(&current_keyword_name, &line_reader.line,
+                        line_reader.line_length, i + 1);
 
       /* Compute the length of the keyword*/
       current_keyword_length = 0;
@@ -411,12 +317,13 @@ void key_file_parse_with_callback(const char *file_name,
     } else {
       /* -------- 🃏 Card Parsing 🃏 ----------*/
       card_t card;
-      if (line_length < EXTRA_STRING_BUFFER_SIZE) {
-        card.string = line.buffer;
+      if (line_reader.line_length < EXTRA_STRING_BUFFER_SIZE) {
+        card.string = line_reader.line.buffer;
       } else {
-        card.string = malloc(line_length + 1);
-        extra_string_copy_to_string(card.string, &line, line_length);
-        card.string[line_length] = '\0';
+        card.string = malloc(line_reader.line_length + 1);
+        extra_string_copy_to_string(card.string, &line_reader.line,
+                                    line_reader.line_length);
+        card.string[line_reader.line_length] = '\0';
       }
 
       /* -------- ⛅ Include Parsing ⛅ -------*/
@@ -427,7 +334,7 @@ void key_file_parse_with_callback(const char *file_name,
           /* Parse all the different INCLUDE keywords*/
           if (extra_string_compare(&current_keyword_name, "INCLUDE") == 0) {
             _parse_include_file_name_card(
-                &card, &card_index, &line, line_length,
+                &card, &card_index, &line_reader.line, line_reader.line_length,
                 &current_multi_line_string, &current_multi_line_index,
                 num_include_paths_ptr, include_paths_ptr, callback, user_data,
                 &error_stack, &error_stack_size, &error_ptr, file_name,
@@ -439,9 +346,9 @@ void key_file_parse_with_callback(const char *file_name,
              * *INCLUDE Remark 2, p. 2690)*/
             if (!_parse_multi_line_string(&current_multi_line_string,
                                           &current_multi_line_index, &card,
-                                          line_length)) {
+                                          line_reader.line_length)) {
               /* continue without calling the callback for the card*/
-              if (card.string != line.buffer) {
+              if (card.string != line_reader.line.buffer) {
                 free(card.string);
               }
               continue;
@@ -457,7 +364,7 @@ void key_file_parse_with_callback(const char *file_name,
             current_multi_line_index = 0;
 
             /* continue without calling the callback for the card*/
-            if (card.string != line.buffer) {
+            if (card.string != line_reader.line.buffer) {
               free(card.string);
             }
 
@@ -469,9 +376,9 @@ void key_file_parse_with_callback(const char *file_name,
              * *INCLUDE Remark 2, p. 2690)*/
             if (!_parse_multi_line_string(&current_multi_line_string,
                                           &current_multi_line_index, &card,
-                                          line_length)) {
+                                          line_reader.line_length)) {
               /* continue without calling the callback for the card*/
-              if (card.string != line.buffer) {
+              if (card.string != line_reader.line.buffer) {
                 free(card.string);
               }
               continue;
@@ -490,7 +397,7 @@ void key_file_parse_with_callback(const char *file_name,
                 full_include_path_name;
 
             /* continue without calling the callback for the card*/
-            if (card.string != line.buffer) {
+            if (card.string != line_reader.line.buffer) {
               free(card.string);
             }
 
@@ -501,11 +408,12 @@ void key_file_parse_with_callback(const char *file_name,
             /* Parse the first card like a normal INCLUDE*/
             if (card_index == 0) {
               _parse_include_file_name_card(
-                  &card, &card_index, &line, line_length,
-                  &current_multi_line_string, &current_multi_line_index,
-                  num_include_paths_ptr, include_paths_ptr, callback, user_data,
-                  &error_stack, &error_stack_size, &error_ptr, file_name,
-                  line_count, root_folder_ptr);
+                  &card, &card_index, &line_reader.line,
+                  line_reader.line_length, &current_multi_line_string,
+                  &current_multi_line_index, num_include_paths_ptr,
+                  include_paths_ptr, callback, user_data, &error_stack,
+                  &error_stack_size, &error_ptr, file_name, line_count,
+                  root_folder_ptr);
               continue;
             } else {
               ERROR_F(
@@ -514,7 +422,7 @@ void key_file_parse_with_callback(const char *file_name,
             }
 
             /* continue without calling the callback for the card*/
-            if (card.string != line.buffer) {
+            if (card.string != line_reader.line.buffer) {
               free(card.string);
             }
 
@@ -525,11 +433,12 @@ void key_file_parse_with_callback(const char *file_name,
             /* Parse the first card like a normal INCLUDE*/
             if (card_index == 0) {
               _parse_include_file_name_card(
-                  &card, &card_index, &line, line_length,
-                  &current_multi_line_string, &current_multi_line_index,
-                  num_include_paths_ptr, include_paths_ptr, callback, user_data,
-                  &error_stack, &error_stack_size, &error_ptr, file_name,
-                  line_count, root_folder_ptr);
+                  &card, &card_index, &line_reader.line,
+                  line_reader.line_length, &current_multi_line_string,
+                  &current_multi_line_index, num_include_paths_ptr,
+                  include_paths_ptr, callback, user_data, &error_stack,
+                  &error_stack_size, &error_ptr, file_name, line_count,
+                  root_folder_ptr);
               continue;
             } else if (card_index == 1) {
               /* Ignore the card it is irrelevant for the parsing*/
@@ -540,7 +449,7 @@ void key_file_parse_with_callback(const char *file_name,
             }
 
             /* continue without calling the callback for the card*/
-            if (card.string != line.buffer) {
+            if (card.string != line_reader.line.buffer) {
               free(card.string);
             }
 
@@ -572,9 +481,9 @@ void key_file_parse_with_callback(const char *file_name,
                                    "INCLUDE_PATH_RELATIVE") == 0) {
             if (!_parse_multi_line_string(&current_multi_line_string,
                                           &current_multi_line_index, &card,
-                                          line_length)) {
+                                          line_reader.line_length)) {
               /* continue without calling the callback for the card*/
-              if (card.string != line.buffer) {
+              if (card.string != line_reader.line.buffer) {
                 free(card.string);
               }
               continue;
@@ -591,9 +500,9 @@ void key_file_parse_with_callback(const char *file_name,
             if (card_index == 0) {
               if (!_parse_multi_line_string(&current_multi_line_string,
                                             &current_multi_line_index, &card,
-                                            line_length)) {
+                                            line_reader.line_length)) {
                 /* continue without calling the callback for the card*/
-                if (card.string != line.buffer) {
+                if (card.string != line_reader.line.buffer) {
                   free(card.string);
                 }
                 continue;
@@ -605,7 +514,7 @@ void key_file_parse_with_callback(const char *file_name,
       /* ------- ⛅ End of Include Parsing ⛅ -------*/
 
       if (current_multi_line_string) {
-        if (card.string != line.buffer) {
+        if (card.string != line_reader.line.buffer) {
           free(card.string);
         }
         card.string = current_multi_line_string;
@@ -624,7 +533,7 @@ void key_file_parse_with_callback(const char *file_name,
       callback(file_name, line_count, keyword_name, &card, card_index,
                user_data);
 
-      if (card.string != line.buffer) {
+      if (card.string != line_reader.line.buffer) {
         free(card.string);
         current_multi_line_string = NULL;
       }
@@ -694,7 +603,7 @@ void key_file_parse_with_callback(const char *file_name,
     free(root_folder_ptr);
   }
 
-  free(line.extra);
+  free(line_reader.line.extra);
   free(current_keyword_name.extra);
 
   fclose(file);

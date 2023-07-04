@@ -368,6 +368,94 @@ double *binout_read_f64(binout_file *bin_file, const char *path_to_variable,
   return data;
 }
 
+int8_t *binout_read_timed_i8(binout_file *bin_file, const char *variable,
+                             size_t *num_values, size_t *num_timesteps) {
+  BEGIN_PROFILE_FUNC();
+
+  int8_t *data = (int8_t *)_binout_read_timed(bin_file, variable, num_values,
+                                              num_timesteps, BINOUT_TYPE_INT8);
+
+  END_PROFILE_FUNC();
+  return data;
+}
+
+int16_t *binout_read_timed_i16(binout_file *bin_file, const char *variable,
+                               size_t *num_values, size_t *num_timesteps) {
+  BEGIN_PROFILE_FUNC();
+
+  int16_t *data = (int16_t *)_binout_read_timed(
+      bin_file, variable, num_values, num_timesteps, BINOUT_TYPE_INT16);
+
+  END_PROFILE_FUNC();
+  return data;
+}
+
+int32_t *binout_read_timed_i32(binout_file *bin_file, const char *variable,
+                               size_t *num_values, size_t *num_timesteps) {
+  BEGIN_PROFILE_FUNC();
+
+  int32_t *data = (int32_t *)_binout_read_timed(
+      bin_file, variable, num_values, num_timesteps, BINOUT_TYPE_INT32);
+
+  END_PROFILE_FUNC();
+  return data;
+}
+
+int64_t *binout_read_timed_i64(binout_file *bin_file, const char *variable,
+                               size_t *num_values, size_t *num_timesteps) {
+  BEGIN_PROFILE_FUNC();
+
+  int64_t *data = (int64_t *)_binout_read_timed(
+      bin_file, variable, num_values, num_timesteps, BINOUT_TYPE_INT64);
+
+  END_PROFILE_FUNC();
+  return data;
+}
+
+uint8_t *binout_read_timed_u8(binout_file *bin_file, const char *variable,
+                              size_t *num_values, size_t *num_timesteps) {
+  BEGIN_PROFILE_FUNC();
+
+  uint8_t *data = (uint8_t *)_binout_read_timed(
+      bin_file, variable, num_values, num_timesteps, BINOUT_TYPE_UINT8);
+
+  END_PROFILE_FUNC();
+  return data;
+}
+
+uint16_t *binout_read_timed_u16(binout_file *bin_file, const char *variable,
+                                size_t *num_values, size_t *num_timesteps) {
+  BEGIN_PROFILE_FUNC();
+
+  uint16_t *data = (uint16_t *)_binout_read_timed(
+      bin_file, variable, num_values, num_timesteps, BINOUT_TYPE_UINT16);
+
+  END_PROFILE_FUNC();
+  return data;
+}
+
+uint32_t *binout_read_timed_u32(binout_file *bin_file, const char *variable,
+                                size_t *num_values, size_t *num_timesteps) {
+  BEGIN_PROFILE_FUNC();
+
+  uint32_t *data = (uint32_t *)_binout_read_timed(
+      bin_file, variable, num_values, num_timesteps, BINOUT_TYPE_UINT32);
+
+  END_PROFILE_FUNC();
+  return data;
+}
+
+uint64_t *binout_read_timed_u64(binout_file *bin_file, const char *variable,
+                                size_t *num_values, size_t *num_timesteps) {
+  BEGIN_PROFILE_FUNC();
+
+  uint64_t *data = (uint64_t *)_binout_read_timed(
+      bin_file, variable, num_values, num_timesteps, BINOUT_TYPE_UINT64);
+
+  END_PROFILE_FUNC();
+  return data;
+}
+
 float *binout_read_timed_f32(binout_file *bin_file, const char *variable,
                              size_t *num_values, size_t *num_timesteps) {
   BEGIN_PROFILE_FUNC();

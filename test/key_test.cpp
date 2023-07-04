@@ -30,6 +30,7 @@
 #include <extra_string.h>
 #include <iostream>
 #include <key.h>
+#include <line.h>
 #ifdef BUILD_CPP
 #include <key.hpp>
 #endif
@@ -650,6 +651,99 @@ TEST_CASE("key_file_parse_no_includes") {
         "aaaaaaaaaaaaaaaaaaaaaaaaaa");
 
   key_file_free(keywords, num_keywords);
+}
+
+TEST_CASE("carriage_return") {
+  size_t num_keywords;
+  char *error_string;
+  keyword_t *keywords = key_file_parse("test_data/carriage_return.k",
+                                       &num_keywords, 0, &error_string);
+  if (error_string) {
+    FAIL(error_string);
+    free(error_string);
+    return;
+  }
+
+  CHECK(key_file_get(keywords, num_keywords, "TEST_KEYWORD_CPP", 0) != NULL);
+  CHECK(key_file_get(keywords, num_keywords, "I_AM_NOT_HERE", 0) == NULL);
+
+  keyword_t *kw = key_file_get(keywords, num_keywords, "TEST_KEYWORD", 0);
+  REQUIRE(kw != NULL);
+  REQUIRE(kw->num_cards >= 2);
+
+  card_t *card = &kw->cards[0];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  CHECK(card_parse_float32(card) == 7.89f);
+
+  card = &kw->cards[1];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  CHECK(card_parse_float32(card) == 12E1f);
+
+  kw = key_file_get(keywords, num_keywords, "KEYWORD", 0);
+  REQUIRE(kw != NULL);
+  REQUIRE(kw->num_cards >= 1);
+
+  card = &kw->cards[0];
+  char *keyword_value = card_parse_whole_no_trim(card);
+  CHECK(keyword_value ==
+        "Hello World this is a file that is used to test the line reader "
+        "and also if it supports carriage return which is necessary for "
+        "windows because this operating system uses carriage return plus "
+        "newline at their end of lines in files instead of just new line "
+        "like unix based operating system are doing");
+  free(keyword_value);
+
+  key_file_free(keywords, num_keywords);
+}
+
+TEST_CASE("read_line") {
+  FILE *file = fopen("test_data/carriage_return.k", "rb");
+  if (!file) {
+    FAIL(strerror(errno));
+    return;
+  }
+
+  line_reader_t lr = new_line_reader(file);
+
+  CHECK(read_line(&lr) != 0);
+  CHECK(extra_string_compare(&lr.line,
+                             "$# LS-DYNA Keyword file created by "
+                             "LS-PrePost(R) V4.8.17 - 24Jun2021") == 0);
+  CHECK(read_line(&lr) != 0);
+  CHECK(extra_string_compare(&lr.line,
+                             "                                 Start of "
+                             "File                        ") == 0);
+  CHECK(read_line(&lr) != 0);
+  CHECK(extra_string_compare(&lr.line,
+                             "$# Created on Nov-17-2022 (14:53:53)") == 0);
+  CHECK(read_line(&lr) != 0);
+  CHECK(extra_string_compare(&lr.line, "*TEST_KEYWORD_CPP") == 0);
+  CHECK(read_line(&lr) != 0);
+  CHECK(extra_string_compare(&lr.line, "-10") == 0);
+  CHECK(read_line(&lr) != 0);
+  CHECK(extra_string_compare(&lr.line, "*KEYWORD") == 0);
+  CHECK(read_line(&lr) != 0);
+  CHECK(extra_string_compare(
+            &lr.line,
+            "Hello World this is a file that is used to test the line reader "
+            "and also if it supports carriage return which is necessary for "
+            "windows because this operating system uses carriage return plus "
+            "newline at their end of lines in files instead of just new line "
+            "like unix based operating system are doing") == 0);
+
+  size_t i = 0;
+  while (i < 15) {
+    CHECK(read_line(&lr) != 0);
+    i++;
+  }
+  CHECK(extra_string_compare(&lr.line, "123") == 0);
+  CHECK(read_line(&lr) == 0);
+
+  if (lr.line.extra) {
+    free(lr.line.extra);
+  }
+
+  fclose(file);
 }
 
 #ifdef BUILD_CPP

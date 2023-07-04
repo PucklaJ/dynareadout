@@ -23,36 +23,39 @@
  * 3. This notice may not be removed or altered from any source distribution.
  ************************************************************************************/
 
-#ifndef EXTRA_STRING_H
-#define EXTRA_STRING_H
-#include <stddef.h>
+#ifndef LINE_H
+#define LINE_H
+
+#include "extra_string.h"
+#include <stdio.h>
+
+#define LINE_READER_BUFFER_SIZE (1024 * 1024) /* 1MB */
+
+/* All the state for the read_line function*/
+typedef struct {
+  FILE *file;
+  extra_string line; /* This stores the read line after a read_line call*/
+  size_t line_length;
+  size_t comment_index; /* An index into line to where a comment can be found.
+                           Is ~0 if no comment has been found*/
+
+  char buffer[LINE_READER_BUFFER_SIZE];
+  size_t buffer_index;
+  size_t bytes_read;
+  size_t extra_capacity;
+} line_reader_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* A string which allocates a part on the stack and allocates more on the heap
- * if it needs "extra" memory*/
-#define EXTRA_STRING_BUFFER_SIZE                                               \
-  (80 + 2) /* LENGTH_OF_DYNA_LINE + carriage return (\r) and newline (\n)*/
-typedef struct {
-  char buffer[EXTRA_STRING_BUFFER_SIZE];
-  char *extra;
-} extra_string;
+/* Initialise all variables of the line reader*/
+line_reader_t new_line_reader(FILE *file);
 
-char extra_string_get(const extra_string *str, size_t index);
-
-void extra_string_set(extra_string *str, size_t index, char value);
-
-void extra_string_copy(extra_string *dst, const extra_string *src,
-                       size_t src_len, size_t offset);
-
-void extra_string_copy_to_string(char *dst, const extra_string *src,
-                                 size_t dst_len);
-
-int extra_string_compare(const extra_string *lhs, const char *rhs);
-
-int extra_string_starts_with(const extra_string *str, const char *prefix);
+/* Reads from file until it encounters the next new line and stores the
+ * resulting string in line. Also supports carriage return. Returns 0 if the
+ * file has been completely parsed and non 0 if the line can be processed*/
+int read_line(line_reader_t *lr);
 
 #ifdef __cplusplus
 }

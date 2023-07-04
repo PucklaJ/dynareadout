@@ -238,6 +238,20 @@ TEST_CASE("binout0000") {
 
   free(y_displacement);
 
+  int32_t *cycle = binout_read_timed_i32(&bin_file, "/nodout/cycle", &num_nodes,
+                                         &num_timesteps);
+  REQUIRE(cycle);
+  CHECK(num_nodes == 1);
+  REQUIRE(num_timesteps >= 601);
+
+  CHECK(cycle[0 * num_nodes + 0] == 1);
+  CHECK(cycle[1 * num_nodes + 0] == 763);
+  CHECK(cycle[2 * num_nodes + 0] == 1526);
+  CHECK(cycle[99 * num_nodes + 0] == 75497);
+  CHECK(cycle[600 * num_nodes + 0] == 457554);
+
+  free(cycle);
+
   binout_close(&bin_file);
 }
 
@@ -350,6 +364,18 @@ TEST_CASE("binout0000C++") {
         }
       }
     }
+  }
+
+  {
+    const auto cycle = bin_file.read_timed<int32_t>("/nodout/cycle");
+    CHECK(cycle.size() == 601);
+    CHECK(cycle[0].size() == 1);
+
+    CHECK(cycle[0][0] == 1);
+    CHECK(cycle[1][0] == 763);
+    CHECK(cycle[2][0] == 1526);
+    CHECK(cycle[99][0] == 75497);
+    CHECK(cycle[600][0] == 457554);
   }
 }
 

@@ -48,69 +48,85 @@ Binout_read(dro::Binout &self, std::string path) {
   bool timed;
   const auto real_path = self.simple_path_to_real(path, type_id, timed);
 
-  // TODO: Create read_timed implementations for all types
-  if (timed && (type_id != dro::BinoutType::Float32 &&
-                type_id != dro::BinoutType::Float64)) {
-    char buffer[1024];
-    sprintf(buffer,
-            "Only float and double values can be read as timed. \"%s\" is %s",
-            path.c_str(),
-            _binout_get_type_name(static_cast<uint64_t>(type_id)));
-    throw dro::Binout::Exception(
-        dro::Binout::Exception::ErrorString(buffer, false));
-  }
+  if (timed) {
+    char *error_buffer;
 
-  switch (type_id) {
-  case dro::BinoutType::Int8:
-    return self.read<int8_t>(real_path);
-  case dro::BinoutType::Int16:
-    return self.read<int16_t>(real_path);
-  case dro::BinoutType::Int32:
-    return self.read<int32_t>(real_path);
-  case dro::BinoutType::Int64:
-    return self.read<int64_t>(real_path);
-  case dro::BinoutType::Uint8:
-    return self.read<uint8_t>(real_path);
-  case dro::BinoutType::Uint16:
-    return self.read<uint16_t>(real_path);
-  case dro::BinoutType::Uint32:
-    return self.read<uint32_t>(real_path);
-  case dro::BinoutType::Uint64:
-    return self.read<uint64_t>(real_path);
-  case dro::BinoutType::Float32:
-    if (timed) {
+    switch (type_id) {
+    case dro::BinoutType::Int8:
+      return self.read_timed<int8_t>(real_path);
+    case dro::BinoutType::Int16:
+      return self.read_timed<int16_t>(real_path);
+    case dro::BinoutType::Int32:
+      return self.read_timed<int32_t>(real_path);
+    case dro::BinoutType::Int64:
+      return self.read_timed<int64_t>(real_path);
+    case dro::BinoutType::Uint8:
+      return self.read_timed<uint8_t>(real_path);
+    case dro::BinoutType::Uint16:
+      return self.read_timed<uint16_t>(real_path);
+    case dro::BinoutType::Uint32:
+      return self.read_timed<uint32_t>(real_path);
+    case dro::BinoutType::Uint64:
+      return self.read_timed<uint64_t>(real_path);
+    case dro::BinoutType::Float32:
       return self.read_timed<float>(real_path);
-    }
-    return self.read<float>(real_path);
-  case dro::BinoutType::Float64:
-    if (timed) {
+    case dro::BinoutType::Float64:
       return self.read_timed<double>(real_path);
+    default:
+      error_buffer = (char *)malloc(1024);
+      sprintf(error_buffer,
+              "Unable to read \"%s\" because it has an invalid type",
+              path.c_str());
+      throw dro::Binout::Exception(
+          dro::Binout::Exception::ErrorString(error_buffer));
     }
-    return self.read<double>(real_path);
-  default:
-    // If the type is invalid it's likely to be a folder and then the children
-    // should be returned
-    auto children = self.get_children(real_path);
-    if (children[children.size() - 1] == "metadata" &&
-        children[0] == "d000001") {
-      const auto metadata = real_path + "/metadata";
-      const auto d000001 = real_path + "/d000001";
+  } else {
+    switch (type_id) {
+    case dro::BinoutType::Int8:
+      return self.read<int8_t>(real_path);
+    case dro::BinoutType::Int16:
+      return self.read<int16_t>(real_path);
+    case dro::BinoutType::Int32:
+      return self.read<int32_t>(real_path);
+    case dro::BinoutType::Int64:
+      return self.read<int64_t>(real_path);
+    case dro::BinoutType::Uint8:
+      return self.read<uint8_t>(real_path);
+    case dro::BinoutType::Uint16:
+      return self.read<uint16_t>(real_path);
+    case dro::BinoutType::Uint32:
+      return self.read<uint32_t>(real_path);
+    case dro::BinoutType::Uint64:
+      return self.read<uint64_t>(real_path);
+    case dro::BinoutType::Float32:
+      return self.read<float>(real_path);
+    case dro::BinoutType::Float64:
+      return self.read<double>(real_path);
+    default:
+      // If the type is invalid it's likely to be a folder and then the children
+      // should be returned
+      auto children = self.get_children(real_path);
+      if (children[children.size() - 1] == "metadata" &&
+          children[0] == "d000001") {
+        const auto metadata = real_path + "/metadata";
+        const auto d000001 = real_path + "/d000001";
 
-      auto metadata_children = self.get_children(metadata);
-      auto d000001_children = self.get_children(d000001);
+        auto metadata_children = self.get_children(metadata);
+        auto d000001_children = self.get_children(d000001);
 
-      std::move(std::make_move_iterator(d000001_children.begin()),
-                std::make_move_iterator(d000001_children.end()),
-                std::back_inserter(metadata_children));
+        std::move(std::make_move_iterator(d000001_children.begin()),
+                  std::make_move_iterator(d000001_children.end()),
+                  std::back_inserter(metadata_children));
 
-      std::sort(metadata_children.begin(), metadata_children.end(),
-                [](const auto &lhs, const auto &rhs) {
-                  return strcmp(lhs.data(), rhs.data()) < 0;
-                });
+        std::sort(metadata_children.begin(), metadata_children.end(),
+                  [](const auto &lhs, const auto &rhs) {
+                    return strcmp(lhs.data(), rhs.data()) < 0;
+                  });
 
-      return metadata_children;
+        return metadata_children;
+      }
+      return children;
     }
-    return children;
   }
 }
 
