@@ -148,31 +148,11 @@ void add_binout_library_to_module(py::module_ &m) {
 
   py::class_<dro::Binout>(m, "Binout")
       .def(py::init<const std::string &>())
-      .def("read", &Binout_read)
-      .def("read_i8", &dro::Binout::read<int8_t>, "For internal use",
-           py::arg("path_to_variable"))
-      .def("read_u8", &dro::Binout::read<uint8_t>, "For internal use",
-           py::arg("path_to_variable"))
-      .def("read_i16", &dro::Binout::read<int16_t>, "For internal use",
-           py::arg("path_to_variable"))
-      .def("read_u16", &dro::Binout::read<uint16_t>, "For internal use",
-           py::arg("path_to_variable"))
-      .def("read_i32", &dro::Binout::read<int32_t>, "For internal use",
-           py::arg("path_to_variable"))
-      .def("read_u32", &dro::Binout::read<uint32_t>, "For internal use",
-           py::arg("path_to_variable"))
-      .def("read_i64", &dro::Binout::read<int64_t>, "For internal use",
-           py::arg("path_to_variable"))
-      .def("read_u64", &dro::Binout::read<uint64_t>, "For internal use",
-           py::arg("path_to_variable"))
-      .def("read_f32", &dro::Binout::read<float>, "For internal use",
-           py::arg("path_to_variable"))
-      .def("read_f64", &dro::Binout::read<double>, "For internal use",
-           py::arg("path_to_variable"))
-      .def("read_timed_f32", &dro::Binout::read_timed<float>,
-           "For internal use", py::arg("path_to_variable"))
-      .def("read_timed_f64", &dro::Binout::read_timed<double>,
-           "For internal use", py::arg("path_to_variable"))
+      .def("read", &Binout_read,
+           "Read data from the file. This can return a 1D array or a 2D array "
+           "if the data under the path is timed (has multiple time steps e.g. "
+           "nodout/x_displacement)",
+           py::arg("path"))
       .def("get_type_id", &dro::Binout::get_type_id,
            "Returns the type id of the given variable.",
            py::arg("path_to_variable"))
@@ -188,30 +168,6 @@ void add_binout_library_to_module(py::module_ &m) {
            "steps. This method is used to get the time steps of one single "
            "folder (e.g. /nodout or /rcforc).",
            py::arg("path"))
-      .def(
-          "simple_path_to_real",
-          [](const dro::Binout &bin_file, const std::string &simple) {
-            dro::BinoutType type_id;
-            bool timed;
-
-            auto real_path =
-                bin_file.simple_path_to_real(simple, type_id, timed);
-
-            return std::make_tuple(std::move(real_path), type_id, timed);
-          },
-          "This takes a path that without metadata or dxxxxxx in it and "
-          "converts it into a path which can be given to the read_type and "
-          "read_timed functions. Returns the path that points to the correct "
-          "file or throws an exception if the file does not exist or the path "
-          "is invalid. The bool inside the tuple (timed) will be set to false "
-          "if it's a file of metadata and to true if it's a file of on of the "
-          "dxxxxxx folders which means that the returned path should be given "
-          "to the read_timed function. The BinoutType of the tuple (type_id) "
-          "will be set to the correct type id of the file. This is used "
-          "internally for the read method, so that a simpler path can be "
-          "provided. This method can be useful if writing an application that "
-          "gets a path from an user.",
-          py::arg("simple"))
 
       ;
 }
