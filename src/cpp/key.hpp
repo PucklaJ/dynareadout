@@ -55,9 +55,9 @@ public:
 
   // Initialises the parsing of the card
   void begin(uint8_t value_width = DEFAULT_VALUE_WIDTH) noexcept;
-  // Advance to the next value. Uses the value width from begin.
+  // Advance to the next value. Uses the value width from begin
   void next() noexcept;
-  // Advance to the next value. Uses the value width provided here.
+  // Advance to the next value. Uses the value width provided here
   void next(uint8_t value_width) noexcept;
   // Returns wether the card has been completely parsed. Breaks if incorrect
   // value widths have been supplied
@@ -282,8 +282,8 @@ public:
       String file_name, size_t line_number, String keyword_name,
       std::optional<Card> card, size_t card_index)>;
 
-  // Parses a LS Dyna key file for keywords and their respective cards. Returns
-  // an array keywords
+  // Parses an LS Dyna key file for keywords and their respective cards. Returns
+  // an array of keywords
   // parse_includes: tells the function wether to parse include files via the
   // *INCLUDE and similar keywords or if they should be added as regular
   // keywords to the array.

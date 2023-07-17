@@ -74,8 +74,13 @@ py::list python_card_parse_whole(dro::Card &self, py::list value_widths) {
 }
 
 void add_key_library_to_module(py::module_ &m) {
-  m.def("key_file_parse", &dro::KeyFile::parse, py::arg("file_name"),
-        py::arg("parse_includes") = true);
+  m.def("key_file_parse", &dro::KeyFile::parse,
+        "Parses an LS Dyna key file for keywords and their respective cards. "
+        "Returns an array of keywords.\nparse_includes: tells the function "
+        "wether "
+        "to parse include files via the *INCLUDE and similar keywords or if "
+        "they should be added as regular keywords to the array",
+        py::arg("file_name"), py::arg("parse_includes") = true);
 
   py::class_<dro::Keywords>(m, "Keywords")
       .def("__len__", &dro::Keywords::size)
@@ -96,16 +101,28 @@ void add_key_library_to_module(py::module_ &m) {
       ;
 
   py::class_<dro::Card>(m, "Card")
-      .def("begin", &dro::Card::begin,
+      .def("begin", &dro::Card::begin, "Initialises the parsing of the card",
            py::arg("value_width") = DEFAULT_VALUE_WIDTH)
-      .def("next", [](dro::Card &self) { self.next(); })
-      .def("next_width",
-           [](dro::Card &self, uint8_t value_width) { self.next(value_width); })
-      .def("done", &dro::Card::done)
-      .def("parse_i64",
-           [](const dro::Card &self) { return self.parse<int64_t>(); })
-      .def("parse_f64",
-           [](const dro::Card &self) { return self.parse<double>(); })
+      .def(
+          "next", [](dro::Card &self) { self.next(); },
+          "Advance to the next value. Uses the value width from begin")
+      .def(
+          "next_width",
+          [](dro::Card &self, uint8_t value_width) { self.next(value_width); },
+          "Advance to the next value. Uses the value width provided here")
+      .def("done", &dro::Card::done,
+           "Returns wether the card has been completely parsed. Breaks if "
+           "incorrect value widths have been supplied")
+      .def(
+          "parse_i64",
+          [](const dro::Card &self) { return self.parse<int64_t>(); },
+          "Parses the current value as an integer. Uses the value "
+          "width from begin")
+      .def(
+          "parse_f64",
+          [](const dro::Card &self) { return self.parse<double>(); },
+          "Parses the current value as a float. Uses the value "
+          "width from begin")
       .def(
           "parse_str",
           [](const dro::Card &self, bool trim) {
@@ -114,15 +131,24 @@ void add_key_library_to_module(py::module_ &m) {
             else
               return self.parse_string_no_trim<dro::String>();
           },
+          "Parses the current value as a string. Uses the value "
+          "width from begin. If trim is set to True then it trims leading and "
+          "trailing whitespace",
           py::arg("trim") = true)
-      .def("parse_width_i64",
-           [](const dro::Card &self, uint8_t value_width) {
-             return self.parse<int64_t>(value_width);
-           })
-      .def("parse_width_f64",
-           [](const dro::Card &self, uint8_t value_width) {
-             return self.parse<double>(value_width);
-           })
+      .def(
+          "parse_width_i64",
+          [](const dro::Card &self, uint8_t value_width) {
+            return self.parse<int64_t>(value_width);
+          },
+          "Parses the current value as an integer. Uses the value "
+          "width provided here")
+      .def(
+          "parse_width_f64",
+          [](const dro::Card &self, uint8_t value_width) {
+            return self.parse<double>(value_width);
+          },
+          "Parses the current value as a float. Uses the value "
+          "width provided here")
       .def(
           "parse_width_str",
           [](const dro::Card &self, uint8_t value_width, bool trim) {
@@ -131,8 +157,14 @@ void add_key_library_to_module(py::module_ &m) {
             else
               return self.parse_string_no_trim<dro::String>(value_width);
           },
+          "Parses the current value as a string. Uses the value "
+          "width provided here. If trim is set to True then it trims leading "
+          "and "
+          "trailing whitespace",
           py::arg("value_width"), py::arg("trim") = true)
       .def("parse_whole", &python_card_parse_whole,
+           "Parses all values of the card as the correct types. The width of "
+           "each value needs to be provided as a list through value_widths",
            py::arg("value_widths") = py::list())
       .def("__str__", &dro::Card::parse_string_whole_no_trim<dro::String>)
 
