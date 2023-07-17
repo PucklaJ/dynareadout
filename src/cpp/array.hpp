@@ -131,8 +131,8 @@ public:
   Array(const Array<T> &rhs) = delete;
   virtual ~Array() noexcept;
 
-  inline T &operator[](size_t index);
-  inline const T &operator[](size_t index) const;
+  virtual inline T &operator[](size_t index);
+  virtual inline const T &operator[](size_t index) const;
   Array<T> &operator=(Array<T> &&rhs) noexcept;
   bool operator==(const char *str2) const noexcept;
   bool operator==(const std::string &str2) const noexcept;
@@ -167,7 +167,8 @@ public:
   String(char *str, bool delete_data = true) noexcept
       : Array<char>(str, ~0, delete_data) {}
 
-  inline size_t size() const { return strlen(m_data); }
+  inline size_t size() const noexcept { return strlen(m_data); }
+  inline bool empty() const noexcept { return m_data[0] == '\0'; }
 
   std::string str() const noexcept { return std::string(m_data); }
 
@@ -195,6 +196,9 @@ public:
   bool operator==(const std::string &rhs) const noexcept {
     return operator==(rhs.c_str());
   }
+
+  inline char &operator[](size_t index) override;
+  inline const char &operator[](size_t index) const override;
 };
 
 class SizedString : public Array<char> {
@@ -245,13 +249,13 @@ public:
 
 static bool operator==(const String &str1, const SizedString &str2) noexcept {
   size_t i = 0;
-  for (; i < str1[i] != '\0' && i < str2.size(); i++) {
+  for (; i < str1.data()[i] != '\0' && i < str2.size(); i++) {
     if (str1[i] != str2[i]) {
       return false;
     }
   }
 
-  return i == str2.size() && str1[i] == '\0';
+  return i == str2.size() && str1.data()[i] == '\0';
 }
 
 inline bool operator==(const SizedString &str2, const String &str1) noexcept {
@@ -337,6 +341,26 @@ template <typename T> const T &Array<T>::operator[](size_t index) const {
   }
 
   return m_data[index];
+}
+
+char &String::operator[](size_t index) {
+  for (size_t i = 0; m_data[i] != '\0'; i++) {
+    if (i == index) {
+      return m_data[i];
+    }
+  }
+
+  throw std::runtime_error("Index out of Range");
+}
+
+const char &String::operator[](size_t index) const {
+  for (size_t i = 0; m_data[i] != '\0'; i++) {
+    if (i == index) {
+      return m_data[i];
+    }
+  }
+
+  throw std::runtime_error("Index out of Range");
 }
 
 template <typename T> Array<T> &Array<T>::operator=(Array<T> &&rhs) noexcept {
