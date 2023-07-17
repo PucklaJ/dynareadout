@@ -1277,43 +1277,40 @@ d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
     size_t o = 0;
     while (i < *num_solids) {
       /* Docs: page 33*/
-      const size_t start = o;
+      /* 1. Sigma-x (true stress in the global system)*/
       solids[i].sigma.x = data[o++];
+      /* 2. Sigma-y*/
       solids[i].sigma.y = data[o++];
+      /* 3. Sigma-z*/
       solids[i].sigma.z = data[o++];
+      /* 4. Sigma-xy*/
       solids[i].sigma.xy = data[o++];
+      /* 5. Sigma-yz*/
       solids[i].sigma.yz = data[o++];
+      /* 6. Sigma-zx*/
       solids[i].sigma.zx = data[o++];
+      /* 7. Effective plastic strain or material dependent variable*/
       solids[i].effective_plastic_strain = data[o++];
-      if (plot_file->control_data.neiph > 0) {
-        solids[i].extra1 = data[o++];
-        if (plot_file->control_data.neiph > 1) {
-          solids[i].extra2 = data[o++];
-          if (plot_file->control_data.neiph >= 6) {
-            /* We need -1 since we start by 0 and in the docs they start with
-             * 1*/
-            solids[i].epsilon.x =
-                data[start + 7 + plot_file->control_data.neiph - 5 - 1];
-            solids[i].epsilon.y =
-                data[start + 7 + plot_file->control_data.neiph - 4 - 1];
-            solids[i].epsilon.z =
-                data[start + 7 + plot_file->control_data.neiph - 3 - 1];
-            solids[i].epsilon.xy =
-                data[start + 7 + plot_file->control_data.neiph - 2 - 1];
-            solids[i].epsilon.yz =
-                data[start + 7 + plot_file->control_data.neiph - 1 - 1];
-            solids[i].epsilon.zx =
-                data[start + 7 + plot_file->control_data.neiph - 0 - 1];
-            o = start + 7 + plot_file->control_data.neiph;
-          } else {
-            memset(&solids[i].epsilon, 0, 6 * sizeof(double));
-          }
-        } else {
-          memset(&solids[i].extra2, 0, 7 * sizeof(double));
-        }
+      if (plot_file->control_data.neiph >= 6) {
+        /* We need -1 since we start by 0 and in the docs they start with
+         * 1*/
+        /* 7+NEIPH-5. Epsilon-x*/
+        solids[i].epsilon.x = data[o + plot_file->control_data.neiph - 5 - 1];
+        /* 7+NEIPH-4. Epsilon-y*/
+        solids[i].epsilon.y = data[o + plot_file->control_data.neiph - 4 - 1];
+        /* 7+NEIPH-3. Epsilon-z*/
+        solids[i].epsilon.z = data[o + plot_file->control_data.neiph - 3 - 1];
+        /* 7+NEIPH-2. Epsilon-xy*/
+        solids[i].epsilon.xy = data[o + plot_file->control_data.neiph - 2 - 1];
+        /* 7+NEIPH-1. Epsilon-yz*/
+        solids[i].epsilon.yz = data[o + plot_file->control_data.neiph - 1 - 1];
+        /* 7+NEIPH. Epsilon-zx*/
+        solids[i].epsilon.zx = data[o + plot_file->control_data.neiph - 0 - 1];
       } else {
-        memset(&solids[i].extra1, 0, 8 * sizeof(double));
+        memset(&solids[i].epsilon, 0, 6 * sizeof(double));
       }
+
+      o += plot_file->control_data.neiph;
 
       i++;
     }
@@ -1345,30 +1342,20 @@ d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
     size_t o = 0;
     while (i < *num_solids) {
       /* Docs: page 33*/
-      const size_t start = o;
       /* We can just copy the first 7 values*/
       memcpy(&solids[i], &data[o], 7 * sizeof(double));
       o += 7;
-      if (plot_file->control_data.neiph > 0) {
-        solids[i].extra1 = data[o++];
-        if (plot_file->control_data.neiph > 1) {
-          solids[i].extra2 = data[o++];
-          if (plot_file->control_data.neiph >= 6) {
-            /* We need -1 since we start by 0 and in the docs they start with
-             * 1*/
-            memcpy(&solids[i].epsilon,
-                   &data[start + 7 + plot_file->control_data.neiph - 5 - 1],
-                   6 * sizeof(double));
-            o = start + 7 + plot_file->control_data.neiph;
-          } else {
-            memset(&solids[i].epsilon, 0, 6 * sizeof(double));
-          }
-        } else {
-          memset(&solids[i].extra2, 0, 7 * sizeof(double));
-        }
+      if (plot_file->control_data.neiph >= 6) {
+        /* We need -1 since we start by 0 and in the docs they start with
+         * 1*/
+        memcpy(&solids[i].epsilon,
+               &data[o + plot_file->control_data.neiph - 5 - 1],
+               6 * sizeof(double));
       } else {
-        memset(&solids[i].extra1, 0, 8 * sizeof(double));
+        memset(&solids[i].epsilon, 0, 6 * sizeof(double));
       }
+
+      o += plot_file->control_data.neiph;
 
       i++;
     }

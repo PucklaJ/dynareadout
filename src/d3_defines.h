@@ -25,6 +25,7 @@
 
 #ifndef D3_DEFINES_H
 #define D3_DEFINES_H
+#include <stddef.h>
 #include <stdint.h>
 #ifdef __cplusplus
 #include <array>
@@ -121,8 +122,6 @@ typedef struct {
     double effective_plastic_strain;
     double material_dependent_value;
   };
-  double extra1;
-  double extra2;
   union {
     d3plot_tensor epsilon;
     d3plot_tensor strain;
