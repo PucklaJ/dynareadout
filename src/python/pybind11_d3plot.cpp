@@ -50,11 +50,20 @@ inline void add_d3plot_arrays_to_module(py::module_ &m) {
              }
            })
       .def("get_mid_history_variables",
-           &dro::D3plotShellsState::get_mid_history_variables)
+           &dro::D3plotShellsState::get_mid_history_variables,
+           "Returns the history variables for the mid surface of the shell "
+           "under index",
+           py::arg("index"))
       .def("get_inner_history_variables",
-           &dro::D3plotShellsState::get_inner_history_variables)
+           &dro::D3plotShellsState::get_inner_history_variables,
+           "Returns the history variables for the inner surface of the shell "
+           "under index",
+           py::arg("index"))
       .def("get_outer_history_variables",
-           &dro::D3plotShellsState::get_outer_history_variables)
+           &dro::D3plotShellsState::get_outer_history_variables,
+           "Returns the history variables for the outer surface of the shell "
+           "under index",
+           py::arg("index"))
 
       ;
 
@@ -70,11 +79,20 @@ inline void add_d3plot_arrays_to_module(py::module_ &m) {
              }
            })
       .def("get_mid_history_variables",
-           &dro::D3plotThickShellsState::get_mid_history_variables)
+           &dro::D3plotThickShellsState::get_mid_history_variables,
+           "Returns the history variables of the mid surface of the thick "
+           "shell under index",
+           py::arg("index"))
       .def("get_inner_history_variables",
-           &dro::D3plotThickShellsState::get_inner_history_variables)
+           &dro::D3plotThickShellsState::get_inner_history_variables,
+           "Returns the history variables of the inner surface of the thick "
+           "shell under index",
+           py::arg("index"))
       .def("get_outer_history_variables",
-           &dro::D3plotThickShellsState::get_outer_history_variables)
+           &dro::D3plotThickShellsState::get_outer_history_variables,
+           "Returns the history variables of the outer surface of the thick "
+           "shell under index",
+           py::arg("index"))
 
       ;
 }
@@ -83,24 +101,36 @@ void add_d3plot_library_to_module(py::module_ &m) {
   add_d3plot_arrays_to_module(m);
 
   py::class_<d3plot_solid_con>(m, "d3plot_solid_con")
-      .def_readonly("node_indices", &d3plot_solid_con::node_indices)
-      .def_readonly("material_index", &d3plot_solid_con::material_index)
+      .def_readonly(
+          "node_indices", &d3plot_solid_con::node_indices,
+          "Stores indices into the node_ids, node_coords, etc. arrays")
+      .def_readonly("material_index", &d3plot_solid_con::material_index,
+                    "Index into the parts (this those indeed refer to parts "
+                    "even though the documentation does not say so)")
       .def("__str__", &dro::stream_to_string<d3plot_solid_con>)
 
       ;
 
   py::class_<d3plot_beam_con>(m, "d3plot_beam_con")
-      .def_readonly("node_indices", &d3plot_beam_con::node_indices)
+      .def_readonly(
+          "node_indices", &d3plot_beam_con::node_indices,
+          "Stores indices into the node_ids, node_coords, etc. arrays")
       .def_readonly("orientation_node_index",
                     &d3plot_beam_con::orientation_node_index)
-      .def_readonly("material_index", &d3plot_beam_con::material_index)
+      .def_readonly("material_index", &d3plot_beam_con::material_index,
+                    "Index into the parts (this those indeed refer to parts "
+                    "even though the documentation does not say so)")
       .def("__str__", &dro::stream_to_string<d3plot_beam_con>)
 
       ;
 
   py::class_<d3plot_shell_con>(m, "d3plot_shell_con")
-      .def_readonly("node_indices", &d3plot_shell_con::node_indices)
-      .def_readonly("material_index", &d3plot_shell_con::material_index)
+      .def_readonly(
+          "node_indices", &d3plot_shell_con::node_indices,
+          "Stores indices into the node_ids, node_coords, etc. arrays")
+      .def_readonly("material_index", &d3plot_shell_con::material_index,
+                    "Index into the parts (this those indeed refer to parts "
+                    "even though the documentation does not say so)")
       .def("__str__", &dro::stream_to_string<d3plot_shell_con>)
 
       ;

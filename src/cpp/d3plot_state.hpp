@@ -42,8 +42,13 @@ public:
     return m_num_history_variables;
   }
 
+  // Returns the history variables for the mid surface of the shell under index
   const Array<double> get_mid_history_variables(size_t index) const;
+  // Returns the history variables for the inner surface of the shell under
+  // index
   const Array<double> get_inner_history_variables(size_t index) const;
+  // Returns the history variables for the outer surface of the shell under
+  // index
   const Array<double> get_outer_history_variables(size_t index) const;
 
 private:
@@ -62,8 +67,14 @@ public:
     return m_num_history_variables;
   }
 
+  // Returns the history variables of the mid surface of the thick shell under
+  // index
   const Array<double> get_mid_history_variables(size_t index) const;
+  // Returns the history variables of the inner surface of the thick shell under
+  // index
   const Array<double> get_inner_history_variables(size_t index) const;
+  // Returns the history variables of the outer surface of the thick shell under
+  // index
   const Array<double> get_outer_history_variables(size_t index) const;
 
 private:

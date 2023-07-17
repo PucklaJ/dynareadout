@@ -40,6 +40,8 @@ typedef struct {
 #else
   d3_word node_indices[8];
 #endif
+  /* Index into the parts (this those indeed refer to parts even though the
+   * documentation does not say so)*/
   d3_word material_index;
 } d3plot_solid_con;
 
@@ -54,6 +56,8 @@ typedef struct {
 #endif
   d3_word orientation_node_index;
   d3_word _null[2];
+  /* Index into the parts (this those indeed refer to parts even though the
+   * documentation does not say so)*/
   d3_word material_index;
 } d3plot_beam_con;
 
@@ -64,6 +68,8 @@ typedef struct {
 #else
   d3_word node_indices[4];
 #endif
+  /* Index into the parts (this those indeed refer to parts even though the
+   * documentation does not say so)*/
   d3_word material_index;
 } d3plot_shell_con;
 
