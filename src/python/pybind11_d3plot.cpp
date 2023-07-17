@@ -152,8 +152,6 @@ void add_d3plot_library_to_module(py::module_ &m) {
                     &d3plot_solid::effective_plastic_strain)
       .def_readonly("material_dependent_value",
                     &d3plot_solid::material_dependent_value)
-      .def_readonly("extra1", &d3plot_solid::extra1)
-      .def_readonly("extra1", &d3plot_solid::extra2)
       .def_readonly("epsilon", &d3plot_solid::epsilon)
       .def_readonly("strain", &d3plot_solid::strain)
       .def("__str__", &dro::stream_to_string<d3plot_solid>)

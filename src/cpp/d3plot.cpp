@@ -492,7 +492,6 @@ std::ostream &operator<<(std::ostream &stream, const d3plot_surface &s) {
 std::ostream &operator<<(std::ostream &stream, const d3plot_solid &s) {
   return stream << "Stress: " << s.stress
                 << "; Effective Plastic Strain: " << s.effective_plastic_strain
-                << "; Extra1: " << s.extra1 << "; Extra2: " << s.extra2
                 << "; Strain: " << s.strain;
 }
 
