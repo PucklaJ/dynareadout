@@ -1016,4 +1016,17 @@ TEST_CASE("key_file_parse_with_callbackC++") {
                   << "]: " << card_str.str() << std::endl;
       });
 }
+
+TEST_CASE("empty_card") {
+  card_t card_handle;
+  card_handle.string = (char *)malloc(1);
+  card_handle.string[0] = '\0';
+
+  dro::Card card(&card_handle);
+
+  auto str = card.parse_string_whole_no_trim<dro::String>();
+  CHECK(str.size() == 0);
+  CHECK(str.empty() == true);
+  CHECK_THROWS_MESSAGE(str[0], "Index out of Range");
+}
 #endif
