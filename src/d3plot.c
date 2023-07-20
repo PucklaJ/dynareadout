@@ -232,10 +232,6 @@ d3plot_file d3plot_open(const char *root_file_name) {
     CDA.thermal_strain_tensor_written = 0;
   }
 
-  if (CDA.plastic_strain_tensor_written || CDA.thermal_strain_tensor_written) {
-    CDA.istrn = _get_nth_digit(idtdt, 4);
-  }
-
   /* Compute MDLOPT*/
   if (CDA.maxint >= 0) {
     CDA.mdlopt = 0;
@@ -261,20 +257,16 @@ d3plot_file d3plot_open(const char *root_file_name) {
       Or NELT > 0
       If NV3DT-MAXINT*(6*IOSHL(1)+IOSHL(2)+NEIPS) > 1
       Then ISTRN = 1, else ISTRN = 0*/
-    const d3_word rhs =
-        CDA.maxint * (6 * CDA.ioshl[0] + CDA.ioshl[1] + CDA.neips) +
-        8 * CDA.ioshl[2] + 4 * CDA.ioshl[3];
-    if (CDA.nv2d > rhs + 1) {
-      CDA.istrn = 1;
-    } else {
-      CDA.istrn = 0;
-    }
-
-    if (CDA.istrn == 1 && CDA.neiph >= 6) {
-      /* TODO: last the 6 additional values are the six strain*/
-    }
-
-    if (CDA.nelt > 0) {
+    if (CDA.nv2d > 0) {
+      const d3_word rhs =
+          CDA.maxint * (6 * CDA.ioshl[0] + CDA.ioshl[1] + CDA.neips) +
+          8 * CDA.ioshl[2] + 4 * CDA.ioshl[3];
+      if (CDA.nv2d > rhs + 1) {
+        CDA.istrn = 1;
+      } else {
+        CDA.istrn = 0;
+      }
+    } else if (CDA.nelt > 0) {
       if ((CDA.nv3dt -
            CDA.maxint * (6 * CDA.ioshl[0] + CDA.ioshl[1] + CDA.neips)) > 1) {
         CDA.istrn = 1;
@@ -282,6 +274,13 @@ d3plot_file d3plot_open(const char *root_file_name) {
         CDA.istrn = 0;
       }
     }
+
+    if (CDA.istrn == 1 && CDA.neiph >= 6) {
+      /* TODO: last the 6 additional values are the six strain*/
+    }
+
+  } else {
+    CDA.istrn = _get_nth_digit(idtdt, 4);
   }
 
   if (icode != D3_CODE_OLD_DYNA3D &&
