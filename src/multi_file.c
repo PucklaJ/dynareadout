@@ -142,13 +142,6 @@ void multi_file_return(multi_file_t *f, multi_file_index_t *index) {
   BEGIN_PROFILE_FUNC();
   sync_lock(&f->file_handles_mutex);
 
-  /* Keep at least one file open at all times and close all other ones if
-   * returned*/
-  if (index->index != 0) {
-    fclose(index->file_handle);
-    f->file_handles[index->index].file_handle = NULL;
-  }
-
   sync_unlock(&f->file_handles[index->index].mutex);
 
   sync_unlock(&f->file_handles_mutex);
