@@ -29,7 +29,12 @@
 #include "extra_string.h"
 #include <stdio.h>
 
+#ifdef _WIN32
+/* Windows has a max stack size of 1MB*/
+#define LINE_READER_BUFFER_SIZE (1024 * 10) /* 10KB */
+#else
 #define LINE_READER_BUFFER_SIZE (1024 * 1024) /* 1MB */
+#endif
 
 /* All the state for the read_line function*/
 typedef struct {
