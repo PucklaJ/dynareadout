@@ -40,11 +40,15 @@
 typedef struct {
   FILE *file;
   extra_string line; /* This stores the read line after a read_line call*/
-  size_t line_length;
+  size_t
+      line_length; /* The length of the line when considering inline comments*/
   size_t comment_index; /* An index into line to where a comment can be found.
                            Is ~0 if no comment has been found*/
 
-  char buffer[LINE_READER_BUFFER_SIZE];
+  /* Internal variables used in read_line*/
+  char
+      buffer[LINE_READER_BUFFER_SIZE]; /* The file is read in
+                                          LINE_READER_BUFFER_SIZE sized chunks*/
   size_t buffer_index;
   size_t bytes_read;
   size_t extra_capacity;

@@ -245,8 +245,8 @@ void d3_buffer_read_words(d3_buffer *buffer, d3_pointer *ptr, void *words,
           ERROR_AND_RETURN_BUFFER_PTR("Read Error");
         }
 
-        /* TODO: If bytes_left is not divisible by word size this adds an
-         * invalid value, but this doesn't really matter*/
+        /* Note: If bytes_left is not divisible by word size this adds an
+         * invalid value, but d3plot files are alway word size aligned.*/
         ptr->cur_word += bytes_left / buffer->word_size;
         bytes_read = num_bytes;
         break;
@@ -260,8 +260,9 @@ void d3_buffer_read_words(d3_buffer *buffer, d3_pointer *ptr, void *words,
             ERROR_AND_RETURN_BUFFER_PTR("Read Error");
           }
 
-          /* TODO: If bytes_left is not divisible by word size this adds an
-           * invalid value, but this doesn't really matter*/
+          /* Note: If bytes_from_cur_file is not divisible by word size this
+           * adds an invalid value, but d3plot files are always word size
+           * aligned.*/
           ptr->cur_word += bytes_from_cur_file / buffer->word_size;
           bytes_read += bytes_from_cur_file;
         }
