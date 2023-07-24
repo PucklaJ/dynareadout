@@ -151,7 +151,8 @@ void add_binout_library_to_module(py::module_ &m) {
       .def("read", &Binout_read,
            "Read data from the file. This can return a 1D array or a 2D array "
            "if the data under the path is timed (has multiple time steps e.g. "
-           "nodout/x_displacement)",
+           "nodout/x_displacement). If the path points to a folder it returns "
+           "a list of strings holding the children of said folder.",
            py::arg("path"))
       .def("get_type_id", &dro::Binout::get_type_id,
            "Returns the type id of the given variable.",
@@ -160,8 +161,6 @@ void add_binout_library_to_module(py::module_ &m) {
            "Returns whether a record with the given path and variable name "
            "exists.",
            py::arg("path_to_variable"))
-      .def("get_children", &dro::Binout::get_children,
-           "Returns the entries under a given path.", py::arg("path"))
       .def("get_num_timesteps", &dro::Binout::get_num_timesteps,
            "Returns the number of dxxxxxx folders inside of a given path. "
            "Each folder inside a binout can have a different number of time "
