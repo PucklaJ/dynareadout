@@ -38,6 +38,7 @@ public:
   D3plotShellsState(D3plotShellsState &&rhs) noexcept;
   ~D3plotShellsState() noexcept override;
 
+  // Returns the number of history variables per surface
   inline size_t get_num_history_variables() const noexcept {
     return m_num_history_variables;
   }
@@ -63,6 +64,7 @@ public:
   D3plotThickShellsState(D3plotThickShellsState &&rhs) noexcept;
   ~D3plotThickShellsState() noexcept override;
 
+  // Returns the number of history variables per surface
   inline size_t get_num_history_variables() const noexcept {
     return m_num_history_variables;
   }

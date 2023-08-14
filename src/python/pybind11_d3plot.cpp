@@ -24,6 +24,7 @@
  ************************************************************************************/
 
 #include "conversions.hpp"
+#include "d3plot_state.hpp"
 #include <d3plot.hpp>
 #include <pybind11/chrono.h>
 #include <pybind11/pybind11.h>
@@ -49,6 +50,9 @@ inline void add_d3plot_arrays_to_module(py::module_ &m) {
                throw py::index_error("Index out of range");
              }
            })
+      .def("get_num_history_variables",
+           &dro::D3plotShellsState::get_num_history_variables,
+           "Returns the number of history variables per surface")
       .def("get_mid_history_variables",
            &dro::D3plotShellsState::get_mid_history_variables,
            "Returns the history variables for the mid surface of the shell "
@@ -78,6 +82,9 @@ inline void add_d3plot_arrays_to_module(py::module_ &m) {
                throw py::index_error("Index out of range");
              }
            })
+      .def("get_num_history_variables",
+           &dro::D3plotThickShellsState::get_num_history_variables,
+           "Returns the number of history variables per surface")
       .def("get_mid_history_variables",
            &dro::D3plotThickShellsState::get_mid_history_variables,
            "Returns the history variables of the mid surface of the thick "
