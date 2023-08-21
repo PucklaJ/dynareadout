@@ -554,8 +554,9 @@ void key_file_parse_with_callback(const char *file_name,
   } else {
     /* Call the callback for the last keyword if it is not "END", because some
      * keywords can have no cards*/
-    if (current_keyword_length != 3 ||
-        extra_string_compare(&current_keyword_name, "END") != 0) {
+    if (card_index == 0 &&
+        (current_keyword_length != 3 ||
+         extra_string_compare(&current_keyword_name, "END") != 0)) {
       char *keyword_name;
       if (current_keyword_length < EXTRA_STRING_BUFFER_SIZE) {
         keyword_name = current_keyword_name.buffer;
