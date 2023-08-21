@@ -455,31 +455,13 @@ void key_file_parse_with_callback(const char *file_name,
 
             card_index++;
             continue;
+          } else if (extra_string_starts_with(&current_keyword_name,
+                                              "INCLUDE_MULTISCALE")) {
+            /* These keywords do not start with a filename therefore the user
+             * needs to parse them himself*/
           } else {
-            char *keyword_name;
-            if (current_keyword_length < EXTRA_STRING_BUFFER_SIZE) {
-              keyword_name = current_keyword_name.buffer;
-            } else {
-              keyword_name = malloc(current_keyword_length + 1);
-              extra_string_copy_to_string(keyword_name, &current_keyword_name,
-                                          current_keyword_length);
-              keyword_name[current_keyword_length] = '\0';
-            }
-
-            ERROR_F("%s:%zu: Unsupported INCLUDE keyword: \"%s\"", file_name,
-                    current_keyword_line, keyword_name);
-
-            if (keyword_name != current_keyword_name.buffer) {
-              free(keyword_name);
-            }
-          }
-        } else {
-          if (extra_string_compare(&current_keyword_name, "INCLUDE") == 0 ||
-              extra_string_compare(&current_keyword_name, "INCLUDE_PATH") ==
-                  0 ||
-              extra_string_compare(&current_keyword_name,
-                                   "INCLUDE_PATH_RELATIVE") == 0) {
-            if (!_parse_multi_line_string(&current_multi_line_string,
+            if (card_index == 0 &&
+                !_parse_multi_line_string(&current_multi_line_string,
                                           &current_multi_line_index, &card,
                                           line_reader.line_length)) {
               /* continue without calling the callback for the card*/
@@ -488,16 +470,18 @@ void key_file_parse_with_callback(const char *file_name,
               }
               continue;
             }
-          } else if (extra_string_compare(&current_keyword_name,
-                                          "INCLUDE_BINARY") == 0 ||
-                     extra_string_compare(&current_keyword_name,
-                                          "INCLUDE_NASTRAN") == 0 ||
-                     extra_string_compare(&current_keyword_name,
-                                          "INCLUDE_TRANSFORM") == 0 ||
-                     extra_string_compare(&current_keyword_name,
-                                          "INCLUDE_TRANSFORM_BINARY") == 0) {
-            /* Parse the first card like a normal INCLUDE*/
-            if (card_index == 0) {
+          }
+        } else {
+          if (!extra_string_starts_with(&current_keyword_name,
+                                        "INCLUDE_MULTISCALE")) {
+            const int all_cards_are_filenames =
+                extra_string_compare(&current_keyword_name, "INCLUDE") == 0 ||
+                extra_string_compare(&current_keyword_name, "INCLUDE_PATH") ==
+                    0 ||
+                extra_string_compare(&current_keyword_name,
+                                     "INCLUDE_PATH_RELATIVE") == 0;
+
+            if (all_cards_are_filenames || card_index == 0) {
               if (!_parse_multi_line_string(&current_multi_line_string,
                                             &current_multi_line_index, &card,
                                             line_reader.line_length)) {

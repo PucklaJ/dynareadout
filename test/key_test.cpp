@@ -746,6 +746,44 @@ TEST_CASE("read_line") {
   fclose(file);
 }
 
+TEST_CASE("INCLUDE_TRANSFORM") {
+  size_t num_keywords;
+  char *error_string;
+
+  keyword_t *keywords = key_file_parse("test_data/include_transform.k",
+                                       &num_keywords, 1, &error_string);
+  if (error_string) {
+    FAIL(error_string);
+    free(error_string);
+    return;
+  }
+
+  keyword_t *it = key_file_get(keywords, num_keywords, "INCLUDE_TRANSFORM", 0);
+  REQUIRE(it != NULL);
+  REQUIRE(it->num_cards == 5);
+
+  card_t *card = &it->cards[0];
+  char *include_name = card_parse_whole(card);
+  CHECK(include_name == "asidjasidjasidjasnlkdfmg9lmdf9lgmd9flgmd9flg dgd "
+                        "dfgdofjgdfigjdoifjgmdfogmidko"
+                        "asidjasidjasi6jasnlkdfmg9lmdf9lgmd9flgmd9flg dgd "
+                        "dfgdofjgdfigjdoifjgmdfogmidko"
+                        "asidjasidjasi6jasnlkdfmg9lmdf9lgmd9flgmd9flg dgd "
+                        "dfgdofjgdfigjdoifjgmdfogmidko.k");
+
+  card = &it->cards[1];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  CHECK(card_parse_int(card) == 100);
+
+  card = &it->cards[4];
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+  CHECK(card_parse_int(card) == 120);
+
+  free(include_name);
+
+  key_file_free(keywords, num_keywords);
+}
+
 #ifdef BUILD_CPP
 #define FABS(x) ((x) > 0 ? (x) : -(x))
 
