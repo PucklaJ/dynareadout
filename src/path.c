@@ -160,6 +160,35 @@ int path_is_file(const char *path_name) {
 #endif
 
 #ifdef _WIN32
+int path_is_directory(const char *path_name) {
+  BEGIN_PROFILE_FUNC();
+
+  const DWORD attrib = GetFileAttributes(path_name);
+
+  const int rv = (attrib != INVALID_FILE_ATTRIBUTES &&
+                  (attrib & FILE_ATTRIBUTE_DIRECTORY));
+
+  END_PROFILE_FUNC();
+  return rv;
+}
+#else
+int path_is_directory(const char *path_name) {
+  BEGIN_PROFILE_FUNC();
+
+  struct stat path_stat;
+  if (stat(path_name, &path_stat) != 0) {
+    END_PROFILE_FUNC();
+    return 0;
+  }
+
+  const int rv = S_ISDIR(path_stat.st_mode);
+
+  END_PROFILE_FUNC();
+  return rv;
+}
+#endif
+
+#ifdef _WIN32
 char *path_working_directory() {
   BEGIN_PROFILE_FUNC();
 

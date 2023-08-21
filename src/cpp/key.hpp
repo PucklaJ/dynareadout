@@ -26,6 +26,7 @@
 #pragma once
 
 #include "array.hpp"
+#include "cpp/array.hpp"
 #include <array>
 #include <cstdio>
 #include <cstdlib>
@@ -300,11 +301,13 @@ public:
   // parse_config: Configure how the key file should be parsed.
   // Throws a dro::KeyFile::Exception if an error occurs.
   static Keywords parse(const std::filesystem::path &file_name,
+                        std::optional<dro::String> &warnings,
                         ParseConfig parse_config = ParseConfig());
   // Same as parse, but instead of returning an array it calls a callback every
   // time a card (or empty keyword) is encountered.
   static void parse_with_callback(const std::filesystem::path &file_name,
                                   Callback callback,
+                                  std::optional<dro::String> &warnings,
                                   ParseConfig parse_config = ParseConfig());
 };
 

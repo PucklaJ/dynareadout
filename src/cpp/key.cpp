@@ -24,6 +24,7 @@
  ************************************************************************************/
 
 #include "key.hpp"
+#include "cpp/array.hpp"
 #include <cstdio>
 #include <cstdlib>
 
@@ -181,13 +182,17 @@ KeyFile::ParseConfig::ParseConfig(bool parse_includes,
 }
 
 Keywords KeyFile::parse(const std::filesystem::path &file_name,
+                        std::optional<dro::String> &warnings,
                         KeyFile::ParseConfig parse_config) {
   size_t num_keywords;
-  char *error_string;
+  char *error_string, *warning_string;
 
   keyword_t *keywords =
       key_file_parse(file_name.string().c_str(), &num_keywords,
-                     parse_config.get_handle(), &error_string);
+                     parse_config.get_handle(), &error_string, &warning_string);
+  if (warning_string) {
+    warnings = dro::String(warning_string);
+  }
   if (error_string) {
     throw Exception(Exception::ErrorString(error_string));
   }
@@ -197,8 +202,9 @@ Keywords KeyFile::parse(const std::filesystem::path &file_name,
 
 void KeyFile::parse_with_callback(const std::filesystem::path &file_name,
                                   KeyFile::Callback callback,
+                                  std::optional<dro::String> &warnings,
                                   KeyFile::ParseConfig parse_config) {
-  char *error_string;
+  char *error_string, *warning_string;
 
   key_file_parse_with_callback(
       file_name.string().c_str(),
@@ -213,8 +219,12 @@ void KeyFile::parse_with_callback(const std::filesystem::path &file_name,
                     String(const_cast<char *>(keyword_name), false),
                     std::move(card_opt), card_index);
       },
-      parse_config.get_handle(), &error_string, &callback, NULL, NULL, NULL);
+      parse_config.get_handle(), &error_string, &warning_string, &callback,
+      NULL, NULL, NULL);
 
+  if (warning_string) {
+    warnings = dro::String(warning_string);
+  }
   if (error_string) {
     throw Exception(Exception::ErrorString(error_string));
   }

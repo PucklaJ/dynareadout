@@ -80,15 +80,16 @@ extern "C" {
 /* Parses a LS Dyna key file for keywords and their respective cards. Returns an
  * array of keyword_t and sets num_keywords to the number of elements in the
  * array. Needs to be deallocated by key_file_free.
- * parse_includes: tells the function wether to parse include files via the
- * *INCLUDE and similar keywords or if they should be added as regular keywords
- * to the array.
+ * parse_config: Configure how the file is parsed
  * error_string: if set to a non NULL value a error message will be set that
  * tells about an error if one occurred. If it gets set to a non NULL value it
- * needs to be deallocated by free.*/
+ * needs to be deallocated by free.
+ * warning_string: if set to a non NULL value warning messages that are
+ * generated during parsing will be stored here. If it gets set to a non NULL
+ * value it needs to deallocated by free.*/
 keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
                           const key_parse_config_t *parse_config,
-                          char **error_string);
+                          char **error_string, char **warning_string);
 /* Same as key_file_parse, but instead of returning an array it calls an
  * callback every time a card (or empty keyword) is encountered.
  * user_data: will be given to the callback untouched.
@@ -97,8 +98,8 @@ keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
 void key_file_parse_with_callback(const char *file_name,
                                   key_file_callback callback,
                                   const key_parse_config_t *parse_config,
-                                  char **error_string, void *user_data,
-                                  char ***include_paths,
+                                  char **error_string, char **warning_string,
+                                  void *user_data, char ***include_paths,
                                   size_t *num_include_paths,
                                   const char *root_folder);
 /* Deallocates the data returned by key_file_parse*/
@@ -217,6 +218,7 @@ void _parse_include_file_name_card(
     size_t *current_multi_line_index, size_t *num_include_paths,
     char ***include_paths, key_file_callback callback, void *user_data,
     char **error_stack, size_t *error_stack_size, size_t *error_ptr,
+    char **warning_stack, size_t *warning_stack_size, size_t *warning_ptr,
     const char *file_name, size_t line_count, const char *root_folder,
     const key_parse_config_t *parse_config);
 /* -----------------------------*/

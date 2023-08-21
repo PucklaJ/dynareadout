@@ -57,6 +57,9 @@ char *path_join(const char *lhs, const char *rhs);
 /* Returns wether the given path exists and is a file*/
 int path_is_file(const char *path_name);
 
+/* Returns wether the given path exists and is a directory*/
+int path_is_directory(const char *path_name);
+
 /* Returns the current working directory. Needs to be deallocated by free.*/
 char *path_working_directory();
 
