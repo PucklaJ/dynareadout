@@ -130,6 +130,31 @@ Binout_read(dro::Binout &self, std::string path) {
   }
 }
 
+dro::BinoutType Binout_get_type_id(dro::Binout &self, std::string path) {
+  dro::BinoutType type_id;
+  bool _;
+  self.simple_path_to_real(path, type_id, _);
+  return type_id;
+}
+
+bool Binout_variable_exists(dro::Binout &self, std::string path) noexcept {
+  dro::BinoutType _;
+  bool __;
+  try {
+    self.simple_path_to_real(path, _, __);
+  } catch (const dro::Binout::Exception &) {
+    return false;
+  }
+  return true;
+}
+
+size_t Binout_get_num_timesteps(dro::Binout &self, std::string path) {
+  dro::BinoutType _;
+  bool __;
+  const std::string real_path = self.simple_path_to_real(path, _, __);
+  return self.get_num_timesteps(real_path);
+}
+
 void add_binout_library_to_module(py::module_ &m) {
   py::enum_<dro::BinoutType>(m, "BinoutType")
       .value("Int8", dro::BinoutType::Int8)
@@ -154,10 +179,10 @@ void add_binout_library_to_module(py::module_ &m) {
            "nodout/x_displacement). If the path points to a folder it returns "
            "a list of strings holding the children of said folder.",
            py::arg("path"))
-      .def("get_type_id", &dro::Binout::get_type_id,
+      .def("get_type_id", &Binout_get_type_id,
            "Returns the type id of the given variable.",
            py::arg("path_to_variable"))
-      .def("variable_exists", &dro::Binout::variable_exists,
+      .def("variable_exists", &Binout_variable_exists,
            "Returns whether a record with the given path and variable name "
            "exists.",
            py::arg("path_to_variable"))
@@ -165,7 +190,7 @@ void add_binout_library_to_module(py::module_ &m) {
            "Returns the number of dxxxxxx folders inside of a given path. "
            "Each folder inside a binout can have a different number of time "
            "steps. This method is used to get the time steps of one single "
-           "folder (e.g. /nodout or /rcforc).",
+           "folder (e.g. nodout or rcforc).",
            py::arg("path"))
 
       ;
