@@ -74,16 +74,13 @@ py::list python_card_parse_whole(dro::Card &self, py::list value_widths) {
 }
 
 void add_key_library_to_module(py::module_ &m) {
-  m.def("key_file_parse", &dro::KeyFile::parse,
-        "Parses an LS Dyna key file for keywords and their respective cards. "
-        "Returns an array of keywords.\nparse_includes: tells the function "
-        "wether "
-        "to parse include files via the *INCLUDE and similar keywords or if "
-        "they should be added as regular keywords to the array",
-        py::arg("file_name"), py::arg("parse_includes") = true);
+  py::class_<dro::KeyFile::ParseConfig>(m, "key_file_parse_config")
+      .def(py::init<bool, bool>(), py::arg("parse_includes") = true,
+           py::arg("ignore_not_found_includes") = false,
+           "Configure how a key file is parsed");
 
   py::class_<dro::Keywords>(m, "Keywords")
-      .def("__len__", &dro::Keywords::size)
+      .def("__len__", [](dro::Keywords &self) { return self.size(); })
       .def("__getitem__", &dro::Keywords::operator[])
 
       ;
@@ -169,4 +166,13 @@ void add_key_library_to_module(py::module_ &m) {
       .def("__str__", &dro::Card::parse_string_whole_no_trim<dro::String>)
 
       ;
+
+  m.def("key_file_parse", &dro::KeyFile::parse,
+        "Parses an LS Dyna key file for keywords and their respective cards. "
+        "Returns an array of keywords.\nparse_includes: tells the function "
+        "wether "
+        "to parse include files via the *INCLUDE and similar keywords or if "
+        "they should be added as regular keywords to the array",
+        py::arg("file_name"),
+        py::arg("parse_config") = dro::KeyFile::ParseConfig());
 }

@@ -56,6 +56,18 @@ typedef struct {
   size_t num_cards; /* The number of cards in the array*/
 } keyword_t;
 
+/* Contains options to configure how a key file is parsed*/
+typedef struct {
+  int parse_includes; /* Wether to parse supported INCLUDE keywords and
+                         recursively parse those files. Default: 1*/
+  int ignore_not_found_includes; /* Wether to not parse and not output an error
+                                   when not finding an include file. Default:
+                                   0*/
+} key_parse_config_t;
+
+/* Returns a key_parse_config_t with all values set to the default*/
+key_parse_config_t key_default_parse_config();
+
 /* The type of the callback that is called in key_file_parse_with_callback*/
 typedef void (*key_file_callback)(const char *file_name, size_t line_number,
                                   const char *keyword_name, card_t *card,
@@ -75,7 +87,8 @@ extern "C" {
  * tells about an error if one occurred. If it gets set to a non NULL value it
  * needs to be deallocated by free.*/
 keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
-                          int parse_includes, char **error_string);
+                          const key_parse_config_t *parse_config,
+                          char **error_string);
 /* Same as key_file_parse, but instead of returning an array it calls an
  * callback every time a card (or empty keyword) is encountered.
  * user_data: will be given to the callback untouched.
@@ -83,8 +96,9 @@ keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
  * recursion and should be set to NULL*/
 void key_file_parse_with_callback(const char *file_name,
                                   key_file_callback callback,
-                                  int parse_includes, char **error_string,
-                                  void *user_data, char ***include_paths,
+                                  const key_parse_config_t *parse_config,
+                                  char **error_string, void *user_data,
+                                  char ***include_paths,
                                   size_t *num_include_paths,
                                   const char *root_folder);
 /* Deallocates the data returned by key_file_parse*/
@@ -203,7 +217,8 @@ void _parse_include_file_name_card(
     size_t *current_multi_line_index, size_t *num_include_paths,
     char ***include_paths, key_file_callback callback, void *user_data,
     char **error_stack, size_t *error_stack_size, size_t *error_ptr,
-    const char *file_name, size_t line_count, const char *root_folder);
+    const char *file_name, size_t line_count, const char *root_folder,
+    const key_parse_config_t *parse_config);
 /* -----------------------------*/
 
 #ifdef __cplusplus

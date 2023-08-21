@@ -54,6 +54,13 @@
   ERROR_F("%s:%lu: The keyword %s is not implemented", file_name,              \
           current_keyword_line, keyword)
 
+key_parse_config_t key_default_parse_config() {
+  key_parse_config_t c;
+  c.parse_includes = 1;
+  c.ignore_not_found_includes = 0;
+  return c;
+}
+
 typedef struct {
   keyword_t *current_keyword;
   keyword_t *keywords;
@@ -122,7 +129,8 @@ void key_file_parse_callback(const char *file_name, size_t line_number,
 }
 
 keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
-                          int parse_includes, char **error_string) {
+                          const key_parse_config_t *parse_config,
+                          char **error_string) {
   BEGIN_PROFILE_FUNC();
 
   key_file_parse_data data;
@@ -133,9 +141,8 @@ keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
 
   char *internal_error_string;
 
-  key_file_parse_with_callback(file_name, key_file_parse_callback,
-                               parse_includes, &internal_error_string, &data,
-                               NULL, NULL, NULL);
+  key_file_parse_with_callback(file_name, key_file_parse_callback, parse_config,
+                               &internal_error_string, &data, NULL, NULL, NULL);
 
   /* Deallocate the memory if an error occurred*/
   if (internal_error_string) {
@@ -157,8 +164,9 @@ keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
 
 void key_file_parse_with_callback(const char *file_name,
                                   key_file_callback callback,
-                                  int parse_includes, char **error_string,
-                                  void *user_data, char ***include_paths,
+                                  const key_parse_config_t *_parse_config,
+                                  char **error_string, void *user_data,
+                                  char ***include_paths,
                                   size_t *num_include_paths,
                                   const char *root_folder) {
   BEGIN_PROFILE_FUNC();
@@ -227,6 +235,14 @@ void key_file_parse_with_callback(const char *file_name,
     *include_paths_ptr =
         realloc(*include_paths_ptr, *num_include_paths_ptr * sizeof(char *));
     (*include_paths_ptr)[*num_include_paths_ptr - 1] = path_working_directory();
+  }
+
+  /* Setup parse config*/
+  key_parse_config_t parse_config;
+  if (_parse_config) {
+    parse_config = *_parse_config;
+  } else {
+    parse_config = key_default_parse_config();
   }
 
   line_reader_t line_reader = new_line_reader(file);
@@ -330,7 +346,7 @@ void key_file_parse_with_callback(const char *file_name,
       if (extra_string_starts_with(&current_keyword_name, "INCLUDE")) {
         /* Also parse the INCLUDE keywords even when parse_includes is set to 0
          * to support multi line include file names*/
-        if (parse_includes) {
+        if (parse_config.parse_includes) {
           /* Parse all the different INCLUDE keywords*/
           if (extra_string_compare(&current_keyword_name, "INCLUDE") == 0) {
             _parse_include_file_name_card(
@@ -338,7 +354,7 @@ void key_file_parse_with_callback(const char *file_name,
                 &current_multi_line_string, &current_multi_line_index,
                 num_include_paths_ptr, include_paths_ptr, callback, user_data,
                 &error_stack, &error_stack_size, &error_ptr, file_name,
-                line_count, root_folder_ptr);
+                line_count, root_folder_ptr, &parse_config);
             continue;
           } else if (extra_string_compare(&current_keyword_name,
                                           "INCLUDE_PATH") == 0) {
@@ -413,7 +429,7 @@ void key_file_parse_with_callback(const char *file_name,
                   &current_multi_line_index, num_include_paths_ptr,
                   include_paths_ptr, callback, user_data, &error_stack,
                   &error_stack_size, &error_ptr, file_name, line_count,
-                  root_folder_ptr);
+                  root_folder_ptr, &parse_config);
               continue;
             } else {
               ERROR_F(
@@ -438,7 +454,7 @@ void key_file_parse_with_callback(const char *file_name,
                   &current_multi_line_index, num_include_paths_ptr,
                   include_paths_ptr, callback, user_data, &error_stack,
                   &error_stack_size, &error_ptr, file_name, line_count,
-                  root_folder_ptr);
+                  root_folder_ptr, &parse_config);
               continue;
             } else if (card_index == 1) {
               /* Ignore the card it is irrelevant for the parsing*/
@@ -1515,7 +1531,8 @@ void _parse_include_file_name_card(
     size_t *current_multi_line_index, size_t *num_include_paths,
     char ***include_paths, key_file_callback callback, void *user_data,
     char **error_stack, size_t *error_stack_size, size_t *error_ptr,
-    const char *file_name, size_t line_count, const char *root_folder) {
+    const char *file_name, size_t line_count, const char *root_folder,
+    const key_parse_config_t *parse_config) {
   /* Support multi line file names (LS Dyna Manual Volume I
    * *INCLUDE Remark 2, p. 2690)*/
   if (!_parse_multi_line_string(current_multi_line_string,
@@ -1548,9 +1565,9 @@ void _parse_include_file_name_card(
   if (final_include_file_name) {
     char *include_error;
     /* Call the function recursively*/
-    key_file_parse_with_callback(final_include_file_name, callback, 1,
-                                 &include_error, user_data, include_paths,
-                                 num_include_paths, root_folder);
+    key_file_parse_with_callback(final_include_file_name, callback,
+                                 parse_config, &include_error, user_data,
+                                 include_paths, num_include_paths, root_folder);
     free(final_include_file_name);
 
     /* Add the error to the error stack if an error occurred in the
@@ -1565,7 +1582,7 @@ void _parse_include_file_name_card(
       (*error_ptr)++;
       free(include_error);
     }
-  } else {
+  } else if (!parse_config->ignore_not_found_includes) {
     const int error_buffer_size =
         snprintf(((void *)0), 0, "%s:%zu: \"%s\" could not be found", file_name,
                  line_count, *current_multi_line_string);
@@ -1576,6 +1593,8 @@ void _parse_include_file_name_card(
     *error_ptr += error_buffer_size;
     (*error_stack)[*error_ptr] = '\n';
     (*error_ptr)++;
+  } else {
+    /* TODO: output warning*/
   }
 
   free(*current_multi_line_string);

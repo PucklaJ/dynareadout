@@ -174,14 +174,20 @@ const char *KeyFile::Exception::what() const noexcept {
   return m_error_str.data();
 }
 
+KeyFile::ParseConfig::ParseConfig(bool parse_includes,
+                                  bool ignore_not_found_includes) noexcept {
+  m_handle.parse_includes = parse_includes;
+  m_handle.ignore_not_found_includes = ignore_not_found_includes;
+}
+
 Keywords KeyFile::parse(const std::filesystem::path &file_name,
-                        bool parse_includes) {
+                        KeyFile::ParseConfig parse_config) {
   size_t num_keywords;
   char *error_string;
 
   keyword_t *keywords =
       key_file_parse(file_name.string().c_str(), &num_keywords,
-                     static_cast<int>(parse_includes), &error_string);
+                     parse_config.get_handle(), &error_string);
   if (error_string) {
     throw Exception(Exception::ErrorString(error_string));
   }
@@ -191,7 +197,7 @@ Keywords KeyFile::parse(const std::filesystem::path &file_name,
 
 void KeyFile::parse_with_callback(const std::filesystem::path &file_name,
                                   KeyFile::Callback callback,
-                                  bool parse_includes) {
+                                  KeyFile::ParseConfig parse_config) {
   char *error_string;
 
   key_file_parse_with_callback(
@@ -207,8 +213,7 @@ void KeyFile::parse_with_callback(const std::filesystem::path &file_name,
                     String(const_cast<char *>(keyword_name), false),
                     std::move(card_opt), card_index);
       },
-      static_cast<int>(parse_includes), &error_string, &callback, NULL, NULL,
-      NULL);
+      parse_config.get_handle(), &error_string, &callback, NULL, NULL, NULL);
 
   if (error_string) {
     throw Exception(Exception::ErrorString(error_string));

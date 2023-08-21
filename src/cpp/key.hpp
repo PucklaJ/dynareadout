@@ -278,23 +278,34 @@ public:
     const ErrorString m_error_str;
   };
 
+  class ParseConfig {
+  public:
+    ParseConfig(bool parse_includes = true,
+                bool ignore_not_found_includes = false) noexcept;
+
+    inline const key_parse_config_t *get_handle() const noexcept {
+      return &m_handle;
+    }
+
+  private:
+    key_parse_config_t m_handle;
+  };
+
   using Callback = std::function<void(
       String file_name, size_t line_number, String keyword_name,
       std::optional<Card> card, size_t card_index)>;
 
   // Parses an LS Dyna key file for keywords and their respective cards. Returns
   // an array of keywords
-  // parse_includes: tells the function wether to parse include files via the
-  // *INCLUDE and similar keywords or if they should be added as regular
-  // keywords to the array.
+  // parse_config: Configure how the key file should be parsed.
   // Throws a dro::KeyFile::Exception if an error occurs.
   static Keywords parse(const std::filesystem::path &file_name,
-                        bool parse_includes = true);
+                        ParseConfig parse_config = ParseConfig());
   // Same as parse, but instead of returning an array it calls a callback every
   // time a card (or empty keyword) is encountered.
   static void parse_with_callback(const std::filesystem::path &file_name,
                                   Callback callback,
-                                  bool parse_includes = true);
+                                  ParseConfig parse_config = ParseConfig());
 };
 
 template <typename T> static constexpr bool is_string_v = false;

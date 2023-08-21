@@ -80,8 +80,8 @@ TEST_CASE("key_file_parse") {
 
   char *error_string;
   size_t num_keywords;
-  keyword_t *keywords =
-      key_file_parse("test_data/key_file.k", &num_keywords, 1, &error_string);
+  keyword_t *keywords = key_file_parse("test_data/key_file.k", &num_keywords,
+                                       NULL, &error_string);
   if (error_string) {
     FAIL(error_string);
     free(error_string);
@@ -486,7 +486,7 @@ TEST_CASE("key_file_parse_with_callback") {
           CHECK(nid == (j + 1));
         }
       },
-      1, &error_string, NULL, NULL, NULL, NULL);
+      NULL, &error_string, NULL, NULL, NULL, NULL);
   if (error_string) {
     FAIL(error_string);
     free(error_string);
@@ -751,7 +751,7 @@ TEST_CASE("INCLUDE_TRANSFORM") {
   char *error_string;
 
   keyword_t *keywords = key_file_parse("test_data/include_transform.k",
-                                       &num_keywords, 1, &error_string);
+                                       &num_keywords, NULL, &error_string);
   if (error_string) {
     FAIL(error_string);
     free(error_string);
