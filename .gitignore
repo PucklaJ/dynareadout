@@ -10,6 +10,7 @@ build/
 .DS_Store
 
 # Test Data
+test_data/
 test_data/*
 
 # LS PrePost

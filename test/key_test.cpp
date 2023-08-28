@@ -23,6 +23,8 @@
  * 3. This notice may not be removed or altered from any source distribution.
  ************************************************************************************/
 
+#include <algorithm>
+#include <sstream>
 #define DOCTEST_CONFIG_TREAT_CHAR_STAR_AS_STRING
 #include <cstdlib>
 #include <cstring>
@@ -68,28 +70,35 @@ TEST_CASE("key_file_parse") {
   {
     char *error_string;
     size_t num_keywords;
-    keyword_t *keywords =
-        key_file_parse("test_data/schinken.k", &num_keywords, 0, &error_string);
+    keyword_t *keywords = key_file_parse("test_data/schinken.k", &num_keywords,
+                                         0, &error_string, NULL);
     CHECK(error_string != NULL);
     CHECK(keywords == NULL);
     free(error_string);
 
-    CHECK(key_file_parse("test_data/schinken.k", &num_keywords, 0, NULL) ==
-          NULL);
+    CHECK(key_file_parse("test_data/schinken.k", &num_keywords, 0, NULL,
+                         NULL) == NULL);
   }
 
-  char *error_string;
+  key_parse_config_t parse_config;
+  parse_config.parse_includes = 1;
+  parse_config.ignore_not_found_includes = 0;
+
+  char *error_string, *warning_string;
   size_t num_keywords;
-  keyword_t *keywords = key_file_parse("test_data/key_file.k", &num_keywords,
-                                       NULL, &error_string);
-  if (error_string) {
-    FAIL(error_string);
+  keyword_t *keywords =
+      key_file_parse("test_data/key_file.k", &num_keywords, &parse_config,
+                     &error_string, &warning_string);
+  if (error_string || warning_string) {
+    std::stringstream stream;
+    if (error_string)
+      stream << "[ERROR] " << error_string;
+    if (warning_string)
+      stream << "[WARNING] " << warning_string;
+    FAIL(stream.str());
     free(error_string);
+    free(warning_string);
     return;
-  }
-
-  for (size_t i = 0; i < num_keywords; i++) {
-    std::cout << keywords[i].name << std::endl;
   }
 
   keyword_t *keyword = key_file_get(keywords, num_keywords, "TITLE", 0);
@@ -106,9 +115,8 @@ TEST_CASE("key_file_parse") {
   REQUIRE(keyword != NULL);
   CHECK(keyword->num_cards == 1);
   CHECK(card_parse_whole(&keyword->cards[0]) == "Start of File");
-  CHECK(
-      card_parse_whole_no_trim(&keyword->cards[0]) ==
-      "                                 Start of File                        ");
+  CHECK(card_parse_whole_no_trim(&keyword->cards[0]) ==
+        "                                 Start of File");
 
   keyword = key_file_get(keywords, num_keywords, "PART", 0);
   REQUIRE(keyword != NULL);
@@ -229,9 +237,9 @@ TEST_CASE("key_file_parse") {
   card_parse_next(card);
   CHECK(card_parse_done(card) == 0);
   CHECK(card_parse_string(card) == "MECH");
-  CHECK(card_parse_string_no_trim(card) == "MECH      ");
-  CHECK(card_parse_string_width(card, 1) == "M");
-  CHECK(card_parse_string_width_no_trim(card, 5) == "MECH ");
+  CHECK(card_parse_string_no_trim(card) == "      MECH");
+  CHECK(card_parse_string_width(card, 7) == "M");
+  CHECK(card_parse_string_width_no_trim(card, 5) == "     ");
 
   keyword = key_file_get(keywords, num_keywords, "SET_NODE_LIST_TITLE", 1);
   REQUIRE(keyword != NULL);
@@ -439,14 +447,39 @@ TEST_CASE("key_file_parse") {
 }
 
 TEST_CASE("key_file_parse_with_callback") {
-  char *error_string;
+  char *error_string, *warning_string;
   size_t num_keywords;
 
   key_file_parse_with_callback(
       "test_data/key_file.k",
       [](const char *file_name, size_t line_number, const char *keyword_name,
          card_t *card, size_t card_index, void *user_data) {
-        CHECK(file_name == "test_data/key_file.k");
+        constexpr std::array expected_file_names = {
+            "test_data/key_file.k",
+            "test_data/"
+            "includeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.k",
+            "test_data/"
+            "includaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.k",
+            "test_data/nastran.k", "test_data/binary.k"};
+
+        bool file_name_found = false;
+        for (const char *expected_file_name : expected_file_names) {
+          if (strcmp(file_name, expected_file_name) == 0) {
+            file_name_found = true;
+            break;
+          }
+        }
+
+        if (!file_name_found) {
+          std::stringstream stream;
+          stream << "Unexpected file name: \"" << file_name << '"';
+          FAIL(stream.str());
+        }
+
         CHECK(user_data == NULL);
         REQUIRE(keyword_name != NULL);
 
@@ -486,10 +519,19 @@ TEST_CASE("key_file_parse_with_callback") {
           CHECK(nid == (j + 1));
         }
       },
-      NULL, &error_string, NULL, NULL, NULL, NULL);
-  if (error_string) {
-    FAIL(error_string);
+      NULL, &error_string, &warning_string, NULL, NULL, NULL, NULL);
+  if (error_string || warning_string) {
+    std::stringstream stream;
+    if (error_string) {
+      stream << error_string;
+    }
+    if (warning_string) {
+      stream << warning_string;
+    }
+
+    FAIL(stream.str());
     free(error_string);
+    free(warning_string);
     return;
   }
 }
@@ -622,13 +664,23 @@ TEST_CASE("card_parse_get_type") {
 }
 
 TEST_CASE("key_file_parse_no_includes") {
+  key_parse_config_t parse_config;
+  parse_config.parse_includes = 0;
+
   size_t num_keywords;
-  char *error_string;
+  char *error_string, *warning_string;
   keyword_t *keywords =
-      key_file_parse("test_data/key_file.k", &num_keywords, 0, &error_string);
-  if (error_string) {
-    FAIL(error_string);
+      key_file_parse("test_data/key_file.k", &num_keywords, &parse_config,
+                     &error_string, &warning_string);
+  if (error_string || warning_string) {
+    std::stringstream stream;
+    if (error_string)
+      stream << error_string;
+    if (warning_string)
+      stream << warning_string;
+    FAIL(stream.str());
     free(error_string);
+    free(warning_string);
     return;
   }
 
@@ -637,30 +689,39 @@ TEST_CASE("key_file_parse_no_includes") {
   REQUIRE(keyword->num_cards == 1);
   CHECK(card_parse_whole_no_trim(&keyword->cards[0]) ==
         "includeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        "eeeeeeee"
         "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-        "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
-        "eeeeeeeeeeeeeeeeeeeeeeeeee");
+        "eeeeeeee"
+        "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.k");
 
   keyword = key_file_get(keywords, num_keywords, "INCLUDE_NASTRAN", 0);
   REQUIRE(keyword != NULL);
   REQUIRE(keyword->num_cards == 1);
   CHECK(card_parse_whole_no_trim(&keyword->cards[0]) ==
         "includaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        "aaaaaaaa"
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
-        "aaaaaaaaaaaaaaaaaaaaaaaaaa");
+        "aaaaaaaa"
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.k");
 
   key_file_free(keywords, num_keywords);
 }
 
 TEST_CASE("carriage_return") {
   size_t num_keywords;
-  char *error_string;
-  keyword_t *keywords = key_file_parse("test_data/carriage_return.k",
-                                       &num_keywords, 0, &error_string);
-  if (error_string) {
-    FAIL(error_string);
+  char *error_string, *warning_string;
+  keyword_t *keywords =
+      key_file_parse("test_data/carriage_return.k", &num_keywords, 0,
+                     &error_string, &warning_string);
+  if (error_string || warning_string) {
+    std::stringstream stream;
+    if (error_string)
+      stream << error_string;
+    if (warning_string)
+      stream << warning_string;
+    FAIL(stream.str());
     free(error_string);
+    free(warning_string);
     return;
   }
 
@@ -748,13 +809,20 @@ TEST_CASE("read_line") {
 
 TEST_CASE("INCLUDE_TRANSFORM") {
   size_t num_keywords;
-  char *error_string;
+  char *error_string, *warning_string;
 
-  keyword_t *keywords = key_file_parse("test_data/include_transform.k",
-                                       &num_keywords, NULL, &error_string);
-  if (error_string) {
-    FAIL(error_string);
+  keyword_t *keywords =
+      key_file_parse("test_data/include_transform.k", &num_keywords, NULL,
+                     &error_string, &warning_string);
+  if (error_string || warning_string) {
+    std::stringstream stream;
+    if (error_string)
+      stream << error_string;
+    if (warning_string)
+      stream << warning_string;
+    FAIL(stream.str());
     free(error_string);
+    free(warning_string);
     return;
   }
 
@@ -788,7 +856,12 @@ TEST_CASE("INCLUDE_TRANSFORM") {
 #define FABS(x) ((x) > 0 ? (x) : -(x))
 
 TEST_CASE("key_file_parseC++") {
-  auto keywords = dro::KeyFile::parse("test_data/key_file.k");
+  std::optional<dro::String> warnings;
+  auto keywords = dro::KeyFile::parse("test_data/key_file.k", warnings);
+  if (warnings) {
+    FAIL(warnings->data());
+    return;
+  }
 
   // Takes the first found keyword of "MAT_PIECEWISE_LINEAR_PLASTICITY_TITLE"
   // (in this case is only one) and the second card of that keyword
@@ -853,19 +926,15 @@ TEST_CASE("key_file_parseC++") {
   card.begin();
   CHECK(card.parse_string_whole<char *>() == "Start of File");
   str = card.parse_string_whole<dro::String>();
-  CHECK(str.data() == "Start of File");
+  CHECK(str == "Start of File");
   CHECK(card.parse_string_whole<std::string>() == "Start of File");
 
-  CHECK(
-      card.parse_string_whole_no_trim<char *>() ==
-      "                                 Start of File                        ");
+  CHECK(card.parse_string_whole_no_trim<char *>() ==
+        "                                 Start of File");
   str = card.parse_string_whole_no_trim<dro::String>();
-  CHECK(
-      str.data() ==
-      "                                 Start of File                        ");
-  CHECK(
-      card.parse_string_whole_no_trim<std::string>() ==
-      "                                 Start of File                        ");
+  CHECK(str == "                                 Start of File");
+  CHECK(card.parse_string_whole_no_trim<std::string>() ==
+        "                                 Start of File");
 
   card = keywords["NODE"][0][26];
 
@@ -1039,20 +1108,43 @@ TEST_CASE("key_file_parseC++") {
 }
 
 TEST_CASE("key_file_parse_with_callbackC++") {
+  std::optional<dro::String> warnings;
   dro::KeyFile::parse_with_callback(
       "test_data/key_file.k",
       [](dro::String file_name, size_t line_number, dro::String keyword_name,
          std::optional<dro::Card> card, size_t card_index) {
-        CHECK(file_name == "test_data/key_file.k");
+        constexpr std::array expected_file_names = {
+            "test_data/key_file.k",
+            "test_data/"
+            "includeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+            "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee.k",
+            "test_data/"
+            "includaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.k",
+            "test_data/nastran.k", "test_data/binary.k"};
 
-        if (!card) {
-          return;
+        bool file_name_found = false;
+        for (const char *expected_file_name : expected_file_names) {
+          if (file_name == expected_file_name) {
+            file_name_found = true;
+            break;
+          }
         }
 
-        const auto card_str = card->parse_string_whole_no_trim<dro::String>();
-        std::cout << keyword_name.str() << "[" << card_index
-                  << "]: " << card_str.str() << std::endl;
-      });
+        if (!file_name_found) {
+          std::stringstream stream;
+          stream << "Unexpected file name: \"" << file_name << '"';
+          FAIL(stream.str());
+        }
+      },
+      warnings);
+
+  if (warnings) {
+    FAIL(warnings->data());
+    return;
+  }
 }
 
 TEST_CASE("empty_card") {

@@ -167,12 +167,23 @@ void add_key_library_to_module(py::module_ &m) {
 
       ;
 
-  m.def("key_file_parse", &dro::KeyFile::parse,
-        "Parses an LS Dyna key file for keywords and their respective cards. "
-        "Returns an array of keywords.\nparse_includes: tells the function "
-        "wether "
-        "to parse include files via the *INCLUDE and similar keywords or if "
-        "they should be added as regular keywords to the array",
-        py::arg("file_name"),
-        py::arg("parse_config") = dro::KeyFile::ParseConfig());
+  m.def(
+      "key_file_parse",
+      [](const std::filesystem::path &file_name, bool output_warnings,
+         dro::KeyFile::ParseConfig parse_config) {
+        std::optional<dro::String> warnings;
+        auto keywords =
+            dro::KeyFile::parse(file_name, warnings, std::move(parse_config));
+
+        if (output_warnings && warnings) {
+          std::cout << warnings->data() << std::endl;
+        }
+
+        return keywords;
+      },
+      "Parses an LS Dyna key file for keywords and their respective cards. "
+      "Returns an array of keywords.\nparse_config: Configure how the file is "
+      "parsed",
+      py::arg("file_name"), py::arg("output_warnings") = true,
+      py::arg("parse_config") = dro::KeyFile::ParseConfig());
 }
