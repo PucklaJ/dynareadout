@@ -33,7 +33,7 @@
 
 void *_binout_read(binout_file *bin_file, const char *path_to_variable,
                    size_t *data_size, const uint8_t binout_type) {
-  CLEAR_ERROR_STRING();
+  BINOUT_CLEAR_ERROR_STRING();
 
   path_view_t path = path_view_new(path_to_variable);
   const binout_file_t *file =
@@ -87,7 +87,7 @@ void *_binout_read(binout_file *bin_file, const char *path_to_variable,
 void *_binout_read_timed(binout_file *bin_file, const char *variable,
                          size_t *num_values, size_t *num_timesteps,
                          const uint8_t binout_type) {
-  CLEAR_ERROR_STRING();
+  BINOUT_CLEAR_ERROR_STRING();
 
   if (bin_file->directory.num_children == 0) {
     NEW_ERROR_STRING("The binout directory is empty");

@@ -47,7 +47,7 @@ void pgni_add_element_solids(d3plot_file *plot_file, const d3plot_part *part,
       solid_ids = d3plot_read_solid_element_ids(plot_file, &num_solids);
       if (plot_file->error_string) {
         /*Ignore these elements*/
-        CLEAR_ERROR_STRING();
+        D3PLOT_CLEAR_ERROR_STRING();
       }
     }
     if (solid_ids) {
@@ -59,7 +59,7 @@ void pgni_add_element_solids(d3plot_file *plot_file, const d3plot_part *part,
           if (loaded_ids) {
             free((d3_word *)solid_ids);
           }
-          CLEAR_ERROR_STRING();
+          D3PLOT_CLEAR_ERROR_STRING();
         }
       }
       if (solid_cons) {
@@ -121,7 +121,7 @@ void pgni_add_element_beams(d3plot_file *plot_file, const d3plot_part *part,
       beam_ids = d3plot_read_beam_element_ids(plot_file, &num_beams);
       if (plot_file->error_string) {
         /*Ignore these elements*/
-        CLEAR_ERROR_STRING();
+        D3PLOT_CLEAR_ERROR_STRING();
       }
     }
     if (beam_ids) {
@@ -133,7 +133,7 @@ void pgni_add_element_beams(d3plot_file *plot_file, const d3plot_part *part,
           if (loaded_ids) {
             free((d3_word *)beam_ids);
           }
-          CLEAR_ERROR_STRING();
+          D3PLOT_CLEAR_ERROR_STRING();
         }
       }
       if (beam_cons) {
@@ -195,7 +195,7 @@ void pgni_add_element_shells(d3plot_file *plot_file, const d3plot_part *part,
       shell_ids = d3plot_read_shell_element_ids(plot_file, &num_shells);
       if (plot_file->error_string) {
         /*Ignore these elements*/
-        CLEAR_ERROR_STRING();
+        D3PLOT_CLEAR_ERROR_STRING();
       }
     }
     if (shell_ids) {
@@ -207,7 +207,7 @@ void pgni_add_element_shells(d3plot_file *plot_file, const d3plot_part *part,
           if (loaded_ids) {
             free((d3_word *)shell_ids);
           }
-          CLEAR_ERROR_STRING();
+          D3PLOT_CLEAR_ERROR_STRING();
         }
       }
       if (shell_cons) {
@@ -270,7 +270,7 @@ void pgni_add_element_thick_shells(
           d3plot_read_thick_shell_element_ids(plot_file, &num_thick_shells);
       if (plot_file->error_string) {
         /*Ignore these elements*/
-        CLEAR_ERROR_STRING();
+        D3PLOT_CLEAR_ERROR_STRING();
       }
     }
     if (thick_shell_ids) {
@@ -283,7 +283,7 @@ void pgni_add_element_thick_shells(
           if (loaded_ids) {
             free((d3_word *)thick_shell_ids);
           }
-          CLEAR_ERROR_STRING();
+          D3PLOT_CLEAR_ERROR_STRING();
         }
       }
       if (thick_shell_cons) {
@@ -345,7 +345,7 @@ void pgnind_add_element_solids(d3plot_file *plot_file, const d3plot_part *part,
       solid_ids = d3plot_read_solid_element_ids(plot_file, &num_solids);
       if (plot_file->error_string) {
         /*Ignore these elements*/
-        CLEAR_ERROR_STRING();
+        D3PLOT_CLEAR_ERROR_STRING();
       }
     }
     if (solid_ids) {
@@ -357,7 +357,7 @@ void pgnind_add_element_solids(d3plot_file *plot_file, const d3plot_part *part,
           if (loaded_ids) {
             free((d3_word *)solid_ids);
           }
-          CLEAR_ERROR_STRING();
+          D3PLOT_CLEAR_ERROR_STRING();
         }
       }
       if (solid_cons) {
@@ -419,7 +419,7 @@ void pgnind_add_element_beams(d3plot_file *plot_file, const d3plot_part *part,
       beam_ids = d3plot_read_beam_element_ids(plot_file, &num_beams);
       if (plot_file->error_string) {
         /*Ignore these elements*/
-        CLEAR_ERROR_STRING();
+        D3PLOT_CLEAR_ERROR_STRING();
       }
     }
     if (beam_ids) {
@@ -431,7 +431,7 @@ void pgnind_add_element_beams(d3plot_file *plot_file, const d3plot_part *part,
           if (loaded_ids) {
             free((d3_word *)beam_ids);
           }
-          CLEAR_ERROR_STRING();
+          D3PLOT_CLEAR_ERROR_STRING();
         }
       }
       if (beam_cons) {
@@ -493,7 +493,7 @@ void pgnind_add_element_shells(d3plot_file *plot_file, const d3plot_part *part,
       shell_ids = d3plot_read_shell_element_ids(plot_file, &num_shells);
       if (plot_file->error_string) {
         /*Ignore these elements*/
-        CLEAR_ERROR_STRING();
+        D3PLOT_CLEAR_ERROR_STRING();
       }
     }
     if (shell_ids) {
@@ -505,7 +505,7 @@ void pgnind_add_element_shells(d3plot_file *plot_file, const d3plot_part *part,
           if (loaded_ids) {
             free((d3_word *)shell_ids);
           }
-          CLEAR_ERROR_STRING();
+          D3PLOT_CLEAR_ERROR_STRING();
         }
       }
       if (shell_cons) {
@@ -567,7 +567,7 @@ void pgnind_add_element_thick_shells(
           d3plot_read_thick_shell_element_ids(plot_file, &num_thick_shells);
       if (plot_file->error_string) {
         /*Ignore these elements*/
-        CLEAR_ERROR_STRING();
+        D3PLOT_CLEAR_ERROR_STRING();
       }
     }
     if (thick_shell_ids) {
@@ -580,7 +580,7 @@ void pgnind_add_element_thick_shells(
           if (loaded_ids) {
             free((d3_word *)thick_shell_ids);
           }
-          CLEAR_ERROR_STRING();
+          D3PLOT_CLEAR_ERROR_STRING();
         }
       }
       if (thick_shell_cons) {

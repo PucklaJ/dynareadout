@@ -34,7 +34,7 @@ d3_word *d3plot_part_get_node_ids2(
     const d3plot_beam_con *beam_cons, const d3plot_shell_con *shell_cons,
     const d3plot_thick_shell_con *thick_shell_cons) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   uint8_t node_ids_loaded = 0;
 
@@ -85,7 +85,7 @@ d3_word *d3plot_part_get_node_indices2(
     const d3plot_shell_con *shell_cons,
     const d3plot_thick_shell_con *thick_shell_cons) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   const size_t part_node_indices_cap =
       part->num_solids * 8 + part->num_beams * 2 + part->num_shells * 4 +

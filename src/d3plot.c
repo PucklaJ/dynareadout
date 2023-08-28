@@ -495,7 +495,7 @@ d3_word *d3plot_read_all_element_ids(d3plot_file *plot_file, size_t *num_ids) {
 
 d3_word *d3plot_read_part_ids(d3plot_file *plot_file, size_t *num_parts) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   if (plot_file->data_pointers[D3PLT_PTR_PART_IDS] == 0) {
     if (plot_file->data_pointers[D3PLT_PTR_PART_TITLES] == 0) {
@@ -542,7 +542,7 @@ d3_word *d3plot_read_part_ids(d3plot_file *plot_file, size_t *num_parts) {
 
 char **d3plot_read_part_titles(d3plot_file *plot_file, size_t *num_parts) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   *num_parts = plot_file->control_data.nmmat;
   char **part_titles = malloc(*num_parts * sizeof(char *));
@@ -633,7 +633,7 @@ double *d3plot_read_all_node_coordinates(d3plot_file *plot_file,
     return big_data;
   }
 
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   *num_time_steps = plot_file->num_states;
   *num_nodes = (size_t)plot_file->control_data.numnp;
@@ -707,7 +707,7 @@ double *d3plot_read_all_node_velocity(d3plot_file *plot_file, size_t *num_nodes,
     return big_data;
   }
 
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   *num_time_steps = plot_file->num_states;
   *num_nodes = (size_t)plot_file->control_data.numnp;
@@ -782,7 +782,7 @@ double *d3plot_read_all_node_acceleration(d3plot_file *plot_file,
     return big_data;
   }
 
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   *num_time_steps = plot_file->num_states;
   *num_nodes = (size_t)plot_file->control_data.numnp;
@@ -857,7 +857,7 @@ float *d3plot_read_all_node_coordinates_32(d3plot_file *plot_file,
     return big_data;
   }
 
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   *num_time_steps = plot_file->num_states;
   *num_nodes = (size_t)plot_file->control_data.numnp;
@@ -932,7 +932,7 @@ float *d3plot_read_all_node_velocity_32(d3plot_file *plot_file,
     return big_data;
   }
 
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   *num_time_steps = plot_file->num_states;
   *num_nodes = (size_t)plot_file->control_data.numnp;
@@ -1007,7 +1007,7 @@ float *d3plot_read_all_node_acceleration_32(d3plot_file *plot_file,
     return big_data;
   }
 
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   *num_time_steps = plot_file->num_states;
   *num_nodes = (size_t)plot_file->control_data.numnp;
@@ -1042,7 +1042,7 @@ float *d3plot_read_all_node_acceleration_32(d3plot_file *plot_file,
 
 double d3plot_read_time(d3plot_file *plot_file, size_t state) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   if (state >= plot_file->num_states) {
     ERROR_AND_NO_RETURN_F_PTR("%zu is out of bounds for the states", state);
@@ -1082,7 +1082,7 @@ double d3plot_read_time(d3plot_file *plot_file, size_t state) {
 
 double *d3plot_read_all_time(d3plot_file *plot_file, size_t *num_states) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   *num_states = plot_file->num_states;
   double *times = malloc(plot_file->num_states * sizeof(double));
@@ -1137,7 +1137,7 @@ double *d3plot_read_all_time(d3plot_file *plot_file, size_t *num_states) {
 
 float d3plot_read_time_32(d3plot_file *plot_file, size_t state) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   if (state >= plot_file->num_states) {
     ERROR_AND_NO_RETURN_F_PTR("%zu is out of bounds for the states", state);
@@ -1177,7 +1177,7 @@ float d3plot_read_time_32(d3plot_file *plot_file, size_t state) {
 
 float *d3plot_read_all_time_32(d3plot_file *plot_file, size_t *num_states) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   *num_states = plot_file->num_states;
   float *times = malloc(plot_file->num_states * sizeof(float));
@@ -1233,7 +1233,7 @@ float *d3plot_read_all_time_32(d3plot_file *plot_file, size_t *num_states) {
 d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
                                        size_t *num_solids) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   *num_solids = plot_file->control_data.nel8;
   if (*num_solids == 0) {
@@ -1371,7 +1371,7 @@ d3plot_read_thick_shells_state(d3plot_file *plot_file, size_t state,
                                size_t *num_thick_shells,
                                size_t *num_history_variables) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   *num_thick_shells = plot_file->control_data.nelt;
   if (*num_thick_shells == 0) {
@@ -1616,7 +1616,7 @@ d3plot_read_thick_shells_state(d3plot_file *plot_file, size_t state,
 d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
                                      size_t *num_beams) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   *num_beams = plot_file->control_data.nel2;
   if (*num_beams == 0) {
@@ -1719,7 +1719,7 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
                                        size_t *num_shells,
                                        size_t *num_history_variables) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   *num_shells = plot_file->control_data.nel4;
   if (*num_shells == 0) {
@@ -2002,7 +2002,7 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
 d3plot_solid_con *d3plot_read_solid_elements(d3plot_file *plot_file,
                                              size_t *num_solids) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   if (plot_file->control_data.nel8 <= 0) {
     /* nel8 represents the number of extra nodes for ten node solids*/
@@ -2087,7 +2087,7 @@ d3plot_thick_shell_con *
 d3plot_read_thick_shell_elements(d3plot_file *plot_file,
                                  size_t *num_thick_shells) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   if (plot_file->control_data.nelt == 0) {
     *num_thick_shells = 0;
@@ -2173,7 +2173,7 @@ d3plot_read_thick_shell_elements(d3plot_file *plot_file,
 d3plot_beam_con *d3plot_read_beam_elements(d3plot_file *plot_file,
                                            size_t *num_beams) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   if (plot_file->control_data.nel2 == 0) {
     *num_beams = 0;
@@ -2248,7 +2248,7 @@ d3plot_beam_con *d3plot_read_beam_elements(d3plot_file *plot_file,
 d3plot_shell_con *d3plot_read_shell_elements(d3plot_file *plot_file,
                                              size_t *num_shells) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   if (plot_file->control_data.nel4 == 0) {
     *num_shells = 0;
@@ -2322,7 +2322,7 @@ d3plot_shell_con *d3plot_read_shell_elements(d3plot_file *plot_file,
 
 char *d3plot_read_title(d3plot_file *plot_file) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   char *title = malloc(10 * plot_file->buffer.word_size + 1);
   /* We never set D3PLT_PTR_TITLE, but because the Title is at position 0 we
@@ -2346,7 +2346,7 @@ char *d3plot_read_title(d3plot_file *plot_file) {
 
 struct tm *d3plot_read_run_time(d3plot_file *plot_file) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   d3_word run_time = 0;
   d3_pointer d3_ptr =
@@ -2367,7 +2367,7 @@ struct tm *d3plot_read_run_time(d3plot_file *plot_file) {
 
 time_t d3plot_read_epoch_run_time(d3plot_file *plot_file) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   d3_word run_time = 0;
   d3_pointer d3_ptr =
@@ -2390,12 +2390,12 @@ time_t d3plot_read_epoch_run_time(d3plot_file *plot_file) {
   ids = id_func(plot_file, &num_elements);                                     \
   if (plot_file->error_string) {                                               \
     /* Just ignore those elements*/                                            \
-    CLEAR_ERROR_STRING();                                                      \
+    D3PLOT_CLEAR_ERROR_STRING();                                               \
   } else if (num_elements > 0) {                                               \
     el_type *els = el_func(plot_file, &num_elements);                          \
     if (plot_file->error_string) {                                             \
       /* Just ignore those elements*/                                          \
-      CLEAR_ERROR_STRING();                                                    \
+      D3PLOT_CLEAR_ERROR_STRING();                                             \
     } else {                                                                   \
       size_t i = 0;                                                            \
       while (i < num_elements) {                                               \
@@ -2421,7 +2421,7 @@ time_t d3plot_read_epoch_run_time(d3plot_file *plot_file) {
 
 d3plot_part d3plot_read_part(d3plot_file *plot_file, size_t part_index) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   d3plot_part part;
   part.solid_ids = NULL;
@@ -2469,7 +2469,7 @@ d3plot_part d3plot_read_part(d3plot_file *plot_file, size_t part_index) {
 d3plot_part d3plot_read_part_by_id(d3plot_file *plot_file, d3_word part_id,
                                    const d3_word *part_ids, size_t num_parts) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   d3plot_part part = {0};
 
@@ -2574,7 +2574,7 @@ int _get_nth_digit(d3_word value, int n) {
 
 double *_d3plot_read_node_data(d3plot_file *plot_file, size_t state,
                                size_t *num_nodes, size_t data_type) {
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   if (plot_file->buffer.word_size == 4) {
     float *coords32 =
@@ -2624,7 +2624,7 @@ double *_d3plot_read_node_data(d3plot_file *plot_file, size_t state,
 
 float *_d3plot_read_node_data_32(d3plot_file *plot_file, size_t state,
                                  size_t *num_nodes, size_t data_type) {
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   if (plot_file->buffer.word_size == 8) {
     double *coords64 =
@@ -2674,7 +2674,7 @@ float *_d3plot_read_node_data_32(d3plot_file *plot_file, size_t state,
 
 d3_word *_d3plot_read_ids(d3plot_file *plot_file, size_t *num_ids,
                           size_t data_type, size_t num_ids_value) {
-  CLEAR_ERROR_STRING();
+  D3PLOT_CLEAR_ERROR_STRING();
 
   *num_ids = num_ids_value;
   if (num_ids_value == 0) {

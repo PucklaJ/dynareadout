@@ -69,7 +69,7 @@
   sprintf(format_buffer, format_str, __VA_ARGS__);                             \
   NEW_ERROR_STRING(format_buffer);
 
-#define CLEAR_ERROR_STRING()                                                   \
+#define BINOUT_CLEAR_ERROR_STRING()                                            \
   free(bin_file->error_string);                                                \
   bin_file->error_string = NULL;
 

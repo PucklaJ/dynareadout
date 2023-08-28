@@ -352,7 +352,7 @@ void binout_close(binout_file *bin_file) {
 uint8_t binout_get_type_id(binout_file *bin_file,
                            const char *path_to_variable) {
   BEGIN_PROFILE_FUNC();
-  CLEAR_ERROR_STRING();
+  BINOUT_CLEAR_ERROR_STRING();
 
   path_view_t path = path_view_new(path_to_variable);
   const binout_file_t *file =
