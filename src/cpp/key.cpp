@@ -24,7 +24,6 @@
  ************************************************************************************/
 
 #include "key.hpp"
-#include "cpp/array.hpp"
 #include <cstdio>
 #include <cstdlib>
 

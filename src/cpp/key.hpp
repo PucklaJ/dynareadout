@@ -26,7 +26,6 @@
 #pragma once
 
 #include "array.hpp"
-#include "cpp/array.hpp"
 #include <array>
 #include <cstdio>
 #include <cstdlib>
