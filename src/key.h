@@ -218,14 +218,6 @@ void _card_cpy(const card_t *card, char *dst, size_t len);
  * wether the multi line string has been completely parsed.*/
 int _parse_multi_line_string(char **multi_line_string, size_t *multi_line_index,
                              const card_t *card, size_t line_length);
-void _parse_include_file_name_card(
-    const card_t *card, size_t *card_index, const extra_string *line,
-    size_t line_length, char **current_multi_line_string,
-    size_t *current_multi_line_index, key_file_callback callback,
-    void *user_data, char **error_stack, size_t *error_stack_size,
-    size_t *error_ptr, char **warning_stack, size_t *warning_stack_size,
-    size_t *warning_ptr, const char *file_name, size_t line_count,
-    key_parse_recursion_t *rec, const key_parse_config_t *parse_config);
 /* -----------------------------*/
 
 #ifdef __cplusplus
