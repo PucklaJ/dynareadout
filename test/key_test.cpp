@@ -30,9 +30,11 @@
 #include <cstring>
 #include <doctest/doctest.h>
 #include <extra_string.h>
+#include <include_transform.h>
 #include <iostream>
 #include <key.h>
 #include <line.h>
+
 #ifdef BUILD_CPP
 #include <key.hpp>
 #endif
@@ -807,7 +809,7 @@ TEST_CASE("read_line") {
   fclose(file);
 }
 
-TEST_CASE("INCLUDE_TRANSFORM") {
+TEST_CASE("key_file_include_transform") {
   size_t num_keywords;
   char *error_string, *warning_string;
 
@@ -830,25 +832,30 @@ TEST_CASE("INCLUDE_TRANSFORM") {
   REQUIRE(it != NULL);
   REQUIRE(it->num_cards == 5);
 
-  card_t *card = &it->cards[0];
-  char *include_name = card_parse_whole(card);
-  CHECK(include_name == "asidjasidjasidjasnlkdfmg9lmdf9lgmd9flgmd9flg dgd "
-                        "dfgdofjgdfigjdoifjgmdfogmidko"
-                        "asidjasidjasi6jasnlkdfmg9lmdf9lgmd9flgmd9flg dgd "
-                        "dfgdofjgdfigjdoifjgmdfogmidko"
-                        "asidjasidjasi6jasnlkdfmg9lmdf9lgmd9flgmd9flg dgd "
-                        "dfgdofjgdfigjdoifjgmdfogmidko.k");
+  include_transform_t include_transform = key_parse_include_transform(it);
 
-  card = &it->cards[1];
-  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
-  CHECK(card_parse_int(card) == 100);
+  CHECK(include_transform.file_name ==
+        "asidjasidjasidjasnlkdfmg9lmdf9lgmd9flgmd9flg dgd "
+        "dfgdofjgdfigjdoifjgmdfogmidkoasidjasidjasi6jasnlkdfmg9lmdf9lgmd9flgmd9"
+        "flg dgd "
+        "dfgdofjgdfigjdoifjgmdfogmidkoasidjasidjasi6jasnlkdfmg9lmdf9lgmd9flgmd9"
+        "flg dgd dfgdofjgdfigjdoifjgmdfogmidko.k");
+  CHECK(include_transform.idnoff == 100);
+  CHECK(include_transform.ideoff == 101);
+  CHECK(include_transform.idpoff == 102);
+  CHECK(include_transform.idmoff == 103);
+  CHECK(include_transform.idsoff == 104);
+  CHECK(include_transform.idfoff == 105);
+  CHECK(include_transform.iddoff == 0);
+  CHECK(include_transform.idroff == 0);
+  CHECK(include_transform.fctmas == 2.0);
+  CHECK(include_transform.fcttim == 2.0);
+  CHECK(include_transform.fctlen == 2.0);
+  CHECK(include_transform.fcttem == "CtoF");
+  CHECK(include_transform.incout1 == 1);
+  CHECK(include_transform.tranid == 120);
 
-  card = &it->cards[4];
-  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
-  CHECK(card_parse_int(card) == 120);
-
-  free(include_name);
-
+  key_free_include_transform(&include_transform);
   key_file_free(keywords, num_keywords);
 }
 
