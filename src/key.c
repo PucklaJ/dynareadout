@@ -160,7 +160,7 @@ keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
 
   key_file_parse_with_callback(file_name, key_file_parse_callback, parse_config,
                                &internal_error_string, warning_string, &data,
-                               NULL, NULL, NULL);
+                               NULL);
 
   /* Deallocate the memory if an error occurred*/
   if (internal_error_string) {
@@ -184,9 +184,7 @@ void key_file_parse_with_callback(const char *file_name,
                                   key_file_callback callback,
                                   const key_parse_config_t *_parse_config,
                                   char **error_string, char **warning_string,
-                                  void *user_data, char ***include_paths,
-                                  size_t *num_include_paths,
-                                  const char *root_folder) {
+                                  void *user_data, key_parse_recursion_t *rec) {
   BEGIN_PROFILE_FUNC();
 
   /* Variables to stack multiple errors*/
@@ -212,54 +210,40 @@ void key_file_parse_with_callback(const char *file_name,
     return;
   }
 
-  /* This points to the include paths*/
-  char ***include_paths_ptr;
-  size_t *num_include_paths_ptr;
-  /* Stores the parent directory of the first file passed to
-   * key_file_parse_with_callback*/
-  char *root_folder_ptr;
+  /* Data for recursion. Stores all include paths*/
+  key_parse_recursion_t *rec_ptr = NULL;
 
-  if (!include_paths) {
-    include_paths_ptr = malloc(sizeof(char **));
-    *include_paths_ptr = NULL;
-  } else {
-    include_paths_ptr = include_paths;
-  }
+  if (!rec) {
+    rec_ptr = malloc(sizeof(key_parse_recursion_t));
+    rec_ptr->include_paths = NULL;
+    rec_ptr->num_include_paths = 0;
 
-  if (!num_include_paths) {
-    num_include_paths_ptr = malloc(sizeof(size_t));
-    *num_include_paths_ptr = 0;
-  } else {
-    num_include_paths_ptr = num_include_paths;
-  }
-
-  if (!root_folder) {
     const size_t index = path_move_up_real(file_name);
     if (index == (size_t)~0) {
-      root_folder_ptr = path_working_directory();
+      rec_ptr->root_folder = path_working_directory();
     } else {
       if (path_is_abs(file_name)) {
-        root_folder_ptr = malloc(index + 1 + 1);
-        memcpy(root_folder_ptr, file_name, index + 1);
-        root_folder_ptr[index + 1] = '\0';
+        rec_ptr->root_folder = malloc(index + 1 + 1);
+        memcpy(rec_ptr->root_folder, file_name, index + 1);
+        rec_ptr->root_folder[index + 1] = '\0';
       } else {
         char *current_wd = path_working_directory();
-        root_folder_ptr = path_join(current_wd, file_name);
-        root_folder_ptr[path_move_up_real(root_folder_ptr) + 1] = '\0';
+        rec_ptr->root_folder = path_join(current_wd, file_name);
+        rec_ptr->root_folder[path_move_up_real(rec_ptr->root_folder) + 1] =
+            '\0';
         free(current_wd);
       }
     }
   } else {
-    root_folder_ptr = (char *)root_folder;
+    rec_ptr = rec;
   }
 
-  if (*num_include_paths_ptr == 0) {
+  if (rec_ptr->num_include_paths == 0) {
     /* Add the current working directory (local directory) to the
      * include paths*/
-    (*num_include_paths_ptr)++;
-    *include_paths_ptr =
-        realloc(*include_paths_ptr, *num_include_paths_ptr * sizeof(char *));
-    (*include_paths_ptr)[*num_include_paths_ptr - 1] = path_working_directory();
+    rec_ptr->num_include_paths = 1;
+    rec_ptr->include_paths = malloc(sizeof(char *));
+    rec_ptr->include_paths[0] = path_working_directory();
   }
 
   /* Setup parse config*/
@@ -376,11 +360,10 @@ void key_file_parse_with_callback(const char *file_name,
           if (extra_string_compare(&current_keyword_name, "INCLUDE") == 0) {
             _parse_include_file_name_card(
                 &card, &card_index, &line_reader.line, line_reader.line_length,
-                &current_multi_line_string, &current_multi_line_index,
-                num_include_paths_ptr, include_paths_ptr, callback, user_data,
-                &error_stack, &error_stack_size, &error_ptr, &warning_stack,
-                &warning_stack_size, &warning_ptr, file_name, line_count,
-                root_folder_ptr, &parse_config);
+                &current_multi_line_string, &current_multi_line_index, callback,
+                user_data, &error_stack, &error_stack_size, &error_ptr,
+                &warning_stack, &warning_stack_size, &warning_ptr, file_name,
+                line_count, rec_ptr, &parse_config);
             continue;
           } else if (extra_string_compare(&current_keyword_name,
                                           "INCLUDE_PATH") == 0) {
@@ -401,10 +384,11 @@ void key_file_parse_with_callback(const char *file_name,
                         file_name, line_count, current_multi_line_string);
               free(current_multi_line_string);
             } else {
-              (*num_include_paths_ptr)++;
-              *include_paths_ptr = realloc(
-                  *include_paths_ptr, *num_include_paths_ptr * sizeof(char *));
-              (*include_paths_ptr)[*num_include_paths_ptr - 1] =
+              rec_ptr->num_include_paths++;
+              rec_ptr->include_paths =
+                  realloc(rec_ptr->include_paths,
+                          rec_ptr->num_include_paths * sizeof(char *));
+              rec_ptr->include_paths[rec_ptr->num_include_paths - 1] =
                   current_multi_line_string;
             }
             current_multi_line_string = NULL;
@@ -432,7 +416,7 @@ void key_file_parse_with_callback(const char *file_name,
             }
 
             char *full_include_path_name =
-                path_join(root_folder_ptr, current_multi_line_string);
+                path_join(rec_ptr->root_folder, current_multi_line_string);
             free(current_multi_line_string);
             current_multi_line_string = NULL;
             current_multi_line_index = 0;
@@ -443,10 +427,11 @@ void key_file_parse_with_callback(const char *file_name,
                   file_name, line_count, full_include_path_name);
               free(full_include_path_name);
             } else {
-              (*num_include_paths_ptr)++;
-              *include_paths_ptr = realloc(
-                  *include_paths_ptr, *num_include_paths_ptr * sizeof(char *));
-              (*include_paths_ptr)[*num_include_paths_ptr - 1] =
+              rec_ptr->num_include_paths++;
+              rec_ptr->include_paths =
+                  realloc(rec_ptr->include_paths,
+                          rec_ptr->num_include_paths * sizeof(char *));
+              rec_ptr->include_paths[rec_ptr->num_include_paths - 1] =
                   full_include_path_name;
             }
 
@@ -464,11 +449,10 @@ void key_file_parse_with_callback(const char *file_name,
               _parse_include_file_name_card(
                   &card, &card_index, &line_reader.line,
                   line_reader.line_length, &current_multi_line_string,
-                  &current_multi_line_index, num_include_paths_ptr,
-                  include_paths_ptr, callback, user_data, &error_stack,
+                  &current_multi_line_index, callback, user_data, &error_stack,
                   &error_stack_size, &error_ptr, &warning_stack,
                   &warning_stack_size, &warning_ptr, file_name, line_count,
-                  root_folder_ptr, &parse_config);
+                  rec_ptr, &parse_config);
               continue;
             } else {
               WARNING_F(
@@ -490,11 +474,10 @@ void key_file_parse_with_callback(const char *file_name,
               _parse_include_file_name_card(
                   &card, &card_index, &line_reader.line,
                   line_reader.line_length, &current_multi_line_string,
-                  &current_multi_line_index, num_include_paths_ptr,
-                  include_paths_ptr, callback, user_data, &error_stack,
+                  &current_multi_line_index, callback, user_data, &error_stack,
                   &error_stack_size, &error_ptr, &warning_stack,
                   &warning_stack_size, &warning_ptr, file_name, line_count,
-                  root_folder_ptr, &parse_config);
+                  rec_ptr, &parse_config);
               continue;
             } else if (card_index == 1) {
               /* Ignore the card it is irrelevant for the parsing*/
@@ -626,22 +609,17 @@ void key_file_parse_with_callback(const char *file_name,
     }
   }
 
-  /* Free all include paths*/
-  if (!include_paths) {
+  /* Free all recursion data (include paths, root folder)*/
+  if (!rec) {
     size_t i = 0;
-    while (i < *num_include_paths_ptr) {
-      free((*include_paths_ptr)[i]);
+    while (i < rec_ptr->num_include_paths) {
+      free(rec_ptr->include_paths[i]);
 
       i++;
     }
-    free(*include_paths_ptr);
-    free(include_paths_ptr);
-  }
-  if (!num_include_paths) {
-    free(num_include_paths_ptr);
-  }
-  if (!root_folder) {
-    free(root_folder_ptr);
+    free(rec_ptr->include_paths);
+    free(rec_ptr->root_folder);
+    free(rec_ptr);
   }
 
   free(line_reader.line.extra);
@@ -649,6 +627,7 @@ void key_file_parse_with_callback(const char *file_name,
 
   fclose(file);
 
+  /* Convert the error stack into an error string*/
   if (error_stack) {
     if (!error_string) {
       free(error_stack);
@@ -660,6 +639,7 @@ void key_file_parse_with_callback(const char *file_name,
     *error_string = NULL;
   }
 
+  /* Convert the warning stack into a warning string*/
   if (warning_stack) {
     if (!warning_string) {
       free(warning_stack);
@@ -1580,12 +1560,11 @@ int _parse_multi_line_string(char **multi_line_string, size_t *multi_line_index,
 void _parse_include_file_name_card(
     const card_t *card, size_t *card_index, const extra_string *line,
     size_t line_length, char **current_multi_line_string,
-    size_t *current_multi_line_index, size_t *num_include_paths,
-    char ***include_paths, key_file_callback callback, void *user_data,
-    char **error_stack, size_t *error_stack_size, size_t *error_ptr,
-    char **warning_stack, size_t *warning_stack_size, size_t *warning_ptr,
-    const char *file_name, size_t line_count, const char *root_folder,
-    const key_parse_config_t *parse_config) {
+    size_t *current_multi_line_index, key_file_callback callback,
+    void *user_data, char **error_stack, size_t *error_stack_size,
+    size_t *error_ptr, char **warning_stack, size_t *warning_stack_size,
+    size_t *warning_ptr, const char *file_name, size_t line_count,
+    key_parse_recursion_t *rec, const key_parse_config_t *parse_config) {
   /* Support multi line file names (LS Dyna Manual Volume I
    * *INCLUDE Remark 2, p. 2690)*/
   if (!_parse_multi_line_string(current_multi_line_string,
@@ -1601,9 +1580,9 @@ void _parse_include_file_name_card(
 
   /* Loop over all include paths and look for file*/
   size_t i = 0;
-  while (i < *num_include_paths) {
+  while (i < rec->num_include_paths) {
     char *full_include_file_name =
-        path_join((*include_paths)[i], *current_multi_line_string);
+        path_join(rec->include_paths[i], *current_multi_line_string);
 
     if (path_is_file(full_include_file_name)) {
       final_include_file_name = full_include_file_name;
@@ -1620,8 +1599,7 @@ void _parse_include_file_name_card(
     /* Call the function recursively*/
     key_file_parse_with_callback(final_include_file_name, callback,
                                  parse_config, &include_error, &include_warning,
-                                 user_data, include_paths, num_include_paths,
-                                 root_folder);
+                                 user_data, rec);
     free(final_include_file_name);
 
     /* Add the error to the error stack if an error occurred in the

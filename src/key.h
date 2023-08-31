@@ -65,6 +65,15 @@ typedef struct {
                                    0*/
 } key_parse_config_t;
 
+/* Holds all variables used for recursion*/
+typedef struct {
+  char **include_paths;     /* Holds all paths that are added with INCLUDE_PATH
+                               keywords and such*/
+  size_t num_include_paths; /* The number of include paths*/
+  char *root_folder;        /* The folder which contains the file with which the
+                               function was invoked first*/
+} key_parse_recursion_t;
+
 /* Returns a key_parse_config_t with all values set to the default*/
 key_parse_config_t key_default_parse_config();
 
@@ -93,15 +102,12 @@ keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
 /* Same as key_file_parse, but instead of returning an array it calls an
  * callback every time a card (or empty keyword) is encountered.
  * user_data: will be given to the callback untouched.
- * include_paths, num_include_paths, root_folder: these are only used for
- * recursion and should be set to NULL*/
+ * rec: only used for recursion and should be set to NULL*/
 void key_file_parse_with_callback(const char *file_name,
                                   key_file_callback callback,
                                   const key_parse_config_t *parse_config,
                                   char **error_string, char **warning_string,
-                                  void *user_data, char ***include_paths,
-                                  size_t *num_include_paths,
-                                  const char *root_folder);
+                                  void *user_data, key_parse_recursion_t *rec);
 /* Deallocates the data returned by key_file_parse*/
 void key_file_free(keyword_t *keywords, size_t num_keywords);
 /* Returns a certain keyword with name. If the key file contains more keywords
@@ -215,12 +221,11 @@ int _parse_multi_line_string(char **multi_line_string, size_t *multi_line_index,
 void _parse_include_file_name_card(
     const card_t *card, size_t *card_index, const extra_string *line,
     size_t line_length, char **current_multi_line_string,
-    size_t *current_multi_line_index, size_t *num_include_paths,
-    char ***include_paths, key_file_callback callback, void *user_data,
-    char **error_stack, size_t *error_stack_size, size_t *error_ptr,
-    char **warning_stack, size_t *warning_stack_size, size_t *warning_ptr,
-    const char *file_name, size_t line_count, const char *root_folder,
-    const key_parse_config_t *parse_config);
+    size_t *current_multi_line_index, key_file_callback callback,
+    void *user_data, char **error_stack, size_t *error_stack_size,
+    size_t *error_ptr, char **warning_stack, size_t *warning_stack_size,
+    size_t *warning_ptr, const char *file_name, size_t line_count,
+    key_parse_recursion_t *rec, const key_parse_config_t *parse_config);
 /* -----------------------------*/
 
 #ifdef __cplusplus

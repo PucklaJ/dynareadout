@@ -519,7 +519,7 @@ TEST_CASE("key_file_parse_with_callback") {
           CHECK(nid == (j + 1));
         }
       },
-      NULL, &error_string, &warning_string, NULL, NULL, NULL, NULL);
+      NULL, &error_string, &warning_string, NULL, NULL);
   if (error_string || warning_string) {
     std::stringstream stream;
     if (error_string) {

@@ -219,7 +219,7 @@ void KeyFile::parse_with_callback(const std::filesystem::path &file_name,
                     std::move(card_opt), card_index);
       },
       parse_config.get_handle(), &error_string, &warning_string, &callback,
-      NULL, NULL, NULL);
+      NULL);
 
   if (warning_string) {
     warnings = dro::String(warning_string);
