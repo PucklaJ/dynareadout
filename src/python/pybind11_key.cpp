@@ -23,6 +23,8 @@
  * 3. This notice may not be removed or altered from any source distribution.
  ************************************************************************************/
 
+#include "conversions.hpp"
+#include <include_transform.hpp>
 #include <key.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl/filesystem.h>
@@ -186,4 +188,49 @@ void add_key_library_to_module(py::module_ &m) {
       "parsed",
       py::arg("file_name"), py::arg("output_warnings") = true,
       py::arg("parse_config") = dro::KeyFile::ParseConfig());
+
+  dro::add_array_type_to_module<dro::TransformationOption>(m);
+  dro::add_array_type_to_module<transformation_option_t>(m);
+
+  py::class_<dro::IncludeTransform>(m, "IncludeTransform")
+      .def(py::init<dro::Keyword &>(), py::arg("keyword"))
+      .def(py::init<>())
+      .def("parse_include_transform_card",
+           &dro::IncludeTransform::parse_include_transform_card,
+           py::arg("card"), py::arg("card_index"))
+      .def("get_file_name", &dro::IncludeTransform::get_file_name)
+      .def("get_suffix", &dro::IncludeTransform::get_suffix)
+      .def("get_fcttem", &dro::IncludeTransform::get_fcttem)
+      .def("get_idnoff", &dro::IncludeTransform::get_idnoff)
+      .def("get_ideoff", &dro::IncludeTransform::get_ideoff)
+      .def("get_idpoff", &dro::IncludeTransform::get_idpoff)
+      .def("get_idmoff", &dro::IncludeTransform::get_idmoff)
+      .def("get_idsoff", &dro::IncludeTransform::get_idsoff)
+      .def("get_idfoff", &dro::IncludeTransform::get_idfoff)
+      .def("get_iddoff", &dro::IncludeTransform::get_iddoff)
+      .def("get_idroff", &dro::IncludeTransform::get_idroff)
+      .def("get_incout1", &dro::IncludeTransform::get_incout1)
+      .def("get_tranid", &dro::IncludeTransform::get_tranid)
+      .def("get_fctmas", &dro::IncludeTransform::get_fctmas)
+      .def("get_fcttim", &dro::IncludeTransform::get_fcttim)
+      .def("get_fctlen", &dro::IncludeTransform::get_fctlen)
+
+      ;
+
+  py::class_<dro::TransformationOption>(m, "TransformOption")
+      .def("get_name", &dro::TransformationOption::get_name)
+      .def("get_parameters", &dro::TransformationOption::get_parameters)
+
+      ;
+
+  py::class_<dro::DefineTransformation>(m, "DefineTransformation")
+      .def(py::init<dro::Keyword &>(), py::arg("keyword"))
+      .def(py::init())
+      .def("parse_define_transformation_card",
+           &dro::DefineTransformation::parse_define_transformation_card,
+           py::arg("card"), py::arg("card_index"))
+      .def("get_tranid", &dro::DefineTransformation::get_tranid)
+      .def("get_options", &dro::DefineTransformation::get_options)
+
+      ;
 }

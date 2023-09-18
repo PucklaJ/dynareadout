@@ -61,7 +61,7 @@ public:
   void parse_define_transformation_card(Card card, size_t card_index) noexcept;
 
   inline int64_t get_tranid() const noexcept { return m_handle.tranid; }
-  Array<TransformationOption> &get_options() noexcept;
+  Array<TransformationOption> get_options() noexcept;
   inline Array<transformation_option_t> get_raw_options() noexcept {
     return Array<transformation_option_t>(m_handle.options,
                                           m_handle.num_options, false);
@@ -69,7 +69,6 @@ public:
 
 private:
   define_transformation_t m_handle;
-  Array<TransformationOption> m_options;
 };
 
 } // namespace dro

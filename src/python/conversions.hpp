@@ -26,6 +26,7 @@
 #include <array.hpp>
 #include <cstring>
 #include <d3_defines.h>
+#include <include_transform.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <sstream>
@@ -191,6 +192,10 @@ template <typename T> inline const char *get_array_name() {
     return "BeamArray";
   } else if constexpr (std::is_same_v<T, d3plot_shell>) {
     return "ShellArray";
+  } else if constexpr (std::is_same_v<T, TransformationOption>) {
+    return "TransformationOptionArray";
+  } else {
+    return "UnnamedArray";
   }
 }
 

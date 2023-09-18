@@ -58,15 +58,16 @@ void DefineTransformation::parse_define_transformation_card(
   key_parse_define_transformation_card(&m_handle, card.m_handle, card_index);
 }
 
-Array<TransformationOption> &DefineTransformation::get_options() noexcept {
-  if (m_options.empty() && m_handle.num_options != 0) {
-    m_options = Array<TransformationOption>::New(m_handle.num_options);
+Array<TransformationOption> DefineTransformation::get_options() noexcept {
+  if (m_handle.num_options != 0) {
+    auto options = Array<TransformationOption>::New(m_handle.num_options);
     for (size_t i = 0; i < m_handle.num_options; i++) {
-      m_options[i] = TransformationOption(&m_handle.options[i]);
+      options[i] = TransformationOption(&m_handle.options[i]);
     }
+    return options;
   }
 
-  return m_options;
+  return Array<TransformationOption>();
 }
 
 } // namespace dro
