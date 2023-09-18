@@ -51,6 +51,9 @@ namespace dro {
 // A Card inside of a LS Dyna key file (input deck)
 class Card {
 public:
+  friend class IncludeTransform;
+  friend class DefineTransformation;
+
   Card(card_t *handle) noexcept;
 
   // Initialises the parsing of the card
@@ -129,6 +132,9 @@ private:
 // A Keyword of a LS Dyna key file (input deck) with all its cards
 class Keyword {
 public:
+  friend class IncludeTransform;
+  friend class DefineTransformation;
+
   // An iterator to iterate over all cards of the keyword
   class CardsIterator {
   public:

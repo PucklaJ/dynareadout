@@ -36,6 +36,7 @@
 #include <line.h>
 
 #ifdef BUILD_CPP
+#include <include_transform.hpp>
 #include <key.hpp>
 #endif
 
@@ -1203,5 +1204,87 @@ TEST_CASE("empty_card") {
   CHECK(str.size() == 0);
   CHECK(str.empty() == true);
   CHECK_THROWS_MESSAGE(str[0], "Index out of Range");
+}
+
+TEST_CASE("key_file_include_transformC++") {
+  size_t num_keywords;
+  char *error_string, *warning_string;
+
+  std::optional<dro::String> warnings;
+  auto keywords =
+      dro::KeyFile::parse("test_data/include_transform.k", warnings);
+  if (warnings) {
+    FAIL(*warnings);
+    return;
+  }
+
+  auto kw = keywords["INCLUDE_TRANSFORM"][0];
+  REQUIRE(kw.num_cards() == 5);
+
+  dro::IncludeTransform include_transform(kw);
+
+  dro::String name = include_transform.get_file_name();
+
+  CHECK(name ==
+        "asidjasidjasidjasnlkdfmg9lmdf9lgmd9flgmd9flg dgd "
+        "dfgdofjgdfigjdoifjgmdfogmidkoasidjasidjasi6jasnlkdfmg9lmdf9lgmd9flgmd9"
+        "flg dgd "
+        "dfgdofjgdfigjdoifjgmdfogmidkoasidjasidjasi6jasnlkdfmg9lmdf9lgmd9flgmd9"
+        "flg dgd dfgdofjgdfigjdoifjgmdfogmidko.k");
+  CHECK(include_transform.get_idnoff() == 100);
+  CHECK(include_transform.get_ideoff() == 101);
+  CHECK(include_transform.get_idpoff() == 102);
+  CHECK(include_transform.get_idmoff() == 103);
+  CHECK(include_transform.get_idsoff() == 104);
+  CHECK(include_transform.get_idfoff() == 105);
+  CHECK(include_transform.get_iddoff() == 0);
+  CHECK(include_transform.get_idroff() == 0);
+  CHECK(include_transform.get_fctmas() == 2.0);
+  CHECK(include_transform.get_fcttim() == 2.0);
+  CHECK(include_transform.get_fctlen() == 2.0);
+  name = include_transform.get_fcttem();
+  CHECK(name == "CtoF");
+  CHECK(include_transform.get_incout1() == 1);
+  CHECK(include_transform.get_tranid() == 120);
+
+  kw = keywords["DEFINE_TRANSFORMATION"][0];
+  REQUIRE(kw.num_cards() == 11);
+
+  dro::DefineTransformation dt(kw);
+
+  CHECK(dt.get_tranid() == 120);
+  REQUIRE(dt.get_raw_options().size() == 10);
+
+  auto &o = dt.get_options()[0];
+
+  name = o.get_name();
+  CHECK(name == "MIRROR");
+  CHECK(o.get_parameters()[0] == 0.0);
+  CHECK(o.get_parameters()[5] == 0.0);
+  CHECK(o.get_parameters()[6] == 0.0);
+  CHECK(o.get_parameters()[3] == 1.0);
+
+  o = dt.get_options()[1];
+  name = o.get_name();
+  CHECK(name == "TRANSL");
+  CHECK(o.get_parameters()[0] == 599.633);
+  CHECK(o.get_parameters()[1] == -17.585);
+  CHECK(o.get_parameters()[2] == 756.693);
+  CHECK(o.get_parameters()[6] == 0.0);
+
+  o = dt.get_options()[5];
+  name = o.get_name();
+  CHECK(name == "SCALE");
+  CHECK(o.get_parameters()[0] == 1.1);
+  CHECK(o.get_parameters()[1] == 1.1);
+  CHECK(o.get_parameters()[2] == 1.1);
+  CHECK(o.get_parameters()[6] == 0.0);
+
+  o = dt.get_options()[9];
+  name = o.get_name();
+  CHECK(name == "ROTATE");
+  CHECK(o.get_parameters()[0] == 1.0);
+  CHECK(o.get_parameters()[1] == 2.0);
+  CHECK(o.get_parameters()[2] == 45.0);
 }
 #endif
