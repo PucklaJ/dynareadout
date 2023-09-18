@@ -456,7 +456,7 @@ TEST_CASE("key_file_parse_with_callback") {
       "test_data/key_file.k",
       [](const char *file_name, size_t line_number, const char *keyword_name,
          card_t *card, size_t card_index, void *user_data) {
-        constexpr std::array expected_file_names = {
+        constexpr const char *expected_file_names[5] = {
             "test_data/key_file.k",
             "test_data/"
             "includeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
