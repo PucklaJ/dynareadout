@@ -24,9 +24,13 @@
  ************************************************************************************/
 
 #include "include_transform.h"
+#include "profiling.h"
 #include <stdlib.h>
+#include <string.h>
 
 include_transform_t key_parse_include_transform(keyword_t *keyword) {
+  BEGIN_PROFILE_FUNC();
+
   include_transform_t it;
   it.file_name = NULL;
   it.idnoff = IDNOFF_DEFAULT;
@@ -54,11 +58,14 @@ include_transform_t key_parse_include_transform(keyword_t *keyword) {
     i++;
   }
 
+  END_PROFILE_FUNC();
   return it;
 }
 
 void key_parse_include_transform_card(include_transform_t *it, card_t *card,
                                       size_t card_index) {
+  BEGIN_PROFILE_FUNC();
+
   switch (card_index) {
   case 0:
     it->file_name = card_parse_whole(card);
@@ -120,9 +127,77 @@ void key_parse_include_transform_card(include_transform_t *it, card_t *card,
     _card_try_parse_int(card, &it->tranid);
     break;
   }
+
+  END_PROFILE_FUNC();
+}
+
+define_transformation_t key_parse_define_transformation(keyword_t *keyword) {
+  BEGIN_PROFILE_FUNC();
+
+  define_transformation_t dt;
+  dt.tranid = 0;
+  dt.options = NULL;
+  dt.num_options = 0;
+
+  size_t i = 0;
+  while (i < keyword->num_cards) {
+    key_parse_define_transformation_card(&dt, &keyword->cards[i], i);
+
+    i++;
+  }
+
+  END_PROFILE_FUNC();
+  return dt;
+}
+
+void key_parse_define_transformation_card(define_transformation_t *dt,
+                                          card_t *card, size_t card_index) {
+  BEGIN_PROFILE_FUNC();
+
+  card_parse_begin(card, DEFAULT_VALUE_WIDTH);
+
+  if (card_index == 0) {
+    _card_try_parse_int(card, &dt->tranid);
+    END_PROFILE_FUNC();
+    return;
+  }
+
+  transformation_option_t o;
+  /* Avoid potential segfault when parsing an empty card*/
+  const char *default_name = "NULL";
+  o.name = malloc(strlen(default_name) + 1);
+  memcpy(o.name, default_name, strlen(default_name) + 1);
+
+  memset(o.parameters, 0, sizeof(o.parameters));
+
+  while (1) {
+    if (card_parse_done(card))
+      break;
+    free(o.name);
+    o.name = card_parse_string(card);
+    card_parse_next(card);
+    size_t i = 0;
+    while (!card_parse_done(card) && i < 7) {
+      _card_try_parse_float64(card, &o.parameters[i]);
+
+      card_parse_next(card);
+      i++;
+    }
+
+    break;
+  }
+
+  dt->num_options++;
+  dt->options =
+      realloc(dt->options, dt->num_options * sizeof(transformation_option_t));
+  dt->options[dt->num_options - 1] = o;
+
+  END_PROFILE_FUNC();
 }
 
 void key_free_include_transform(include_transform_t *it) {
+  BEGIN_PROFILE_FUNC();
+
   if (it->file_name) {
     free(it->file_name);
   }
@@ -134,24 +209,47 @@ void key_free_include_transform(include_transform_t *it) {
   if (it->suffix) {
     free(it->suffix);
   }
+
+  END_PROFILE_FUNC();
+}
+
+void key_free_define_transformation(define_transformation_t *dt) {
+  BEGIN_PROFILE_FUNC();
+
+  size_t i = 0;
+  while (i < dt->num_options) {
+    free(dt->options[i].name);
+
+    i++;
+  }
+  free(dt->options);
+
+  END_PROFILE_FUNC();
 }
 
 void _card_try_parse_int(const card_t *card, int64_t *value) {
+  BEGIN_PROFILE_FUNC();
+
   const card_parse_type card_type = card_parse_get_type(card);
   switch (card_type) {
   case CARD_PARSE_INT:
     *value = card_parse_int(card);
     break;
-  case CARD_PARSE_FLOAT:
+  case CARD_PARSE_FLOAT: {
     const double float_value = card_parse_float64(card);
     *value = (int64_t)float_value;
     break;
+  }
   default:
     break;
   }
+
+  END_PROFILE_FUNC();
 }
 
 void _card_try_parse_float64(const card_t *card, double *value) {
+  BEGIN_PROFILE_FUNC();
+
   const card_parse_type card_type = card_parse_get_type(card);
   switch (card_type) {
   case CARD_PARSE_INT:
@@ -161,4 +259,6 @@ void _card_try_parse_float64(const card_t *card, double *value) {
   default:
     break;
   }
+
+  END_PROFILE_FUNC();
 }

@@ -828,11 +828,11 @@ TEST_CASE("key_file_include_transform") {
     return;
   }
 
-  keyword_t *it = key_file_get(keywords, num_keywords, "INCLUDE_TRANSFORM", 0);
-  REQUIRE(it != NULL);
-  REQUIRE(it->num_cards == 5);
+  keyword_t *kw = key_file_get(keywords, num_keywords, "INCLUDE_TRANSFORM", 0);
+  REQUIRE(kw != NULL);
+  REQUIRE(kw->num_cards == 5);
 
-  include_transform_t include_transform = key_parse_include_transform(it);
+  include_transform_t include_transform = key_parse_include_transform(kw);
 
   CHECK(include_transform.file_name ==
         "asidjasidjasidjasnlkdfmg9lmdf9lgmd9flgmd9flg dgd "
@@ -856,6 +856,44 @@ TEST_CASE("key_file_include_transform") {
   CHECK(include_transform.tranid == 120);
 
   key_free_include_transform(&include_transform);
+
+  kw = key_file_get(keywords, num_keywords, "DEFINE_TRANSFORMATION", 0);
+  REQUIRE(kw != NULL);
+  REQUIRE(kw->num_cards == 11);
+
+  define_transformation_t def_trans = key_parse_define_transformation(kw);
+
+  CHECK(def_trans.tranid == 120);
+  REQUIRE(def_trans.num_options == 10);
+
+  transformation_option_t *o = &def_trans.options[0];
+  CHECK(o->name == "MIRROR");
+  CHECK(o->parameters[0] == 0.0);
+  CHECK(o->parameters[5] == 0.0);
+  CHECK(o->parameters[6] == 0.0);
+  CHECK(o->parameters[3] == 1.0);
+
+  o = &def_trans.options[1];
+  CHECK(o->name == "TRANSL");
+  CHECK(o->parameters[0] == 599.633);
+  CHECK(o->parameters[1] == -17.585);
+  CHECK(o->parameters[2] == 756.693);
+  CHECK(o->parameters[6] == 0.0);
+
+  o = &def_trans.options[5];
+  CHECK(o->name == "SCALE");
+  CHECK(o->parameters[0] == 1.1);
+  CHECK(o->parameters[1] == 1.1);
+  CHECK(o->parameters[2] == 1.1);
+  CHECK(o->parameters[6] == 0.0);
+
+  o = &def_trans.options[9];
+  CHECK(o->name == "ROTATE");
+  CHECK(o->parameters[0] == 1.0);
+  CHECK(o->parameters[1] == 2.0);
+  CHECK(o->parameters[2] == 45.0);
+
+  key_free_define_transformation(&def_trans);
   key_file_free(keywords, num_keywords);
 }
 

@@ -85,6 +85,18 @@ typedef struct {
                      See *DEFINE_TRANSFORMATION.*/
 } include_transform_t;
 
+typedef struct {
+  char *name;
+  double parameters[7];
+} transformation_option_t;
+
+typedef struct {
+  int64_t tranid; /* Transform ID */
+
+  transformation_option_t *options;
+  size_t num_options;
+} define_transformation_t;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -94,8 +106,15 @@ include_transform_t key_parse_include_transform(keyword_t *keyword);
 /* Parse a single card from an INCLUDE_TRANSFORM keyword*/
 void key_parse_include_transform_card(include_transform_t *it, card_t *card,
                                       size_t card_index);
+/* Parses an DEFINE_TRANSFORMATION keyword and returns all parsed values*/
+define_transformation_t key_parse_define_transformation(keyword_t *keyword);
+/* Parses a single card form a DEFINE_TRANSFORMATION keyword*/
+void key_parse_define_transformation_card(define_transformation_t *dt,
+                                          card_t *card, size_t card_index);
 /* Free all allocated memory of an INCLUDE_TRANSFORM*/
 void key_free_include_transform(include_transform_t *it);
+/* Free all allocated memory of DEFINE_TRANSFORMATION*/
+void key_free_define_transformation(define_transformation_t *dt);
 
 /* Only change the value of the type of the current value is int*/
 void _card_try_parse_int(const card_t *card, int64_t *value);
