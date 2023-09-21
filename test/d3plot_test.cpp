@@ -23,6 +23,8 @@
  * 3. This notice may not be removed or altered from any source distribution.
  ************************************************************************************/
 
+#include "path.h"
+#include <stdlib.h>
 #define DOCTEST_CONFIG_TREAT_CHAR_STAR_AS_STRING
 #include <binary_search.h>
 #include <cerrno>
@@ -84,13 +86,17 @@ TEST_CASE("d3_buffer") {
 
 TEST_CASE("d3_buffer_seek") {
   // Create test data
-  if (!path_is_file("test_data/d3_buffer_seek")) {
+  if (!path_is_directory("test_data/d3_buffer_seek")) {
+    REQUIRE(system("mkdir \"test_data/d3_buffer_seek\"") == 0);
+  }
+
+  if (!path_is_file("test_data/d3_buffer_seek/seek_file")) {
     for (size_t i = 0; i < 1000; i++) {
       char file_name[2048];
       if (i == 0) {
-        sprintf(file_name, "test_data/d3_buffer_seek");
+        sprintf(file_name, "test_data/d3_buffer_seek/seek_file");
       } else {
-        sprintf(file_name, "test_data/d3_buffer_seek%02zu", i);
+        sprintf(file_name, "test_data/d3_buffer_seek/seek_file%02zu", i);
       }
 
       FILE *file = fopen(file_name, "wb");
@@ -111,7 +117,7 @@ TEST_CASE("d3_buffer_seek") {
     }
   }
 
-  d3_buffer buffer = d3_buffer_open("test_data/d3_buffer_seek");
+  d3_buffer buffer = d3_buffer_open("test_data/d3_buffer_seek/seek_file");
   if (buffer.error_string) {
     FAIL(buffer.error_string);
     d3_buffer_close(&buffer);
