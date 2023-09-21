@@ -44,7 +44,7 @@
 
 TEST_CASE("d3_buffer") {
 
-  d3_buffer buffer = d3_buffer_open("test_data/d3plot");
+  d3_buffer buffer = d3_buffer_open("test_data/d3plot_files/d3plot");
   if (buffer.error_string) {
     FAIL(buffer.error_string);
     d3_buffer_close(&buffer);
@@ -218,7 +218,7 @@ TEST_CASE("d3_buffer_seek") {
 }
 
 TEST_CASE("d3plot") {
-  d3plot_file plot_file = d3plot_open("test_data/d3plot");
+  d3plot_file plot_file = d3plot_open("test_data/d3plot_files/d3plot");
   if (plot_file.error_string) {
     FAIL(plot_file.error_string);
     d3plot_close(&plot_file);
@@ -609,7 +609,7 @@ TEST_CASE("d3plotC++") {
     CHECK(strlen(e.what()) > 0);
   }
 
-  dro::D3plot plot_file("test_data/d3plot");
+  dro::D3plot plot_file("test_data/d3plot_files/d3plot");
 
   {
     const auto title(plot_file.read_title());
