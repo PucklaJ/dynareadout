@@ -1121,7 +1121,7 @@ TEST_CASE("_insert_sorted") {
   }
 }
 
-TEST_CASE("binary_search") {
+TEST_CASE("d3_word_binary_search") {
   constexpr d3_word arr[] = {1, 2, 3, 4, 6, 7, 8, 9, 10, 11};
   constexpr size_t arr_size = sizeof(arr) / sizeof(*arr);
   size_t idx = d3_word_binary_search(arr, 0, arr_size - 1, 6);

@@ -787,13 +787,22 @@ TEST_CASE("read_line") {
   CHECK(read_line(&lr) != 0);
   CHECK(extra_string_compare(&lr.line, "*KEYWORD") == 0);
   CHECK(read_line(&lr) != 0);
-  CHECK(extra_string_compare(
-            &lr.line,
-            "Hello World this is a file that is used to test the line reader "
-            "and also if it supports carriage return which is necessary for "
-            "windows because this operating system uses carriage return plus "
-            "newline at their end of lines in files instead of just new line "
-            "like unix based operating system are doing") == 0);
+
+  const char *expected =
+      "Hello World this is a file that is used to test the line reader "
+      "and also if it supports carriage return which is necessary for "
+      "windows because this operating system uses carriage return plus "
+      "newline at their end of lines in files instead of just new line "
+      "like unix based operating system are doing";
+
+  CHECK(lr.line_length == strlen(expected));
+  size_t j = 0;
+  while (j < lr.line_length && j < strlen(expected)) {
+    INFO(j);
+    CHECK(extra_string_get(&lr.line, j) == expected[j]);
+
+    j++;
+  }
 
   size_t i = 0;
   while (i < 15) {

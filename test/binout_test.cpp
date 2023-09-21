@@ -245,10 +245,10 @@ TEST_CASE("binout0000") {
   REQUIRE(num_timesteps >= 601);
 
   CHECK(cycle[0 * num_nodes + 0] == 1);
-  CHECK(cycle[1 * num_nodes + 0] == 763);
-  CHECK(cycle[2 * num_nodes + 0] == 1526);
-  CHECK(cycle[99 * num_nodes + 0] == 75497);
-  CHECK(cycle[600 * num_nodes + 0] == 457554);
+  CHECK(cycle[1 * num_nodes + 0] == 10);
+  CHECK(cycle[2 * num_nodes + 0] == 20);
+  CHECK(cycle[99 * num_nodes + 0] == 945);
+  CHECK(cycle[600 * num_nodes + 0] == 5723);
 
   free(cycle);
 
@@ -280,13 +280,13 @@ TEST_CASE("binout0000C++") {
 
   {
     const auto children = bin_file.get_children("/");
-    REQUIRE(children.size() == 2);
-    CHECK(children[0] == dro::String("nodout", false));
-    CHECK(children[1] == dro::SizedString("rcforc", strlen("rcforc"), false));
-    CHECK(children[1] == std::string("rcforc"));
+    REQUIRE(children.size() == 5);
+    CHECK(children[0] == dro::String("bndout", false));
+    CHECK(children[1] == dro::SizedString("glstat", strlen("glstat"), false));
+    CHECK(children[1] == std::string("glstat"));
   }
 
-  CHECK(bin_file.get_num_timesteps("/nodout") == 601);
+  CHECK(bin_file.get_num_timesteps("/nodout") == 14998);
 
   try {
     bin_file.get_num_timesteps("/schinken");
@@ -324,7 +324,7 @@ TEST_CASE("binout0000C++") {
     const auto legend = bin_file.read<int8_t>("/nodout/metadata//legend");
     REQUIRE(legend.size() == 80);
     CHECK(legend ==
-          "History_node_1                                                 "
+          "                                                               "
           "                 ");
   }
 
@@ -344,23 +344,22 @@ TEST_CASE("binout0000C++") {
   {
     const auto title = bin_file.read<int8_t>("/rcforc/metadata/title");
     CHECK(title.size() == 80);
-    CHECK(title ==
-          "Pouch_macro_37Ah                                                 "
-          "               ");
+    CHECK(title == "LS-DYNA keyword deck by LS-PrePost                         "
+                   "                     ");
   }
 
   {
-    const auto y_displacement =
-        bin_file.read_timed<float>("/nodout/y_displacement");
-    CHECK(y_displacement.size() == 601);
-    CHECK(y_displacement[0].size() == 1);
+    const auto z_displacement =
+        bin_file.read_timed<float>("/nodout/z_displacement");
+    CHECK(z_displacement.size() == 14998);
+    CHECK(z_displacement[0].size() == 1);
 
-    for (size_t t = 0; t < y_displacement.size(); t++) {
-      for (size_t i = 0; i < y_displacement[t].size(); i++) {
+    for (size_t t = 0; t < z_displacement.size(); t++) {
+      for (size_t i = 0; i < z_displacement[t].size(); i++) {
         if (t == 0) {
-          CHECK(y_displacement[t][i] == 0.0f);
+          CHECK(z_displacement[t][i] == 0.0f);
         } else {
-          CHECK(y_displacement[t][i] != 0.0f);
+          CHECK(z_displacement[t][i] != 0.0f);
         }
       }
     }
@@ -368,14 +367,14 @@ TEST_CASE("binout0000C++") {
 
   {
     const auto cycle = bin_file.read_timed<int32_t>("/nodout/cycle");
-    CHECK(cycle.size() == 601);
+    CHECK(cycle.size() == 14998);
     CHECK(cycle[0].size() == 1);
 
     CHECK(cycle[0][0] == 1);
-    CHECK(cycle[1][0] == 763);
-    CHECK(cycle[2][0] == 1526);
-    CHECK(cycle[99][0] == 75497);
-    CHECK(cycle[600][0] == 457554);
+    CHECK(cycle[1][0] == 10);
+    CHECK(cycle[2][0] == 20);
+    CHECK(cycle[99][0] == 945);
+    CHECK(cycle[600][0] == 5723);
   }
 }
 
@@ -421,6 +420,7 @@ TEST_CASE("Array") {
       int *is_arr = (int *)malloc(10 * sizeof(int));
       is_arr[0] = 0;
       is_arr[1] = 6;
+      is_arr[2] = 6;
       is_arr[3] = 7;
       is_arr[4] = 8;
       is_arr[5] = 9;
@@ -438,6 +438,7 @@ TEST_CASE("Array") {
     auto is = dro::Array<int>::New(10);
     is[0] = 0;
     is[1] = 6;
+    is[2] = 6;
     is[3] = 7;
     is[4] = 8;
     is[5] = 9;
@@ -456,7 +457,7 @@ TEST_CASE("glob") {
   size_t num_files;
   char **globed_files = binout_glob("src/*.c", &num_files);
 
-  CHECK(num_files == 18);
+  CHECK(num_files == 19);
   CHECK(strarr_contains(globed_files, num_files, "src/binary_search.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/binout_directory.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/binout_glob.c"));
@@ -468,6 +469,7 @@ TEST_CASE("glob") {
   CHECK(strarr_contains(globed_files, num_files, "src/d3plot_state.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/d3plot.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/extra_string.c"));
+  CHECK(strarr_contains(globed_files, num_files, "src/include_transform.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/key.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/line.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/multi_file.c"));
