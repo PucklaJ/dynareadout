@@ -92,8 +92,7 @@ int read_line(line_reader_t *lr) {
       /* Switch to extra if too much characters have been read and make sure
        * that enough memory is allocated*/
       if (lr->line_length >= EXTRA_STRING_BUFFER_SIZE &&
-          (lr->extra_capacity == 0 ||
-           lr->line_length - EXTRA_STRING_BUFFER_SIZE > lr->extra_capacity)) {
+          lr->line_length + 1 - EXTRA_STRING_BUFFER_SIZE > lr->extra_capacity) {
         lr->extra_capacity += EXTRA_STRING_BUFFER_SIZE;
         lr->line.extra = realloc(lr->line.extra, lr->extra_capacity);
         cursor = &lr->line.extra[lr->line_length - EXTRA_STRING_BUFFER_SIZE];
