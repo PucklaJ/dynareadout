@@ -321,10 +321,17 @@ template <typename T>
 static constexpr bool is_number_v =
     std::is_integral_v<T> || std::is_floating_point_v<T>;
 
+#ifdef __clang__
+template <> static constexpr bool is_string_v<char *> = true;
+template <> static constexpr bool is_string_v<String> = true;
+template <> static constexpr bool is_string_v<SizedString> = true;
+template <> static constexpr bool is_string_v<std::string> = true;
+#else
 template <> constexpr bool is_string_v<char *> = true;
 template <> constexpr bool is_string_v<String> = true;
 template <> constexpr bool is_string_v<SizedString> = true;
 template <> constexpr bool is_string_v<std::string> = true;
+#endif
 
 template <typename T> T Card::parse() const {
   return parse<T>(m_handle->value_width);
