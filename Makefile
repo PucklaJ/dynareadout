@@ -6,13 +6,15 @@ ifneq ($(VERBOSE),1)
 VV=@
 endif
 
+CU=/usr/bin/clang
+RC=/usr/bin/rustc
 AS=/usr/bin/gcc
 GC=/usr/bin/go
+FC=/usr/bin/gfortran
 CXX=/usr/bin/gcc
-MM=/usr/bin/gcc
 CC=/usr/bin/gcc
 MXX=/usr/bin/gcc
-RC=/usr/bin/rustc
+MM=/usr/bin/gcc
 
 AR=/usr/bin/ar
 RCAR=/usr/bin/rustc
@@ -20,26 +22,65 @@ GCAR=/usr/bin/go
 LD=/usr/bin/g++
 RCLD=/usr/bin/rustc
 GCLD=/usr/bin/go
+FCLD=/usr/bin/gfortran
 SH=/usr/bin/g++
 RCSH=/usr/bin/rustc
+FCSH=/usr/bin/gfortran
 
 
-dynareadout_CCFLAGS=-m64 -fvisibility=hidden -O3 -ansi -DTHREAD_SAFE -fPIC -DNDEBUG
-dynareadout_ARFLAGS=-cr
+dynareadout_cpp_CXXFLAGS=-m64 -fvisibility=hidden -fvisibility-inlines-hidden -O3 -std=c++17 -Isrc -DTHREAD_SAFE -fPIC -DNDEBUG
 dynareadout_cpp_CXXFLAGS=-m64 -fvisibility=hidden -fvisibility-inlines-hidden -O3 -std=c++17 -Isrc -DTHREAD_SAFE -fPIC -DNDEBUG
 dynareadout_cpp_ARFLAGS=-cr
+dynareadout_CCFLAGS=-m64 -fvisibility=hidden -O3 -ansi -DTHREAD_SAFE -fPIC -DNDEBUG
+dynareadout_ARFLAGS=-cr
 
-default:  dynareadout
+default:  dynareadout_cpp dynareadout
 
-all:  dynareadout dynareadout_cpp
+all:  dynareadout_cpp dynareadout
 
-.PHONY: default all  dynareadout dynareadout_cpp
+.PHONY: default all  dynareadout_cpp dynareadout
+
+dynareadout_cpp: build/linux/x86_64/release/libdynareadout_cpp.a
+build/linux/x86_64/release/libdynareadout_cpp.a: build/linux/x86_64/release/libdynareadout.a build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot_part.cpp.o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot_state.cpp.o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot.cpp.o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/binout.cpp.o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/include_transform.cpp.o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/key.cpp.o
+	@echo linking.release libdynareadout_cpp.a
+	@mkdir -p build/linux/x86_64/release
+	$(VV)$(AR) $(dynareadout_cpp_ARFLAGS) build/linux/x86_64/release/libdynareadout_cpp.a build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot_part.cpp.o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot_state.cpp.o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot.cpp.o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/binout.cpp.o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/include_transform.cpp.o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/key.cpp.o
+
+build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot_part.cpp.o: src/cpp/d3plot_part.cpp
+	@echo compiling.release src/cpp/d3plot_part.cpp
+	@mkdir -p build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp
+	$(VV)$(CXX) -c $(dynareadout_cpp_CXXFLAGS) -o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot_part.cpp.o src/cpp/d3plot_part.cpp
+
+build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot_state.cpp.o: src/cpp/d3plot_state.cpp
+	@echo compiling.release src/cpp/d3plot_state.cpp
+	@mkdir -p build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp
+	$(VV)$(CXX) -c $(dynareadout_cpp_CXXFLAGS) -o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot_state.cpp.o src/cpp/d3plot_state.cpp
+
+build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot.cpp.o: src/cpp/d3plot.cpp
+	@echo compiling.release src/cpp/d3plot.cpp
+	@mkdir -p build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp
+	$(VV)$(CXX) -c $(dynareadout_cpp_CXXFLAGS) -o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot.cpp.o src/cpp/d3plot.cpp
+
+build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/binout.cpp.o: src/cpp/binout.cpp
+	@echo compiling.release src/cpp/binout.cpp
+	@mkdir -p build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp
+	$(VV)$(CXX) -c $(dynareadout_cpp_CXXFLAGS) -o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/binout.cpp.o src/cpp/binout.cpp
+
+build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/include_transform.cpp.o: src/cpp/include_transform.cpp
+	@echo compiling.release src/cpp/include_transform.cpp
+	@mkdir -p build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp
+	$(VV)$(CXX) -c $(dynareadout_cpp_CXXFLAGS) -o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/include_transform.cpp.o src/cpp/include_transform.cpp
+
+build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/key.cpp.o: src/cpp/key.cpp
+	@echo compiling.release src/cpp/key.cpp
+	@mkdir -p build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp
+	$(VV)$(CXX) -c $(dynareadout_cpp_CXXFLAGS) -o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/key.cpp.o src/cpp/key.cpp
 
 dynareadout: build/linux/x86_64/release/libdynareadout.a
-build/linux/x86_64/release/libdynareadout.a: build/.objs/dynareadout/linux/x86_64/release/src/line.c.o build/.objs/dynareadout/linux/x86_64/release/src/key.c.o build/.objs/dynareadout/linux/x86_64/release/src/sync.c.o build/.objs/dynareadout/linux/x86_64/release/src/extra_string.c.o build/.objs/dynareadout/linux/x86_64/release/src/binout_read.c.o build/.objs/dynareadout/linux/x86_64/release/src/binout_directory.c.o build/.objs/dynareadout/linux/x86_64/release/src/d3plot_part_nodes.c.o build/.objs/dynareadout/linux/x86_64/release/src/d3plot_state.c.o build/.objs/dynareadout/linux/x86_64/release/src/path_view.c.o build/.objs/dynareadout/linux/x86_64/release/src/d3plot.c.o build/.objs/dynareadout/linux/x86_64/release/src/binary_search.c.o build/.objs/dynareadout/linux/x86_64/release/src/binout.c.o build/.objs/dynareadout/linux/x86_64/release/src/d3_buffer.c.o build/.objs/dynareadout/linux/x86_64/release/src/d3plot_data.c.o build/.objs/dynareadout/linux/x86_64/release/src/multi_file.c.o build/.objs/dynareadout/linux/x86_64/release/src/binout_glob.c.o build/.objs/dynareadout/linux/x86_64/release/src/path.c.o
+build/linux/x86_64/release/libdynareadout.a: build/.objs/dynareadout/linux/x86_64/release/src/line.c.o build/.objs/dynareadout/linux/x86_64/release/src/key.c.o build/.objs/dynareadout/linux/x86_64/release/src/sync.c.o build/.objs/dynareadout/linux/x86_64/release/src/extra_string.c.o build/.objs/dynareadout/linux/x86_64/release/src/include_transform.c.o build/.objs/dynareadout/linux/x86_64/release/src/binout_read.c.o build/.objs/dynareadout/linux/x86_64/release/src/binout_directory.c.o build/.objs/dynareadout/linux/x86_64/release/src/d3plot_part_nodes.c.o build/.objs/dynareadout/linux/x86_64/release/src/d3plot_state.c.o build/.objs/dynareadout/linux/x86_64/release/src/path_view.c.o build/.objs/dynareadout/linux/x86_64/release/src/d3plot.c.o build/.objs/dynareadout/linux/x86_64/release/src/binary_search.c.o build/.objs/dynareadout/linux/x86_64/release/src/binout.c.o build/.objs/dynareadout/linux/x86_64/release/src/d3_buffer.c.o build/.objs/dynareadout/linux/x86_64/release/src/d3plot_data.c.o build/.objs/dynareadout/linux/x86_64/release/src/multi_file.c.o build/.objs/dynareadout/linux/x86_64/release/src/binout_glob.c.o build/.objs/dynareadout/linux/x86_64/release/src/path.c.o
 	@echo linking.release libdynareadout.a
 	@mkdir -p build/linux/x86_64/release
-	$(VV)$(AR) $(dynareadout_ARFLAGS) build/linux/x86_64/release/libdynareadout.a build/.objs/dynareadout/linux/x86_64/release/src/line.c.o build/.objs/dynareadout/linux/x86_64/release/src/key.c.o build/.objs/dynareadout/linux/x86_64/release/src/sync.c.o build/.objs/dynareadout/linux/x86_64/release/src/extra_string.c.o build/.objs/dynareadout/linux/x86_64/release/src/binout_read.c.o build/.objs/dynareadout/linux/x86_64/release/src/binout_directory.c.o build/.objs/dynareadout/linux/x86_64/release/src/d3plot_part_nodes.c.o build/.objs/dynareadout/linux/x86_64/release/src/d3plot_state.c.o build/.objs/dynareadout/linux/x86_64/release/src/path_view.c.o build/.objs/dynareadout/linux/x86_64/release/src/d3plot.c.o build/.objs/dynareadout/linux/x86_64/release/src/binary_search.c.o build/.objs/dynareadout/linux/x86_64/release/src/binout.c.o build/.objs/dynareadout/linux/x86_64/release/src/d3_buffer.c.o build/.objs/dynareadout/linux/x86_64/release/src/d3plot_data.c.o build/.objs/dynareadout/linux/x86_64/release/src/multi_file.c.o build/.objs/dynareadout/linux/x86_64/release/src/binout_glob.c.o build/.objs/dynareadout/linux/x86_64/release/src/path.c.o
+	$(VV)$(AR) $(dynareadout_ARFLAGS) build/linux/x86_64/release/libdynareadout.a build/.objs/dynareadout/linux/x86_64/release/src/line.c.o build/.objs/dynareadout/linux/x86_64/release/src/key.c.o build/.objs/dynareadout/linux/x86_64/release/src/sync.c.o build/.objs/dynareadout/linux/x86_64/release/src/extra_string.c.o build/.objs/dynareadout/linux/x86_64/release/src/include_transform.c.o build/.objs/dynareadout/linux/x86_64/release/src/binout_read.c.o build/.objs/dynareadout/linux/x86_64/release/src/binout_directory.c.o build/.objs/dynareadout/linux/x86_64/release/src/d3plot_part_nodes.c.o build/.objs/dynareadout/linux/x86_64/release/src/d3plot_state.c.o build/.objs/dynareadout/linux/x86_64/release/src/path_view.c.o build/.objs/dynareadout/linux/x86_64/release/src/d3plot.c.o build/.objs/dynareadout/linux/x86_64/release/src/binary_search.c.o build/.objs/dynareadout/linux/x86_64/release/src/binout.c.o build/.objs/dynareadout/linux/x86_64/release/src/d3_buffer.c.o build/.objs/dynareadout/linux/x86_64/release/src/d3plot_data.c.o build/.objs/dynareadout/linux/x86_64/release/src/multi_file.c.o build/.objs/dynareadout/linux/x86_64/release/src/binout_glob.c.o build/.objs/dynareadout/linux/x86_64/release/src/path.c.o
 
 build/.objs/dynareadout/linux/x86_64/release/src/line.c.o: src/line.c
 	@echo compiling.release src/line.c
@@ -60,6 +101,11 @@ build/.objs/dynareadout/linux/x86_64/release/src/extra_string.c.o: src/extra_str
 	@echo compiling.release src/extra_string.c
 	@mkdir -p build/.objs/dynareadout/linux/x86_64/release/src
 	$(VV)$(CC) -c $(dynareadout_CCFLAGS) -o build/.objs/dynareadout/linux/x86_64/release/src/extra_string.c.o src/extra_string.c
+
+build/.objs/dynareadout/linux/x86_64/release/src/include_transform.c.o: src/include_transform.c
+	@echo compiling.release src/include_transform.c
+	@mkdir -p build/.objs/dynareadout/linux/x86_64/release/src
+	$(VV)$(CC) -c $(dynareadout_CCFLAGS) -o build/.objs/dynareadout/linux/x86_64/release/src/include_transform.c.o src/include_transform.c
 
 build/.objs/dynareadout/linux/x86_64/release/src/binout_read.c.o: src/binout_read.c
 	@echo compiling.release src/binout_read.c
@@ -126,38 +172,17 @@ build/.objs/dynareadout/linux/x86_64/release/src/path.c.o: src/path.c
 	@mkdir -p build/.objs/dynareadout/linux/x86_64/release/src
 	$(VV)$(CC) -c $(dynareadout_CCFLAGS) -o build/.objs/dynareadout/linux/x86_64/release/src/path.c.o src/path.c
 
-dynareadout_cpp: build/linux/x86_64/release/libdynareadout_cpp.a
-build/linux/x86_64/release/libdynareadout_cpp.a: build/linux/x86_64/release/libdynareadout.a build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot_part.cpp.o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot_state.cpp.o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot.cpp.o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/binout.cpp.o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/key.cpp.o
-	@echo linking.release libdynareadout_cpp.a
-	@mkdir -p build/linux/x86_64/release
-	$(VV)$(AR) $(dynareadout_cpp_ARFLAGS) build/linux/x86_64/release/libdynareadout_cpp.a build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot_part.cpp.o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot_state.cpp.o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot.cpp.o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/binout.cpp.o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/key.cpp.o
+clean:  clean_dynareadout_cpp clean_dynareadout
 
-build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot_part.cpp.o: src/cpp/d3plot_part.cpp
-	@echo compiling.release src/cpp/d3plot_part.cpp
-	@mkdir -p build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp
-	$(VV)$(CXX) -c $(dynareadout_cpp_CXXFLAGS) -o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot_part.cpp.o src/cpp/d3plot_part.cpp
-
-build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot_state.cpp.o: src/cpp/d3plot_state.cpp
-	@echo compiling.release src/cpp/d3plot_state.cpp
-	@mkdir -p build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp
-	$(VV)$(CXX) -c $(dynareadout_cpp_CXXFLAGS) -o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot_state.cpp.o src/cpp/d3plot_state.cpp
-
-build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot.cpp.o: src/cpp/d3plot.cpp
-	@echo compiling.release src/cpp/d3plot.cpp
-	@mkdir -p build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp
-	$(VV)$(CXX) -c $(dynareadout_cpp_CXXFLAGS) -o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot.cpp.o src/cpp/d3plot.cpp
-
-build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/binout.cpp.o: src/cpp/binout.cpp
-	@echo compiling.release src/cpp/binout.cpp
-	@mkdir -p build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp
-	$(VV)$(CXX) -c $(dynareadout_cpp_CXXFLAGS) -o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/binout.cpp.o src/cpp/binout.cpp
-
-build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/key.cpp.o: src/cpp/key.cpp
-	@echo compiling.release src/cpp/key.cpp
-	@mkdir -p build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp
-	$(VV)$(CXX) -c $(dynareadout_cpp_CXXFLAGS) -o build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/key.cpp.o src/cpp/key.cpp
-
-clean:  clean_dynareadout clean_dynareadout_cpp
+clean_dynareadout_cpp:  clean_dynareadout
+	@rm -rf build/linux/x86_64/release/libdynareadout_cpp.a
+	@rm -rf build/linux/x86_64/release/dynareadout_cpp.sym
+	@rm -rf build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot_part.cpp.o
+	@rm -rf build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot_state.cpp.o
+	@rm -rf build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot.cpp.o
+	@rm -rf build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/binout.cpp.o
+	@rm -rf build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/include_transform.cpp.o
+	@rm -rf build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/key.cpp.o
 
 clean_dynareadout:
 	@rm -rf build/linux/x86_64/release/libdynareadout.a
@@ -166,6 +191,7 @@ clean_dynareadout:
 	@rm -rf build/.objs/dynareadout/linux/x86_64/release/src/key.c.o
 	@rm -rf build/.objs/dynareadout/linux/x86_64/release/src/sync.c.o
 	@rm -rf build/.objs/dynareadout/linux/x86_64/release/src/extra_string.c.o
+	@rm -rf build/.objs/dynareadout/linux/x86_64/release/src/include_transform.c.o
 	@rm -rf build/.objs/dynareadout/linux/x86_64/release/src/binout_read.c.o
 	@rm -rf build/.objs/dynareadout/linux/x86_64/release/src/binout_directory.c.o
 	@rm -rf build/.objs/dynareadout/linux/x86_64/release/src/d3plot_part_nodes.c.o
@@ -179,13 +205,4 @@ clean_dynareadout:
 	@rm -rf build/.objs/dynareadout/linux/x86_64/release/src/multi_file.c.o
 	@rm -rf build/.objs/dynareadout/linux/x86_64/release/src/binout_glob.c.o
 	@rm -rf build/.objs/dynareadout/linux/x86_64/release/src/path.c.o
-
-clean_dynareadout_cpp:  clean_dynareadout
-	@rm -rf build/linux/x86_64/release/libdynareadout_cpp.a
-	@rm -rf build/linux/x86_64/release/dynareadout_cpp.sym
-	@rm -rf build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot_part.cpp.o
-	@rm -rf build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot_state.cpp.o
-	@rm -rf build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/d3plot.cpp.o
-	@rm -rf build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/binout.cpp.o
-	@rm -rf build/.objs/dynareadout_cpp/linux/x86_64/release/src/cpp/key.cpp.o
 
