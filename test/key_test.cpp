@@ -973,7 +973,7 @@ TEST_CASE("key_file_parseC++") {
   card.begin();
   CHECK(card.parse<char *>() == "Ground");
   auto str = card.parse<dro::String>();
-  CHECK(str.data() == "Ground");
+  CHECK(str == "Ground");
   CHECK(card.parse<std::string>() == "Ground");
 
   card = keywords[""][0][0];

@@ -28,6 +28,12 @@
 #include <cstdlib>
 
 namespace dro {
+
+template <> constexpr bool is_string_v<char *> = true;
+template <> constexpr bool is_string_v<String> = true;
+template <> constexpr bool is_string_v<SizedString> = true;
+template <> constexpr bool is_string_v<std::string> = true;
+
 Card::Card(card_t *handle) noexcept : m_handle(handle) {}
 
 void Card::begin(uint8_t value_width) noexcept {
