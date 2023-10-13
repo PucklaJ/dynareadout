@@ -1216,9 +1216,6 @@ TEST_CASE("empty_card") {
 }
 
 TEST_CASE("key_file_include_transformC++") {
-  size_t num_keywords;
-  char *error_string, *warning_string;
-
   std::optional<dro::String> warnings;
   auto keywords =
       dro::KeyFile::parse("test_data/include_transform.k", warnings);
@@ -1264,7 +1261,8 @@ TEST_CASE("key_file_include_transformC++") {
   CHECK(dt.get_tranid() == 120);
   REQUIRE(dt.get_raw_options().size() == 10);
 
-  auto &o = dt.get_options()[0];
+  auto options = dt.get_options();
+  auto &o = options[0];
 
   name = o.get_name();
   CHECK(name == "MIRROR");
@@ -1273,7 +1271,7 @@ TEST_CASE("key_file_include_transformC++") {
   CHECK(o.get_parameters()[6] == 0.0);
   CHECK(o.get_parameters()[3] == 1.0);
 
-  o = dt.get_options()[1];
+  o = options[1];
   name = o.get_name();
   CHECK(name == "TRANSL");
   CHECK(o.get_parameters()[0] == 599.633);
@@ -1281,7 +1279,7 @@ TEST_CASE("key_file_include_transformC++") {
   CHECK(o.get_parameters()[2] == 756.693);
   CHECK(o.get_parameters()[6] == 0.0);
 
-  o = dt.get_options()[5];
+  o = options[5];
   name = o.get_name();
   CHECK(name == "SCALE");
   CHECK(o.get_parameters()[0] == 1.1);
@@ -1289,7 +1287,7 @@ TEST_CASE("key_file_include_transformC++") {
   CHECK(o.get_parameters()[2] == 1.1);
   CHECK(o.get_parameters()[6] == 0.0);
 
-  o = dt.get_options()[9];
+  o = options[9];
   name = o.get_name();
   CHECK(name == "ROTATE");
   CHECK(o.get_parameters()[0] == 1.0);
