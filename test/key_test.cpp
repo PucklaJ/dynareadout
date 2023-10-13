@@ -1294,4 +1294,50 @@ TEST_CASE("key_file_include_transformC++") {
   CHECK(o.get_parameters()[1] == 2.0);
   CHECK(o.get_parameters()[2] == 45.0);
 }
+
+TEST_CASE("INCLUDE_PATH") {
+  SUBCASE("key_file_parse") {
+    std::optional<dro::String> warnings;
+    auto keywords =
+        dro::KeyFile::parse("test_data/include_paths/main.k", warnings);
+    if (warnings) {
+      FAIL(*warnings);
+      return;
+    }
+
+    auto kw = keywords["LAYER_22"][0];
+    CHECK(kw.num_cards() == 0);
+    kw = keywords["LAYER_41"][0];
+    CHECK(kw.num_cards() == 0);
+  }
+
+  SUBCASE("key_file_parse_with_callback") {
+    bool layer_22_found = false, layer_41_found = false;
+
+    std::optional<dro::String> warnings;
+    dro::KeyFile::parse_with_callback(
+        "test_data/include_paths/main.k",
+        [&](dro::String file_name, size_t line_number, dro::String keyword_name,
+            std::optional<dro::Card> card, size_t card_index) {
+          if (keyword_name == "LAYER_22" && !layer_22_found) {
+            layer_22_found = true;
+          } else if (keyword_name == "LAYER_41" && !layer_41_found) {
+            layer_41_found = true;
+          } else {
+            THROW_KEY_FILE_EXCEPTION(
+                "Invalid Keyword: \"%s\" layer_22_found=%s layer_41_found=%s",
+                keyword_name.data(), layer_22_found ? "true" : "false",
+                layer_41_found ? "true" : "false");
+          }
+        },
+        warnings);
+    if (warnings) {
+      FAIL(*warnings);
+      return;
+    }
+
+    CHECK(layer_22_found == true);
+    CHECK(layer_41_found == true);
+  }
+}
 #endif

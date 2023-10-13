@@ -393,9 +393,9 @@ void key_file_parse_with_callback(const char *file_name,
               if (full_include_file_name) {
                 char *include_error, *include_warning;
                 /* Call the function recursively*/
-                key_file_parse_with_callback(full_include_file_name, callback,
-                                             &parse_config, &include_error,
-                                             &include_warning, user_data, rec);
+                key_file_parse_with_callback(
+                    full_include_file_name, callback, &parse_config,
+                    &include_error, &include_warning, user_data, rec_ptr);
                 free(full_include_file_name);
 
                 /* Add the error to the error stack if an error occurred in the
