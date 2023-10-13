@@ -94,6 +94,8 @@ typedef struct {
 /* Holds the components of a DEFINE_TRANSFORMATION keyword*/
 typedef struct {
   int64_t tranid; /* Transform ID */
+  char
+      *title; /* A user defined title if DEFINE_TRANSFORMATION_TITLE is parsed*/
 
   transformation_option_t *options; /* The Options like TRANSL, SCALE etc.*/
   size_t num_options;
@@ -109,10 +111,12 @@ include_transform_t key_parse_include_transform(keyword_t *keyword);
 void key_parse_include_transform_card(include_transform_t *it, card_t *card,
                                       size_t card_index);
 /* Parses an DEFINE_TRANSFORMATION keyword and returns all parsed values*/
-define_transformation_t key_parse_define_transformation(keyword_t *keyword);
+define_transformation_t key_parse_define_transformation(keyword_t *keyword,
+                                                        int is_title);
 /* Parses a single card form a DEFINE_TRANSFORMATION keyword*/
 void key_parse_define_transformation_card(define_transformation_t *dt,
-                                          card_t *card, size_t card_index);
+                                          card_t *card, size_t card_index,
+                                          int is_title);
 /* Free all allocated memory of an INCLUDE_TRANSFORM*/
 void key_free_include_transform(include_transform_t *it);
 /* Free all allocated memory of DEFINE_TRANSFORMATION*/

@@ -872,7 +872,7 @@ TEST_CASE("key_file_include_transform") {
   REQUIRE(kw != NULL);
   REQUIRE(kw->num_cards == 11);
 
-  define_transformation_t def_trans = key_parse_define_transformation(kw);
+  define_transformation_t def_trans = key_parse_define_transformation(kw, 0);
 
   CHECK(def_trans.tranid == 120);
   REQUIRE(def_trans.num_options == 10);
@@ -1294,6 +1294,17 @@ TEST_CASE("key_file_include_transformC++") {
   CHECK(o.get_parameters()[0] == 1.0);
   CHECK(o.get_parameters()[1] == 2.0);
   CHECK(o.get_parameters()[2] == 45.0);
+
+  kw = keywords["DEFINE_TRANSFORMATION_TITLE"][0];
+  REQUIRE(kw.num_cards() >= 2);
+
+  dro::DefineTransformation dt1(kw, true);
+
+  auto str = dt1.get_title();
+  CHECK(str == "this great transformation");
+  CHECK(dt1.get_tranid() == 310);
+  const auto opt = dt1.get_options();
+  CHECK(opt.size() == 4);
 }
 
 TEST_CASE("INCLUDE_PATH") {

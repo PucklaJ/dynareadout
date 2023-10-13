@@ -39,8 +39,10 @@ void IncludeTransform::parse_include_transform_card(
 TransformationOption::TransformationOption(transformation_option_t *handle)
     : m_handle(handle) {}
 
-DefineTransformation::DefineTransformation(Keyword &kw) noexcept {
-  m_handle = key_parse_define_transformation(kw.m_handle);
+DefineTransformation::DefineTransformation(Keyword &kw,
+                                           bool is_title) noexcept {
+  m_handle =
+      key_parse_define_transformation(kw.m_handle, static_cast<int>(is_title));
 }
 
 DefineTransformation::DefineTransformation() noexcept {
@@ -54,8 +56,9 @@ DefineTransformation::~DefineTransformation() noexcept {
 }
 
 void DefineTransformation::parse_define_transformation_card(
-    Card card, size_t card_index) noexcept {
-  key_parse_define_transformation_card(&m_handle, card.m_handle, card_index);
+    Card card, size_t card_index, bool is_title) noexcept {
+  key_parse_define_transformation_card(&m_handle, card.m_handle, card_index,
+                                       static_cast<int>(is_title));
 }
 
 Array<TransformationOption> DefineTransformation::get_options() noexcept {

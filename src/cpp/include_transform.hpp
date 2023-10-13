@@ -1,6 +1,7 @@
 #pragma once
 #include "array.hpp"
 #include "key.hpp"
+#include <cstring>
 #include <include_transform.h>
 
 namespace dro {
@@ -61,13 +62,15 @@ private:
 // Holds the components of a DEFINE_TRANSFORMATION keyword
 class DefineTransformation {
 public:
-  // Parses an DEFINE_TRANSFORMATION keyword
-  DefineTransformation(Keyword &kw) noexcept;
+  // Parses an DEFINE_TRANSFORMATION keyword. is_title says wether this is a
+  // DEFINE_TRANSFORMATION_TITLE keyword
+  DefineTransformation(Keyword &kw, bool is_title = false) noexcept;
   DefineTransformation() noexcept;
   ~DefineTransformation() noexcept;
 
   // Parses a single card form a DEFINE_TRANSFORMATION keyword
-  void parse_define_transformation_card(Card card, size_t card_index) noexcept;
+  void parse_define_transformation_card(Card card, size_t card_index,
+                                        bool is_title = false) noexcept;
 
   // Transform ID
   inline int64_t get_tranid() const noexcept { return m_handle.tranid; }
@@ -78,6 +81,13 @@ public:
   inline Array<transformation_option_t> get_raw_options() noexcept {
     return Array<transformation_option_t>(m_handle.options,
                                           m_handle.num_options, false);
+  }
+  // A user defined title if DEFINE_TRANSFORMATION_TITLE is parsed
+  inline String get_title() {
+    if (!m_handle.title) {
+      THROW_KEY_FILE_EXCEPTION("%s", "title of DefineTransformation is NULL");
+    }
+    return String(m_handle.title, false);
   }
 
 private:

@@ -131,17 +131,19 @@ void key_parse_include_transform_card(include_transform_t *it, card_t *card,
   END_PROFILE_FUNC();
 }
 
-define_transformation_t key_parse_define_transformation(keyword_t *keyword) {
+define_transformation_t key_parse_define_transformation(keyword_t *keyword,
+                                                        int is_title) {
   BEGIN_PROFILE_FUNC();
 
   define_transformation_t dt;
   dt.tranid = 0;
   dt.options = NULL;
   dt.num_options = 0;
+  dt.title = NULL;
 
   size_t i = 0;
   while (i < keyword->num_cards) {
-    key_parse_define_transformation_card(&dt, &keyword->cards[i], i);
+    key_parse_define_transformation_card(&dt, &keyword->cards[i], i, is_title);
 
     i++;
   }
@@ -151,12 +153,23 @@ define_transformation_t key_parse_define_transformation(keyword_t *keyword) {
 }
 
 void key_parse_define_transformation_card(define_transformation_t *dt,
-                                          card_t *card, size_t card_index) {
+                                          card_t *card, size_t card_index,
+                                          int is_title) {
   BEGIN_PROFILE_FUNC();
 
   card_parse_begin(card, DEFAULT_VALUE_WIDTH);
 
   if (card_index == 0) {
+    if (is_title) {
+      dt->title = card_parse_whole(card);
+    } else {
+      _card_try_parse_int(card, &dt->tranid);
+    }
+    END_PROFILE_FUNC();
+    return;
+  }
+
+  if (card_index == 1 && is_title) {
     _card_try_parse_int(card, &dt->tranid);
     END_PROFILE_FUNC();
     return;
@@ -223,6 +236,7 @@ void key_free_define_transformation(define_transformation_t *dt) {
     i++;
   }
   free(dt->options);
+  free(dt->title);
 
   END_PROFILE_FUNC();
 }

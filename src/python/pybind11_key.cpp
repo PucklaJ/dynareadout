@@ -228,7 +228,7 @@ void add_key_library_to_module(py::module_ &m) {
       .def(py::init())
       .def("parse_define_transformation_card",
            &dro::DefineTransformation::parse_define_transformation_card,
-           py::arg("card"), py::arg("card_index"))
+           py::arg("card"), py::arg("card_index"), py::arg("is_title") = true)
       .def("get_tranid", &dro::DefineTransformation::get_tranid)
       .def("get_options", &dro::DefineTransformation::get_options)
 
