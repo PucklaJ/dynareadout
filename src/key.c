@@ -670,6 +670,7 @@ void key_file_parse_with_callback(const char *file_name,
   free(line_reader.line.extra);
   free(current_keyword_name.extra);
 
+  free_line_reader(line_reader);
   fclose(file);
 
   /* Convert the error stack into an error string*/

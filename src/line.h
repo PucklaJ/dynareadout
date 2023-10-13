@@ -29,12 +29,7 @@
 #include "extra_string.h"
 #include <stdio.h>
 
-#ifdef _WIN32
-/* Windows has a max stack size of 1MB*/
-#define LINE_READER_BUFFER_SIZE (1024 * 10) /* 10KB */
-#else
 #define LINE_READER_BUFFER_SIZE (1024 * 1024) /* 1MB */
-#endif
 
 /* All the state for the read_line function*/
 typedef struct {
@@ -46,9 +41,7 @@ typedef struct {
                            Is ~0 if no comment has been found*/
 
   /* Internal variables used in read_line*/
-  char
-      buffer[LINE_READER_BUFFER_SIZE]; /* The file is read in
-                                          LINE_READER_BUFFER_SIZE sized chunks*/
+  char *buffer; /* The file is read in LINE_READER_BUFFER_SIZE sized chunks*/
   size_t buffer_index;
   size_t bytes_read;
   size_t extra_capacity;
@@ -58,13 +51,17 @@ typedef struct {
 extern "C" {
 #endif
 
-/* Initialise all variables of the line reader*/
+/* Initialise all variables of the line reader. Needs to be deallocated by
+ * free_line_reader*/
 line_reader_t new_line_reader(FILE *file);
 
 /* Reads from file until it encounters the next new line and stores the
  * resulting string in line. Also supports carriage return. Returns 0 if the
  * file has been completely parsed and non 0 if the line can be processed*/
 int read_line(line_reader_t *lr);
+
+/* Frees all allocated memory of a line reader*/
+void free_line_reader(line_reader_t lr);
 
 #ifdef __cplusplus
 }

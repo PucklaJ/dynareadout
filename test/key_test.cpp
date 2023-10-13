@@ -816,6 +816,7 @@ TEST_CASE("read_line") {
     free(lr.line.extra);
   }
 
+  free_line_reader(lr);
   fclose(file);
 }
 
