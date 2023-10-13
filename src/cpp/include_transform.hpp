@@ -5,14 +5,19 @@
 
 namespace dro {
 
+// ls-dyna_manual_volume_i_r13.pdf p. 2685
 class IncludeTransform {
 public:
+  // Parses an INCLUDE_TRANSFORM keyword
   IncludeTransform(Keyword &kw) noexcept;
   IncludeTransform() noexcept;
   ~IncludeTransform() noexcept;
 
+  // Parse a single card from an INCLUDE_TRANSFORM keyword. Useful when using
+  // parse_with_callback
   void parse_include_transform_card(Card card, size_t card_index) noexcept;
 
+  // For an explanation of these variables see <include_transform.h>
   inline String get_file_name() noexcept {
     return String(m_handle.file_name, false);
   }
@@ -39,6 +44,7 @@ private:
   include_transform_t m_handle;
 };
 
+// Holds the name and parameters for every option of a DEFINE_TRANSFORMATION
 class TransformationOption {
 public:
   TransformationOption(transformation_option_t *handle);
@@ -52,16 +58,23 @@ private:
   transformation_option_t *m_handle;
 };
 
+// Holds the components of a DEFINE_TRANSFORMATION keyword
 class DefineTransformation {
 public:
+  // Parses an DEFINE_TRANSFORMATION keyword
   DefineTransformation(Keyword &kw) noexcept;
   DefineTransformation() noexcept;
   ~DefineTransformation() noexcept;
 
+  // Parses a single card form a DEFINE_TRANSFORMATION keyword
   void parse_define_transformation_card(Card card, size_t card_index) noexcept;
 
+  // Transform ID
   inline int64_t get_tranid() const noexcept { return m_handle.tranid; }
+  // The Options like TRANSL, SCALE etc. Creates a new array and allocates
+  // memory
   Array<TransformationOption> get_options() noexcept;
+  // Access the C array directly without copying and allocating any new memory
   inline Array<transformation_option_t> get_raw_options() noexcept {
     return Array<transformation_option_t>(m_handle.options,
                                           m_handle.num_options, false);

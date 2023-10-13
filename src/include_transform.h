@@ -85,15 +85,17 @@ typedef struct {
                      See *DEFINE_TRANSFORMATION.*/
 } include_transform_t;
 
+/* Holds the name and parameters for every option of a DEFINE_TRANSFORMATION*/
 typedef struct {
   char *name;
   double parameters[7];
 } transformation_option_t;
 
+/* Holds the components of a DEFINE_TRANSFORMATION keyword*/
 typedef struct {
   int64_t tranid; /* Transform ID */
 
-  transformation_option_t *options;
+  transformation_option_t *options; /* The Options like TRANSL, SCALE etc.*/
   size_t num_options;
 } define_transformation_t;
 
