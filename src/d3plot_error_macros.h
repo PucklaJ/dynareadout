@@ -26,6 +26,7 @@
 #ifndef D3PLOT_ERROR_MACROS_H
 #define D3PLOT_ERROR_MACROS_H
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 

@@ -281,8 +281,8 @@ TEST_CASE("binout0000C++") {
   {
     const auto children = bin_file.get_children("/");
     REQUIRE(children.size() == 5);
-    CHECK(children[0] == dro::String("bndout", false));
-    CHECK(children[1] == dro::SizedString("glstat", strlen("glstat"), false));
+    CHECK(children[0] == dro::String(strdup("bndout")));
+    CHECK(children[1] == dro::SizedString(strdup("glstat"), strlen("glstat")));
     CHECK(children[1] == std::string("glstat"));
   }
 
@@ -449,6 +449,22 @@ TEST_CASE("Array") {
 
     CHECK(std::binary_search(is.begin(), is.end(), 8) == true);
     CHECK(std::binary_search(is.begin(), is.end(), 177) == false);
+  }
+
+  SUBCASE("const") {
+    int *data = (int *)malloc(sizeof(int) * 5);
+    data[0] = 1;
+    data[1] = 2;
+    data[2] = 4;
+    data[3] = 8;
+    data[4] = 16;
+
+    const dro::Array<int> d(data, 5);
+
+    int i = 1;
+    for (auto it = d.begin(); it != d.end(); it++, i *= 2) {
+      CHECK(*it == i);
+    }
   }
 }
 #endif

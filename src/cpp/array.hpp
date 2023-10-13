@@ -48,8 +48,8 @@ public:
     using iterator_category = std::input_iterator_tag;
     using difference_type = std::ptrdiff_t;
     using value_type = T;
-    using pointer = T *;   // or also value_type*
-    using reference = T &; // or also value_type&
+    using pointer = T *;         // or also value_type*
+    using reference = const T &; // or also value_type&
 
     explicit ConstIterator(pointer data, difference_type index) noexcept
         : m_data(data), m_index(index) {}
@@ -71,7 +71,7 @@ public:
     difference_type operator-(const ConstIterator &rhs) const {
       return m_index - rhs.m_index;
     }
-    const reference operator*() const { return m_data[m_index]; }
+    reference operator*() const { return m_data[m_index]; }
     const pointer operator->() const { return &m_data[m_index]; }
 
   public:
@@ -87,6 +87,7 @@ public:
     using value_type = T;
     using pointer = T *;   // or also value_type*
     using reference = T &; // or also value_type&
+    using const_reference = const T &;
 
     explicit Iterator(pointer data, difference_type index) noexcept
         : m_data(data), m_index(index) {}
@@ -108,7 +109,7 @@ public:
     difference_type operator-(const Iterator &rhs) const {
       return m_index - rhs.m_index;
     }
-    const reference operator*() const { return m_data[m_index]; }
+    const_reference operator*() const { return m_data[m_index]; }
     const pointer operator->() const { return &m_data[m_index]; }
     reference operator*() { return m_data[m_index]; }
     pointer operator->() { return &m_data[m_index]; }

@@ -201,7 +201,7 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file,
   const size_t user_ids_size = user_ids_end - user_ids_start;
   if (user_ids_size != CDP.narbs) {
     ERROR_AND_NO_RETURN_F_PTR(
-        "The USER IDENTIFICATION NUMBERS section is false (%zu != %llu)",
+        "The USER IDENTIFICATION NUMBERS section is false (%zu != %lu)",
         user_ids_size, CDP.narbs);
 
     END_PROFILE_FUNC();

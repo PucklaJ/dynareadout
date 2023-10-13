@@ -181,7 +181,7 @@ binout_file binout_open(const char *file_name) {
         BIN_FILE_READ(path_buffer, 1, record_data_length,
                       "Failed to read PATH of CD record");
 
-        if (PATH_IS_ABS(path_buffer)) {
+        if PATH_IS_ABS (path_buffer) {
           memcpy(current_path_string, path_buffer, record_data_length + 1);
           current_path = path_view_new(current_path_string);
           /* Only insert the current folder if the current path is not the

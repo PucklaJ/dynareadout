@@ -620,49 +620,49 @@ TEST_CASE("extra_string") {
 
 TEST_CASE("card_parse_get_type") {
   card_t card;
-  card.string = "10";
+  card.string = strdup("10");
   card.current_index = 0;
   card.value_width = DEFAULT_VALUE_WIDTH;
 
   CHECK(card_parse_get_type(&card) == CARD_PARSE_INT);
 
-  card.string = "  +30  ";
+  card.string = strdup("  +30  ");
   CHECK(card_parse_get_type(&card) == CARD_PARSE_INT);
 
-  card.string = " -20.5   ";
+  card.string = strdup(" -20.5   ");
   CHECK(card_parse_get_type(&card) == CARD_PARSE_FLOAT);
 
-  card.string = "4e56";
+  card.string = strdup("4e56");
   CHECK(card_parse_get_type(&card) == CARD_PARSE_FLOAT);
 
-  card.string = "+7E-7";
+  card.string = strdup("+7E-7");
   CHECK(card_parse_get_type(&card) == CARD_PARSE_FLOAT);
 
-  card.string = "6.8e10";
+  card.string = strdup("6.8e10");
   CHECK(card_parse_get_type(&card) == CARD_PARSE_FLOAT);
 
-  card.string = "Hey World";
+  card.string = strdup("Hey World");
   CHECK(card_parse_get_type(&card) == CARD_PARSE_STRING);
 
-  card.string = "10M";
+  card.string = strdup("10M");
   CHECK(card_parse_get_type(&card) == CARD_PARSE_STRING);
 
-  card.string = "5.6j";
+  card.string = strdup("5.6j");
   CHECK(card_parse_get_type(&card) == CARD_PARSE_STRING);
 
-  card.string = "1.";
+  card.string = strdup("1.");
   CHECK(card_parse_get_type(&card) == CARD_PARSE_STRING);
 
-  card.string = "1e";
+  card.string = strdup("1e");
   CHECK(card_parse_get_type(&card) == CARD_PARSE_STRING);
 
-  card.string = "1.0e";
+  card.string = strdup("1.0e");
   CHECK(card_parse_get_type(&card) == CARD_PARSE_STRING);
 
-  card.string = "+";
+  card.string = strdup("+");
   CHECK(card_parse_get_type(&card) == CARD_PARSE_STRING);
 
-  card.string = "1e+";
+  card.string = strdup("1e+");
   CHECK(card_parse_get_type(&card) == CARD_PARSE_STRING);
 }
 

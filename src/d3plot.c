@@ -185,7 +185,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
 
   /* Quit immediately if NDIM is not supported*/
   if (CDA.ndim != 3) {
-    ERROR_AND_RETURN_F("A ndim value of %llu is not supported", CDA.ndim);
+    ERROR_AND_RETURN_F("A ndim value of %lu is not supported", CDA.ndim);
   }
 
   i = 0;
@@ -242,7 +242,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
     CDA.mdlopt = 1;
     CDA.maxint *= -1;
   } else {
-    ERROR_AND_RETURN_F("Invalid value for MAXINT: %lld", CDA.maxint);
+    ERROR_AND_RETURN_F("Invalid value for MAXINT: %ld", CDA.maxint);
   }
 
   if (idtdt < 100) {
@@ -2493,7 +2493,7 @@ d3plot_part d3plot_read_part_by_id(d3plot_file *plot_file, d3_word part_id,
   }
 
   if (index == ~0) {
-    ERROR_AND_NO_RETURN_F_PTR("The part id %llu has not been found", part_id);
+    ERROR_AND_NO_RETURN_F_PTR("The part id %lu has not been found", part_id);
     END_PROFILE_FUNC();
     return part;
   }

@@ -184,7 +184,7 @@ int _d3plot_read_state_data(d3plot_file *plot_file, d3_pointer *d3_ptr) {
   const size_t global_size = global_end - global_start;
 
   if (global_size != CDP.nglbv) {
-    ERROR_AND_NO_RETURN_F_PTR("Size of GLOBAL is %zu instead of %llu",
+    ERROR_AND_NO_RETURN_F_PTR("Size of GLOBAL is %zu instead of %lu",
                               global_size, CDP.nglbv);
     END_PROFILE_FUNC();
     return 0;

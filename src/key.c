@@ -42,11 +42,14 @@
   error_stack[error_ptr] = '\n';                                               \
   error_ptr++
 #define ERROR_F(msg, ...)                                                      \
-  const int error_buffer_size = snprintf(NULL, 0, msg, __VA_ARGS__);           \
+  const int error_buffer_size = 1024;                                          \
   error_stack_size += error_buffer_size + 1;                                   \
   error_stack = realloc(error_stack, error_stack_size);                        \
-  sprintf(&error_stack[error_ptr], msg, __VA_ARGS__);                          \
-  error_ptr += error_buffer_size;                                              \
+  const int error_size_written =                                               \
+      sprintf(&error_stack[error_ptr], msg, __VA_ARGS__);                      \
+  error_stack_size -= error_buffer_size - (error_size_written + 1);            \
+  error_stack = realloc(error_stack, error_stack_size);                        \
+  error_ptr += error_size_written;                                             \
   error_stack[error_ptr] = '\n';                                               \
   error_ptr++;
 #define ERROR_ERRNO(msg) ERROR_F(msg, strerror(errno));
@@ -59,13 +62,16 @@
   warning_stack[warning_ptr] = '\n';                                           \
   warning_ptr++
 #define WARNING_F(msg, ...)                                                    \
-  const int warning_buffer_size = snprintf(NULL, 0, msg, __VA_ARGS__);         \
+  const int warning_buffer_size = 1024;                                        \
   warning_stack_size += warning_buffer_size + 1;                               \
   warning_stack = realloc(warning_stack, warning_stack_size);                  \
-  sprintf(&warning_stack[warning_ptr], msg, __VA_ARGS__);                      \
-  warning_ptr += warning_buffer_size;                                          \
+  const int warning_size_written =                                             \
+      sprintf(&warning_stack[warning_ptr], msg, __VA_ARGS__);                  \
+  warning_stack_size -= warning_buffer_size - (warning_size_written + 1);      \
+  warning_stack = realloc(warning_stack, warning_stack_size);                  \
+  warning_ptr += warning_size_written;                                         \
   warning_stack[warning_ptr] = '\n';                                           \
-  warning_ptr++;
+  warning_ptr++
 #define WARNING_ERRNO(msg) WARNING_F(msg, strerror(errno));
 #define ERROR_KEYWORD_NOT_IMPLEMENTED(keyword)                                 \
   ERROR_F("%s:%lu: The keyword %s is not implemented", file_name,              \
