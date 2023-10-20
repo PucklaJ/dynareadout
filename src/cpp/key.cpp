@@ -26,6 +26,7 @@
 #include "key.hpp"
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 
 namespace dro {
 
@@ -180,11 +181,30 @@ const char *KeyFile::Exception::what() const noexcept {
   return m_error_str.data();
 }
 
-KeyFile::ParseConfig::ParseConfig(bool parse_includes,
-                                  bool ignore_not_found_includes) noexcept {
+KeyFile::ParseConfig::ParseConfig(
+    bool parse_includes, bool ignore_not_found_includes,
+    std::vector<std::filesystem::path> extra_include_paths) noexcept {
   m_handle.parse_includes = parse_includes;
   m_handle.ignore_not_found_includes = ignore_not_found_includes;
+  if (!extra_include_paths.empty()) {
+    m_handle.num_extra_include_paths = extra_include_paths.size();
+    m_handle.extra_include_paths = reinterpret_cast<char **>(
+        malloc(m_handle.num_extra_include_paths * sizeof(char *)));
+    for (size_t i = 0; i < extra_include_paths.size(); i++) {
+      m_handle.extra_include_paths[i] = strdup(extra_include_paths[i].c_str());
+    }
+  } else {
+    m_handle.extra_include_paths = NULL;
+    m_handle.num_extra_include_paths = 0;
+  }
 }
+
+KeyFile::ParseConfig::ParseConfig(ParseConfig &&rhs) {
+  m_handle = rhs.m_handle;
+  rhs.m_handle = {0};
+}
+
+KeyFile::ParseConfig::~ParseConfig() { free(m_handle.extra_include_paths); }
 
 Keywords KeyFile::parse(const std::filesystem::path &file_name,
                         std::optional<dro::String> &warnings,

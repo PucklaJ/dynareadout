@@ -286,8 +286,11 @@ public:
 
   class ParseConfig {
   public:
-    ParseConfig(bool parse_includes = true,
-                bool ignore_not_found_includes = false) noexcept;
+    ParseConfig(
+        bool parse_includes = true, bool ignore_not_found_includes = false,
+        std::vector<std::filesystem::path> extra_include_paths = {}) noexcept;
+    ParseConfig(ParseConfig &&rhs);
+    ~ParseConfig();
 
     inline const key_parse_config_t *get_handle() const noexcept {
       return &m_handle;

@@ -1236,6 +1236,20 @@ TEST_CASE("key_file_parse_with_callbackC++") {
   }
 }
 
+TEST_CASE("key_file_parse_extra_include_pathsC++") {
+  std::optional<dro::String> warnings;
+  auto keywords = dro::KeyFile::parse(
+      "test_data/extra_include_paths.k", warnings,
+      dro::KeyFile::ParseConfig{true, false, {"test_data/extra_folder"}});
+  if (warnings) {
+    FAIL(*warnings);
+    return;
+  }
+
+  auto c = keywords["EXTRA_KEYWORD"][0][0];
+  CHECK(c.parse_string_whole<std::string>() == "SuperDuper");
+}
+
 TEST_CASE("empty_card") {
   card_t card_handle;
   card_handle.string = (char *)malloc(1);
