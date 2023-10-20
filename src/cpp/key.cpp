@@ -199,12 +199,26 @@ KeyFile::ParseConfig::ParseConfig(
   }
 }
 
-KeyFile::ParseConfig::ParseConfig(ParseConfig &&rhs) {
+KeyFile::ParseConfig::ParseConfig(ParseConfig &&rhs) noexcept {
   m_handle = rhs.m_handle;
   rhs.m_handle = {0};
 }
 
-KeyFile::ParseConfig::~ParseConfig() { free(m_handle.extra_include_paths); }
+KeyFile::ParseConfig::ParseConfig(const ParseConfig &rhs) noexcept {
+  m_handle = rhs.m_handle;
+  if (m_handle.num_extra_include_paths != 0) {
+    m_handle.extra_include_paths = reinterpret_cast<char **>(
+        malloc(m_handle.num_extra_include_paths * sizeof(char *)));
+    for (size_t i = 0; i < m_handle.num_extra_include_paths; i++) {
+      m_handle.extra_include_paths[i] =
+          strdup(rhs.m_handle.extra_include_paths[i]);
+    }
+  }
+}
+
+KeyFile::ParseConfig::~ParseConfig() noexcept {
+  free(m_handle.extra_include_paths);
+}
 
 Keywords KeyFile::parse(const std::filesystem::path &file_name,
                         std::optional<dro::String> &warnings,

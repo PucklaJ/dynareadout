@@ -76,9 +76,12 @@ py::list python_card_parse_whole(dro::Card &self, py::list value_widths) {
 }
 
 void add_key_library_to_module(py::module_ &m) {
-  py::class_<dro::KeyFile::ParseConfig>(m, "key_file_parse_config")
-      .def(py::init<bool, bool>(), py::arg("parse_includes") = true,
+  py::class_<dro::KeyFile::ParseConfig>(m, "KeyFileParseConfig")
+      .def(py::init<bool, bool, std::vector<std::filesystem::path>>(),
+           py::arg("parse_includes") = true,
            py::arg("ignore_not_found_includes") = false,
+           py::arg("extra_include_paths") =
+               std::vector<std::filesystem::path>(),
            "Configure how a key file is parsed");
 
   py::class_<dro::Keywords>(m, "Keywords")
@@ -165,7 +168,7 @@ void add_key_library_to_module(py::module_ &m) {
            "Parses all values of the card as the correct types. The width of "
            "each value needs to be provided as a list through value_widths",
            py::arg("value_widths") = py::list())
-      .def("__str__", &dro::Card::parse_string_whole_no_trim<dro::String>)
+      .def("__str__", &dro::Card::parse_string_whole_no_trim<std::string>)
 
       ;
 
