@@ -78,9 +78,8 @@
           current_keyword_line, keyword)
 
 key_parse_config_t key_default_parse_config() {
-  key_parse_config_t c;
+  key_parse_config_t c = {0};
   c.parse_includes = 1;
-  c.ignore_not_found_includes = 0;
   return c;
 }
 
@@ -223,6 +222,7 @@ void key_file_parse_with_callback(const char *file_name,
     rec_ptr = malloc(sizeof(key_parse_recursion_t));
     rec_ptr->include_paths = NULL;
     rec_ptr->num_include_paths = 0;
+    rec_ptr->extra_include_paths_applied = 0;
 
     const size_t index = path_move_up_real(file_name);
     if (index == (size_t)~0) {
@@ -258,6 +258,26 @@ void key_file_parse_with_callback(const char *file_name,
     parse_config = *_parse_config;
   } else {
     parse_config = key_default_parse_config();
+  }
+
+  /* Add the additional include paths to the include_paths array*/
+  if (!rec_ptr->extra_include_paths_applied) {
+    const size_t j = rec_ptr->num_include_paths;
+    rec_ptr->num_include_paths += parse_config.num_extra_include_paths;
+    rec_ptr->include_paths = realloc(
+        rec_ptr->include_paths, rec_ptr->num_include_paths * sizeof(char *));
+
+    size_t i = 0;
+    while (i < parse_config.num_extra_include_paths) {
+      const size_t len = strlen(parse_config.extra_include_paths[i]);
+      rec_ptr->include_paths[j + i] = malloc(len * sizeof(char));
+      memcpy(rec_ptr->include_paths[j + i], parse_config.extra_include_paths[i],
+             len + 1);
+
+      i++;
+    }
+
+    rec_ptr->extra_include_paths_applied = 1;
   }
 
   line_reader_t line_reader = new_line_reader(file);

@@ -35,6 +35,8 @@
 #include <key.h>
 #include <line.h>
 
+extern char *stralloc(const char *);
+
 #ifdef BUILD_CPP
 #include <include_transform.hpp>
 #include <key.hpp>
@@ -83,9 +85,8 @@ TEST_CASE("key_file_parse") {
                          NULL) == NULL);
   }
 
-  key_parse_config_t parse_config;
+  key_parse_config_t parse_config = {0};
   parse_config.parse_includes = 1;
-  parse_config.ignore_not_found_includes = 0;
 
   char *error_string, *warning_string;
   size_t num_keywords;
@@ -539,6 +540,39 @@ TEST_CASE("key_file_parse_with_callback") {
   }
 }
 
+TEST_CASE("key_file_parse_extra_include_paths") {
+  key_parse_config_t parse_config = {0};
+  parse_config.parse_includes = 1;
+  parse_config.num_extra_include_paths = 1;
+  parse_config.extra_include_paths = (char **)malloc(sizeof(char *));
+  parse_config.extra_include_paths[0] = stralloc("test_data/extra_folder");
+
+  size_t num_keywords;
+  char *error_string, *warning_string;
+  keyword_t *keywords =
+      key_file_parse("test_data/extra_include_paths.k", &num_keywords,
+                     &parse_config, &error_string, &warning_string);
+
+  if (warning_string) {
+    FAIL(warning_string);
+    free(warning_string);
+  }
+  if (error_string) {
+    FAIL(error_string);
+    free(error_string);
+  }
+
+  REQUIRE(num_keywords == 1);
+  keyword_t *kw = key_file_get(keywords, num_keywords, "EXTRA_KEYWORD", 0);
+  REQUIRE(kw != NULL);
+  REQUIRE(kw->num_cards == 1);
+  card_t *c = &kw->cards[0];
+  CHECK(card_parse_whole(c) == "SuperDuper");
+
+  free(parse_config.extra_include_paths[0]);
+  free(parse_config.extra_include_paths);
+}
+
 TEST_CASE("extra_string") {
   {
     const char *cstr = "Hello World";
@@ -667,8 +701,7 @@ TEST_CASE("card_parse_get_type") {
 }
 
 TEST_CASE("key_file_parse_no_includes") {
-  key_parse_config_t parse_config;
-  parse_config.parse_includes = 0;
+  key_parse_config_t parse_config = {0};
 
   size_t num_keywords;
   char *error_string, *warning_string;

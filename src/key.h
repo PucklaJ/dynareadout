@@ -63,6 +63,11 @@ typedef struct {
   int ignore_not_found_includes; /* Wether to not parse and not output an error
                                    when not finding an include file. Default:
                                    0*/
+  char **extra_include_paths; /* Define some additional include paths which are
+                                 used to look for files under the INCLUDE
+                                 keyword and such*/
+  size_t num_extra_include_paths; /* The number of strings in the
+                                     extra_include_paths array*/
 } key_parse_config_t;
 
 /* Holds all variables used for recursion*/
@@ -72,6 +77,8 @@ typedef struct {
   size_t num_include_paths; /* The number of include paths*/
   char *root_folder;        /* The folder which contains the file with which the
                                function was invoked first*/
+  int extra_include_paths_applied; /* Wether the additional include paths of the
+                                      parse config have already been applied*/
 } key_parse_recursion_t;
 
 /* Returns a key_parse_config_t with all values set to the default*/
