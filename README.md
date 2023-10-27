@@ -6,11 +6,11 @@ High-Performance and Thread-Safe C/C++ library for parsing binary output files a
 
 This library also supports bindings to other languages
 
-| Language | Implemented | Repository                                                          |
-| -------- | :---------: | ------------------------------------------------------------------- |
-| C++      |      ✅      | [dynareadout](https://github.com/PucklaJ/dynareadout)               |
-| Python   |      ✅      | [dynareadout_python](https://github.com/PucklaJ/dynareadout_python) |
-| Go       |      ✅      | [dynareadout_go](https://github.com/PucklaJ/dynareadout_go)         |
+| Language | Repository                                                          |
+| -------- | ------------------------------------------------------------------- |
+| C++      | [dynareadout](https://github.com/PucklaJ/dynareadout)               |
+| Python   | [dynareadout_python](https://github.com/PucklaJ/dynareadout_python) |
+| Go       | [dynareadout_go](https://github.com/PucklaJ/dynareadout_go)         |
 
 ## Wiki
 
@@ -37,6 +37,8 @@ add_requires("dynareadout")
 -- add_requires("dynareadout", {configs = {cpp = false}})
 -- shared build instead of static
 -- add_requires("dynareadout", {shared = true})
+-- no thread safety
+-- add_requires("dynareadout", {configs = {thread_safe = false}})
 
 target("example")
   set_kind("binary")
