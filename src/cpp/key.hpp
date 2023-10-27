@@ -284,8 +284,15 @@ public:
     const ErrorString m_error_str;
   };
 
+  // Contains options to configure how a key file is parsed
   class ParseConfig {
   public:
+    // parse_includes ... Wether to parse supported INCLUDE keywords and
+    // recursively parse those files
+    // ignore_not_found_includes ... Wether to not parse and not output an error
+    // when not finding an include file.
+    // extra_include_paths ... Define some additional include paths which are
+    // used to look for files under the INCLUDE keyword and such.
     ParseConfig(
         bool parse_includes = true, bool ignore_not_found_includes = false,
         std::vector<std::filesystem::path> extra_include_paths = {}) noexcept;
@@ -301,9 +308,28 @@ public:
     key_parse_config_t m_handle;
   };
 
-  using Callback = std::function<void(
-      String file_name, size_t line_number, String keyword_name,
-      std::optional<Card> card, size_t card_index)>;
+  // Holds information about the current state when parsing a key file
+  class ParseInfo {
+  public:
+    ParseInfo(key_parse_info_t handle) noexcept;
+
+    // Name of the current file
+    inline std::filesystem::path file_name() { return m_handle.file_name; }
+    // Current line
+    inline size_t line_number() const noexcept { return m_handle.line_number; }
+    // Array containing the include paths where it looks for include files
+    // (including working directory)
+    std::vector<std::filesystem::path> include_paths();
+    // The folder which contains the initial file of the parse call
+    inline std::filesystem::path root_folder() { return m_handle.root_folder; }
+
+  private:
+    key_parse_info_t m_handle;
+  };
+
+  using Callback =
+      std::function<void(ParseInfo info, String keyword_name,
+                         std::optional<Card> card, size_t card_index)>;
 
   // Parses an LS Dyna key file for keywords and their respective cards. Returns
   // an array of keywords

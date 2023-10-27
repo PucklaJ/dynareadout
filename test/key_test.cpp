@@ -1200,8 +1200,8 @@ TEST_CASE("key_file_parse_with_callbackC++") {
   std::optional<dro::String> warnings;
   dro::KeyFile::parse_with_callback(
       "test_data/key_file.k",
-      [](dro::String file_name, size_t line_number, dro::String keyword_name,
-         std::optional<dro::Card> card, size_t card_index) {
+      [](auto info, dro::String keyword_name, std::optional<dro::Card> card,
+         size_t card_index) {
         constexpr std::array expected_file_names = {
             "test_data/key_file.k",
             "test_data/"
@@ -1216,7 +1216,7 @@ TEST_CASE("key_file_parse_with_callbackC++") {
 
         bool file_name_found = false;
         for (const char *expected_file_name : expected_file_names) {
-          if (file_name == expected_file_name) {
+          if (info.file_name() == expected_file_name) {
             file_name_found = true;
             break;
           }
@@ -1224,7 +1224,7 @@ TEST_CASE("key_file_parse_with_callbackC++") {
 
         if (!file_name_found) {
           std::stringstream stream;
-          stream << "Unexpected file name: \"" << file_name << '"';
+          stream << "Unexpected file name: \"" << info.file_name() << '"';
           FAIL(stream.str());
         }
       },
@@ -1376,7 +1376,7 @@ TEST_CASE("INCLUDE_PATH") {
     std::optional<dro::String> warnings;
     dro::KeyFile::parse_with_callback(
         "test_data/include_paths/main.k",
-        [&](dro::String file_name, size_t line_number, dro::String keyword_name,
+        [&](dro::KeyFile::ParseInfo info, dro::String keyword_name,
             std::optional<dro::Card> card, size_t card_index) {
           if (keyword_name == "LAYER_22" && !layer_22_found) {
             layer_22_found = true;
@@ -1387,6 +1387,16 @@ TEST_CASE("INCLUDE_PATH") {
                 "Invalid Keyword: \"%s\" layer_22_found=%s layer_41_found=%s",
                 keyword_name.data(), layer_22_found ? "true" : "false",
                 layer_41_found ? "true" : "false");
+          }
+
+          if (keyword_name == "LAYER_41") {
+            CHECK(info.root_folder() == (std::filesystem::current_path() /
+                                         "test_data/include_paths/"));
+
+            const auto ip = info.include_paths();
+            REQUIRE(ip.size() == 2);
+            CHECK(ip[0] == std::filesystem::current_path());
+            CHECK(ip[1] == "test_data/include_paths");
           }
         },
         warnings);

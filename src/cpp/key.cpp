@@ -220,6 +220,17 @@ KeyFile::ParseConfig::~ParseConfig() noexcept {
   free(m_handle.extra_include_paths);
 }
 
+KeyFile::ParseInfo::ParseInfo(key_parse_info_t handle) noexcept
+    : m_handle(handle) {}
+
+std::vector<std::filesystem::path> KeyFile::ParseInfo::include_paths() {
+  std::vector<std::filesystem::path> p(m_handle.num_include_paths);
+  for (size_t i = 0; i < m_handle.num_include_paths; i++) {
+    p[i] = m_handle.include_paths[i];
+  }
+  return p;
+}
+
 Keywords KeyFile::parse(const std::filesystem::path &file_name,
                         std::optional<dro::String> &warnings,
                         KeyFile::ParseConfig parse_config) {
@@ -247,14 +258,14 @@ void KeyFile::parse_with_callback(const std::filesystem::path &file_name,
 
   key_file_parse_with_callback(
       file_name.string().c_str(),
-      [](const char *file_name, size_t line_number, const char *keyword_name,
-         card_t *card, size_t card_index, void *user_data) {
+      [](key_parse_info_t info, const char *keyword_name, card_t *card,
+         size_t card_index, void *user_data) {
         KeyFile::Callback *callback =
             reinterpret_cast<KeyFile::Callback *>(user_data);
 
         auto card_opt = card ? std::make_optional<Card>(card) : std::nullopt;
 
-        (*callback)(String(const_cast<char *>(file_name), false), line_number,
+        (*callback)(ParseInfo(info),
                     String(const_cast<char *>(keyword_name), false),
                     std::move(card_opt), card_index);
       },
