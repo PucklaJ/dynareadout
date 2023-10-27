@@ -191,7 +191,8 @@ KeyFile::ParseConfig::ParseConfig(
     m_handle.extra_include_paths = reinterpret_cast<char **>(
         malloc(m_handle.num_extra_include_paths * sizeof(char *)));
     for (size_t i = 0; i < extra_include_paths.size(); i++) {
-      m_handle.extra_include_paths[i] = strdup(extra_include_paths[i].c_str());
+      m_handle.extra_include_paths[i] = strdup(
+          reinterpret_cast<const char *>(extra_include_paths[i].c_str()));
     }
   } else {
     m_handle.extra_include_paths = NULL;
