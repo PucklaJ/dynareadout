@@ -456,8 +456,8 @@ TEST_CASE("key_file_parse_with_callback") {
 
   key_file_parse_with_callback(
       "test_data/key_file.k",
-      [](const char *file_name, size_t line_number, const char *keyword_name,
-         card_t *card, size_t card_index, void *user_data) {
+      [](key_parse_info_t info, const char *keyword_name, card_t *card,
+         size_t card_index, void *user_data) {
         constexpr const char *expected_file_names[5] = {
             "test_data/key_file.k",
             "test_data/"
@@ -472,7 +472,7 @@ TEST_CASE("key_file_parse_with_callback") {
 
         bool file_name_found = false;
         for (const char *expected_file_name : expected_file_names) {
-          if (strcmp(file_name, expected_file_name) == 0) {
+          if (strcmp(info.file_name, expected_file_name) == 0) {
             file_name_found = true;
             break;
           }
@@ -480,7 +480,7 @@ TEST_CASE("key_file_parse_with_callback") {
 
         if (!file_name_found) {
           std::stringstream stream;
-          stream << "Unexpected file name: \"" << file_name << '"';
+          stream << "Unexpected file name: \"" << info.file_name << '"';
           FAIL(stream.str());
         }
 

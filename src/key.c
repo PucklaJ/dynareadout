@@ -77,6 +77,14 @@
   ERROR_F("%s:%lu: The keyword %s is not implemented", file_name,              \
           current_keyword_line, keyword)
 
+#define KEY_PARSE_INFO()                                                       \
+  key_parse_info_t info;                                                       \
+  info.file_name = file_name;                                                  \
+  info.line_number = line_count;                                               \
+  info.include_paths = rec_ptr->include_paths;                                 \
+  info.num_include_paths = rec_ptr->num_include_paths;                         \
+  info.root_folder = rec_ptr->root_folder
+
 key_parse_config_t key_default_parse_config() {
   key_parse_config_t c = {0};
   c.parse_includes = 1;
@@ -89,9 +97,8 @@ typedef struct {
   size_t *num_keywords;
 } key_file_parse_data;
 
-void key_file_parse_callback(const char *file_name, size_t line_number,
-                             const char *keyword_name, card_t *card,
-                             size_t card_index, void *user_data) {
+void key_file_parse_callback(key_parse_info_t info, const char *keyword_name,
+                             card_t *card, size_t card_index, void *user_data) {
   key_file_parse_data *data = (key_file_parse_data *)user_data;
 
   if (!data->current_keyword || card_index == 0 || card_index == (size_t)~0) {
@@ -333,8 +340,8 @@ void key_file_parse_with_callback(const char *file_name,
           keyword_name[current_keyword_length] = '\0';
         }
 
-        callback(file_name, line_count, keyword_name, NULL, (size_t)~0,
-                 user_data);
+        KEY_PARSE_INFO();
+        callback(info, keyword_name, NULL, (size_t)~0, user_data);
 
         if (keyword_name != current_keyword_name.buffer) {
           free(keyword_name);
@@ -618,8 +625,8 @@ void key_file_parse_with_callback(const char *file_name,
         keyword_name[current_keyword_length] = '\0';
       }
 
-      callback(file_name, line_count, keyword_name, &card, card_index,
-               user_data);
+      KEY_PARSE_INFO();
+      callback(info, keyword_name, &card, card_index, user_data);
 
       if (card.string != line_reader.line.buffer) {
         free(card.string);
@@ -662,8 +669,9 @@ void key_file_parse_with_callback(const char *file_name,
         card.string = NULL;
       }
 
-      callback(file_name, line_count, keyword_name, card.string ? &card : NULL,
-               (size_t)~0, user_data);
+      KEY_PARSE_INFO();
+      callback(info, keyword_name, card.string ? &card : NULL, (size_t)~0,
+               user_data);
 
       if (keyword_name != current_keyword_name.buffer) {
         free(keyword_name);

@@ -84,8 +84,20 @@ typedef struct {
 /* Returns a key_parse_config_t with all values set to the default*/
 key_parse_config_t key_default_parse_config();
 
+/* Holds information about the current state when parsing a key file*/
+typedef struct {
+  const char *file_name;      /* Name of the current file*/
+  size_t line_number;         /* Current line*/
+  char *const *include_paths; /* Array containing the include paths where
+                                        it looks for include files (including
+                                        working directory)*/
+  size_t num_include_paths;   /* The number of elements in include_paths*/
+  const char *root_folder; /* The folder which contains the initial file of the
+                              parse call*/
+} key_parse_info_t;
+
 /* The type of the callback that is called in key_file_parse_with_callback*/
-typedef void (*key_file_callback)(const char *file_name, size_t line_number,
+typedef void (*key_file_callback)(key_parse_info_t info,
                                   const char *keyword_name, card_t *card,
                                   size_t card_index, void *user_data);
 
