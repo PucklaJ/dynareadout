@@ -26,7 +26,7 @@
 #include "multi_file.h"
 #include "profiling.h"
 
-#ifdef THREAD_SAFE
+#ifndef NO_THREAD_SAFETY
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>

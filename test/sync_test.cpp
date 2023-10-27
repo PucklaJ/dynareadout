@@ -31,7 +31,7 @@
 #include <multi_file.h>
 #include <path.h>
 
-#ifdef THREAD_SAFE
+#ifndef NO_THREAD_SAFETY
 TEST_CASE("sync") {
   sync_t snc = sync_create();
   CHECK(sync_lock(&snc) == 0);
@@ -64,7 +64,7 @@ TEST_CASE("multi_file") {
   multi_file_index_t is[3] = {multi_file_access(&f), multi_file_access(&f),
                               multi_file_access(&f)};
 
-#ifdef THREAD_SAFE
+#ifndef NO_THREAD_SAFETY
   CHECK(is[0].index != is[1].index);
   CHECK(is[1].index != is[2].index);
   CHECK(is[0].index != is[2].index);

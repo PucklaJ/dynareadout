@@ -29,7 +29,7 @@
 #include "sync.h"
 #include <stdio.h>
 
-#ifdef THREAD_SAFE
+#ifndef NO_THREAD_SAFETY
 typedef struct {
   FILE *file_handle;
   size_t index;

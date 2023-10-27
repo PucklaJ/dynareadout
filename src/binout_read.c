@@ -54,7 +54,7 @@ void *_binout_read(binout_file *bin_file, const char *path_to_variable,
   multi_file_t *multi_file = &bin_file->files[file->file_index];
 
   multi_file_index_t multi_file_index = multi_file_access(multi_file);
-#ifdef THREAD_SAFE
+#ifndef NO_THREAD_SAFETY
   if (multi_file_index.index == ULONG_MAX) {
     NEW_ERROR_STRING_F("Failed to access file of \"%s\": %s", path_to_variable,
                        strerror(errno));
@@ -224,7 +224,7 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
 
     multi_file_t *multi_file = &bin_file->files[file->file_index];
     multi_file_index_t multi_file_index = multi_file_access(multi_file);
-#ifdef THREAD_SAFE
+#ifndef NO_THREAD_SAFETY
     if (multi_file_index.index == ULONG_MAX) {
       free(data);
       NEW_ERROR_STRING_F("Failed to access the file of \"%s\": %s", variable,

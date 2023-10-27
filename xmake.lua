@@ -24,7 +24,6 @@ option("build_gen")
 option("thread_safe")
     set_default(true)
     set_showmenu(true)
-    add_defines("THREAD_SAFE")
 option_end()
 
 add_rules("mode.debug", "mode.release")
@@ -55,6 +54,7 @@ target("dynareadout")
         remove_files("src/profiling.c")
     end
     if not get_config("thread_safe") then
+        add_defines("NO_THREAD_SAFETY")
         remove_files("src/sync.c")
     elseif not is_plat("windows") then
         add_syslinks("pthread")
@@ -74,6 +74,9 @@ if get_config("build_cpp") or get_config("build_python") then
             add_syslinks("stdc++fs")
         end
         add_options("thread_safe")
+        if not get_config("thread_safe") then
+            add_defines("NO_THREAD_SAFETY")
+        end
         add_deps("dynareadout")
         add_includedirs("src")
         add_files("src/cpp/*.cpp")
@@ -101,6 +104,9 @@ if get_config("build_test") then
         add_packages("doctest")
         add_includedirs("src")
         add_options("profiling", "thread_safe")
+        if not get_config("thread_safe") then
+            add_defines("NO_THREAD_SAFETY")
+        end
         add_files("test/*.cpp")
     target_end()
 end
@@ -116,6 +122,9 @@ if get_config("build_python") then
         add_deps("dynareadout_cpp")
         add_packages("pybind11")
         add_options("profiling", "thread_safe")
+        if not get_config("thread_safe") then
+            add_defines("NO_THREAD_SAFETY")
+        end
         add_files("src/python/*.cpp")
         add_headerfiles("src/python/*.hpp")
         add_includedirs("src", "src/cpp")

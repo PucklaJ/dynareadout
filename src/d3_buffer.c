@@ -104,7 +104,7 @@ d3_buffer d3_buffer_open(const char *root_file_name) {
     /* Store number 01 through 999*/
     buffer.files[i].file_size = path_get_file_size(file_name_buffer);
     buffer.files[i].file = multi_file_open(file_name_buffer);
-#ifdef THREAD_SAFE
+#ifndef NO_THREAD_SAFETY
     buffer.last_open_file = i;
 #else
     if (!buffer.files[i].file) {
@@ -374,7 +374,7 @@ int d3_buffer_next_file(d3_buffer *buffer, d3_pointer *ptr) {
   file_size = buffer->files[cur_file].file_size;
 
   ptr->multi_file_index = multi_file_access(file);
-#ifdef THREAD_SAFE
+#ifndef NO_THREAD_SAFETY
   if (ptr->multi_file_index.index == ULONG_MAX) {
     if (errno == EMFILE) {
       /* Quick hack to solve the issue of having too many open files*/
@@ -396,7 +396,7 @@ int d3_buffer_next_file(d3_buffer *buffer, d3_pointer *ptr) {
   ptr->cur_file = cur_file;
   ptr->cur_word = cur_word;
 
-#ifndef THREAD_SAFE
+#ifdef NO_THREAD_SAFETY
   /* Open the next file if it isn't open and close the first opened file*/
   if (!buffer->files[ptr->cur_file].file) {
     multi_file_close(&buffer->files[buffer->first_open_file].file);
@@ -451,7 +451,7 @@ d3_pointer d3_buffer_seek(d3_buffer *buffer, size_t word_pos) {
   if (i == buffer->num_files) {
     /* Out of bounds*/
     ERROR_AND_NO_RETURN_BUFFER_PTR("Out of bounds");
-#ifdef THREAD_SAFE
+#ifndef NO_THREAD_SAFETY
     ptr.multi_file_index.file_handle = NULL;
     ptr.multi_file_index.index = ULONG_MAX;
 #else
@@ -465,7 +465,7 @@ d3_pointer d3_buffer_seek(d3_buffer *buffer, size_t word_pos) {
   ptr.cur_file = i;
   multi_file_t *file = &buffer->files[ptr.cur_file].file;
   ptr.multi_file_index = multi_file_access(file);
-#ifdef THREAD_SAFE
+#ifndef NO_THREAD_SAFETY
   if (ptr.multi_file_index.index == ULONG_MAX) {
     if (errno == EMFILE) {
       /* Quick hack to solve the issue of having too many open files*/
@@ -485,7 +485,7 @@ d3_pointer d3_buffer_seek(d3_buffer *buffer, size_t word_pos) {
   }
 #endif
 
-#ifndef THREAD_SAFE
+#ifdef NO_THREAD_SAFETY
   /* If the file is not yet open close enough files so that it can be opened*/
   if (!buffer->files[ptr.cur_file].file) {
     /* Wether all files need to be closed and opened at the current file,
@@ -625,7 +625,7 @@ void d3_pointer_close(d3_buffer *buffer, d3_pointer *ptr) {
 
   multi_file_t *file = &buffer->files[ptr->cur_file].file;
   multi_file_return(file, &ptr->multi_file_index);
-#ifdef THREAD_SAFE
+#ifndef NO_THREAD_SAFETY
   ptr->multi_file_index.index = ULONG_MAX;
   ptr->multi_file_index.file_handle = NULL;
 #else
@@ -637,7 +637,7 @@ void d3_pointer_close(d3_buffer *buffer, d3_pointer *ptr) {
   END_PROFILE_FUNC();
 }
 
-#ifdef THREAD_SAFE
+#ifndef NO_THREAD_SAFETY
 void _d3_buffer_kill_idle_files(d3_buffer *buffer) {
   BEGIN_PROFILE_FUNC();
 

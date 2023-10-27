@@ -81,7 +81,7 @@ binout_file binout_open(const char *file_name) {
   while (cur_file_index < bin_file.num_files) {
     bin_file.files[cur_file_index] =
         multi_file_open(file_names[cur_file_index]);
-#ifndef THREAD_SAFE
+#ifdef NO_THREAD_SAFETY
     if (!bin_file.files[cur_file_index]) {
       _binout_add_file_error(&bin_file, file_names[cur_file_index],
                              strerror(errno));
@@ -97,7 +97,7 @@ binout_file binout_open(const char *file_name) {
     multi_file_index_t file_index = multi_file_access(file);
 
     /* Just ignore the file if it failed to open*/
-#ifdef THREAD_SAFE
+#ifndef NO_THREAD_SAFETY
     if (file_index.index == ULONG_MAX) {
       FILE_FAILED(strerror(errno));
     }
@@ -291,7 +291,7 @@ binout_file binout_open(const char *file_name) {
   /* Clean up failed files*/
   cur_file_index = 0;
   while (cur_file_index < bin_file.num_files) {
-#ifdef THREAD_SAFE
+#ifndef NO_THREAD_SAFETY
     if (bin_file.files[cur_file_index].file_handles == NULL) {
 #else
     if (!bin_file.files[cur_file_index]) {
