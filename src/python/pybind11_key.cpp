@@ -76,14 +76,6 @@ py::list python_card_parse_whole(dro::Card &self, py::list value_widths) {
 }
 
 void add_key_library_to_module(py::module_ &m) {
-  py::class_<dro::KeyFile::ParseConfig>(m, "KeyFileParseConfig")
-      .def(py::init<bool, bool, std::vector<std::filesystem::path>>(),
-           py::arg("parse_includes") = true,
-           py::arg("ignore_not_found_includes") = false,
-           py::arg("extra_include_paths") =
-               std::vector<std::filesystem::path>(),
-           "Configure how a key file is parsed");
-
   py::class_<dro::Keywords>(m, "Keywords")
       .def("__len__", [](dro::Keywords &self) { return self.size(); })
       .def("__getitem__", &dro::Keywords::operator[])
@@ -175,13 +167,16 @@ void add_key_library_to_module(py::module_ &m) {
   m.def(
       "key_file_parse",
       [](const std::filesystem::path &file_name, bool output_warnings,
-         dro::KeyFile::ParseConfig parse_config) {
+         bool parse_includes, bool ignore_not_found_includes,
+         std::vector<std::filesystem::path> extra_include_paths) {
         std::optional<dro::String> warnings;
-        auto keywords =
-            dro::KeyFile::parse(file_name, warnings, std::move(parse_config));
+        auto keywords = dro::KeyFile::parse(
+            file_name, warnings,
+            dro::KeyFile::ParseConfig(parse_includes, ignore_not_found_includes,
+                                      std::move(extra_include_paths)));
 
         if (output_warnings && warnings) {
-          std::cout << warnings->data() << std::endl;
+          std::cout << *warnings << std::endl;
         }
 
         return keywords;
@@ -190,7 +185,9 @@ void add_key_library_to_module(py::module_ &m) {
       "Returns an array of keywords.\nparse_config: Configure how the file is "
       "parsed",
       py::arg("file_name"), py::arg("output_warnings") = true,
-      py::arg("parse_config") = dro::KeyFile::ParseConfig());
+      py::arg("parse_includes") = true,
+      py::arg("ignore_not_found_includes") = false,
+      py::arg("extra_include_paths") = std::vector<std::filesystem::path>());
 
   dro::add_array_type_to_module<dro::TransformationOption>(m);
   dro::add_array_type_to_module<transformation_option_t>(m);

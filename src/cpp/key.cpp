@@ -220,13 +220,13 @@ KeyFile::ParseConfig::~ParseConfig() noexcept {
   free(m_handle.extra_include_paths);
 }
 
-KeyFile::ParseInfo::ParseInfo(key_parse_info_t handle) noexcept
+KeyFile::ParseInfo::ParseInfo(key_parse_info_t *handle) noexcept
     : m_handle(handle) {}
 
 std::vector<std::filesystem::path> KeyFile::ParseInfo::include_paths() {
-  std::vector<std::filesystem::path> p(m_handle.num_include_paths);
-  for (size_t i = 0; i < m_handle.num_include_paths; i++) {
-    p[i] = m_handle.include_paths[i];
+  std::vector<std::filesystem::path> p(m_handle->num_include_paths);
+  for (size_t i = 0; i < m_handle->num_include_paths; i++) {
+    p[i] = m_handle->include_paths[i];
   }
   return p;
 }
@@ -265,7 +265,7 @@ void KeyFile::parse_with_callback(const std::filesystem::path &file_name,
 
         auto card_opt = card ? std::make_optional<Card>(card) : std::nullopt;
 
-        (*callback)(ParseInfo(info),
+        (*callback)(ParseInfo(&info),
                     String(const_cast<char *>(keyword_name), false),
                     std::move(card_opt), card_index);
       },

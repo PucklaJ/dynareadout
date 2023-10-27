@@ -311,20 +311,20 @@ public:
   // Holds information about the current state when parsing a key file
   class ParseInfo {
   public:
-    ParseInfo(key_parse_info_t handle) noexcept;
+    ParseInfo(key_parse_info_t *handle) noexcept;
 
     // Name of the current file
-    inline std::filesystem::path file_name() { return m_handle.file_name; }
+    inline std::filesystem::path file_name() { return m_handle->file_name; }
     // Current line
-    inline size_t line_number() const noexcept { return m_handle.line_number; }
+    inline size_t line_number() const noexcept { return m_handle->line_number; }
     // Array containing the include paths where it looks for include files
     // (including working directory)
     std::vector<std::filesystem::path> include_paths();
     // The folder which contains the initial file of the parse call
-    inline std::filesystem::path root_folder() { return m_handle.root_folder; }
+    inline std::filesystem::path root_folder() { return m_handle->root_folder; }
 
   private:
-    key_parse_info_t m_handle;
+    key_parse_info_t *m_handle;
   };
 
   using Callback =
