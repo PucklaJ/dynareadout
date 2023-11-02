@@ -31,6 +31,7 @@
 #include "profiling.h"
 #include <assert.h>
 #include <errno.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define FILE_FAILED(message)                                                   \
@@ -710,7 +711,7 @@ char *binout_simple_path_to_real(const binout_file *bin_file,
   /* Search for the metadata folder (Should be the last)*/
   sub_folder = NULL;
   i = folder->num_children - 1;
-  while (i >= 0) {
+  while (1) {
     const binout_folder_t *search_folder =
         &((const binout_folder_t *)folder->children)[i];
     if (strcmp(search_folder->name, "metadata") == 0) {
@@ -718,6 +719,10 @@ char *binout_simple_path_to_real(const binout_file *bin_file,
       break;
     }
 
+    /* size_t would overflow*/
+    if (i == 0) {
+      break;
+    }
     i--;
   }
 
@@ -754,11 +759,45 @@ char *binout_simple_path_to_real(const binout_file *bin_file,
 
       END_PROFILE_FUNC();
       return real_path;
+    } else {
+      END_PROFILE_FUNC();
+      return NULL;
     }
   }
 
+  /* Check if the folder exists directly*/
+  const size_t file_index = binout_directory_binary_search_folder(
+      (const binout_folder_t *)folder->children, 0, folder->num_children - 1,
+      &pv);
+  if (file_index == (size_t)~0) {
+    END_PROFILE_FUNC();
+    return NULL;
+  }
+
+  sub_folder = &((binout_folder_t *)folder->children)[file_index];
+
+  const size_t folder_name_len = strlen(folder->name);
+  const size_t sub_folder_name_len = strlen(sub_folder->name);
+  /* PATH_SEP + folder name + PATH_SEP + sub_folder_name*/
+  const size_t real_path_len = 1 + folder_name_len + 1 + sub_folder_name_len;
+  /* real_path + null termination*/
+  const size_t real_path_size = real_path_len + 1;
+
+  /* Allocate and construct real_path*/
+  char *real_path = malloc(real_path_size);
+  size_t p = 0;
+  real_path[p] = PATH_SEP;
+  p += 1;
+  memcpy(&real_path[p], folder->name, folder_name_len);
+  p += folder_name_len;
+  real_path[p] = PATH_SEP;
+  p += 1;
+  memcpy(&real_path[p], sub_folder->name, sub_folder_name_len);
+  p += sub_folder_name_len;
+  real_path[p] = '\0';
+
   END_PROFILE_FUNC();
-  return NULL;
+  return real_path;
 }
 
 const char *_binout_get_command_name(const uint64_t command) {
