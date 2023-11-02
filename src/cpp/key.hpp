@@ -39,6 +39,7 @@
 #include <tuple>
 #include <type_traits>
 #include <typeinfo>
+#include <vector>
 
 #define THROW_KEY_FILE_EXCEPTION(msg, ...)                                     \
   const int error_buffer_size = 1024;                                          \
