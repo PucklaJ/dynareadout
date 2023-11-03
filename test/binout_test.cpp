@@ -289,6 +289,14 @@ TEST_CASE("ncforc.binout") {
   CHECK(timed == 0);
   free(real_path);
 
+  size_t num_values, num_timesteps;
+  float *data = binout_read_timed_f32(&b, "/ncforc/master_100000/x_force",
+                                      &num_values, &num_timesteps);
+  CHECK(data != NULL);
+  CHECK(num_values != 0);
+  CHECK(num_timesteps != 0);
+  free(data);
+
   binout_close(&b);
 }
 
