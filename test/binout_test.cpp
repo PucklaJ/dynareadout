@@ -39,6 +39,7 @@
 #include <path_view.h>
 #include <sstream>
 #include <string>
+#include <string_builder.h>
 #ifdef BUILD_CPP
 #include "main_test.hpp"
 #include <binout.hpp>
@@ -523,7 +524,7 @@ TEST_CASE("glob") {
   size_t num_files;
   char **globed_files = binout_glob("src/*.c", &num_files);
 
-  CHECK(num_files == 19);
+  CHECK(num_files == 20);
   CHECK(strarr_contains(globed_files, num_files, "src/binary_search.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/binout_directory.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/binout_glob.c"));
@@ -542,8 +543,28 @@ TEST_CASE("glob") {
   CHECK(strarr_contains(globed_files, num_files, "src/path_view.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/path.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/profiling.c"));
+  CHECK(strarr_contains(globed_files, num_files, "src/string_builder.c"));
   CHECK(strarr_contains(globed_files, num_files, "src/sync.c"));
   binout_free_glob(globed_files, num_files);
+}
+
+TEST_CASE("string_builder") {
+  string_builder_t b = string_builder_new();
+
+  string_builder_append_char(&b, '/');
+  string_builder_append(&b, "ncforc");
+  string_builder_append_char(&b, '/');
+  string_builder_append(&b, "master_100000");
+  string_builder_append_char(&b, '/');
+  string_builder_append(&b, "metadata");
+  string_builder_append_char(&b, '/');
+  string_builder_append(&b, "ids");
+
+  char *path = string_builder_move(&b);
+  string_builder_free(&b);
+
+  CHECK(path == "/ncforc/master_100000/metadata/ids");
+  free(path);
 }
 
 #ifdef BUILD_CPP
