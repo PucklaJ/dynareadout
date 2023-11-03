@@ -66,10 +66,13 @@ public:
 
   static size_t index_for_id(const Array<d3_word> &ids, d3_word id);
 
+  D3plot(D3plot &&rhs) noexcept;
   // Open a d3plot file family by giving the root file name
   // Example: d3plot of d3plot01, d3plot02, d3plot03, etc.
   D3plot(const std::filesystem::path &root_file_name);
   ~D3plot() noexcept;
+
+  D3plot &operator=(D3plot &&rhs) noexcept;
 
   // Read all ids of the nodes
   Array<d3_word> read_node_ids();

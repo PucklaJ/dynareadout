@@ -28,14 +28,26 @@
 
 namespace dro {
 
+D3plotShellsState::D3plotShellsState(D3plotShellsState &&rhs) noexcept
+    : m_num_history_variables(rhs.m_num_history_variables) {
+  *this = std::move(rhs);
+}
+
 D3plotShellsState::D3plotShellsState(d3plot_shell *data, size_t size,
                                      size_t num_history_variables,
                                      bool delete_data) noexcept
     : Array(data, size, delete_data),
       m_num_history_variables(num_history_variables) {}
 
-D3plotShellsState::D3plotShellsState(D3plotShellsState &&rhs) noexcept
-    : m_num_history_variables(rhs.m_num_history_variables) {
+D3plotShellsState::~D3plotShellsState() noexcept {
+  if (m_data && m_delete_data) {
+    d3plot_free_shells_state(reinterpret_cast<d3plot_shell *>(m_data));
+    m_data = NULL;
+  }
+}
+
+D3plotShellsState &
+D3plotShellsState::operator=(D3plotShellsState &&rhs) noexcept {
   m_data = rhs.m_data;
   m_size = rhs.m_size;
   m_delete_data = rhs.m_delete_data;
@@ -43,13 +55,7 @@ D3plotShellsState::D3plotShellsState(D3plotShellsState &&rhs) noexcept
   rhs.m_data = nullptr;
   rhs.m_size = 0;
   rhs.m_delete_data = false;
-}
-
-D3plotShellsState::~D3plotShellsState() noexcept {
-  if (m_data && m_delete_data) {
-    d3plot_free_shells_state(reinterpret_cast<d3plot_shell *>(m_data));
-    m_data = NULL;
-  }
+  return *this;
 }
 
 const Array<double>
@@ -70,6 +76,11 @@ D3plotShellsState::get_outer_history_variables(size_t index) const {
                        m_num_history_variables, false);
 }
 
+D3plotThickShellsState::D3plotThickShellsState(
+    D3plotThickShellsState &&rhs) noexcept {
+  *this = std::move(rhs);
+}
+
 D3plotThickShellsState::D3plotThickShellsState(d3plot_thick_shell *data,
                                                size_t size,
                                                size_t num_history_variables,
@@ -77,8 +88,16 @@ D3plotThickShellsState::D3plotThickShellsState(d3plot_thick_shell *data,
     : Array(data, size, delete_data),
       m_num_history_variables(num_history_variables) {}
 
-D3plotThickShellsState::D3plotThickShellsState(
-    D3plotThickShellsState &&rhs) noexcept {
+D3plotThickShellsState::~D3plotThickShellsState() noexcept {
+  if (m_data && m_delete_data) {
+    d3plot_free_thick_shells_state(
+        reinterpret_cast<d3plot_thick_shell *>(m_data));
+    m_data = NULL;
+  }
+}
+
+D3plotThickShellsState &
+D3plotThickShellsState::operator=(D3plotThickShellsState &&rhs) noexcept {
   m_data = rhs.m_data;
   m_size = rhs.m_size;
   m_delete_data = rhs.m_delete_data;
@@ -86,14 +105,7 @@ D3plotThickShellsState::D3plotThickShellsState(
   rhs.m_data = nullptr;
   rhs.m_size = 0;
   rhs.m_delete_data = false;
-}
-
-D3plotThickShellsState::~D3plotThickShellsState() noexcept {
-  if (m_data && m_delete_data) {
-    d3plot_free_thick_shells_state(
-        reinterpret_cast<d3plot_thick_shell *>(m_data));
-    m_data = NULL;
-  }
+  return *this;
 }
 
 const Array<double>

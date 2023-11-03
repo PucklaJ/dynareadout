@@ -1310,37 +1310,37 @@ TEST_CASE("key_file_include_transformC++") {
   REQUIRE(dt.get_raw_options().size() == 10);
 
   auto options = dt.get_options();
-  auto &o = options[0];
+  auto *o = &options[0];
 
-  name = o.get_name();
+  name = o->get_name();
   CHECK(name == "MIRROR");
-  CHECK(o.get_parameters()[0] == 0.0);
-  CHECK(o.get_parameters()[5] == 0.0);
-  CHECK(o.get_parameters()[6] == 0.0);
-  CHECK(o.get_parameters()[3] == 1.0);
+  CHECK(o->get_parameters()[0] == 0.0);
+  CHECK(o->get_parameters()[5] == 0.0);
+  CHECK(o->get_parameters()[6] == 0.0);
+  CHECK(o->get_parameters()[3] == 1.0);
 
-  o = options[1];
-  name = o.get_name();
+  o = &options[1];
+  name = o->get_name();
   CHECK(name == "TRANSL");
-  CHECK(o.get_parameters()[0] == 599.633);
-  CHECK(o.get_parameters()[1] == -17.585);
-  CHECK(o.get_parameters()[2] == 756.693);
-  CHECK(o.get_parameters()[6] == 0.0);
+  CHECK(o->get_parameters()[0] == 599.633);
+  CHECK(o->get_parameters()[1] == -17.585);
+  CHECK(o->get_parameters()[2] == 756.693);
+  CHECK(o->get_parameters()[6] == 0.0);
 
-  o = options[5];
-  name = o.get_name();
+  o = &options[5];
+  name = o->get_name();
   CHECK(name == "SCALE");
-  CHECK(o.get_parameters()[0] == 1.1);
-  CHECK(o.get_parameters()[1] == 1.1);
-  CHECK(o.get_parameters()[2] == 1.1);
-  CHECK(o.get_parameters()[6] == 0.0);
+  CHECK(o->get_parameters()[0] == 1.1);
+  CHECK(o->get_parameters()[1] == 1.1);
+  CHECK(o->get_parameters()[2] == 1.1);
+  CHECK(o->get_parameters()[6] == 0.0);
 
-  o = options[9];
-  name = o.get_name();
+  o = &options[9];
+  name = o->get_name();
   CHECK(name == "ROTATE");
-  CHECK(o.get_parameters()[0] == 1.0);
-  CHECK(o.get_parameters()[1] == 2.0);
-  CHECK(o.get_parameters()[2] == 45.0);
+  CHECK(o->get_parameters()[0] == 1.0);
+  CHECK(o->get_parameters()[1] == 2.0);
+  CHECK(o->get_parameters()[2] == 45.0);
 
   kw = keywords["DEFINE_TRANSFORMATION_TITLE"][0];
   REQUIRE(kw.num_cards() >= 2);

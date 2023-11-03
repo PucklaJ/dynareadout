@@ -29,33 +29,64 @@
 
 namespace dro {
 
-D3plotPart::D3plotPart(const d3plot_part &part) : m_part(part) {}
+D3plotPart::D3plotPart(D3plotPart &&rhs) noexcept { *this = std::move(rhs); }
 
-D3plotPart::D3plotPart(D3plotPart &&rhs) : m_part(rhs.m_part) {
-  rhs.m_part.solid_ids = NULL;
-  rhs.m_part.thick_shell_ids = NULL;
-  rhs.m_part.beam_ids = NULL;
-  rhs.m_part.shell_ids = NULL;
+D3plotPart::D3plotPart(const D3plotPart &rhs) noexcept { *this = rhs; }
 
-  rhs.m_part.solid_indices = NULL;
-  rhs.m_part.thick_shell_indices = NULL;
-  rhs.m_part.beam_indices = NULL;
-  rhs.m_part.shell_indices = NULL;
+D3plotPart::D3plotPart(const d3plot_part &part) noexcept : m_part(part) {}
+
+D3plotPart::~D3plotPart() noexcept { d3plot_free_part(&m_part); }
+
+D3plotPart &D3plotPart::operator=(D3plotPart &&rhs) noexcept {
+  m_part = rhs.m_part;
+  rhs.m_part = {0};
+  return *this;
 }
 
-D3plotPart::~D3plotPart() { d3plot_free_part(&m_part); }
-
-D3plotPart &D3plotPart::operator=(D3plotPart &&rhs) {
+D3plotPart &D3plotPart::operator=(const D3plotPart &rhs) noexcept {
   m_part = rhs.m_part;
-  rhs.m_part.solid_ids = NULL;
-  rhs.m_part.thick_shell_ids = NULL;
-  rhs.m_part.beam_ids = NULL;
-  rhs.m_part.shell_ids = NULL;
 
-  rhs.m_part.solid_indices = NULL;
-  rhs.m_part.thick_shell_indices = NULL;
-  rhs.m_part.beam_indices = NULL;
-  rhs.m_part.shell_indices = NULL;
+  m_part.solid_ids =
+      reinterpret_cast<d3_word *>(malloc(m_part.num_solids * sizeof(d3_word)));
+  m_part.thick_shell_ids = reinterpret_cast<d3_word *>(
+      malloc(m_part.num_thick_shells * sizeof(d3_word)));
+  m_part.beam_ids =
+      reinterpret_cast<d3_word *>(malloc(m_part.num_beams * sizeof(d3_word)));
+  m_part.shell_ids =
+      reinterpret_cast<d3_word *>(malloc(m_part.num_shells * sizeof(d3_word)));
+  m_part.solid_indices =
+      reinterpret_cast<d3_word *>(malloc(m_part.num_solids * sizeof(d3_word)));
+  m_part.thick_shell_ids = reinterpret_cast<d3_word *>(
+      malloc(m_part.num_thick_shells * sizeof(d3_word)));
+  m_part.beam_indices =
+      reinterpret_cast<d3_word *>(malloc(m_part.num_beams * sizeof(d3_word)));
+  m_part.shell_indices =
+      reinterpret_cast<d3_word *>(malloc(m_part.num_shells * sizeof(d3_word)));
+
+  if (m_part.num_solids) {
+    memcpy(m_part.solid_ids, rhs.m_part.solid_ids,
+           m_part.num_solids * sizeof(d3_word));
+    memcpy(m_part.solid_indices, rhs.m_part.solid_indices,
+           m_part.num_solids * sizeof(size_t));
+  }
+  if (m_part.num_thick_shells) {
+    memcpy(m_part.thick_shell_ids, rhs.m_part.thick_shell_ids,
+           m_part.num_thick_shells * sizeof(d3_word));
+    memcpy(m_part.thick_shell_indices, rhs.m_part.thick_shell_indices,
+           m_part.num_thick_shells * sizeof(size_t));
+  }
+  if (m_part.num_beams) {
+    memcpy(m_part.beam_ids, rhs.m_part.beam_ids,
+           m_part.num_beams * sizeof(d3_word));
+    memcpy(m_part.beam_indices, rhs.m_part.beam_indices,
+           m_part.num_beams * sizeof(size_t));
+  }
+  if (m_part.num_shells) {
+    memcpy(m_part.shell_ids, rhs.m_part.shell_ids,
+           m_part.num_shells * sizeof(d3_word));
+    memcpy(m_part.shell_indices, rhs.m_part.shell_indices,
+           m_part.num_shells * sizeof(size_t));
+  }
 
   return *this;
 }

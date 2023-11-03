@@ -75,10 +75,13 @@ public:
     const ErrorString m_error_str;
   };
 
+  Binout(Binout &&rhs) noexcept;
   // Open a binout file (or multiple files by globbing) and parse its records to
   // be ready to read data
   Binout(const std::filesystem::path &file_name);
   ~Binout() noexcept;
+
+  Binout &operator=(Binout &&rhs) noexcept;
 
   // Read data from the file. The type id of the data has to match T
   template <typename T> Array<T> read(const std::string &path_to_variable);

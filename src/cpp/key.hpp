@@ -55,7 +55,10 @@ public:
   friend class IncludeTransform;
   friend class DefineTransformation;
 
+  Card(Card &&rhs) noexcept;
   Card(card_t *handle) noexcept;
+
+  Card &operator=(Card &&rhs) noexcept;
 
   // Initialises the parsing of the card
   void begin(uint8_t value_width = DEFAULT_VALUE_WIDTH) noexcept;

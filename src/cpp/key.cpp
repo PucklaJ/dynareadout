@@ -35,7 +35,15 @@ template <> constexpr bool is_string_v<String> = true;
 template <> constexpr bool is_string_v<SizedString> = true;
 template <> constexpr bool is_string_v<std::string> = true;
 
+Card::Card(Card &&rhs) noexcept { *this = std::move(rhs); }
+
 Card::Card(card_t *handle) noexcept : m_handle(handle) {}
+
+Card &Card::operator=(Card &&rhs) noexcept {
+  m_handle = rhs.m_handle;
+  rhs.m_handle = nullptr;
+  return *this;
+}
 
 void Card::begin(uint8_t value_width) noexcept {
   card_parse_begin(m_handle, value_width);

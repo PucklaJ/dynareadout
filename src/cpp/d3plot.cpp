@@ -39,6 +39,8 @@ size_t D3plot::index_for_id(const Array<d3_word> &ids, d3_word id) {
   return d3plot_index_for_id(id, ids.data(), ids.size());
 }
 
+D3plot::D3plot(D3plot &&rhs) noexcept { *this = std::move(rhs); }
+
 D3plot::D3plot(const std::filesystem::path &root_file_name) {
   m_handle = d3plot_open(root_file_name.string().c_str());
   if (m_handle.error_string) {
@@ -53,6 +55,12 @@ D3plot::D3plot(const std::filesystem::path &root_file_name) {
 }
 
 D3plot::~D3plot() noexcept { d3plot_close(&m_handle); }
+
+D3plot &D3plot::operator=(D3plot &&rhs) noexcept {
+  m_handle = rhs.m_handle;
+  rhs.m_handle = {0};
+  return *this;
+}
 
 Array<d3_word> D3plot::read_node_ids() {
   size_t num_ids;

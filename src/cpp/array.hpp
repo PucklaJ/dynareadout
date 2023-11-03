@@ -129,12 +129,13 @@ public:
   Array() noexcept;
   Array(T *data, size_t size, bool delete_data = true) noexcept;
   Array(Array<T> &&rhs) noexcept;
-  Array(const Array<T> &rhs) = delete;
+  Array(const Array<T> &rhs) noexcept;
   virtual ~Array() noexcept;
 
   virtual inline T &operator[](size_t index);
   virtual inline const T &operator[](size_t index) const;
   Array<T> &operator=(Array<T> &&rhs) noexcept;
+  Array<T> &operator=(const Array<T> &rhs) noexcept;
   bool operator==(const char *str2) const noexcept;
   bool operator==(const std::string &str2) const noexcept;
   bool operator==(const Array<T> &rhs) const noexcept;
@@ -165,8 +166,13 @@ protected:
 
 class String : public Array<char> {
 public:
+  inline String(String &&rhs) noexcept;
+  inline String(const String &rhs) noexcept;
   String(char *str, bool delete_data = true) noexcept
       : Array<char>(str, ~0, delete_data) {}
+
+  inline String &operator=(String &&rhs) noexcept;
+  inline String &operator=(const String &rhs) noexcept;
 
   inline size_t size() const noexcept { return strlen(m_data); }
   inline bool empty() const noexcept { return m_data[0] == '\0'; }
@@ -313,12 +319,12 @@ template <typename T>
 Array<T>::Array(T *data, size_t size, bool delete_data) noexcept
     : m_data(data), m_size(size), m_delete_data(delete_data) {}
 
-template <typename T>
-Array<T>::Array(Array<T> &&rhs) noexcept
-    : m_data(rhs.m_data), m_size(rhs.m_size), m_delete_data(rhs.m_delete_data) {
-  rhs.m_data = nullptr;
-  rhs.m_size = 0;
-  rhs.m_delete_data = false;
+template <typename T> Array<T>::Array(Array<T> &&rhs) noexcept {
+  *this = std::move(rhs);
+}
+
+template <typename T> Array<T>::Array(const Array<T> &rhs) noexcept {
+  *this = rhs;
 }
 
 template <typename T> Array<T>::~Array() noexcept {
@@ -374,6 +380,14 @@ template <typename T> Array<T> &Array<T>::operator=(Array<T> &&rhs) noexcept {
   return *this;
 }
 
+template <typename T>
+Array<T> &Array<T>::operator=(const Array<T> &rhs) noexcept {
+  m_size = rhs.m_size;
+  m_data = reinterpret_cast<T *>(malloc(m_size * sizeof(T)));
+  memcpy(m_data, rhs.m_data, m_size * sizeof(T));
+  m_delete_data = true;
+}
+
 template <typename T> std::string Array<T>::str() const noexcept {
   static_assert(std::is_same_v<T, char> || std::is_same_v<T, int8_t> ||
                 std::is_same_v<T, uint8_t>);
@@ -409,6 +423,24 @@ bool Array<T>::operator==(const Array<T> &rhs) const noexcept {
   }
 
   return true;
+}
+
+String::String(String &&rhs) noexcept { *this = std::move(rhs); }
+
+String::String(const String &rhs) noexcept { *this = rhs; }
+
+String &String::operator=(String &&rhs) noexcept {
+  m_data = rhs.m_data;
+  m_delete_data = rhs.m_delete_data;
+  rhs.m_data = nullptr;
+  rhs.m_delete_data = false;
+  return *this;
+}
+
+String &String::operator=(const String &rhs) noexcept {
+  m_data = strdup(rhs.m_data);
+  m_delete_data = true;
+  return *this;
 }
 
 } // namespace dro

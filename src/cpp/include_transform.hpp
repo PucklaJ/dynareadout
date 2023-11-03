@@ -10,9 +10,14 @@ namespace dro {
 class IncludeTransform {
 public:
   // Parses an INCLUDE_TRANSFORM keyword
-  IncludeTransform(Keyword &kw) noexcept;
   IncludeTransform() noexcept;
+  IncludeTransform(IncludeTransform &&rhs) noexcept;
+  IncludeTransform(const IncludeTransform &rhs) noexcept;
+  IncludeTransform(Keyword &kw) noexcept;
   ~IncludeTransform() noexcept;
+
+  IncludeTransform &operator=(IncludeTransform &&rhs) noexcept;
+  IncludeTransform &operator=(const IncludeTransform &rhs) noexcept;
 
   // Parse a single card from an INCLUDE_TRANSFORM keyword. Useful when using
   // parse_with_callback
@@ -48,7 +53,10 @@ private:
 // Holds the name and parameters for every option of a DEFINE_TRANSFORMATION
 class TransformationOption {
 public:
+  TransformationOption(TransformationOption &&rhs) noexcept;
   TransformationOption(transformation_option_t *handle);
+
+  TransformationOption &operator=(TransformationOption &&rhs) noexcept;
 
   inline String get_name() noexcept { return String(m_handle->name, false); }
   inline Array<double> get_parameters() noexcept {
@@ -64,9 +72,14 @@ class DefineTransformation {
 public:
   // Parses an DEFINE_TRANSFORMATION keyword. is_title says wether this is a
   // DEFINE_TRANSFORMATION_TITLE keyword
-  DefineTransformation(Keyword &kw, bool is_title = false) noexcept;
   DefineTransformation() noexcept;
+  DefineTransformation(DefineTransformation &&rhs) noexcept;
+  DefineTransformation(const DefineTransformation &rhs) noexcept;
+  DefineTransformation(Keyword &kw, bool is_title = false) noexcept;
   ~DefineTransformation() noexcept;
+
+  DefineTransformation &operator=(DefineTransformation &&rhs) noexcept;
+  DefineTransformation &operator=(const DefineTransformation &rhs) noexcept;
 
   // Parses a single card form a DEFINE_TRANSFORMATION keyword
   void parse_define_transformation_card(Card card, size_t card_index,

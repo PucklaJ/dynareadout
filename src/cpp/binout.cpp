@@ -36,6 +36,8 @@ const char *Binout::Exception::what() const noexcept {
   return m_error_str.data();
 }
 
+Binout::Binout(Binout &&rhs) noexcept { *this = std::move(rhs); }
+
 Binout::Binout(const std::filesystem::path &file_name) {
   m_handle = binout_open(file_name.string().c_str());
   char *open_error = binout_open_error(&m_handle);
@@ -47,6 +49,12 @@ Binout::Binout(const std::filesystem::path &file_name) {
 }
 
 Binout::~Binout() noexcept { binout_close(&m_handle); }
+
+Binout &Binout::operator=(Binout &&rhs) noexcept {
+  m_handle = rhs.m_handle;
+  rhs.m_handle = {0};
+  return *this;
+}
 
 BinoutType Binout::get_type_id(const std::string &path_to_variable) const {
   const BinoutType type_id{static_cast<BinoutType>(binout_get_type_id(

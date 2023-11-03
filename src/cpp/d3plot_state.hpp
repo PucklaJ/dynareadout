@@ -32,11 +32,13 @@ namespace dro {
 
 class D3plotShellsState : public Array<d3plot_shell> {
 public:
+  D3plotShellsState(D3plotShellsState &&rhs) noexcept;
   D3plotShellsState(d3plot_shell *data, size_t size,
                     size_t num_history_variables,
                     bool delete_data = true) noexcept;
-  D3plotShellsState(D3plotShellsState &&rhs) noexcept;
   ~D3plotShellsState() noexcept override;
+
+  D3plotShellsState &operator=(D3plotShellsState &&rhs) noexcept;
 
   // Returns the number of history variables per surface
   inline size_t get_num_history_variables() const noexcept {
@@ -58,11 +60,13 @@ private:
 
 class D3plotThickShellsState : public Array<d3plot_thick_shell> {
 public:
+  D3plotThickShellsState(D3plotThickShellsState &&rhs) noexcept;
   D3plotThickShellsState(d3plot_thick_shell *data, size_t size,
                          size_t num_history_variables,
                          bool delete_data = true) noexcept;
-  D3plotThickShellsState(D3plotThickShellsState &&rhs) noexcept;
   ~D3plotThickShellsState() noexcept override;
+
+  D3plotThickShellsState &operator=(D3plotThickShellsState &&rhs) noexcept;
 
   // Returns the number of history variables per surface
   inline size_t get_num_history_variables() const noexcept {

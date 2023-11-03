@@ -34,11 +34,13 @@ class D3plot;
 // A class used to access data of a certain part in a d3plot file (family)
 class D3plotPart {
 public:
-  D3plotPart(const d3plot_part &part);
-  D3plotPart(D3plotPart &&rhs);
-  ~D3plotPart();
+  D3plotPart(D3plotPart &&rhs) noexcept;
+  D3plotPart(const D3plotPart &rhs) noexcept;
+  D3plotPart(const d3plot_part &part) noexcept;
+  ~D3plotPart() noexcept;
 
-  D3plotPart &operator=(D3plotPart &&rhs);
+  D3plotPart &operator=(D3plotPart &&rhs) noexcept;
+  D3plotPart &operator=(const D3plotPart &rhs) noexcept;
 
   // Returns all solid element ids of the part
   Array<d3_word> get_solid_elements();
