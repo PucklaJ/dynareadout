@@ -386,6 +386,7 @@ Array<T> &Array<T>::operator=(const Array<T> &rhs) noexcept {
   m_data = reinterpret_cast<T *>(malloc(m_size * sizeof(T)));
   memcpy(m_data, rhs.m_data, m_size * sizeof(T));
   m_delete_data = true;
+  return *this;
 }
 
 template <typename T> std::string Array<T>::str() const noexcept {

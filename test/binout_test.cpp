@@ -503,6 +503,43 @@ TEST_CASE("Array") {
       CHECK(*it == i);
     }
   }
+
+  SUBCASE("move/copy") {
+    dro::Array<int> m;
+
+    {
+      auto d = dro::Array<int>::New(5);
+      d[0] = 1;
+      d[1] = 2;
+      d[2] = 3;
+      d[3] = 4;
+      d[4] = 5;
+      m = std::move(d);
+    }
+
+    CHECK(m[0] == 1);
+    CHECK(m[1] == 2);
+    CHECK(m[2] == 3);
+    CHECK(m[3] == 4);
+    CHECK(m[4] == 5);
+
+    dro::Array<int> n = m;
+    for (auto &i : m) {
+      i *= 2;
+    }
+
+    CHECK(m[0] == 2);
+    CHECK(m[1] == 4);
+    CHECK(m[2] == 6);
+    CHECK(m[3] == 8);
+    CHECK(m[4] == 10);
+
+    CHECK(n[0] == 1);
+    CHECK(n[1] == 2);
+    CHECK(n[2] == 3);
+    CHECK(n[3] == 4);
+    CHECK(n[4] == 5);
+  }
 }
 #endif
 
