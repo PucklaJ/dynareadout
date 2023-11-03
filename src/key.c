@@ -29,49 +29,50 @@
 #include "profiling.h"
 #include <errno.h>
 #include <math.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+void _message_stack_push(char **stack, size_t *stack_size, size_t *ptr,
+                         const char *msg) {
+  const size_t msg_len = strlen(msg);
+  const int add_new_line = *stack != NULL;
+
+  *stack_size += msg_len + 1 + add_new_line;
+  *stack = realloc(*stack, *stack_size);
+
+  if (add_new_line) {
+    (*stack)[(*ptr)++] = '\n';
+  }
+  memcpy(&(*stack)[*ptr], msg, msg_len + 1);
+  *ptr += msg_len + 1;
+}
+
+void _message_stack_push_f(char **stack, size_t *stack_size, size_t *ptr,
+                           const char *f, ...) {
+  va_list args;
+
+  char buffer[1024];
+
+  va_start(args, f);
+  vsprintf(buffer, f, args);
+  va_end(args);
+
+  _message_stack_push(stack, stack_size, ptr, buffer);
+}
+
 #define ERROR_MSG(msg)                                                         \
-  const size_t error_msg_len = strlen(msg);                                    \
-  error_stack_size += error_msg_len + 1;                                       \
-  error_stack = realloc(error_stack, error_stack_size);                        \
-  memcpy(&error_stack[error_ptr], msg, error_msg_len);                         \
-  error_ptr += error_msg_len;                                                  \
-  error_stack[error_ptr] = '\n';                                               \
-  error_ptr++
-#define ERROR_F(msg, ...)                                                      \
-  const int error_buffer_size = 1024;                                          \
-  error_stack_size += error_buffer_size + 1;                                   \
-  error_stack = realloc(error_stack, error_stack_size);                        \
-  const int error_size_written =                                               \
-      sprintf(&error_stack[error_ptr], msg, __VA_ARGS__);                      \
-  error_stack_size -= error_buffer_size - (error_size_written + 1);            \
-  error_stack = realloc(error_stack, error_stack_size);                        \
-  error_ptr += error_size_written;                                             \
-  error_stack[error_ptr] = '\n';                                               \
-  error_ptr++;
+  _message_stack_push(&error_stack, &error_stack_size, &error_ptr, msg)
+#define ERROR_F(f, ...)                                                        \
+  _message_stack_push_f(&error_stack, &error_stack_size, &error_ptr, f,        \
+                        __VA_ARGS__)
 #define ERROR_ERRNO(msg) ERROR_F(msg, strerror(errno));
 #define WARNING_MSG(msg)                                                       \
-  const size_t warning_msg_len = strlen(msg);                                  \
-  warning_stack_size += warning_msg_len + 1;                                   \
-  warning_stack = realloc(warning_stack, warning_stack_size);                  \
-  memcpy(&warning_stack[warning_ptr], msg, warning_msg_len);                   \
-  warning_ptr += warning_msg_len;                                              \
-  warning_stack[warning_ptr] = '\n';                                           \
-  warning_ptr++
-#define WARNING_F(msg, ...)                                                    \
-  const int warning_buffer_size = 1024;                                        \
-  warning_stack_size += warning_buffer_size + 1;                               \
-  warning_stack = realloc(warning_stack, warning_stack_size);                  \
-  const int warning_size_written =                                             \
-      sprintf(&warning_stack[warning_ptr], msg, __VA_ARGS__);                  \
-  warning_stack_size -= warning_buffer_size - (warning_size_written + 1);      \
-  warning_stack = realloc(warning_stack, warning_stack_size);                  \
-  warning_ptr += warning_size_written;                                         \
-  warning_stack[warning_ptr] = '\n';                                           \
-  warning_ptr++
+  _message_stack_push(&warning_stack, &warning_stack_size, &warning_ptr, msg)
+#define WARNING_F(f, ...)                                                      \
+  _message_stack_push_f(&warning_stack, &warning_stack_size, &warning_ptr, f,  \
+                        __VA_ARGS__)
 #define WARNING_ERRNO(msg) WARNING_F(msg, strerror(errno));
 #define ERROR_KEYWORD_NOT_IMPLEMENTED(keyword)                                 \
   ERROR_F("%s:%lu: The keyword %s is not implemented", file_name,              \
@@ -304,7 +305,8 @@ void key_file_parse_with_callback(const char *file_name,
   while (read_line(&line_reader)) {
     line_count++;
 
-    /* Check if the line starts with a comment or contains a comment character*/
+    /* Check if the line starts with a comment or contains a comment
+     * character*/
     if (line_reader.comment_index == 0) {
       /* The entire line is a comment. Ignore it.*/
       continue;
@@ -386,8 +388,8 @@ void key_file_parse_with_callback(const char *file_name,
 
       /* -------- ⛅ Include Parsing ⛅ -------*/
       if (extra_string_starts_with(&current_keyword_name, "INCLUDE")) {
-        /* Also parse the INCLUDE keywords even when parse_includes is set to 0
-         * to support multi line include file names*/
+        /* Also parse the INCLUDE keywords even when parse_includes is set to
+         * 0 to support multi line include file names*/
         if (parse_config.parse_includes) {
           /* Parse the current card as a file name that should be included*/
           if (extra_string_compare(&current_keyword_name, "INCLUDE") == 0 ||
@@ -425,14 +427,14 @@ void key_file_parse_with_callback(const char *file_name,
                     &include_error, &include_warning, user_data, rec_ptr);
                 free(full_include_file_name);
 
-                /* Add the error to the error stack if an error occurred in the
-                 * recursive call*/
+                /* Add the error to the error stack if an error occurred in
+                 * the recursive call*/
                 if (include_error != NULL) {
                   ERROR_MSG(include_error);
                   free(include_error);
                 }
-                /* Add the warning to the warning stack if a warning occurred in
-                 * the recursive call*/
+                /* Add the warning to the warning stack if a warning occurred
+                 * in the recursive call*/
                 if (include_warning != NULL) {
                   WARNING_MSG(include_warning);
                   free(include_warning);
@@ -538,7 +540,8 @@ void key_file_parse_with_callback(const char *file_name,
             continue;
           } else if (extra_string_compare(&current_keyword_name,
                                           "INCLUDE_BINARY") == 0) {
-            /* INCLUDE_BINARY does only have one card (which is parsed above)*/
+            /* INCLUDE_BINARY does only have one card (which is parsed
+             * above)*/
             WARNING_F("%s:%zu: Invalid number of cards (%zu) for "
                       "INCLUDE_BINARY keyword",
                       file_name, line_count, card_index + 1);
