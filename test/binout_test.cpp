@@ -264,28 +264,6 @@ TEST_CASE("ncforc.binout") {
     return;
   }
 
-  size_t num_children;
-  char **children =
-      binout_get_children(&b, "/ncforc/master_100000", &num_children);
-  CHECK(children != NULL);
-  CHECK(num_children != 0);
-
-  puts("The masters children");
-  for (size_t i = 0; i < num_children; i++) {
-    printf("%s\n", children[i]);
-  }
-  binout_free_children(children);
-
-  children = binout_get_children(&b, "/ncforc", &num_children);
-  CHECK(children != NULL);
-  CHECK(num_children != 0);
-
-  puts("\nncforc children");
-  for (size_t i = 0; i < num_children; i++) {
-    printf("%s\n", children[i]);
-  }
-  binout_free_children(children);
-
   uint8_t type_id;
   int timed;
   char *real_path =
@@ -301,6 +279,14 @@ TEST_CASE("ncforc.binout") {
   CHECK(real_path == "/ncforc/master_100000/x_force");
   CHECK(type_id == BINOUT_TYPE_FLOAT32);
   CHECK(timed != 0);
+  free(real_path);
+
+  real_path = binout_simple_path_to_real(&b, "ncforc/master_100000/ids",
+                                         &type_id, &timed);
+  REQUIRE(real_path != NULL);
+  CHECK(real_path == "/ncforc/master_100000/metadata/ids");
+  CHECK(type_id == BINOUT_TYPE_INT32);
+  CHECK(timed == 0);
   free(real_path);
 
   binout_close(&b);

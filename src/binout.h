@@ -122,6 +122,8 @@ void _binout_add_file_error(binout_file *bin_file, const char *file_name,
 /* Returns 1 if the given folder_name is a dxxxxxx folder and 0 otherwise. The
  * string can not be empty and must be null-terminated.*/
 int _binout_is_d_string(const char *folder_name);
+/* Returns wether the given string is equal to "metadata"*/
+int _binout_is_metadata_string(const char *folder_name);
 /* This is the same as _binout_is_d_string, but it uses the current element of a
  * path view instead of a string*/
 int _binout_path_view_is_d_string(const path_view_t *pv);
