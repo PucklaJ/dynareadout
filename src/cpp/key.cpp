@@ -37,11 +37,33 @@ template <> constexpr bool is_string_v<std::string> = true;
 
 Card::Card(Card &&rhs) noexcept { *this = std::move(rhs); }
 
-Card::Card(card_t *handle) noexcept : m_handle(handle) {}
+Card::Card(const Card &rhs) noexcept { *this = rhs; }
+
+Card::Card(card_t *handle) noexcept
+    : m_handle(handle), m_delete_handle(false) {}
+
+Card::~Card() noexcept {
+  if (m_delete_handle) {
+    free(m_handle->string);
+    free(m_handle);
+    m_delete_handle = false;
+  }
+}
 
 Card &Card::operator=(Card &&rhs) noexcept {
   m_handle = rhs.m_handle;
+  m_delete_handle = rhs.m_delete_handle;
   rhs.m_handle = nullptr;
+  rhs.m_delete_handle = false;
+  return *this;
+}
+
+Card &Card::operator=(const Card &rhs) noexcept {
+  m_handle = reinterpret_cast<card_t *>(malloc(sizeof(card_t)));
+  m_handle->string = strdup(rhs.m_handle->string);
+  m_handle->value_width = rhs.m_handle->value_width;
+  m_handle->current_index = rhs.m_handle->current_index;
+  m_delete_handle = true;
   return *this;
 }
 

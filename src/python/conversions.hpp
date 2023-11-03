@@ -53,13 +53,24 @@ void array_setitem(Array<T> &self, size_t index, py::object other) {
         const auto temp{other_bytes[py::int_(0)].cast<int>()};
         self[index] = static_cast<char>(temp);
       } else {
-        self[index] = other_bytes[py::int_(0)].cast<T>();
+        if constexpr (std::is_copy_assignable_v<T>) {
+          self[index] = other_bytes[py::int_(0)].cast<T>();
+        } else {
+          std::stringstream stream;
+          stream << "Values of the type " << typeid(T).name()
+                 << " can not be assigned to str";
+          throw py::type_error(stream.str());
+        }
       }
     } else {
       throw py::value_error("Unable to set Array value to string");
     }
   } else {
-    self[index] = other.cast<T>();
+    if constexpr (std::is_copy_assignable_v<T>) {
+      self[index] = other.cast<T>();
+    } else {
+      self[index] = std::move(other).cast<T>();
+    }
   }
 }
 
@@ -205,7 +216,8 @@ inline py::class_<Array<T>> add_array_type_to_module(py::module_ &m) {
                .def(py::init(&array_constructor<T>))
                .def("__len__", &Array<T>::size)
                .def("__setitem__", &array_setitem<T>)
-               .def("__getitem__", &array_getitem<T>)
+               .def("__getitem__", &array_getitem<T>,
+                    py::return_value_policy::reference)
                .def("__eq__", &array_equals<T>)
                .def("__lt__", &array_less_than<T>)
                .def("__gt__", &array_greater_than<T>)

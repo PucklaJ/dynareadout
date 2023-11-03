@@ -56,9 +56,12 @@ public:
   friend class DefineTransformation;
 
   Card(Card &&rhs) noexcept;
+  Card(const Card &rhs) noexcept;
   Card(card_t *handle) noexcept;
+  ~Card() noexcept;
 
   Card &operator=(Card &&rhs) noexcept;
+  Card &operator=(const Card &rhs) noexcept;
 
   // Initialises the parsing of the card
   void begin(uint8_t value_width = DEFAULT_VALUE_WIDTH) noexcept;
@@ -131,6 +134,7 @@ public:
 
 private:
   card_t *m_handle;
+  bool m_delete_handle;
 };
 
 // A Keyword of a LS Dyna key file (input deck) with all its cards
