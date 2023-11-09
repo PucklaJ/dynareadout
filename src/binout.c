@@ -483,8 +483,7 @@ size_t binout_get_num_timesteps(const binout_file *bin_file, const char *path) {
   /* Loop until the last dxxxxxx string has been found. It's probably the
    * penultimate one, after "metadata"*/
   size_t end_index = num_children - 1;
-  while (end_index > start_index &&
-         !_binout_is_d_string(folders[end_index].name)) {
+  while (!_binout_is_d_string(folders[end_index].name)) {
     end_index--;
   }
 
