@@ -28,6 +28,8 @@
 #include "binout_defines.h"
 #include "profiling.h"
 #include <errno.h>
+#include <limits.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -84,9 +86,9 @@ void *_binout_read(binout_file *bin_file, const char *path_to_variable,
   return data;
 }
 
-void *_binout_read_timed(binout_file *bin_file, const char *variable,
-                         size_t *num_values, size_t *num_timesteps,
-                         const uint8_t binout_type) {
+binout_folder_t *_binout_search_timed(binout_file *bin_file,
+                                      const char *variable,
+                                      size_t *file_index) {
   BINOUT_CLEAR_ERROR_STRING();
 
   if (bin_file->directory.num_children == 0) {
@@ -100,132 +102,145 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
     return NULL;
   }
 
-  const size_t folder_index = binout_directory_binary_search_folder(
+  size_t search_index = binout_directory_binary_search_folder(
       bin_file->directory.children, 0, bin_file->directory.num_children - 1,
       &path);
-
-  if (folder_index == (size_t)~0) {
-    NEW_ERROR_STRING_F("The folder of \"%s\" does not exist", variable);
+  if (search_index == (size_t)~0) {
+    NEW_ERROR_STRING_F("The variable \"%s\" does not exist", variable);
     return NULL;
   }
 
-  if (BINOUT_FOLDER_CHILDREN_GET_TYPE(
-          (&bin_file->directory.children[folder_index])) != BINOUT_FOLDER) {
-    NEW_ERROR_STRING_F("The folder of \"%s\" contains files", variable);
+  binout_folder_t *folder = &bin_file->directory.children[search_index];
+
+  while (path_view_advance(&path)) {
+    if (folder->num_children == 0) {
+      NEW_ERROR_STRING_F("The variable \"%s\" does not exist", variable);
+      return NULL;
+    }
+
+    if (BINOUT_FOLDER_CHILDREN_GET_TYPE(folder) == BINOUT_FILE) {
+      if (path_view_advance(&path)) {
+        NEW_ERROR_STRING_F("The variable \"%s\" does not exist", variable);
+        return NULL;
+      }
+
+      NEW_ERROR_STRING_F("The variable \"%s\" is not timed", variable);
+      return NULL;
+    } else {
+      search_index = binout_directory_binary_search_folder(
+          folder->children, 0, folder->num_children - 1, &path);
+      if (search_index == (size_t)~0) {
+        /* See if the is a d folder*/
+        binout_folder_t *d_folder = NULL;
+        size_t i = 0;
+        while (i < folder->num_children) {
+          d_folder = &((binout_folder_t *)folder->children)[i];
+          if (_binout_is_d_string(d_folder->name)) {
+            break;
+          }
+          d_folder = NULL;
+
+          i++;
+        }
+
+        if (d_folder && d_folder->num_children != 0 &&
+            BINOUT_FOLDER_CHILDREN_GET_TYPE(d_folder) == BINOUT_FILE) {
+          search_index = binout_directory_binary_search_file(
+              d_folder->children, 0, d_folder->num_children - 1, &path);
+          if (search_index != (size_t)~0) {
+            *file_index = search_index;
+            return folder;
+          }
+        }
+
+        NEW_ERROR_STRING_F("The variable \"%s\" does not exist", variable);
+        return NULL;
+      } else {
+        folder = &((binout_folder_t *)folder->children)[search_index];
+      }
+    }
+  }
+
+  NEW_ERROR_STRING_F(
+      "The variable \"%s\" is either metadata (not timed) or does not exist",
+      variable);
+  return NULL;
+}
+
+void *_binout_read_timed(binout_file *bin_file, const char *variable,
+                         size_t *num_values, size_t *num_timesteps,
+                         const uint8_t binout_type) {
+  size_t file_index;
+  binout_folder_t *folder =
+      _binout_search_timed(bin_file, variable, &file_index);
+  if (!folder) {
     return NULL;
   }
 
-  if (!path_view_advance(&path)) {
-    NEW_ERROR_STRING_F("The path \"%s\" is too short", variable);
-    return NULL;
-  }
+  binout_folder_t *ds = (binout_folder_t *)folder->children;
+  binout_file_t *df = &((binout_file_t *)ds->children)[file_index];
 
-  const binout_folder_t *d_folders =
-      (const binout_folder_t *)bin_file->directory.children[folder_index]
-          .children;
-  const size_t num_folders =
-      bin_file->directory.children[folder_index].num_children;
-
-  if (num_folders == 0) {
-    NEW_ERROR_STRING_F("The folder of \"%s\" is empty", variable);
-    return NULL;
-  }
-
-  /* Loop until the first dxxxxxx string has been found. It's probably the first
-   * one.*/
   size_t start_index = 0;
-  while (start_index < num_folders &&
-         !_binout_is_d_string(d_folders[start_index].name)) {
+  while (start_index < folder->num_children &&
+         !_binout_is_d_string(ds[start_index].name)) {
     start_index++;
   }
 
-  /* If no dxxxxxx folders are found*/
-  if (start_index == num_folders) {
-    NEW_ERROR_STRING_F("The folder of \"%s\" does not contain timed data",
-                       variable);
-    return NULL;
-  }
-
-  /* Loop until the last dxxxxxx string has been found. It's probably the
-   * penultimate one, after "metadata"*/
-  size_t end_index = num_folders - 1;
-  while (end_index > start_index &&
-         !_binout_is_d_string(d_folders[end_index].name)) {
-    end_index--;
+  size_t end_index = folder->num_children - 2;
+  if (!_binout_is_d_string(ds[end_index].name)) {
+    end_index = folder->num_children - 1;
+    while (1) {
+      if (end_index == 0 || _binout_is_d_string(ds[end_index].name)) {
+        break;
+      }
+      end_index--;
+    }
   }
 
   *num_timesteps = end_index - start_index + 1;
-  void *data = NULL;
-  size_t file_index;
+  *num_values =
+      df->size / (size_t)_binout_get_type_size((const uint64_t)binout_type);
+
+  void *data = malloc(df->size * *num_timesteps);
 
   size_t i = start_index;
   while (i <= end_index) {
-    const binout_folder_t *current_d_folder = &d_folders[i];
-
-    if (current_d_folder->num_children == 0) {
-      free(data);
-      NEW_ERROR_STRING_F(
-          "The folder of \"%s\" which should contain the data is empty",
-          variable);
-      return NULL;
-    }
-
-    if (BINOUT_FOLDER_CHILDREN_GET_TYPE(current_d_folder) != BINOUT_FILE) {
-      free(data);
-      NEW_ERROR_STRING_F("The folder of \"%s\" which should contain the data "
-                         "does contain more folders",
-                         variable);
-      return NULL;
-    }
-
-    /* Look for the variable in the first folder*/
-    if (!data) {
-      file_index = binout_directory_binary_search_file(
-          (const binout_file_t *)current_d_folder->children, 0,
-          current_d_folder->num_children - 1, &path);
-
-      if (file_index == (size_t)~0) {
-        NEW_ERROR_STRING_F("\"%s\" has not been found", variable);
+    binout_folder_t *d = &ds[i];
+    binout_file_t *dfs = (binout_file_t *)d->children;
+    /* Just a fail safe. Should not happen. All d folders are structured the
+     * same.*/
+    if (d->num_children < file_index + 1 ||
+        strcmp(dfs[file_index].name, df->name) != 0) {
+      if (d->num_children == 0) {
+        free(data);
+        NEW_ERROR_STRING_F("The structure of variable \"%s\" is invalid. Time "
+                           "Step %zu does not contain any files",
+                           variable, i - start_index);
         return NULL;
       }
 
-      const binout_file_t *file =
-          &((const binout_file_t *)current_d_folder->children)[file_index];
+      path_view_t name;
+      name.string = df->name;
+      name.start = 0;
+      name.end = strlen(df->name) - 1;
 
-      if (file->var_type != binout_type) {
-        NEW_ERROR_STRING_F("\"%s\" is of the type %s instead of %s", variable,
-                           _binout_get_type_name(file->var_type),
-                           _binout_get_type_name(binout_type));
-        return NULL;
-      }
-
-      *num_values = file->size /
-                    (size_t)_binout_get_type_size((const uint64_t)binout_type);
-
-      data = malloc(file->size * *num_timesteps);
-    }
-
-    const binout_file_t *file =
-        &((const binout_file_t *)current_d_folder->children)[file_index];
-
-    if (path_view_strcmp(&path, file->name) != 0) {
       file_index = binout_directory_binary_search_file(
-          (const binout_file_t *)current_d_folder->children, 0,
-          current_d_folder->num_children, &path);
-
+          dfs, 0, d->num_children - 1, &name);
       if (file_index == (size_t)~0) {
         free(data);
-        NEW_ERROR_STRING_F("\"%s\" has not been found", variable);
+        NEW_ERROR_STRING_F("The structure of variable \"%s\" is invalid. Time "
+                           "Step %zu does not contain the variable",
+                           variable, i - start_index);
         return NULL;
       }
-
-      file = &((const binout_file_t *)current_d_folder->children)[file_index];
     }
 
-    multi_file_t *multi_file = &bin_file->files[file->file_index];
-    multi_file_index_t multi_file_index = multi_file_access(multi_file);
+    df = &dfs[file_index];
+
+    multi_file_t *mf = &bin_file->files[df->file_index];
+    multi_file_index_t mf_idx = multi_file_access(mf);
 #ifndef NO_THREAD_SAFETY
-    if (multi_file_index.index == ULONG_MAX) {
+    if (mf_idx.index == ULONG_MAX) {
       free(data);
       NEW_ERROR_STRING_F("Failed to access the file of \"%s\": %s", variable,
                          strerror(errno));
@@ -233,24 +248,23 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
     }
 #endif
 
-    if (multi_file_seek(multi_file, &multi_file_index, file->file_pos,
-                        SEEK_SET) != 0) {
+    if (multi_file_seek(mf, &mf_idx, df->file_pos, SEEK_SET) != 0) {
       free(data);
-      multi_file_return(multi_file, &multi_file_index);
+      multi_file_return(mf, &mf_idx);
       NEW_ERROR_STRING_F("Failed to seek to the data of \"%s\"", variable);
       return NULL;
     }
 
-    if (multi_file_read(multi_file, &multi_file_index,
-                        &((uint8_t *)data)[(i - start_index) * file->size],
-                        file->size, 1) != 1) {
+    if (multi_file_read(mf, &mf_idx,
+                        &((uint8_t *)data)[(i - start_index) * df->size],
+                        df->size, 1) != 1) {
       free(data);
-      multi_file_return(multi_file, &multi_file_index);
+      multi_file_return(mf, &mf_idx);
       NEW_ERROR_STRING_F("Failed to read the data of \"%s\"", variable);
       return NULL;
     }
 
-    multi_file_return(multi_file, &multi_file_index);
+    multi_file_return(mf, &mf_idx);
 
     i++;
   }

@@ -317,10 +317,13 @@ TEST_CASE("rwforc") {
   CHECK(type_id == BINOUT_TYPE_FLOAT32);
   CHECK(timed == 1);
 
-  size_t nv, nt;
+  size_t nv = 0, nt = 0;
   float *v = binout_read_timed_f32(&b, real, &nv, &nt);
   free(real);
-  REQUIRE(v != NULL);
+  CHECK(v != NULL);
+  CHECK(nv != 0);
+  CHECK(nt != 0);
+  free(v);
 
   binout_close(&b);
 }
