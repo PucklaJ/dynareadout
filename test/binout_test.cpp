@@ -300,6 +300,31 @@ TEST_CASE("ncforc.binout") {
   binout_close(&b);
 }
 
+TEST_CASE("rwforc") {
+  binout_file b = binout_open("test_data/rwforc_sim/binout");
+  if (b.error_string) {
+    FAIL(b.error_string);
+    free(b.error_string);
+    return;
+  }
+
+  uint8_t type_id;
+  int timed;
+  char *real =
+      binout_simple_path_to_real(&b, "rwforc/forces/x_force", &type_id, &timed);
+  REQUIRE(real != NULL);
+  CHECK(real == "/rwforc/forces/x_force");
+  CHECK(type_id == BINOUT_TYPE_FLOAT32);
+  CHECK(timed == 1);
+
+  size_t nv, nt;
+  float *v = binout_read_timed_f32(&b, real, &nv, &nt);
+  free(real);
+  REQUIRE(v != NULL);
+
+  binout_close(&b);
+}
+
 #ifdef BUILD_CPP
 TEST_CASE("binout0000C++") {
   {
