@@ -34,14 +34,14 @@
 #include <unistd.h>
 #endif
 
-size_t _path_move_up(const char *path, char path_sep) {
+size_t path_move_up(const char *path) {
   BEGIN_PROFILE_FUNC();
 
   /* Loop over the string and store the last position of a path seperator*/
   size_t last_path_sep = (size_t)~0;
   size_t i = 0;
   while (path[i] != '\0') {
-    if (path[i] == path_sep) {
+    if (path[i] == PATH_SEP) {
       last_path_sep = i;
     }
 
@@ -56,7 +56,7 @@ size_t _path_move_up(const char *path, char path_sep) {
   /* Support trailing path separators*/
   if (path[last_path_sep + 1] == '\0') {
     /* Support multiple path separators*/
-    while (path[last_path_sep] == path_sep) {
+    while (path[last_path_sep] == PATH_SEP) {
       if (last_path_sep == 0) {
         break;
       }
@@ -70,7 +70,7 @@ size_t _path_move_up(const char *path, char path_sep) {
     }
 
     /* Loop until the first path seperator has been found*/
-    while (path[last_path_sep] != path_sep) {
+    while (path[last_path_sep] != PATH_SEP) {
       if (last_path_sep == 0) {
         break;
       }
@@ -79,7 +79,67 @@ size_t _path_move_up(const char *path, char path_sep) {
   }
 
   /* Support multiple path separators*/
-  while (path[last_path_sep] == path_sep) {
+  while (path[last_path_sep] == PATH_SEP) {
+    if (last_path_sep == 0) {
+      break;
+    }
+    last_path_sep--;
+  }
+
+  if (last_path_sep != 0) {
+    last_path_sep++;
+  }
+
+  END_PROFILE_FUNC();
+  return last_path_sep;
+}
+
+size_t path_move_up_real(const char *path) {
+  BEGIN_PROFILE_FUNC();
+
+  /* Loop over the string and store the last position of a path seperator*/
+  size_t last_path_sep = (size_t)~0;
+  size_t i = 0;
+  while (path[i] != '\0') {
+    if (CHAR_IS_REAL_PATH_SEP(path[i])) {
+      last_path_sep = i;
+    }
+
+    i++;
+  }
+
+  if (last_path_sep == (size_t)~0) {
+    END_PROFILE_FUNC();
+    return last_path_sep;
+  }
+
+  /* Support trailing path separators*/
+  if (path[last_path_sep + 1] == '\0') {
+    /* Support multiple path separators*/
+    while (CHAR_IS_REAL_PATH_SEP(path[last_path_sep])) {
+      if (last_path_sep == 0) {
+        break;
+      }
+      last_path_sep--;
+    }
+
+    /* The path consists of only path separators*/
+    if (last_path_sep == 0) {
+      END_PROFILE_FUNC();
+      return (size_t)~0;
+    }
+
+    /* Loop until the first path seperator has been found*/
+    while (!CHAR_IS_REAL_PATH_SEP(path[last_path_sep])) {
+      if (last_path_sep == 0) {
+        break;
+      }
+      last_path_sep--;
+    }
+  }
+
+  /* Support multiple path separators*/
+  while (CHAR_IS_REAL_PATH_SEP(path[last_path_sep])) {
     if (last_path_sep == 0) {
       break;
     }
@@ -236,7 +296,7 @@ int path_is_abs(const char *path_name) {
 
 #ifdef _WIN32
   const int rv = ((path_name[0] >= 'A' && path_name[0] <= 'Z') &&
-                  (path_name[1] == ':') && (path_name[2] == REAL_PATH_SEP));
+                  (path_name[1] == ':') && CHAR_IS_REAL_PATH_SEP(path_name[2]));
 #else
   const int rv = path_name[0] == PATH_SEP;
 #endif
