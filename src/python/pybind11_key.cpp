@@ -171,9 +171,10 @@ void add_key_library_to_module(py::module_ &m) {
          std::vector<std::filesystem::path> extra_include_paths) {
         std::optional<dro::String> warnings;
         auto keywords = dro::KeyFile::parse(
-            file_name, warnings,
+            file_name,
             dro::KeyFile::ParseConfig(parse_includes, ignore_not_found_includes,
-                                      std::move(extra_include_paths)));
+                                      std::move(extra_include_paths)),
+            &warnings);
 
         if (output_warnings && warnings) {
           std::cout << *warnings << std::endl;

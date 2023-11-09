@@ -263,8 +263,8 @@ std::vector<std::filesystem::path> KeyFile::ParseInfo::include_paths() {
 }
 
 Keywords KeyFile::parse(const std::filesystem::path &file_name,
-                        std::optional<dro::String> &warnings,
-                        KeyFile::ParseConfig parse_config) {
+                        KeyFile::ParseConfig parse_config,
+                        std::optional<dro::String> *warnings) {
   size_t num_keywords;
   char *error_string, *warning_string;
 
@@ -272,7 +272,11 @@ Keywords KeyFile::parse(const std::filesystem::path &file_name,
       key_file_parse(file_name.string().c_str(), &num_keywords,
                      parse_config.get_handle(), &error_string, &warning_string);
   if (warning_string) {
-    warnings = dro::String(warning_string);
+    if (warnings == nullptr) {
+      free(warning_string);
+    } else {
+      *warnings = dro::String(warning_string);
+    }
   }
   if (error_string) {
     throw Exception(Exception::ErrorString(error_string));
@@ -283,8 +287,8 @@ Keywords KeyFile::parse(const std::filesystem::path &file_name,
 
 void KeyFile::parse_with_callback(const std::filesystem::path &file_name,
                                   KeyFile::Callback callback,
-                                  std::optional<dro::String> &warnings,
-                                  KeyFile::ParseConfig parse_config) {
+                                  KeyFile::ParseConfig parse_config,
+                                  std::optional<dro::String> *warnings) {
   char *error_string, *warning_string;
 
   key_file_parse_with_callback(
@@ -304,7 +308,11 @@ void KeyFile::parse_with_callback(const std::filesystem::path &file_name,
       NULL);
 
   if (warning_string) {
-    warnings = dro::String(warning_string);
+    if (warnings == nullptr) {
+      free(warning_string);
+    } else {
+      *warnings = dro::String(warning_string);
+    }
   }
   if (error_string) {
     throw Exception(Exception::ErrorString(error_string));

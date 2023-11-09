@@ -945,12 +945,7 @@ TEST_CASE("key_file_include_transform") {
 #define FABS(x) ((x) > 0 ? (x) : -(x))
 
 TEST_CASE("key_file_parseC++") {
-  std::optional<dro::String> warnings;
-  auto keywords = dro::KeyFile::parse("test_data/key_file.k", warnings);
-  if (warnings) {
-    FAIL(warnings->data());
-    return;
-  }
+  auto keywords = dro::KeyFile::parse("test_data/key_file.k");
 
   // Takes the first found keyword of "MAT_PIECEWISE_LINEAR_PLASTICITY_TITLE"
   // (in this case is only one) and the second card of that keyword
@@ -1197,7 +1192,6 @@ TEST_CASE("key_file_parseC++") {
 }
 
 TEST_CASE("key_file_parse_with_callbackC++") {
-  std::optional<dro::String> warnings;
   dro::KeyFile::parse_with_callback(
       "test_data/key_file.k",
       [](auto info, dro::String keyword_name, std::optional<dro::Card> card,
@@ -1227,24 +1221,13 @@ TEST_CASE("key_file_parse_with_callbackC++") {
           stream << "Unexpected file name: \"" << info.file_name() << '"';
           FAIL(stream.str());
         }
-      },
-      warnings);
-
-  if (warnings) {
-    FAIL(warnings->data());
-    return;
-  }
+      });
 }
 
 TEST_CASE("key_file_parse_extra_include_pathsC++") {
-  std::optional<dro::String> warnings;
   auto keywords = dro::KeyFile::parse(
-      "test_data/extra_include_paths.k", warnings,
+      "test_data/extra_include_paths.k",
       dro::KeyFile::ParseConfig{true, false, {"test_data/extra_folder"}});
-  if (warnings) {
-    FAIL(*warnings);
-    return;
-  }
 
   auto c = keywords["EXTRA_KEYWORD"][0][0];
   CHECK(c.parse_string_whole<std::string>() == "SuperDuper");
@@ -1264,13 +1247,7 @@ TEST_CASE("empty_card") {
 }
 
 TEST_CASE("key_file_include_transformC++") {
-  std::optional<dro::String> warnings;
-  auto keywords =
-      dro::KeyFile::parse("test_data/include_transform.k", warnings);
-  if (warnings) {
-    FAIL(*warnings);
-    return;
-  }
+  auto keywords = dro::KeyFile::parse("test_data/include_transform.k");
 
   auto kw = keywords["INCLUDE_TRANSFORM"][0];
   REQUIRE(kw.num_cards() == 5);
@@ -1356,13 +1333,7 @@ TEST_CASE("key_file_include_transformC++") {
 
 TEST_CASE("INCLUDE_PATH") {
   SUBCASE("key_file_parse") {
-    std::optional<dro::String> warnings;
-    auto keywords =
-        dro::KeyFile::parse("test_data/include_paths/main.k", warnings);
-    if (warnings) {
-      FAIL(*warnings);
-      return;
-    }
+    auto keywords = dro::KeyFile::parse("test_data/include_paths/main.k");
 
     auto kw = keywords["LAYER_22"][0];
     CHECK(kw.num_cards() == 0);
@@ -1373,7 +1344,6 @@ TEST_CASE("INCLUDE_PATH") {
   SUBCASE("key_file_parse_with_callback") {
     bool layer_22_found = false, layer_41_found = false;
 
-    std::optional<dro::String> warnings;
     dro::KeyFile::parse_with_callback(
         "test_data/include_paths/main.k",
         [&](dro::KeyFile::ParseInfo info, dro::String keyword_name,
@@ -1398,12 +1368,7 @@ TEST_CASE("INCLUDE_PATH") {
             CHECK(ip[0] == std::filesystem::current_path());
             CHECK(ip[1] == "test_data/include_paths");
           }
-        },
-        warnings);
-    if (warnings) {
-      FAIL(*warnings);
-      return;
-    }
+        });
 
     CHECK(layer_22_found == true);
     CHECK(layer_41_found == true);
