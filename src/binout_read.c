@@ -52,6 +52,11 @@ void *_binout_read(binout_file *bin_file, const char *path_to_variable,
     return NULL;
   }
 
+  if (file->size == 0) {
+    NEW_ERROR_STRING_F("The file \"%s\" is empty", path_to_variable);
+    return NULL;
+  }
+
   const size_t type_size = (size_t)_binout_get_type_size((uint64_t)binout_type);
   multi_file_t *multi_file = &bin_file->files[file->file_index];
 
@@ -182,24 +187,21 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
 
   size_t start_index = 0;
   while (start_index < folder->num_children &&
-         !_binout_is_d_string(ds[start_index].name)) {
+         !_binout_is_d_string(ds[start_index].name))
     start_index++;
-  }
 
-  size_t end_index = folder->num_children - 2;
-  if (!_binout_is_d_string(ds[end_index].name)) {
-    end_index = folder->num_children - 1;
-    while (1) {
-      if (end_index == 0 || _binout_is_d_string(ds[end_index].name)) {
-        break;
-      }
-      end_index--;
-    }
-  }
+  size_t end_index = folder->num_children - 1;
+  while (!_binout_is_d_string(ds[end_index].name))
+    end_index--;
 
   *num_timesteps = end_index - start_index + 1;
   *num_values =
       df->size / (size_t)_binout_get_type_size((const uint64_t)binout_type);
+
+  if (*num_values == 0) {
+    NEW_ERROR_STRING_F("The files of \"%s\" are empty", variable);
+    return NULL;
+  }
 
   void *data = malloc(df->size * *num_timesteps);
 
@@ -260,7 +262,8 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
                         df->size, 1) != 1) {
       free(data);
       multi_file_return(mf, &mf_idx);
-      NEW_ERROR_STRING_F("Failed to read the data of \"%s\"", variable);
+      NEW_ERROR_STRING_F("Failed to read time step %zu of \"%s\"",
+                         i - start_index, variable);
       return NULL;
     }
 

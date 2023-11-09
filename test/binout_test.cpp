@@ -320,10 +320,23 @@ TEST_CASE("rwforc") {
   size_t nv = 0, nt = 0;
   float *v = binout_read_timed_f32(&b, real, &nv, &nt);
   free(real);
+  if (b.error_string) {
+    FAIL(b.error_string);
+    free(b.error_string);
+    b.error_string = NULL;
+  }
   CHECK(v != NULL);
   CHECK(nv != 0);
   CHECK(nt != 0);
   free(v);
+
+  real = binout_simple_path_to_real(&b, "rwforc/transducer/x_force", &type_id,
+                                    &timed);
+  REQUIRE(real != NULL);
+  CHECK(real == "/rwforc/transducer/x_force");
+  CHECK(type_id == BINOUT_TYPE_FLOAT32);
+  CHECK(timed == 1);
+  free(real);
 
   binout_close(&b);
 }
