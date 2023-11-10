@@ -97,7 +97,7 @@ size_t path_move_up(const char *path) {
 size_t path_move_up_real(const char *path) {
   BEGIN_PROFILE_FUNC();
 
-  /* Loop over the string and store the last position of a path seperator*/
+  /* Loop over the string and store the last position of a path separator*/
   size_t last_path_sep = (size_t)~0;
   size_t i = 0;
   while (path[i] != '\0') {

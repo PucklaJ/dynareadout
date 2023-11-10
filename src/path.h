@@ -35,7 +35,7 @@
 #define CHAR_IS_REAL_PATH_SEP(c) (c == LEGACY_PATH_SEP || c == NEW_PATH_SEP)
 #else
 #define REAL_PATH_SEP '/'
-#define CHAR_REAL_PATH_SEP(c) (c == REAL_PATH_SEP)
+#define CHAR_IS_REAL_PATH_SEP(c) (c == REAL_PATH_SEP)
 #endif
 
 #define PATH_IS_ABS(str) (str[0] == PATH_SEP)
