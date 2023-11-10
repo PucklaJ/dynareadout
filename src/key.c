@@ -27,6 +27,7 @@
 #include "binary_search.h"
 #include "line.h"
 #include "profiling.h"
+#include "string_builder.h"
 #include <errno.h>
 #include <math.h>
 #include <stdarg.h>
@@ -34,23 +35,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-void _message_stack_push(char **stack, size_t *stack_size, size_t *ptr,
-                         const char *msg) {
-  const size_t msg_len = strlen(msg);
-  const int add_new_line = *stack != NULL;
-
-  *stack_size += msg_len + 1 + add_new_line;
-  *stack = realloc(*stack, *stack_size);
-
-  if (add_new_line) {
-    (*stack)[(*ptr)++] = '\n';
+void _message_stack_push(string_builder_t *stack, const char *msg) {
+  /* Add a new line after the previous message*/
+  if (stack->cap != 0) {
+    string_builder_append_char(stack, '\n');
   }
-  memcpy(&(*stack)[*ptr], msg, msg_len + 1);
-  *ptr += msg_len + 1;
+  string_builder_append(stack, msg);
 }
 
-void _message_stack_push_f(char **stack, size_t *stack_size, size_t *ptr,
-                           const char *f, ...) {
+void _message_stack_push_f(string_builder_t *stack, const char *f, ...) {
   va_list args;
 
   char buffer[1024];
@@ -59,20 +52,14 @@ void _message_stack_push_f(char **stack, size_t *stack_size, size_t *ptr,
   vsprintf(buffer, f, args);
   va_end(args);
 
-  _message_stack_push(stack, stack_size, ptr, buffer);
+  _message_stack_push(stack, buffer);
 }
 
-#define ERROR_MSG(msg)                                                         \
-  _message_stack_push(&error_stack, &error_stack_size, &error_ptr, msg)
-#define ERROR_F(f, ...)                                                        \
-  _message_stack_push_f(&error_stack, &error_stack_size, &error_ptr, f,        \
-                        __VA_ARGS__)
+#define ERROR_MSG(msg) _message_stack_push(&error_stack, msg)
+#define ERROR_F(f, ...) _message_stack_push_f(&error_stack, f, __VA_ARGS__)
 #define ERROR_ERRNO(msg) ERROR_F(msg, strerror(errno));
-#define WARNING_MSG(msg)                                                       \
-  _message_stack_push(&warning_stack, &warning_stack_size, &warning_ptr, msg)
-#define WARNING_F(f, ...)                                                      \
-  _message_stack_push_f(&warning_stack, &warning_stack_size, &warning_ptr, f,  \
-                        __VA_ARGS__)
+#define WARNING_MSG(msg) _message_stack_push(&warning_stack, msg)
+#define WARNING_F(f, ...) _message_stack_push_f(&warning_stack, f, __VA_ARGS__)
 #define WARNING_ERRNO(msg) WARNING_F(msg, strerror(errno));
 #define ERROR_KEYWORD_NOT_IMPLEMENTED(keyword)                                 \
   ERROR_F("%s:%lu: The keyword %s is not implemented", file_name,              \
@@ -137,6 +124,7 @@ void key_file_parse_callback(key_parse_info_t info, const char *keyword_name,
     data->current_keyword->cards = NULL;
     data->current_keyword->num_cards = 0;
 
+    /* TODO string_clone*/
     const size_t keyword_len = strlen(keyword_name);
     data->current_keyword->name = malloc(keyword_len + 1);
     memcpy(data->current_keyword->name, keyword_name, keyword_len + 1);
@@ -201,20 +189,14 @@ void key_file_parse_with_callback(const char *file_name,
   BEGIN_PROFILE_FUNC();
 
   /* Variables to stack multiple errors*/
-  char *error_stack = NULL;
-  size_t error_stack_size = 0;
-  size_t error_ptr = 0;
-
-  char *warning_stack = NULL;
-  size_t warning_stack_size = 0;
-  size_t warning_ptr = 0;
+  string_builder_t error_stack = string_builder_new(),
+                   warning_stack = string_builder_new();
 
   FILE *file = fopen(file_name, "rb");
   if (!file) {
     if (error_string) {
       ERROR_ERRNO("Failed to open key file: %s");
-      error_stack[error_stack_size - 1] = '\0';
-      *error_string = error_stack;
+      *error_string = error_stack.buffer;
     }
     if (warning_string) {
       *warning_string = NULL;
@@ -242,7 +224,7 @@ void key_file_parse_with_callback(const char *file_name,
         rec_ptr->root_folder[index + 1] = '\0';
       } else {
         char *current_wd = path_working_directory();
-        rec_ptr->root_folder = path_join(current_wd, file_name);
+        rec_ptr->root_folder = path_join_real(current_wd, file_name);
         rec_ptr->root_folder[path_move_up_real(rec_ptr->root_folder) + 1] =
             '\0';
         free(current_wd);
@@ -705,24 +687,22 @@ void key_file_parse_with_callback(const char *file_name,
   fclose(file);
 
   /* Convert the error stack into an error string*/
-  if (error_stack) {
+  if (error_stack.buffer) {
     if (!error_string) {
-      free(error_stack);
+      string_builder_free(&error_stack);
     } else {
-      error_stack[error_stack_size - 1] = '\0';
-      *error_string = error_stack;
+      *error_string = error_stack.buffer;
     }
   } else if (error_string) {
     *error_string = NULL;
   }
 
   /* Convert the warning stack into a warning string*/
-  if (warning_stack) {
+  if (warning_stack.buffer) {
     if (!warning_string) {
-      free(warning_stack);
+      string_builder_free(&warning_stack);
     } else {
-      warning_stack[warning_stack_size - 1] = '\0';
-      *warning_string = warning_stack;
+      *warning_string = warning_stack.buffer;
     }
   } else if (warning_string) {
     *warning_string = NULL;

@@ -161,7 +161,7 @@ char *path_join(const char *lhs, const char *rhs) {
   const size_t rhs_len = strlen(rhs);
 
   size_t i = lhs_len - 1, j = 0;
-  /* Loop until the last non path seperator has been found*/
+  /* Loop until the last non path separator has been found*/
   while (lhs[i] == PATH_SEP) {
     if (i == 0) {
       break;
@@ -169,7 +169,7 @@ char *path_join(const char *lhs, const char *rhs) {
     i--;
   }
 
-  /* Loop until the first non path seperator has been found*/
+  /* Loop until the first non path separator has been found*/
   while (rhs[j] == PATH_SEP) {
     if (j == rhs_len - 1) {
       break;

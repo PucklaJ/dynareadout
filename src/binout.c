@@ -426,24 +426,20 @@ void binout_free_children(char **children) {
 char *binout_open_error(binout_file *bin_file) {
   BEGIN_PROFILE_FUNC();
 
-  char *file_error = NULL;
-  size_t file_error_size = 0;
+  string_builder_t file_error = string_builder_new();
 
   size_t i = 0;
   while (i < bin_file->num_file_errors) {
-    const size_t file_error_length = strlen(bin_file->file_errors[i]);
-    file_error_size += file_error_length + 1;
-    file_error = realloc(file_error, file_error_size);
-    memcpy(file_error, bin_file->file_errors[bin_file->num_file_errors - 1],
-           file_error_length);
-    file_error[file_error_size - 1] =
-        '\n' * (i != bin_file->num_file_errors - 1);
+    string_builder_append(&file_error, bin_file->file_errors[i]);
+    if (i != bin_file->num_file_errors - 1) {
+      string_builder_append_char(&file_error, '\n');
+    }
 
     i++;
   }
 
   END_PROFILE_FUNC();
-  return file_error;
+  return file_error.buffer;
 }
 
 size_t binout_get_num_timesteps(const binout_file *bin_file, const char *path) {
@@ -766,28 +762,15 @@ const char *_binout_get_type_name(const uint64_t type_id) {
 
 void _binout_add_file_error(binout_file *bin_file, const char *file_name,
                             const char *message) {
-  const char *middle = ": ";
-  const size_t file_name_length = strlen(file_name);
-  const size_t message_length = strlen(message);
-  const size_t middle_length = 2;
-
   bin_file->num_file_errors++;
   bin_file->file_errors = realloc(bin_file->file_errors,
                                   bin_file->num_file_errors * sizeof(char *));
 
-  bin_file->file_errors[bin_file->num_file_errors - 1] =
-      malloc(file_name_length + middle_length + message_length + 1);
-  memcpy(bin_file->file_errors[bin_file->num_file_errors - 1], file_name,
-         file_name_length);
-  memcpy(
-      &bin_file->file_errors[bin_file->num_file_errors - 1][file_name_length],
-      middle, middle_length);
-  memcpy(&bin_file->file_errors[bin_file->num_file_errors - 1]
-                               [file_name_length + middle_length],
-         message, message_length);
-  bin_file->file_errors[bin_file->num_file_errors - 1]
-                       [file_name_length + middle_length + message_length] =
-      '\0';
+  string_builder_t new_file_error = string_builder_new();
+  string_builder_append(&new_file_error, file_name);
+  string_builder_append(&new_file_error, ": ");
+  string_builder_append(&new_file_error, message);
+  bin_file->file_errors[bin_file->num_file_errors - 1] = new_file_error.buffer;
 }
 
 int _binout_is_d_string(const char *folder_name) {
