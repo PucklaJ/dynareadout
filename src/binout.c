@@ -439,7 +439,7 @@ char *binout_open_error(binout_file *bin_file) {
   }
 
   END_PROFILE_FUNC();
-  return file_error.buffer;
+  return string_builder_move(&file_error);
 }
 
 size_t binout_get_num_timesteps(const binout_file *bin_file, const char *path) {
@@ -770,7 +770,8 @@ void _binout_add_file_error(binout_file *bin_file, const char *file_name,
   string_builder_append(&new_file_error, file_name);
   string_builder_append(&new_file_error, ": ");
   string_builder_append(&new_file_error, message);
-  bin_file->file_errors[bin_file->num_file_errors - 1] = new_file_error.buffer;
+  bin_file->file_errors[bin_file->num_file_errors - 1] =
+      string_builder_move(&new_file_error);
 }
 
 int _binout_is_d_string(const char *folder_name) {

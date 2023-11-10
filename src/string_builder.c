@@ -90,3 +90,25 @@ void string_builder_free(string_builder_t *b) {
 
   END_PROFILE_FUNC();
 }
+
+char *string_clone(const char *str) {
+  BEGIN_PROFILE_FUNC();
+
+  const size_t len = strlen(str);
+  char *rv = malloc(len + 1);
+  memcpy(rv, str, len + 1);
+
+  END_PROFILE_FUNC();
+  return rv;
+}
+
+char *string_clone_len(const char *str, size_t len) {
+  BEGIN_PROFILE_FUNC();
+
+  char *rv = malloc(len + 1);
+  memcpy(rv, str, len);
+  rv[len] = '\0';
+
+  END_PROFILE_FUNC();
+  return rv;
+}

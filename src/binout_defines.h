@@ -25,6 +25,7 @@
 
 #ifndef BINOUT_DEFINES_H
 #define BINOUT_DEFINES_H
+#include "string_builder.h"
 #include <limits.h>
 
 #define BINOUT_HEADER_BIG_ENDIAN 0
@@ -60,14 +61,12 @@
 #define NEW_ERROR_STRING(message)                                              \
   if (bin_file->error_string)                                                  \
     free(bin_file->error_string);                                              \
-  const size_t message_length = strlen(message);                               \
-  bin_file->error_string = malloc(message_length + 1);                         \
-  memcpy(bin_file->error_string, message, message_length + 1);
+  bin_file->error_string = string_clone(message)
 
 #define NEW_ERROR_STRING_F(format_str, ...)                                    \
   char format_buffer[1024];                                                    \
   sprintf(format_buffer, format_str, __VA_ARGS__);                             \
-  NEW_ERROR_STRING(format_buffer);
+  NEW_ERROR_STRING(format_buffer)
 
 #define BINOUT_CLEAR_ERROR_STRING()                                            \
   free(bin_file->error_string);                                                \

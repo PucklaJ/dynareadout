@@ -25,6 +25,7 @@
 
 #include "path_view.h"
 #include "profiling.h"
+#include "string_builder.h"
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -118,9 +119,7 @@ int path_view_strcmp(const path_view_t *pv, const char *str) {
 char *path_view_stralloc(const path_view_t *pv) {
   BEGIN_PROFILE_FUNC();
 
-  char *str = malloc(PATH_VIEW_LEN(pv) + 1);
-  PATH_VIEW_CPY(str, pv);
-  str[PATH_VIEW_LEN(pv)] = '\0';
+  char *str = string_clone_len(&pv->string[pv->start], pv->end - pv->start + 1);
 
   END_PROFILE_FUNC();
   return str;

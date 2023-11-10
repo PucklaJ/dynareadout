@@ -26,6 +26,7 @@
 #include "multi_file.h"
 #include "path.h"
 #include "profiling.h"
+#include "string_builder.h"
 
 #ifndef NO_THREAD_SAFETY
 #include <limits.h>
@@ -42,9 +43,7 @@ multi_file_t multi_file_open(const char *path) {
     f.file_path = path_join_real(wd, path);
     free(wd);
   } else {
-    const int len = strlen(path);
-    f.file_path = malloc(len + 1);
-    memcpy(f.file_path, path, len + 1);
+    f.file_path = string_clone(path);
   }
 
   f.file_handles = NULL;

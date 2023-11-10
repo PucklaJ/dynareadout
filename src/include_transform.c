@@ -25,6 +25,7 @@
 
 #include "include_transform.h"
 #include "profiling.h"
+#include "string_builder.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -177,9 +178,7 @@ void key_parse_define_transformation_card(define_transformation_t *dt,
 
   transformation_option_t o;
   /* Avoid potential segfault when parsing an empty card*/
-  const char *default_name = "NULL";
-  o.name = malloc(strlen(default_name) + 1);
-  memcpy(o.name, default_name, strlen(default_name) + 1);
+  o.name = string_clone("NULL");
 
   memset(o.parameters, 0, sizeof(o.parameters));
 

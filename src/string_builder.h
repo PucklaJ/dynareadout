@@ -28,6 +28,7 @@
 
 #include <stddef.h>
 
+/* Used to construct string out of multiple other strings and characters*/
 typedef struct {
   char *buffer;
   size_t ptr;
@@ -38,11 +39,26 @@ typedef struct {
 extern "C" {
 #endif
 
+/* Returns a string builder with all values initialized to the default. Needs to
+ * be deallocated by string_builder_free*/
 string_builder_t string_builder_new();
+/* Add a string*/
 void string_builder_append(string_builder_t *b, const char *s);
+/* Add a char*/
 void string_builder_append_char(string_builder_t *b, char c);
+/* Returns the underlying buffer and sets all values of b to the default*/
 char *string_builder_move(string_builder_t *b);
+/* Deallocates all memory of b*/
 void string_builder_free(string_builder_t *b);
+
+/* Same as libc's strdup: Allocates memory and copies the contents of str and
+ * returns them. Needs to be deallocated by free.*/
+char *string_clone(const char *str);
+
+/* Same as string_clone but use len instead of strlen: Allocates memory and
+ * copies the contents of str and returns them. Needs to be deallocated by
+ * free.*/
+char *string_clone_len(const char *str, size_t len);
 
 #ifdef __cplusplus
 }

@@ -124,10 +124,7 @@ void key_file_parse_callback(key_parse_info_t info, const char *keyword_name,
     data->current_keyword->cards = NULL;
     data->current_keyword->num_cards = 0;
 
-    /* TODO string_clone*/
-    const size_t keyword_len = strlen(keyword_name);
-    data->current_keyword->name = malloc(keyword_len + 1);
-    memcpy(data->current_keyword->name, keyword_name, keyword_len + 1);
+    data->current_keyword->name = string_clone(keyword_name);
   }
 
   if (!card) {
@@ -141,9 +138,7 @@ void key_file_parse_callback(key_parse_info_t info, const char *keyword_name,
               data->current_keyword->num_cards * sizeof(card_t));
   card_t *keyword_card =
       &data->current_keyword->cards[data->current_keyword->num_cards - 1];
-  const size_t card_len = strlen(card->string);
-  keyword_card->string = malloc(card_len + 1);
-  memcpy(keyword_card->string, card->string, card_len + 1);
+  keyword_card->string = string_clone(card->string);
 }
 
 keyword_t *key_file_parse(const char *file_name, size_t *num_keywords,
@@ -188,6 +183,13 @@ void key_file_parse_with_callback(const char *file_name,
                                   void *user_data, key_parse_recursion_t *rec) {
   BEGIN_PROFILE_FUNC();
 
+  if (error_string) {
+    *error_string = NULL;
+  }
+  if (warning_string) {
+    *warning_string = NULL;
+  }
+
   /* Variables to stack multiple errors*/
   string_builder_t error_stack = string_builder_new(),
                    warning_stack = string_builder_new();
@@ -196,7 +198,7 @@ void key_file_parse_with_callback(const char *file_name,
   if (!file) {
     if (error_string) {
       ERROR_ERRNO("Failed to open key file: %s");
-      *error_string = error_stack.buffer;
+      *error_string = string_builder_move(&error_stack);
     }
     if (warning_string) {
       *warning_string = NULL;
@@ -219,9 +221,7 @@ void key_file_parse_with_callback(const char *file_name,
       rec_ptr->root_folder = path_working_directory();
     } else {
       if (path_is_abs(file_name)) {
-        rec_ptr->root_folder = malloc(index + 1 + 1);
-        memcpy(rec_ptr->root_folder, file_name, index + 1);
-        rec_ptr->root_folder[index + 1] = '\0';
+        rec_ptr->root_folder = string_clone_len(file_name, index + 1);
       } else {
         char *current_wd = path_working_directory();
         rec_ptr->root_folder = path_join_real(current_wd, file_name);
@@ -259,10 +259,8 @@ void key_file_parse_with_callback(const char *file_name,
 
     size_t i = 0;
     while (i < parse_config.num_extra_include_paths) {
-      const size_t len = strlen(parse_config.extra_include_paths[i]);
-      rec_ptr->include_paths[j + i] = malloc(len * sizeof(char));
-      memcpy(rec_ptr->include_paths[j + i], parse_config.extra_include_paths[i],
-             len + 1);
+      rec_ptr->include_paths[j + i] =
+          string_clone(parse_config.extra_include_paths[i]);
 
       i++;
     }
@@ -687,26 +685,17 @@ void key_file_parse_with_callback(const char *file_name,
   fclose(file);
 
   /* Convert the error stack into an error string*/
-  if (error_stack.buffer) {
-    if (!error_string) {
-      string_builder_free(&error_stack);
-    } else {
-      *error_string = error_stack.buffer;
-    }
-  } else if (error_string) {
-    *error_string = NULL;
+  if (error_stack.buffer && error_string) {
+    *error_string = string_builder_move(&error_stack);
   }
 
   /* Convert the warning stack into a warning string*/
-  if (warning_stack.buffer) {
-    if (!warning_string) {
-      string_builder_free(&warning_stack);
-    } else {
-      *warning_string = warning_stack.buffer;
-    }
-  } else if (warning_string) {
-    *warning_string = NULL;
+  if (warning_stack.buffer && warning_string) {
+    *warning_string = string_builder_move(&warning_stack);
   }
+
+  string_builder_free(&error_stack);
+  string_builder_free(&warning_stack);
 
   END_PROFILE_FUNC();
 }
@@ -1367,10 +1356,9 @@ char *card_parse_string_width(const card_t *card, uint8_t value_width) {
     i++;
   }
 
-  char *value = malloc(end_index - start_index + 1 + 1);
-  memcpy(value, &card->string[start_index + card->current_index],
-         end_index - start_index + 1);
-  value[end_index - start_index + 1] = '\0';
+  char *value =
+      string_clone_len(&card->string[start_index + card->current_index],
+                       end_index - start_index + 1);
 
   END_PROFILE_FUNC();
   return value;
@@ -1379,9 +1367,8 @@ char *card_parse_string_width(const card_t *card, uint8_t value_width) {
 char *card_parse_string_width_no_trim(const card_t *card, uint8_t value_width) {
   BEGIN_PROFILE_FUNC();
 
-  char *value = malloc(value_width + 1);
-  memcpy(value, &card->string[card->current_index], value_width);
-  value[value_width] = '\0';
+  char *value =
+      string_clone_len(&card->string[card->current_index], value_width);
 
   END_PROFILE_FUNC();
   return value;
@@ -1405,9 +1392,8 @@ char *card_parse_whole(const card_t *card) {
     i++;
   }
 
-  char *value = malloc(end_index - start_index + 1 + 1);
-  memcpy(value, &card->string[start_index], end_index - start_index + 1);
-  value[end_index - start_index + 1] = '\0';
+  char *value =
+      string_clone_len(&card->string[start_index], end_index - start_index + 1);
 
   END_PROFILE_FUNC();
   return value;
@@ -1416,9 +1402,7 @@ char *card_parse_whole(const card_t *card) {
 char *card_parse_whole_no_trim(const card_t *card) {
   BEGIN_PROFILE_FUNC();
 
-  const size_t len = strlen(card->string);
-  char *value = malloc(len + 1);
-  memcpy(value, card->string, len + 1);
+  char *value = string_clone(card->string);
 
   END_PROFILE_FUNC();
   return value;
@@ -1558,6 +1542,7 @@ void _card_cpy(const card_t *card, char *dst, size_t len) {
   END_PROFILE_FUNC();
 }
 
+/* TODO: Use string builder for multi line string*/
 int _parse_multi_line_string(char **multi_line_string, size_t *multi_line_index,
                              const card_t *card, size_t line_length) {
   BEGIN_PROFILE_FUNC();
