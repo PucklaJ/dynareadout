@@ -186,7 +186,7 @@ void add_binout_library_to_module(py::module_ &m) {
            "Returns whether a record with the given path and variable name "
            "exists.",
            py::arg("path_to_variable"))
-      .def("get_num_timesteps", &dro::Binout::get_num_timesteps,
+      .def("get_num_timesteps", &Binout_get_num_timesteps,
            "Returns the number of dxxxxxx folders inside of a given path. "
            "Each folder inside a binout can have a different number of time "
            "steps. This method is used to get the time steps of one single "
