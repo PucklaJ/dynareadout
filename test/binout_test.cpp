@@ -302,9 +302,10 @@ TEST_CASE("ncforc.binout") {
 
 TEST_CASE("rwforc") {
   binout_file b = binout_open("test_data/rwforc_sim/binout");
-  if (b.error_string) {
-    FAIL(b.error_string);
-    free(b.error_string);
+  char *error_string = binout_open_error(&b);
+  if (error_string) {
+    FAIL(error_string);
+    free(error_string);
     return;
   }
 
