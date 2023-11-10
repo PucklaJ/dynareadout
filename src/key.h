@@ -27,6 +27,7 @@
 #define KEY_H
 
 #include "extra_string.h"
+#include "string_builder.h"
 #include <stdint.h>
 
 #define DEFAULT_VALUE_WIDTH 10
@@ -235,7 +236,7 @@ card_parse_type card_parse_get_type_width(const card_t *card,
 void _card_cpy(const card_t *card, char *dst, size_t len);
 /* Handles the parsing of multi line string for include file names. Returns
  * wether the multi line string has been completely parsed.*/
-int _parse_multi_line_string(char **multi_line_string, size_t *multi_line_index,
+int _parse_multi_line_string(string_builder_t *multi_line_string,
                              const card_t *card, size_t line_length);
 /* -----------------------------*/
 

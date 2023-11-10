@@ -27,7 +27,6 @@
 #include "binary_search.h"
 #include "line.h"
 #include "profiling.h"
-#include "string_builder.h"
 #include <errno.h>
 #include <math.h>
 #include <stdarg.h>
@@ -278,8 +277,7 @@ void key_file_parse_with_callback(const char *file_name,
   size_t card_index = 0;
   size_t line_count = 0;
 
-  char *current_multi_line_string = NULL;
-  size_t current_multi_line_index = 0;
+  string_builder_t current_multi_line_string = string_builder_new();
 
   /* Loop until all lines have been read or an error occurred*/
   while (read_line(&line_reader)) {
@@ -381,15 +379,15 @@ void key_file_parse_with_callback(const char *file_name,
                card_index == 0)) {
             /* Support multi line file names (LS Dyna Manual Volume I
              * *INCLUDE Remark 2, p. 2690)*/
-            if (_parse_multi_line_string(&current_multi_line_string,
-                                         &current_multi_line_index, &card,
+            if (_parse_multi_line_string(&current_multi_line_string, &card,
                                          line_reader.line_length)) {
               /* Loop over all include paths and look for the file*/
               char *full_include_file_name = NULL;
               size_t i = 0;
               while (i < rec_ptr->num_include_paths) {
-                full_include_file_name = path_join(rec_ptr->include_paths[i],
-                                                   current_multi_line_string);
+                full_include_file_name =
+                    path_join(rec_ptr->include_paths[i],
+                              current_multi_line_string.buffer);
                 if (path_is_file(full_include_file_name)) {
                   break;
                 }
@@ -424,16 +422,14 @@ void key_file_parse_with_callback(const char *file_name,
 
                 if (parse_config.ignore_not_found_includes) {
                   WARNING_F(format_str, file_name, line_count,
-                            current_multi_line_string);
+                            current_multi_line_string.buffer);
                 } else {
                   ERROR_F(format_str, file_name, line_count,
-                          current_multi_line_string);
+                          current_multi_line_string.buffer);
                 }
               }
 
-              free(current_multi_line_string);
-              current_multi_line_string = NULL;
-              current_multi_line_index = 0;
+              string_builder_free(&current_multi_line_string);
               card_index++;
             }
 
@@ -445,8 +441,7 @@ void key_file_parse_with_callback(const char *file_name,
                                           "INCLUDE_PATH") == 0) {
             /* Support multi line file names (LS Dyna Manual Volume I
              * *INCLUDE Remark 2, p. 2690)*/
-            if (!_parse_multi_line_string(&current_multi_line_string,
-                                          &current_multi_line_index, &card,
+            if (!_parse_multi_line_string(&current_multi_line_string, &card,
                                           line_reader.line_length)) {
               /* continue without calling the callback for the card*/
               if (card.string != line_reader.line.buffer) {
@@ -455,20 +450,19 @@ void key_file_parse_with_callback(const char *file_name,
               continue;
             }
 
-            if (!path_is_directory(current_multi_line_string)) {
+            if (!path_is_directory(current_multi_line_string.buffer)) {
               WARNING_F("%s:%zu: INCLUDE_PATH has not been found: \"%s\"",
-                        file_name, line_count, current_multi_line_string);
-              free(current_multi_line_string);
+                        file_name, line_count,
+                        current_multi_line_string.buffer);
+              string_builder_free(&current_multi_line_string);
             } else {
               rec_ptr->num_include_paths++;
               rec_ptr->include_paths =
                   realloc(rec_ptr->include_paths,
                           rec_ptr->num_include_paths * sizeof(char *));
               rec_ptr->include_paths[rec_ptr->num_include_paths - 1] =
-                  current_multi_line_string;
+                  string_builder_move(&current_multi_line_string);
             }
-            current_multi_line_string = NULL;
-            current_multi_line_index = 0;
 
             /* continue without calling the callback for the card*/
             if (card.string != line_reader.line.buffer) {
@@ -481,8 +475,7 @@ void key_file_parse_with_callback(const char *file_name,
                                           "INCLUDE_PATH_RELATIVE") == 0) {
             /* Support multi line file names (LS Dyna Manual Volume I
              * *INCLUDE Remark 2, p. 2690)*/
-            if (!_parse_multi_line_string(&current_multi_line_string,
-                                          &current_multi_line_index, &card,
+            if (!_parse_multi_line_string(&current_multi_line_string, &card,
                                           line_reader.line_length)) {
               /* continue without calling the callback for the card*/
               if (card.string != line_reader.line.buffer) {
@@ -491,11 +484,9 @@ void key_file_parse_with_callback(const char *file_name,
               continue;
             }
 
-            char *full_include_path_name =
-                path_join(rec_ptr->root_folder, current_multi_line_string);
-            free(current_multi_line_string);
-            current_multi_line_string = NULL;
-            current_multi_line_index = 0;
+            char *full_include_path_name = path_join(
+                rec_ptr->root_folder, current_multi_line_string.buffer);
+            string_builder_free(&current_multi_line_string);
 
             if (!path_is_directory(full_include_path_name)) {
               WARNING_F(
@@ -555,8 +546,7 @@ void key_file_parse_with_callback(const char *file_name,
              * needs to parse them himself*/
           } else {
             if (card_index == 0 &&
-                !_parse_multi_line_string(&current_multi_line_string,
-                                          &current_multi_line_index, &card,
+                !_parse_multi_line_string(&current_multi_line_string, &card,
                                           line_reader.line_length)) {
               /* continue without calling the callback for the card*/
               if (card.string != line_reader.line.buffer) {
@@ -576,8 +566,7 @@ void key_file_parse_with_callback(const char *file_name,
                                      "INCLUDE_PATH_RELATIVE") == 0;
 
             if (all_cards_are_filenames || card_index == 0) {
-              if (!_parse_multi_line_string(&current_multi_line_string,
-                                            &current_multi_line_index, &card,
+              if (!_parse_multi_line_string(&current_multi_line_string, &card,
                                             line_reader.line_length)) {
                 /* continue without calling the callback for the card*/
                 if (card.string != line_reader.line.buffer) {
@@ -591,11 +580,11 @@ void key_file_parse_with_callback(const char *file_name,
       }
       /* ------- ⛅ End of Include Parsing ⛅ -------*/
 
-      if (current_multi_line_string) {
+      if (current_multi_line_string.buffer) {
         if (card.string != line_reader.line.buffer) {
           free(card.string);
         }
-        card.string = current_multi_line_string;
+        card.string = string_builder_move(&current_multi_line_string);
       }
 
       char *keyword_name;
@@ -613,12 +602,10 @@ void key_file_parse_with_callback(const char *file_name,
 
       if (card.string != line_reader.line.buffer) {
         free(card.string);
-        current_multi_line_string = NULL;
       }
       if (keyword_name != current_keyword_name.buffer) {
         free(keyword_name);
       }
-      current_multi_line_index = 0;
 
       card_index++;
     }
@@ -646,8 +633,8 @@ void key_file_parse_with_callback(const char *file_name,
       }
 
       card_t card;
-      if (current_multi_line_string) {
-        card.string = current_multi_line_string;
+      if (current_multi_line_string.buffer) {
+        card.string = string_builder_move(&current_multi_line_string);
       } else {
         card.string = NULL;
       }
@@ -1542,25 +1529,20 @@ void _card_cpy(const card_t *card, char *dst, size_t len) {
   END_PROFILE_FUNC();
 }
 
-/* TODO: Use string builder for multi line string*/
-int _parse_multi_line_string(char **multi_line_string, size_t *multi_line_index,
+int _parse_multi_line_string(string_builder_t *multi_line_string,
                              const card_t *card, size_t line_length) {
   BEGIN_PROFILE_FUNC();
 
   size_t card_string_index = 0;
 
-  if (!*multi_line_string) {
-    /* The maximum size of an include file name is 236 (+ null
-     * terminator)*/
-    *multi_line_string = malloc(237 * sizeof(char));
+  if (multi_line_string->cap == 0) {
     /* Trim leading white space*/
     while (card_string_index != line_length &&
            card->string[card_string_index] == ' ') {
       card_string_index++;
     }
     if (card_string_index == line_length) {
-      (*multi_line_string)[0] = '\0';
-
+      string_builder_append_char(multi_line_string, '\0');
       END_PROFILE_FUNC();
       return 1;
     }
@@ -1568,32 +1550,25 @@ int _parse_multi_line_string(char **multi_line_string, size_t *multi_line_index,
 
   line_length -= card_string_index;
 
-  /* Support multi line strings which are longer than 236 (out of spec)*/
-  if (*multi_line_index + line_length > 236) {
-    *multi_line_string =
-        realloc(*multi_line_string,
-                (*multi_line_index + line_length + 1) * sizeof(char));
-  }
+  string_builder_append_len(multi_line_string, &card->string[card_string_index],
+                            line_length);
 
-  memcpy(&(*multi_line_string)[*multi_line_index],
-         &card->string[card_string_index], line_length);
-  *multi_line_index += line_length;
-  if ((*multi_line_string)[*multi_line_index - 2] == ' ' &&
-      (*multi_line_string)[*multi_line_index - 1] == '+') {
+  if (multi_line_string->buffer[multi_line_string->ptr - 2] == ' ' &&
+      multi_line_string->buffer[multi_line_string->ptr - 1] == '+') {
     /* We have a multi line file name*/
-    *multi_line_index -= 2;
+    multi_line_string->ptr -= 2;
 
     END_PROFILE_FUNC();
     return 0;
   }
 
   /* Trim trailing white space*/
-  while ((*multi_line_string)[*multi_line_index - 1] == ' ' &&
-         *multi_line_index != 0) {
-    (*multi_line_index)--;
+  while (multi_line_string->buffer[multi_line_string->ptr - 1] == ' ' &&
+         multi_line_string->ptr != 0) {
+    multi_line_string->ptr--;
   }
 
-  (*multi_line_string)[*multi_line_index] = '\0';
+  multi_line_string->buffer[multi_line_string->ptr] = '\0';
 
   END_PROFILE_FUNC();
   return 1;

@@ -68,6 +68,22 @@ void string_builder_append_char(string_builder_t *b, char c) {
   END_PROFILE_FUNC();
 }
 
+void string_builder_append_len(string_builder_t *b, const char *s, size_t l) {
+  BEGIN_PROFILE_FUNC();
+
+  b->cap += l + 1;
+  if (b->ptr == 0) {
+    b->cap++;
+  }
+
+  b->buffer = realloc(b->buffer, b->cap);
+  memcpy(&b->buffer[b->ptr], s, l);
+  b->buffer[b->ptr + l] = '\0';
+  b->ptr += l;
+
+  END_PROFILE_FUNC();
+}
+
 char *string_builder_move(string_builder_t *b) {
   BEGIN_PROFILE_FUNC();
 

@@ -46,6 +46,8 @@ string_builder_t string_builder_new();
 void string_builder_append(string_builder_t *b, const char *s);
 /* Add a char*/
 void string_builder_append_char(string_builder_t *b, char c);
+/* Add a string and use l instead of strlen*/
+void string_builder_append_len(string_builder_t *b, const char *s, size_t l);
 /* Returns the underlying buffer and sets all values of b to the default*/
 char *string_builder_move(string_builder_t *b);
 /* Deallocates all memory of b*/
