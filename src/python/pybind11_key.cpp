@@ -78,19 +78,22 @@ py::list python_card_parse_whole(dro::Card &self, py::list value_widths) {
 void add_key_library_to_module(py::module_ &m) {
   py::class_<dro::Keywords>(m, "Keywords")
       .def("__len__", [](dro::Keywords &self) { return self.size(); })
-      .def("__getitem__", &dro::Keywords::operator[])
+      .def("__getitem__", &dro::Keywords::operator[],
+           py::return_value_policy::take_ownership)
 
       ;
 
   py::class_<dro::KeywordSlice>(m, "KeywordSlice")
       .def("__len__", &dro::KeywordSlice::size)
-      .def("__getitem__", &dro::KeywordSlice::operator[])
+      .def("__getitem__", &dro::KeywordSlice::operator[],
+           py::return_value_policy::take_ownership)
 
       ;
 
   py::class_<dro::Keyword>(m, "Keyword")
       .def("__len__", &dro::Keyword::num_cards)
-      .def("__getitem__", &dro::Keyword::operator[])
+      .def("__getitem__", &dro::Keyword::operator[],
+           py::return_value_policy::take_ownership)
 
       ;
 
@@ -128,7 +131,7 @@ void add_key_library_to_module(py::module_ &m) {
           "Parses the current value as a string. Uses the value "
           "width from begin. If trim is set to True then it trims leading and "
           "trailing whitespace",
-          py::arg("trim") = true)
+          py::arg("trim") = true, py::return_value_policy::take_ownership)
       .def(
           "parse_width_i64",
           [](const dro::Card &self, uint8_t value_width) {
@@ -155,11 +158,13 @@ void add_key_library_to_module(py::module_ &m) {
           "width provided here. If trim is set to True then it trims leading "
           "and "
           "trailing whitespace",
-          py::arg("value_width"), py::arg("trim") = true)
+          py::arg("value_width"), py::arg("trim") = true,
+          py::return_value_policy::take_ownership)
       .def("parse_whole", &python_card_parse_whole,
            "Parses all values of the card as the correct types. The width of "
            "each value needs to be provided as a list through value_widths",
-           py::arg("value_widths") = py::list())
+           py::arg("value_widths") = py::list(),
+           py::return_value_policy::take_ownership)
       .def("__str__", &dro::Card::parse_string_whole_no_trim<std::string>)
 
       ;
@@ -188,7 +193,8 @@ void add_key_library_to_module(py::module_ &m) {
       py::arg("file_name"), py::arg("output_warnings") = true,
       py::arg("parse_includes") = true,
       py::arg("ignore_not_found_includes") = false,
-      py::arg("extra_include_paths") = std::vector<std::filesystem::path>());
+      py::arg("extra_include_paths") = std::vector<std::filesystem::path>(),
+      py::return_value_policy::take_ownership);
 
   dro::add_array_type_to_module<dro::TransformationOption>(m);
   dro::add_array_type_to_module<transformation_option_t>(m);
@@ -199,9 +205,12 @@ void add_key_library_to_module(py::module_ &m) {
       .def("parse_include_transform_card",
            &dro::IncludeTransform::parse_include_transform_card,
            py::arg("card"), py::arg("card_index"))
-      .def("get_file_name", &dro::IncludeTransform::get_file_name)
-      .def("get_suffix", &dro::IncludeTransform::get_suffix)
-      .def("get_fcttem", &dro::IncludeTransform::get_fcttem)
+      .def("get_file_name", &dro::IncludeTransform::get_file_name,
+           py::return_value_policy::take_ownership)
+      .def("get_suffix", &dro::IncludeTransform::get_suffix,
+           py::return_value_policy::take_ownership)
+      .def("get_fcttem", &dro::IncludeTransform::get_fcttem,
+           py::return_value_policy::take_ownership)
       .def("get_idnoff", &dro::IncludeTransform::get_idnoff)
       .def("get_ideoff", &dro::IncludeTransform::get_ideoff)
       .def("get_idpoff", &dro::IncludeTransform::get_idpoff)
@@ -219,8 +228,10 @@ void add_key_library_to_module(py::module_ &m) {
       ;
 
   py::class_<dro::TransformationOption>(m, "TransformOption")
-      .def("get_name", &dro::TransformationOption::get_name)
-      .def("get_parameters", &dro::TransformationOption::get_parameters)
+      .def("get_name", &dro::TransformationOption::get_name,
+           py::return_value_policy::take_ownership)
+      .def("get_parameters", &dro::TransformationOption::get_parameters,
+           py::return_value_policy::take_ownership)
 
       ;
 
@@ -231,7 +242,8 @@ void add_key_library_to_module(py::module_ &m) {
            &dro::DefineTransformation::parse_define_transformation_card,
            py::arg("card"), py::arg("card_index"), py::arg("is_title") = true)
       .def("get_tranid", &dro::DefineTransformation::get_tranid)
-      .def("get_options", &dro::DefineTransformation::get_options)
+      .def("get_options", &dro::DefineTransformation::get_options,
+           py::return_value_policy::take_ownership)
 
       ;
 }

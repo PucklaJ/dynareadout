@@ -114,7 +114,8 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def_readonly("material_index", &d3plot_solid_con::material_index,
                     "Index into the parts (this those indeed refer to parts "
                     "even though the documentation does not say so)")
-      .def("__str__", &dro::stream_to_string<d3plot_solid_con>)
+      .def("__str__", &dro::stream_to_string<d3plot_solid_con>,
+           py::return_value_policy::take_ownership)
 
       ;
 
@@ -127,7 +128,8 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def_readonly("material_index", &d3plot_beam_con::material_index,
                     "Index into the parts (this those indeed refer to parts "
                     "even though the documentation does not say so)")
-      .def("__str__", &dro::stream_to_string<d3plot_beam_con>)
+      .def("__str__", &dro::stream_to_string<d3plot_beam_con>,
+           py::return_value_policy::take_ownership)
 
       ;
 
@@ -138,7 +140,8 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def_readonly("material_index", &d3plot_shell_con::material_index,
                     "Index into the parts (this those indeed refer to parts "
                     "even though the documentation does not say so)")
-      .def("__str__", &dro::stream_to_string<d3plot_shell_con>)
+      .def("__str__", &dro::stream_to_string<d3plot_shell_con>,
+           py::return_value_policy::take_ownership)
 
       ;
 
@@ -152,14 +155,16 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def_readonly("zy", &d3plot_tensor::zy)
       .def_readonly("xz", &d3plot_tensor::xz)
       .def_readonly("zx", &d3plot_tensor::zx)
-      .def("__str__", &dro::stream_to_string<d3plot_tensor>)
+      .def("__str__", &dro::stream_to_string<d3plot_tensor>,
+           py::return_value_policy::take_ownership)
 
       ;
 
   py::class_<d3plot_x_y>(m, "d3plot_x_y")
       .def_readonly("x", &d3plot_x_y::x)
       .def_readonly("y", &d3plot_x_y::y)
-      .def("__str__", &dro::stream_to_string<d3plot_x_y>)
+      .def("__str__", &dro::stream_to_string<d3plot_x_y>,
+           py::return_value_policy::take_ownership)
 
       ;
 
@@ -167,7 +172,8 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def_readonly("x", &d3plot_x_y_xy::x)
       .def_readonly("y", &d3plot_x_y_xy::y)
       .def_readonly("xy", &d3plot_x_y_xy::xy)
-      .def("__str__", &dro::stream_to_string<d3plot_x_y_xy>)
+      .def("__str__", &dro::stream_to_string<d3plot_x_y_xy>,
+           py::return_value_policy::take_ownership)
 
       ;
 
@@ -178,7 +184,8 @@ void add_d3plot_library_to_module(py::module_ &m) {
                     &d3plot_surface::effective_plastic_strain)
       .def_readonly("material_dependent_value",
                     &d3plot_surface::material_dependent_value)
-      .def("__str__", &dro::stream_to_string<d3plot_surface>)
+      .def("__str__", &dro::stream_to_string<d3plot_surface>,
+           py::return_value_policy::take_ownership)
 
       ;
 
@@ -191,7 +198,8 @@ void add_d3plot_library_to_module(py::module_ &m) {
                     &d3plot_solid::material_dependent_value)
       .def_readonly("epsilon", &d3plot_solid::epsilon)
       .def_readonly("strain", &d3plot_solid::strain)
-      .def("__str__", &dro::stream_to_string<d3plot_solid>)
+      .def("__str__", &dro::stream_to_string<d3plot_solid>,
+           py::return_value_policy::take_ownership)
 
       ;
 
@@ -203,7 +211,8 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def_readonly("inner_strain", &d3plot_thick_shell::inner_strain)
       .def_readonly("outer_epsilon", &d3plot_thick_shell::outer_epsilon)
       .def_readonly("outer_strain", &d3plot_thick_shell::outer_strain)
-      .def("__str__", &dro::stream_to_string<d3plot_thick_shell>)
+      .def("__str__", &dro::stream_to_string<d3plot_thick_shell>,
+           py::return_value_policy::take_ownership)
 
       ;
 
@@ -214,7 +223,8 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def_readonly("s_bending_moment", &d3plot_beam::s_bending_moment)
       .def_readonly("t_bending_moment", &d3plot_beam::t_bending_moment)
       .def_readonly("torsional_resultant", &d3plot_beam::torsional_resultant)
-      .def("__str__", &dro::stream_to_string<d3plot_beam>)
+      .def("__str__", &dro::stream_to_string<d3plot_beam>,
+           py::return_value_policy::take_ownership)
 
       ;
 
@@ -233,7 +243,8 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def_readonly("element_dependent_variables",
                     &d3plot_shell::element_dependent_variables)
       .def_readonly("internal_energy", &d3plot_shell::internal_energy)
-      .def("__str__", &dro::stream_to_string<d3plot_shell>)
+      .def("__str__", &dro::stream_to_string<d3plot_shell>,
+           py::return_value_policy::take_ownership)
 
       ;
 
@@ -243,90 +254,109 @@ void add_d3plot_library_to_module(py::module_ &m) {
            "d3plot of d3plot01, d3plot02, d3plot03, etc.",
            py::arg("root_file_name"))
       .def("read_node_ids", &dro::D3plot::read_node_ids,
-           "Read all ids of the nodes.")
+           "Read all ids of the nodes.",
+           py::return_value_policy::take_ownership)
       .def("read_solid_element_ids", &dro::D3plot::read_solid_element_ids,
-           "Read all ids of the solid elements.")
+           "Read all ids of the solid elements.",
+           py::return_value_policy::take_ownership)
       .def("read_beam_element_ids", &dro::D3plot::read_beam_element_ids,
-           "Read all ids of the beam elements.")
+           "Read all ids of the beam elements.",
+           py::return_value_policy::take_ownership)
       .def("read_shell_element_ids", &dro::D3plot::read_shell_element_ids,
-           "Read all ids of the shell elements.")
+           "Read all ids of the shell elements.",
+           py::return_value_policy::take_ownership)
       .def("read_thick_shell_element_ids",
            &dro::D3plot::read_thick_shell_element_ids,
-           "Read all ids of the thick shell elements.")
+           "Read all ids of the thick shell elements.",
+           py::return_value_policy::take_ownership)
       .def("read_all_element_ids", &dro::D3plot::read_all_element_ids,
-           "Read all ids of the solid, beam, shell and thick shell elements.")
+           "Read all ids of the solid, beam, shell and thick shell elements.",
+           py::return_value_policy::take_ownership)
       .def("read_part_ids", &dro::D3plot::read_part_ids,
-           "Read all ids of the parts.")
+           "Read all ids of the parts.",
+           py::return_value_policy::take_ownership)
 
       .def("read_part_titles", &dro::D3plot::read_part_titles,
-           "Returns a list containing all part titles as sized strings.")
+           "Returns a list containing all part titles as sized strings.",
+           py::return_value_policy::take_ownership)
 
       .def(
           "read_node_coordinates", &dro::D3plot::read_node_coordinates,
           "Read the node coordinates of all nodes of a given state (time step)",
-          py::arg("state") = static_cast<size_t>(0))
+          py::arg("state") = static_cast<size_t>(0),
+          py::return_value_policy::take_ownership)
       .def("read_all_node_coordinates", &dro::D3plot::read_all_node_coordinates,
            "Reads all node coordinates of all time steps and returns them as "
-           "one big array.")
+           "one big array.",
+           py::return_value_policy::take_ownership)
       .def("read_node_velocity", &dro::D3plot::read_node_velocity,
            "Read the node velocity of all nodes of a given state (time step).",
-           py::arg("state"))
+           py::arg("state"), py::return_value_policy::take_ownership)
       .def("read_all_node_velocity", &dro::D3plot::read_all_node_velocity,
            "Reads all node velocities of all time steps and returns them as "
-           "one big array.")
+           "one big array.",
+           py::return_value_policy::take_ownership)
       .def("read_node_acceleration", &dro::D3plot::read_node_acceleration,
            "Read the node acceleration of all nodes of a given state (time "
            "step).",
-           py::arg("state"))
+           py::arg("state"), py::return_value_policy::take_ownership)
       .def("read_all_node_acceleration",
            &dro::D3plot::read_all_node_acceleration,
            "Read all node accelerations of all time steps and returns the as "
-           "one big array.")
+           "one big array.",
+           py::return_value_policy::take_ownership)
       .def("read_time", &dro::D3plot::read_time,
            "Read the time of a given state (time step) in milliseconds.",
-           py::arg("state"))
+           py::arg("state"), py::return_value_policy::take_ownership)
       .def("read_all_time", &dro::D3plot::read_all_time,
-           "Reads all time of every state (time step) in milliseconds.")
+           "Reads all time of every state (time step) in milliseconds.",
+           py::return_value_policy::take_ownership)
       .def("read_solids_state", &dro::D3plot::read_solids_state,
            "Returns stress, strain (if NEIPH >= 6) for a given state.",
-           py::arg("state"))
+           py::arg("state"), py::return_value_policy::take_ownership)
       .def("read_thick_shells_state", &dro::D3plot::read_thick_shells_state,
            "Returns stress, strain (if ISTRN == 1) for a given state.",
-           py::arg("state"))
+           py::arg("state"), py::return_value_policy::take_ownership)
       .def("read_beams_state", &dro::D3plot::read_beams_state,
            "Returns Axial Force, S shear resultant, T shear resultant, S "
            "bending moment, T bending moment and Torsional resultant of all "
            "beams for a given state.",
-           py::arg("state"))
+           py::arg("state"), py::return_value_policy::take_ownership)
       .def("read_shells_state", &dro::D3plot::read_shells_state,
            "Returns stress, strain (if ISTRN == 1) and some other variables "
            "(see docs pg. 36) of all shells for a given state.",
-           py::arg("state"))
+           py::arg("state"), py::return_value_policy::take_ownership)
 
       .def("read_solid_elements", &dro::D3plot::read_solid_elements,
            "Returns the node connectivity + material number of all 8 node "
-           "solid elements.")
+           "solid elements.",
+           py::return_value_policy::take_ownership)
       .def(
           "read_thick_shell_elements", &dro::D3plot::read_thick_shell_elements,
           "Returns the node connectivity + material number of all 8 node thick "
           "shell elements. Technically it returns a SolidConArray, since the "
-          "connectivity is the same between solids and thick shells.")
+          "connectivity is the same between solids and thick shells.",
+          py::return_value_policy::take_ownership)
       .def("read_beam_elements", &dro::D3plot::read_beam_elements,
            "Returns the node connectivity + orientation node + material number "
-           "of all beam elements.")
+           "of all beam elements.",
+           py::return_value_policy::take_ownership)
       .def("read_shell_elements", &dro::D3plot::read_shell_elements,
            "Returns the node connectivity + material number of all shell "
-           "elements.")
+           "elements.",
+           py::return_value_policy::take_ownership)
       .def("read_title", &dro::D3plot::read_title,
-           "Returns a string holding the Title of the d3plot file.")
+           "Returns a string holding the Title of the d3plot file.",
+           py::return_value_policy::take_ownership)
       .def("read_run_time", &dro::D3plot::read_run_time,
            "Returns the time at which the simulation has been run as calender "
-           "time.")
+           "time.",
+           py::return_value_policy::take_ownership)
       .def("read_part", &dro::D3plot::read_part,
            "Returns all elements (solid, thick shell, beam, shell) of a part. "
            "The part_index can retrieved by iterating over the array returned "
            "by read_part_ids.",
-           py::arg("part_index"))
+           py::arg("part_index"), py::return_value_policy::take_ownership)
       .def(
           "read_part_by_id", &dro::D3plot::read_part_by_id,
           "The same as read_part, but instead of an index into the parts, this "
@@ -334,7 +364,8 @@ void add_d3plot_library_to_module(py::module_ &m) {
           "ids returned by read_part_ids. If you do not do this, they will be "
           "read in this function call. Which means that if you intend to call "
           "this function multiple times, it is best to preload the part ids.",
-          py::arg("part_id"), py::arg("part_ids") = dro::Array<d3_word>())
+          py::arg("part_id"), py::arg("part_ids") = dro::Array<d3_word>(),
+          py::return_value_policy::take_ownership)
 
       .def("num_time_steps", &dro::D3plot::num_time_steps,
            "Returns the number of states (time steps).")
@@ -343,30 +374,38 @@ void add_d3plot_library_to_module(py::module_ &m) {
 
   py::class_<dro::D3plotPart>(m, "D3plotPart")
       .def("get_solid_elements", &dro::D3plotPart::get_solid_elements,
-           "Returns all solid element ids of the part.")
+           "Returns all solid element ids of the part.",
+           py::return_value_policy::take_ownership)
       .def("get_thick_shell_elements",
            &dro::D3plotPart::get_thick_shell_elements,
-           "Returns all thick shell element ids of the part.")
+           "Returns all thick shell element ids of the part.",
+           py::return_value_policy::take_ownership)
       .def("get_beam_elements", &dro::D3plotPart::get_beam_elements,
-           "Returns all beam element ids of the part.")
+           "Returns all beam element ids of the part.",
+           py::return_value_policy::take_ownership)
       .def("get_shell_elements", &dro::D3plotPart::get_shell_elements,
-           "Returns all shell element ids of the part.")
+           "Returns all shell element ids of the part.",
+           py::return_value_policy::take_ownership)
       .def("get_solid_element_indices",
            &dro::D3plotPart::get_solid_element_indices,
            "Returns all solid element indices (into the array returned by "
-           "dynareadout.D3plot.read_solid_element_ids) of the part.")
+           "dynareadout.D3plot.read_solid_element_ids) of the part.",
+           py::return_value_policy::take_ownership)
       .def("get_thick_shell_element_indices",
            &dro::D3plotPart::get_thick_shell_element_indices,
            "Returns all thick shell element indices (into the array returned "
-           "by dynareadout.D3plot.read_solid_element_ids) of the part.")
+           "by dynareadout.D3plot.read_solid_element_ids) of the part.",
+           py::return_value_policy::take_ownership)
       .def("get_beam_element_indices",
            &dro::D3plotPart::get_beam_element_indices,
            "Returns all beam element indices (into the array returned by "
-           "dynareadout.D3plot.read_solid_element_ids) of the part.")
+           "dynareadout.D3plot.read_solid_element_ids) of the part.",
+           py::return_value_policy::take_ownership)
       .def("get_shell_element_indices",
            &dro::D3plotPart::get_shell_element_indices,
            "Returns all shell element indices (into the array returned by "
-           "dynareadout.D3plot.read_solid_element_ids) of the part.")
+           "dynareadout.D3plot.read_solid_element_ids) of the part.",
+           py::return_value_policy::take_ownership)
       .def("get_node_ids", &dro::D3plotPart::get_node_ids,
            "Returns all node ids of the part. All ids and connectivities of "
            "all different elements can be provided to improve performance, "
@@ -385,7 +424,8 @@ void add_d3plot_library_to_module(py::module_ &m) {
            py::arg("shell_cons") =
                static_cast<dro::Array<d3plot_shell_con> *>(nullptr),
            py::arg("thick_shell_cons") =
-               static_cast<dro::Array<d3plot_thick_shell_con> *>(nullptr))
+               static_cast<dro::Array<d3plot_thick_shell_con> *>(nullptr),
+           py::return_value_policy::take_ownership)
       .def("get_node_indices", &dro::D3plotPart::get_node_indices,
            "Returns all node indices of the part. All ids and connectivities "
            "of all different elements can be provided to improve performance, "
@@ -404,7 +444,8 @@ void add_d3plot_library_to_module(py::module_ &m) {
            py::arg("shell_cons") =
                static_cast<dro::Array<d3plot_shell_con> *>(nullptr),
            py::arg("thick_shell_cons") =
-               static_cast<dro::Array<d3plot_thick_shell_con> *>(nullptr))
+               static_cast<dro::Array<d3plot_thick_shell_con> *>(nullptr),
+           py::return_value_policy::take_ownership)
       .def("get_num_nodes", &dro::D3plotPart::get_num_nodes,
            "Returns the number of nodes of a part. Internally it just calls "
            "get_node_indices and returns the number of node indices.",
@@ -425,7 +466,8 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def("get_num_elements", &dro::D3plotPart::get_num_elements,
            "Returns the number of all elements of a part.")
       .def("get_all_element_ids", &dro::D3plotPart::get_all_element_ids,
-           "Returns an array containing all element ids.")
+           "Returns an array containing all element ids.",
+           py::return_value_policy::take_ownership)
 
       ;
 }

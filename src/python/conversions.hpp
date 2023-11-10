@@ -225,14 +225,19 @@ inline py::class_<Array<T>> add_array_type_to_module(py::module_ &m) {
   );
 
   if constexpr (std::is_same_v<T, uint8_t> || std::is_same_v<T, int8_t>) {
-    arr.def("__str__", &Array<T>::str);
-    arr.def("__repr__", [](Array<T> &arr) { return "'" + arr.str() + "'"; });
+    arr.def("__str__", &Array<T>::str, py::return_value_policy::take_ownership);
+    arr.def(
+        "__repr__", [](Array<T> &arr) { return "'" + arr.str() + "'"; },
+        py::return_value_policy::take_ownership);
   } else if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>) {
-    arr.def("__repr__", [](Array<T> &arr) {
-      std::stringstream str;
-      str << arr;
-      return str.str();
-    });
+    arr.def(
+        "__repr__",
+        [](Array<T> &arr) {
+          std::stringstream str;
+          str << arr;
+          return str.str();
+        },
+        py::return_value_policy::take_ownership);
   }
 
   return arr;
@@ -299,11 +304,13 @@ inline void add_array_to_module(py::module_ &m) {
              Array<char> arr(self.data(), self.size(), false);
              array_setitem(arr, index, std::move(other));
            })
-      .def("__getitem__",
-           [](String &self, size_t index) {
-             Array<char> arr(self.data(), self.size(), false);
-             return array_getitem(arr, index);
-           })
+      .def(
+          "__getitem__",
+          [](String &self, size_t index) {
+            Array<char> arr(self.data(), self.size(), false);
+            return array_getitem(arr, index);
+          },
+          py::return_value_policy::reference)
       .def("__eq__",
            [](String &self, const py::object &other) {
              if (py::isinstance<String>(other)) {
@@ -351,8 +358,12 @@ inline void add_array_to_module(py::module_ &m) {
              throw py::type_error(
                  "This string can not be compared with the other type");
            })
-      .def("__str__", [](String &arr) { return arr.str(); })
-      .def("__repr__", [](String &arr) { return "'" + arr.str() + "'"; })
+      .def(
+          "__str__", [](String &arr) { return arr.str(); },
+          py::return_value_policy::take_ownership)
+      .def(
+          "__repr__", [](String &arr) { return "'" + arr.str() + "'"; },
+          py::return_value_policy::take_ownership)
 
       ;
 
@@ -403,11 +414,13 @@ inline void add_array_to_module(py::module_ &m) {
              Array<char> arr(self.data(), self.size(), false);
              array_setitem(arr, index, std::move(other));
            })
-      .def("__getitem__",
-           [](SizedString &self, size_t index) {
-             Array<char> arr(self.data(), self.size(), false);
-             return array_getitem(arr, index);
-           })
+      .def(
+          "__getitem__",
+          [](SizedString &self, size_t index) {
+            Array<char> arr(self.data(), self.size(), false);
+            return array_getitem(arr, index);
+          },
+          py::return_value_policy::reference)
       .def("__eq__",
            [](SizedString &self, const py::object &other) {
              if (py::isinstance<String>(other)) {
@@ -455,8 +468,12 @@ inline void add_array_to_module(py::module_ &m) {
              throw py::type_error(
                  "This string can not be compared with the other type");
            })
-      .def("__str__", [](SizedString &arr) { return arr.str(); })
-      .def("__repr__", [](SizedString &arr) { return "'" + arr.str() + "'"; })
+      .def(
+          "__str__", [](SizedString &arr) { return arr.str(); },
+          py::return_value_policy::take_ownership)
+      .def(
+          "__repr__", [](SizedString &arr) { return "'" + arr.str() + "'"; },
+          py::return_value_policy::take_ownership)
 
       ;
 };

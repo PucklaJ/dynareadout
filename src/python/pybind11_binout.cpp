@@ -178,7 +178,7 @@ void add_binout_library_to_module(py::module_ &m) {
            "if the data under the path is timed (has multiple time steps e.g. "
            "nodout/x_displacement). If the path points to a folder it returns "
            "a list of strings holding the children of said folder.",
-           py::arg("path") = "/")
+           py::arg("path") = "/", py::return_value_policy::take_ownership)
       .def("get_type_id", &Binout_get_type_id,
            "Returns the type id of the given variable.",
            py::arg("path_to_variable"))
