@@ -32,6 +32,7 @@
 #ifdef _WIN32
 #define LEGACY_PATH_SEP '\\'
 #define NEW_PATH_SEP '/'
+#define REAL_PATH_SEP LEGACY_PATH_SEP
 #define CHAR_IS_REAL_PATH_SEP(c) (c == LEGACY_PATH_SEP || c == NEW_PATH_SEP)
 #else
 #define REAL_PATH_SEP '/'
@@ -56,6 +57,10 @@ size_t path_move_up_real(const char *path);
 /* Join two paths together by inserting a PATH_SEP. Needs to be deallocated by
  * free*/
 char *path_join(const char *lhs, const char *rhs);
+
+/* Join two paths together by inserting a real PATH_SEP of the native
+ * filesystem. Needs to be deallocated by free*/
+char *path_join_real(const char *lhs, const char *rhs);
 
 /* Returns wether the given path exists and is a file*/
 int path_is_file(const char *path_name);

@@ -189,6 +189,41 @@ char *path_join(const char *lhs, const char *rhs) {
   return str;
 }
 
+char *path_join_real(const char *lhs, const char *rhs) {
+  BEGIN_PROFILE_FUNC();
+
+  const size_t lhs_len = strlen(lhs);
+  const size_t rhs_len = strlen(rhs);
+
+  size_t i = lhs_len - 1, j = 0;
+  /* Loop until the last non path seperator has been found*/
+  while (CHAR_IS_REAL_PATH_SEP(lhs[i])) {
+    if (i == 0) {
+      break;
+    }
+    i--;
+  }
+
+  /* Loop until the first non path seperator has been found*/
+  while (CHAR_IS_REAL_PATH_SEP(rhs[j])) {
+    if (j == rhs_len - 1) {
+      break;
+    }
+    j++;
+  }
+
+  const size_t str_len = (i + 1) + (rhs_len - j) + 1;
+
+  char *str = malloc(str_len + 1);
+  memcpy(str, lhs, i + 1);
+  memcpy(&str[i + 2], &rhs[j], rhs_len - j);
+  str[i + 1] = REAL_PATH_SEP;
+  str[str_len] = '\0';
+
+  END_PROFILE_FUNC();
+  return str;
+}
+
 #ifdef _WIN32
 int path_is_file(const char *path_name) {
   BEGIN_PROFILE_FUNC();
