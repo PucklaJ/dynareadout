@@ -55,13 +55,13 @@ D3plotPart &D3plotPart::operator=(const D3plotPart &rhs) noexcept {
   m_part.shell_ids =
       reinterpret_cast<d3_word *>(malloc(m_part.num_shells * sizeof(d3_word)));
   m_part.solid_indices =
-      reinterpret_cast<d3_word *>(malloc(m_part.num_solids * sizeof(d3_word)));
+      reinterpret_cast<size_t *>(malloc(m_part.num_solids * sizeof(d3_word)));
   m_part.thick_shell_ids = reinterpret_cast<d3_word *>(
       malloc(m_part.num_thick_shells * sizeof(d3_word)));
   m_part.beam_indices =
-      reinterpret_cast<d3_word *>(malloc(m_part.num_beams * sizeof(d3_word)));
+      reinterpret_cast<size_t *>(malloc(m_part.num_beams * sizeof(d3_word)));
   m_part.shell_indices =
-      reinterpret_cast<d3_word *>(malloc(m_part.num_shells * sizeof(d3_word)));
+      reinterpret_cast<size_t *>(malloc(m_part.num_shells * sizeof(d3_word)));
 
   if (m_part.num_solids) {
     memcpy(m_part.solid_ids, rhs.m_part.solid_ids,
