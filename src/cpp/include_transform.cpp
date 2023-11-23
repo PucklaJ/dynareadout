@@ -3,25 +3,7 @@
 
 namespace dro {
 
-IncludeTransform::IncludeTransform() noexcept {
-  m_handle.file_name = NULL;
-  m_handle.idnoff = IDNOFF_DEFAULT;
-  m_handle.ideoff = IDEOFF_DEFAULT;
-  m_handle.idpoff = IDPOFF_DEFAULT;
-  m_handle.idmoff = IDMOFF_DEFAULT;
-  m_handle.idsoff = IDSOFF_DEFAULT;
-  m_handle.idfoff = IDFOFF_DEFAULT;
-  m_handle.iddoff = IDDOFF_DEFAULT;
-  m_handle.idroff = IDROFF_DEFAULT;
-  m_handle.prefix = PREFIX_DEFAULT;
-  m_handle.suffix = SUFFIX_DEFAULT;
-  m_handle.fctmas = FCTMAS_DEFAULT;
-  m_handle.fcttim = FCTTIM_DEFAULT;
-  m_handle.fctlen = FCTLEN_DEFAULT;
-  m_handle.fcttem = FCTTEM_DEFAULT;
-  m_handle.incout1 = INCOUT1_DEFAULT;
-  m_handle.tranid = TRANID_DEFAULT;
-}
+IncludeTransform::IncludeTransform() noexcept { m_handle = {0}; }
 
 IncludeTransform::IncludeTransform(IncludeTransform &&rhs) noexcept {
   *this = std::move(rhs);
@@ -79,11 +61,7 @@ TransformationOption::operator=(TransformationOption &&rhs) noexcept {
   return *this;
 }
 
-DefineTransformation::DefineTransformation() noexcept {
-  m_handle.tranid = 0;
-  m_handle.options = NULL;
-  m_handle.num_options = 0;
-}
+DefineTransformation::DefineTransformation() noexcept { m_handle = {0}; }
 
 DefineTransformation::DefineTransformation(
     DefineTransformation &&rhs) noexcept {
@@ -108,9 +86,7 @@ DefineTransformation::~DefineTransformation() noexcept {
 DefineTransformation &
 DefineTransformation::operator=(DefineTransformation &&rhs) noexcept {
   m_handle = rhs.m_handle;
-  rhs.m_handle.title = NULL;
-  rhs.m_handle.options = NULL;
-  rhs.m_handle.num_options = 0;
+  rhs.m_handle = {0};
   return *this;
 }
 
