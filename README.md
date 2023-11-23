@@ -11,6 +11,7 @@ This library also supports bindings to other languages
 | C++      | [dynareadout](https://github.com/PucklaJ/dynareadout)               |
 | Python   | [dynareadout_python](https://github.com/PucklaJ/dynareadout_python) |
 | Go       | [dynareadout_go](https://github.com/PucklaJ/dynareadout_go)         |
+| Odin     | [dynareadout_odin](https://github.com/PucklaJ/dynareadout_odin)     |
 
 ## Wiki
 
