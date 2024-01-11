@@ -29,41 +29,31 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define BINOUT_FOLDER_CHILDREN_GET_TYPE(folder)                                \
-  (((const binout_folder_or_file_t *)folder->children)->type)
-
 enum { BINOUT_FILE, BINOUT_FOLDER };
 
-/* A folder or file used to read the first byte to find out if it is a folder or
- * file*/
-typedef struct {
-  uint8_t type; /* Either BINOUT_FOLDER or BINOUT_FILE*/
-} binout_folder_or_file_t;
+struct binout_entry_t;
+typedef struct binout_entry_t binout_entry_t;
 
-/* Stores the index of the file and the position in that file at which the data
- * can be found*/
-typedef struct {
-  uint8_t type;
-  char *name;         /* Name of the variable*/
-  uint8_t var_type;   /* Type of the variable*/
-  size_t size;        /* Size of the data of the variable in bytes*/
-  uint8_t file_index; /* Index into the file_handles array of binout_file*/
-  long file_pos;      /* The file position used in fseek*/
-} binout_file_t;
+/* An entry inside of a binout_directory_t. Can either be a file or a folder. */
+struct binout_entry_t {
+  uint8_t type; /* Either BINOUT_FOLDER or BINOUT_FILE */
+  char* name; /* Name of the variable or folder */
+  union {
+    size_t size; /* Size of the data of the variable in bytes */
+    size_t num_children; /* Size of the children array */
+  };
+  binout_entry_t* children; /* An array containing the sub entries if this entry is a folder */
+  uint8_t var_type; /* Type of the variable */
+  uint8_t file_index; /* Index into the file_handles array of binout_file */
+  long file_pos; /* The file position used in fseek */
+};
 
-/* Has a name and stores subfolders or files*/
-typedef struct {
-  uint8_t type;
-  char *name;          /* Name of the folder*/
-  void *children;      /* An array containing the subfolders or files*/
-  size_t num_children; /* Size of the children array*/
-} binout_folder_t;
 
 /* A directory structure of a binout file(s).
  * Each file represents a variable and where to find it inside the file(s)
  */
 typedef struct {
-  binout_folder_t *children;
+  binout_entry_t *children;
   size_t num_children;
 } binout_directory_t;
 
@@ -77,13 +67,13 @@ extern "C" {
  * inserted if it does not already exist. Returns the newly created (or found)
  * folder.
  */
-binout_folder_t *binout_directory_insert_folder(binout_directory_t *dir,
+binout_entry_t *binout_directory_insert_folder(binout_directory_t *dir,
                                                 path_view_t *path);
 
 /* Same as binout_directory_insert_folder, but for binout_folder_t. Without the
  * requirement of an absolute path. Used for recursion.
  */
-binout_folder_t *binout_folder_insert_folder(binout_folder_t *dir,
+binout_entry_t *binout_folder_insert_folder(binout_entry_t *dir,
                                              path_view_t *path);
 
 /* Insert a file with the given name and parameters into the folder specified by
@@ -91,7 +81,7 @@ binout_folder_t *binout_folder_insert_folder(binout_folder_t *dir,
  * This function takes ownership of name, which means that name needs to be
  * allocated by malloc, etc. and that you do not need to deallocate it.
  */
-void binout_folder_insert_file(binout_folder_t *dir, char *name,
+void binout_folder_insert_file(binout_entry_t *dir, char *name,
                                uint8_t var_type, size_t size,
                                uint8_t file_index, long file_pos);
 
@@ -99,11 +89,11 @@ void binout_folder_insert_file(binout_folder_t *dir, char *name,
  * path needs to be absolute and start at the root folder (start == 0) and
  * have at least three elements.
  */
-const binout_file_t *binout_directory_get_file(const binout_directory_t *dir,
+const binout_entry_t *binout_directory_get_file(const binout_directory_t *dir,
                                                path_view_t *path);
 
 /* Same as binout_directory_get_file. Used for recursion.*/
-const binout_file_t *binout_folder_get_file(const binout_folder_t *dir,
+const binout_entry_t *binout_folder_get_file(const binout_entry_t *dir,
                                             path_view_t *path);
 
 /* Returns an pointer to children of an folder.
@@ -111,13 +101,13 @@ const binout_file_t *binout_folder_get_file(const binout_folder_t *dir,
  * If the given path does not exist this returns NULL and sets num_children to
  * ~0. The path needs to be absolute and start at the root folder (start == 0).
  */
-const binout_folder_or_file_t *
+const binout_entry_t *
 binout_directory_get_children(const binout_directory_t *dir, path_view_t *path,
                               size_t *num_children);
 
 /* Same as binout_directory_get_children. Used for recursion.*/
-const binout_folder_or_file_t *
-binout_folder_get_children(const binout_folder_t *folder, path_view_t *path,
+const binout_entry_t *
+binout_folder_get_children(const binout_entry_t *folder, path_view_t *path,
                            size_t *num_children);
 
 /* Deallocates all memory of a binout_directory_t.
@@ -126,8 +116,8 @@ binout_folder_get_children(const binout_folder_t *folder, path_view_t *path,
  */
 void binout_directory_free(binout_directory_t *dir);
 
-/* Deallocates all memory of a binout_folder_t. Used for recursion.*/
-void binout_folder_free(binout_folder_t *folder);
+/* Deallocates all memory of a binout_entry_t with type BINOUT_FOLDER. Used for recursion.*/
+void binout_folder_free(binout_entry_t *folder);
 
 #ifdef __cplusplus
 }
