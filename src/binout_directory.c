@@ -45,8 +45,12 @@ binout_entry_t *binout_directory_insert_folder(binout_directory_t *dir,
   binout_entry_t *folder = NULL;
   if (dir->num_children != 0) {
     int found;
-    index = binout_directory_binary_search_folder_insert(
-        dir->children, 0, dir->num_children - 1, path, &found);
+    char* path_str = path_view_stralloc(path);
+
+    index = binout_directory_binary_search_entry_insert(
+        dir->children, 0, dir->num_children - 1, path_str, &found);
+    free(path_str);
+
     if (found) {
       folder = &dir->children[index];
     }
@@ -69,6 +73,9 @@ binout_entry_t *binout_directory_insert_folder(binout_directory_t *dir,
     folder->name = path_view_stralloc(path);
     folder->children = NULL;
     folder->num_children = 0;
+  } else if (folder->type != BINOUT_FOLDER) {
+    END_PROFILE_FUNC();
+    return NULL;
   }
 
   if (!path_view_advance(path)) {
@@ -90,9 +97,13 @@ binout_entry_t *binout_folder_insert_folder(binout_entry_t *dir,
   binout_entry_t *folder = NULL;
   if (dir->num_children != 0) {
     int found;
-    index = binout_directory_binary_search_folder_insert(
-        dir->children, 0, dir->num_children - 1, path,
+    char* path_str = path_view_stralloc(path);
+
+    index = binout_directory_binary_search_entry_insert(
+        dir->children, 0, dir->num_children - 1, path_str,
         &found);
+    free(path_str);
+
     if (found) {
       folder = &dir->children[index];
     }
@@ -101,7 +112,7 @@ binout_entry_t *binout_folder_insert_folder(binout_entry_t *dir,
   if (!folder) {
     dir->num_children++;
     dir->children =
-        realloc(dir->children, dir->num_children * sizeof(binout_folder_t));
+        realloc(dir->children, dir->num_children * sizeof(binout_entry_t));
 
     /* Move everything to the right*/
     size_t i = dir->num_children - 1;
@@ -115,6 +126,9 @@ binout_entry_t *binout_folder_insert_folder(binout_entry_t *dir,
     folder->name = path_view_stralloc(path);
     folder->children = NULL;
     folder->num_children = 0;
+  } else if (folder->type != BINOUT_FOLDER) {
+    END_PROFILE_FUNC();
+    return NULL;
   }
 
   if (!path_view_advance(path)) {
@@ -141,7 +155,7 @@ void binout_folder_insert_file(binout_entry_t *dir, char *name,
   binout_entry_t *file = NULL;
   if (dir->num_children != 0) {
     int found;
-    index = binout_directory_binary_search_file_insert(
+    index = binout_directory_binary_search_entry_insert(
         dir->children, 0, dir->num_children - 1, name,
         &found);
     if (found) {
@@ -154,7 +168,7 @@ void binout_folder_insert_file(binout_entry_t *dir, char *name,
     /* Allocate memory for the new child. In this case files*/
     dir->num_children++;
     dir->children =
-        realloc(dir->children, dir->num_children * sizeof(binout_file_t));
+        realloc(dir->children, dir->num_children * sizeof(binout_entry_t));
 
     /* Move everything to the right*/
     size_t i = dir->num_children - 1;
@@ -164,6 +178,9 @@ void binout_folder_insert_file(binout_entry_t *dir, char *name,
     }
 
     file = &dir->children[index];
+  } else if (file->type != BINOUT_FILE) {
+    END_PROFILE_FUNC();
+    return;
   }
 
   file->type = BINOUT_FILE;
@@ -192,10 +209,10 @@ binout_directory_get_children(const binout_directory_t *dir, path_view_t *path,
   if (!path_view_advance(path)) {
     *num_children = dir->num_children;
     END_PROFILE_FUNC();
-    return (const binout_folder_or_file_t *)dir->children;
+    return dir->children;
   }
 
-  size_t index = binout_directory_binary_search_folder(
+  size_t index = binout_directory_binary_search_entry(
       dir->children, 0, dir->num_children - 1, path);
   if (index == (size_t)~0) {
     *num_children = ~0;
@@ -204,6 +221,11 @@ binout_directory_get_children(const binout_directory_t *dir, path_view_t *path,
   }
 
   const binout_entry_t *folder = &dir->children[index];
+  if (folder->type != BINOUT_FOLDER) {
+    *num_children = ~0;
+    END_PROFILE_FUNC();
+    return NULL;
+  }
 
   if (!path_view_advance(path)) {
     *num_children = folder->num_children;
@@ -229,7 +251,7 @@ binout_folder_get_children(const binout_entry_t *folder, path_view_t *path,
     return NULL;
   }
 
-  size_t index = binout_directory_binary_search_folder(folder->children, 0, folder->num_children - 1, path);
+  size_t index = binout_directory_binary_search_entry(folder->children, 0, folder->num_children - 1, path);
   if (index == (size_t)~0) {
     *num_children = ~0;
     END_PROFILE_FUNC();
@@ -237,6 +259,11 @@ binout_folder_get_children(const binout_entry_t *folder, path_view_t *path,
   }
 
   const binout_entry_t *child = &folder->children[index];
+  if (child->type != BINOUT_FOLDER) {
+    *num_children = ~0;
+    END_PROFILE_FUNC();
+    return NULL;
+  }
 
   if (!path_view_advance(path)) {
     *num_children = child->num_children;
@@ -268,7 +295,7 @@ const binout_entry_t *binout_directory_get_file(const binout_directory_t *dir,
   }
 
   /* Search for the folder*/
-  const size_t index = binout_directory_binary_search_folder(
+  const size_t index = binout_directory_binary_search_entry(
       dir->children, 0, dir->num_children - 1, path);
   if (index == (size_t)~0) {
     /* The folder has not been found*/
@@ -276,15 +303,22 @@ const binout_entry_t *binout_directory_get_file(const binout_directory_t *dir,
     return NULL;
   }
 
+  binout_entry_t* entry = &dir->children[index];
+
   /* If we are already at the end*/
   if (!path_view_advance(path)) {
     END_PROFILE_FUNC();
     return NULL;
   }
 
+  if (entry->type != BINOUT_FOLDER) {
+    END_PROFILE_FUNC();
+    return NULL;
+  }
+
   /* Recursively search for the file*/
   const binout_entry_t *file =
-      binout_folder_get_file(&dir->children[index], path);
+      binout_folder_get_file(entry, path);
 
   END_PROFILE_FUNC();
   return file;

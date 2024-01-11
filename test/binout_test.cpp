@@ -713,19 +713,19 @@ TEST_CASE("binout_directory") {
   binout_folder_insert_folder(&dir.children[1], &p2);
   // Insert 'ids' into '/nodout/metadata'
   binout_folder_insert_file(
-      &reinterpret_cast<binout_folder_t *>(dir.children[1].children)[1],
+      &reinterpret_cast<binout_entry_t *>(dir.children[1].children)[1],
       stralloc("ids"), BINOUT_TYPE_INT32, 10, 0, 200);
   // Insert 'time' into '/nodout/metadata'
   binout_folder_insert_file(
-      &reinterpret_cast<binout_folder_t *>(dir.children[1].children)[1],
+      &reinterpret_cast<binout_entry_t *>(dir.children[1].children)[1],
       stralloc("time"), BINOUT_TYPE_FLOAT32, 1, 0, 180);
   // Insert 'x_displacement' into '/nodout/d000001'
   binout_folder_insert_file(
-      &reinterpret_cast<binout_folder_t *>(dir.children[1].children)[0],
+      &reinterpret_cast<binout_entry_t *>(dir.children[1].children)[0],
       stralloc("x_displacement"), BINOUT_TYPE_FLOAT64, 10, 0, 300);
   // Insert 'y_displacement' into '/nodout/d000001'
   binout_folder_insert_file(
-      &reinterpret_cast<binout_folder_t *>(dir.children[1].children)[0],
+      &reinterpret_cast<binout_entry_t *>(dir.children[1].children)[0],
       stralloc("y_displacement"), BINOUT_TYPE_FLOAT64, 10, 0, 380);
 
   p1 = path_view_new("metadata");
@@ -738,19 +738,19 @@ TEST_CASE("binout_directory") {
 
   // Insert 'ids' into '/nodfor/metadata'
   binout_folder_insert_file(
-      &reinterpret_cast<binout_folder_t *>(dir.children[0].children)[1],
+      &reinterpret_cast<binout_entry_t *>(dir.children[0].children)[1],
       stralloc("ids"), BINOUT_TYPE_INT64, 10, 1, 10);
   // Insert 'time' into '/nodfor/metadata'
   binout_folder_insert_file(
-      &reinterpret_cast<binout_folder_t *>(dir.children[0].children)[1],
+      &reinterpret_cast<binout_entry_t *>(dir.children[0].children)[1],
       stralloc("time"), BINOUT_TYPE_FLOAT64, 1, 1, 20);
   // Insert 'x_force' into '/nodfor/d000010'
   binout_folder_insert_file(
-      &reinterpret_cast<binout_folder_t *>(dir.children[0].children)[0],
+      &reinterpret_cast<binout_entry_t *>(dir.children[0].children)[0],
       stralloc("x_force"), BINOUT_TYPE_FLOAT64, 10, 1, 100);
   // Insert 'y_force' into '/nodfor/d000010'
   binout_folder_insert_file(
-      &reinterpret_cast<binout_folder_t *>(dir.children[0].children)[0],
+      &reinterpret_cast<binout_entry_t *>(dir.children[0].children)[0],
       stralloc("y_force"), BINOUT_TYPE_FLOAT64, 10, 1, 150);
 
   {
@@ -853,13 +853,13 @@ TEST_CASE("binout_directory") {
     path_view_t p = path_view_new("/nodout/metadata");
 
     size_t num_children;
-    const binout_folder_or_file_t *folder_or_file =
+    const binout_entry_t *folder_or_file =
         binout_directory_get_children(&dir, &p, &num_children);
 
     REQUIRE(num_children == 2);
     REQUIRE(folder_or_file->type == BINOUT_FILE);
-    CHECK(((binout_file_t *)folder_or_file)[0].name == "ids");
-    CHECK(((binout_file_t *)folder_or_file)[1].name == "time");
+    CHECK(((binout_entry_t *)folder_or_file)[0].name == "ids");
+    CHECK(((binout_entry_t *)folder_or_file)[1].name == "time");
   }
 
   binout_directory_free(&dir);
