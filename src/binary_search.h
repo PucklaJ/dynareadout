@@ -29,8 +29,8 @@
 #define BINARY_SEARCH_H
 #include "binout_directory.h"
 #include "d3_defines.h"
-#include "key.h"
 #include <stddef.h>
+#include "key.h"
 #ifdef PROFILING
 #include "profiling.h"
 #endif
@@ -39,50 +39,22 @@
 extern "C" {
 #endif
 
-size_t binout_directory_binary_search_folder(const binout_folder_t *arr,
-                                             size_t start_index,
-                                             size_t end_index,
-                                             const path_view_t *value);
+size_t binout_directory_binary_search_entry(const binout_entry_t * arr, size_t start_index, size_t end_index, const path_view_t * value);
 
-size_t binout_directory_binary_search_folder_insert(const binout_folder_t *arr,
-                                                    size_t start_index,
-                                                    size_t end_index,
-                                                    const path_view_t *value,
-                                                    int *found);
+size_t binout_directory_binary_search_entry_insert(const binout_entry_t * arr, size_t start_index, size_t end_index, const char * value, int *found);
 
-size_t binout_directory_binary_search_file(const binout_file_t *arr,
-                                           size_t start_index, size_t end_index,
-                                           const path_view_t *value);
+size_t d3_word_binary_search(const d3_word * arr, size_t start_index, size_t end_index, d3_word value);
 
-size_t binout_directory_binary_search_file_insert(const binout_file_t *arr,
-                                                  size_t start_index,
-                                                  size_t end_index,
-                                                  const char *value,
-                                                  int *found);
+size_t d3_word_binary_search_insert(const d3_word * arr, size_t start_index, size_t end_index, d3_word value, int *found);
 
-size_t d3_word_binary_search(const d3_word *arr, size_t start_index,
-                             size_t end_index, d3_word value);
+size_t key_file_binary_search_insert(const keyword_t* arr, size_t start_index, size_t end_index, const char* value, int *found);
 
-size_t d3_word_binary_search_insert(const d3_word *arr, size_t start_index,
-                                    size_t end_index, d3_word value,
-                                    int *found);
-
-size_t key_file_binary_search_insert(const keyword_t *arr, size_t start_index,
-                                     size_t end_index, const char *value,
-                                     int *found);
-
-size_t key_file_binary_search(const keyword_t *arr, size_t start_index,
-                              size_t end_index, const char *value);
+size_t key_file_binary_search(const keyword_t* arr, size_t start_index, size_t end_index, const char* value);
 
 #ifdef PROFILING
-size_t string_binary_search_insert(char const **arr, size_t start_index,
-                                   size_t end_index, const char *value,
-                                   int *found);
+size_t string_binary_search_insert(char const ** arr, size_t start_index, size_t end_index, const char * value, int *found);
 
-size_t profiling_stack_binary_search_insert(const profiling_stack_t *arr,
-                                            size_t start_index,
-                                            size_t end_index, const char *value,
-                                            int *found);
+size_t profiling_stack_binary_search_insert(const profiling_stack_t* arr, size_t start_index, size_t end_index, const char* value, int *found);
 
 #endif
 

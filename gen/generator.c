@@ -118,24 +118,12 @@ int main(int args, char *argv[]) {
   ifdef_end(binary_search_h);
   newline(binary_search_h);
   cpp_start(binary_search_h);
-  binary_search_prototype(binary_search_h,
-                          "binout_directory_binary_search_folder",
-                          "const binout_folder_t *", "const path_view_t *");
+  binary_search_prototype(binary_search_h, "binout_directory_binary_search_entry", "const binout_entry_t *", "const path_view_t *");
   semicolon(binary_search_h);
   newline(binary_search_h);
   binary_search_insert_prototype(
-      binary_search_h, "binout_directory_binary_search_folder_insert",
-      "const binout_folder_t *", "const path_view_t *");
-  semicolon(binary_search_h);
-  newline(binary_search_h);
-  binary_search_prototype(binary_search_h,
-                          "binout_directory_binary_search_file",
-                          "const binout_file_t *", "const path_view_t *");
-  semicolon(binary_search_h);
-  newline(binary_search_h);
-  binary_search_insert_prototype(binary_search_h,
-                                 "binout_directory_binary_search_file_insert",
-                                 "const binout_file_t *", "const char *");
+      binary_search_h, "binout_directory_binary_search_entry_insert",
+      "const binout_entry_t *", "const char *");
   semicolon(binary_search_h);
   newline(binary_search_h);
   binary_search_prototype(binary_search_h, "d3_word_binary_search",
@@ -181,34 +169,17 @@ int main(int args, char *argv[]) {
   newline(binary_search_c);
 
   binary_search_prototype(binary_search_c,
-                          "binout_directory_binary_search_folder",
-                          "const binout_folder_t *", "const path_view_t *");
+                          "binout_directory_binary_search_entry",
+                          "const binout_entry_t *", "const path_view_t *");
   newline(binary_search_c);
-  binary_search_body(binary_search_c, "binout_directory_binary_search_folder",
+  binary_search_body(binary_search_c, "binout_directory_binary_search_entry",
                      "path_view_strcmp", ".name");
   newline(binary_search_c);
   binary_search_insert_prototype(
-      binary_search_c, "binout_directory_binary_search_folder_insert",
-      "const binout_folder_t *", "const path_view_t *");
+      binary_search_c, "binout_directory_binary_search_entry_insert",
+      "const binout_entry_t *", "const char *");
   newline(binary_search_c);
-  binary_search_insert_body(binary_search_c,
-                            "binout_directory_binary_search_folder_insert",
-                            "path_view_strcmp", ".name");
-  newline(binary_search_c);
-  binary_search_prototype(binary_search_c,
-                          "binout_directory_binary_search_file",
-                          "const binout_file_t *", "const path_view_t *");
-  newline(binary_search_c);
-  binary_search_body(binary_search_c, "binout_directory_binary_search_file",
-                     "path_view_strcmp", ".name");
-  newline(binary_search_c);
-  binary_search_insert_prototype(binary_search_c,
-                                 "binout_directory_binary_search_file_insert",
-                                 "const binout_file_t *", "const char *");
-  newline(binary_search_c);
-  binary_search_insert_body(binary_search_c,
-                            "binout_directory_binary_search_file_insert",
-                            "strcmp", ".name");
+  binary_search_insert_body(binary_search_c, "binout_directory_binary_search_entry_insert", "strcmp", ".name");
   newline(binary_search_c);
   binary_search_prototype(binary_search_c, "d3_word_binary_search",
                           "const d3_word *", "d3_word");
