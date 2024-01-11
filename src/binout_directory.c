@@ -373,7 +373,12 @@ void binout_directory_free(binout_directory_t *dir) {
 
   size_t i = 0;
   while (i < dir->num_children) {
-    binout_folder_free(&dir->children[i]);
+    if (dir->children[i].type == BINOUT_FOLDER) {
+      binout_folder_free(&dir->children[i]);
+    } else {
+      free(dir->children[i].name);
+      dir->children[i].name = NULL;
+    }
 
     i++;
   }
@@ -398,9 +403,11 @@ void binout_folder_free(binout_entry_t *folder) {
 
   size_t i = 0;
   while (i < folder->num_children) {
-    free(folder->children[i].name);
     if (folder->children[i].type == BINOUT_FOLDER) {
       binout_folder_free(&folder->children[i]);
+    } else {
+      free(folder->children[i].name);
+      folder->children[i].name = NULL;
     }
 
     i++;

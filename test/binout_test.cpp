@@ -342,6 +342,16 @@ TEST_CASE("rwforc") {
   binout_close(&b);
 }
 
+TEST_CASE("binout_multi") {
+  binout_file binout = binout_open("test_data/binout_multi/binout*");
+  char* err = binout_open_error(&binout);
+  if (err) {
+      FAIL(err);
+  }
+
+  binout_close(&binout);
+}
+
 #ifdef BUILD_CPP
 TEST_CASE("binout0000C++") {
   {
