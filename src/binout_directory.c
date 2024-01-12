@@ -159,8 +159,8 @@ void binout_folder_insert_file(binout_entry_t *dir, char *name,
         dir->children, 0, dir->num_children - 1, name,
         &found);
     if (found) {
-      free(name);
       file = &dir->children[index];
+      free(file->name);
     }
   }
 
