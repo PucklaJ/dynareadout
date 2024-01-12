@@ -92,9 +92,23 @@ void *_binout_read(binout_file *bin_file, const char *path_to_variable,
   return data;
 }
 
+struct timed_path_t;
+typedef struct timed_path_t timed_path_t;
+struct timed_path_t {
+  size_t index;
+  timed_path_t* child;
+};
+
+void timed_path_free(timed_path_t* timed_path) {
+  if (timed_path->child) {
+    timed_path_free(timed_path->child);
+    free(timed_path->child);
+  }
+}
+
 binout_entry_t *_binout_search_timed(binout_file *bin_file,
                                       const char *variable,
-                                      size_t *file_index) {
+                                      timed_path_t* timed_path) {
   BINOUT_CLEAR_ERROR_STRING();
 
   if (bin_file->directory.num_children == 0) {
@@ -131,7 +145,7 @@ binout_entry_t *_binout_search_timed(binout_file *bin_file,
     search_index = binout_directory_binary_search_entry(
         folder->children, 0, folder->num_children - 1, &path);
     if (search_index == (size_t)~0) {
-      /* See if the is a d folder*/
+      /* See if there is a d folder*/
       binout_entry_t *d_folder = NULL;
       size_t i = 0;
       while (i < folder->num_children) {
@@ -145,13 +159,37 @@ binout_entry_t *_binout_search_timed(binout_file *bin_file,
       }
 
       if (d_folder && d_folder->num_children != 0) {
-        search_index = binout_directory_binary_search_entry(
-            d_folder->children, 0, d_folder->num_children - 1, &path);
-        if (search_index != (size_t)~0) {
-          /* TODO: Support timed values inside folders */
-          assert(d_folder->children[search_index].type == BINOUT_FILE);
-          *file_index = search_index;
-          return folder;
+        /* Recursevily search for folders inside the d folder */
+        binout_entry_t* current_folder = d_folder;
+        timed_path_t* current_timed_path = timed_path;
+
+        while(1) {
+          if (current_folder->num_children == 0) {
+            break;
+          }
+
+          search_index = binout_directory_binary_search_entry(
+             current_folder->children, 0, current_folder->num_children - 1, &path);
+          if (search_index != (size_t)~0) {
+            current_timed_path->index = search_index;
+            if (current_folder->children[search_index].type == BINOUT_FILE) {
+              if (path_view_advance(&path)) {
+                break;
+              }
+
+              return folder;
+            } else {
+              current_folder = &current_folder->children[search_index];
+              current_timed_path->child = malloc(sizeof(timed_path_t));
+              current_timed_path = current_timed_path->child;
+              current_timed_path->index = ~0;
+              current_timed_path->child = NULL;
+            }
+          }
+
+          if (!path_view_advance(&path)) {
+              break;
+          }
         }
       }
 
@@ -177,19 +215,63 @@ binout_entry_t *_binout_search_timed(binout_file *bin_file,
   return NULL;
 }
 
+binout_entry_t* _binout_open_timed_path(binout_entry_t* d_folder, timed_path_t* timed_path, const char* variable_name) {
+  BEGIN_PROFILE_FUNC();
+
+  binout_entry_t* current_folder = d_folder;
+  timed_path_t* current_timed_path = timed_path;
+  while (current_timed_path) {
+    if (current_folder->num_children < current_timed_path->index + 1) {
+      END_PROFILE_FUNC();
+      return NULL;
+    }
+
+    current_folder = &current_folder->children[current_timed_path->index];
+    if (current_folder->type == BINOUT_FILE) {
+      if (current_timed_path->child != NULL) {
+        END_PROFILE_FUNC();
+        return NULL;
+      }
+
+      /* A fail safe to check if the file name stays the same */
+      if (variable_name && strcmp(current_folder->name, variable_name) != 0) {
+        END_PROFILE_FUNC();
+        return NULL;
+      }
+
+      END_PROFILE_FUNC();
+      return current_folder;
+    } else {
+      if (current_timed_path->child == NULL) {
+        END_PROFILE_FUNC();
+        return NULL;
+      }
+
+      current_timed_path = current_timed_path->child;
+    }
+  }
+
+  END_PROFILE_FUNC();
+  return NULL;
+}
+
 void *_binout_read_timed(binout_file *bin_file, const char *variable,
                          size_t *num_values, size_t *num_timesteps,
                          const uint8_t binout_type) {
-  size_t file_index;
+  timed_path_t timed_path;
+  timed_path.index = ~0;
+  timed_path.child = NULL;
+
   binout_entry_t *folder =
-      _binout_search_timed(bin_file, variable, &file_index);
+      _binout_search_timed(bin_file, variable, &timed_path);
   if (!folder) {
+    timed_path_free(&timed_path);
     return NULL;
   }
 
-  binout_entry_t *ds = folder->children;
-  binout_entry_t *df = &ds->children[file_index];
+  binout_entry_t *ds = folder->children; /* The array of the d folders */
 
+  /* Determine where the d folders inside the children of folder start and end (usually it starts at 0 and ends at num_children - 2, because the last one is metadata) */
   size_t start_index = 0;
   while (start_index < folder->num_children &&
          !_binout_is_d_string(ds[start_index].name))
@@ -199,11 +281,15 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
   while (!_binout_is_d_string(ds[end_index].name))
     end_index--;
 
+  binout_entry_t* df = _binout_open_timed_path(&ds[start_index], &timed_path, NULL);
+  assert(df && "Failed to find variable inside first time step. Internal library error");
+
   *num_timesteps = end_index - start_index + 1;
   *num_values =
       df->size / (size_t)_binout_get_type_size((const uint64_t)binout_type);
 
   if (*num_values == 0) {
+    timed_path_free(&timed_path);
     NEW_ERROR_STRING_F("The files of \"%s\" are empty", variable);
     return NULL;
   }
@@ -212,61 +298,42 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
 
   size_t i = start_index;
   while (i <= end_index) {
-    binout_entry_t *d = &ds[i];
-    binout_entry_t *dfs = d->children;
-    /* Just a fail safe. Should not happen. All d folders are structured the
-     * same.*/
-    if (d->num_children < file_index + 1 ||
-        strcmp(dfs[file_index].name, df->name) != 0) {
-      if (d->num_children == 0) {
+    binout_entry_t *d = &ds[i]; /* The d folder of the current time step */
+    binout_entry_t* d_file = _binout_open_timed_path(d, &timed_path, df->name); /* The file belonging to the current time step */
+    if (!d_file) {
         free(data);
+        timed_path_free(&timed_path);
         NEW_ERROR_STRING_F("The structure of variable \"%s\" is invalid. Time "
-                           "Step %zu does not contain any files",
+                           "Step %zu differs from the first time step",
                            variable, i - start_index);
         return NULL;
-      }
-
-      path_view_t name;
-      name.string = df->name;
-      name.start = 0;
-      name.end = strlen(df->name) - 1;
-
-      /* TODO: Support timed values with folders */
-      file_index = binout_directory_binary_search_entry(
-          dfs, 0, d->num_children - 1, &name);
-      if (file_index == (size_t)~0) {
-        free(data);
-        NEW_ERROR_STRING_F("The structure of variable \"%s\" is invalid. Time "
-                           "Step %zu does not contain the variable",
-                           variable, i - start_index);
-        return NULL;
-      }
     }
 
-    df = &dfs[file_index];
-
-    multi_file_t *mf = &bin_file->files[df->file_index];
+    multi_file_t *mf = &bin_file->files[d_file->file_index];
     multi_file_index_t mf_idx = multi_file_access(mf);
 #ifndef NO_THREAD_SAFETY
     if (mf_idx.index == ULONG_MAX) {
       free(data);
+      timed_path_free(&timed_path);
       NEW_ERROR_STRING_F("Failed to access the file of \"%s\": %s", variable,
                          strerror(errno));
       return NULL;
     }
 #endif
 
-    if (multi_file_seek(mf, &mf_idx, df->file_pos, SEEK_SET) != 0) {
+    if (multi_file_seek(mf, &mf_idx, d_file->file_pos, SEEK_SET) != 0) {
       free(data);
+      timed_path_free(&timed_path);
       multi_file_return(mf, &mf_idx);
       NEW_ERROR_STRING_F("Failed to seek to the data of \"%s\"", variable);
       return NULL;
     }
 
     if (multi_file_read(mf, &mf_idx,
-                        &((uint8_t *)data)[(i - start_index) * df->size],
-                        df->size, 1) != 1) {
+                        &((uint8_t *)data)[(i - start_index) * d_file->size],
+                        d_file->size, 1) != 1) {
       free(data);
+      timed_path_free(&timed_path);
       multi_file_return(mf, &mf_idx);
       NEW_ERROR_STRING_F("Failed to read time step %zu of \"%s\"",
                          i - start_index, variable);
@@ -278,6 +345,7 @@ void *_binout_read_timed(binout_file *bin_file, const char *variable,
     i++;
   }
 
+  timed_path_free(&timed_path);
   return data;
 }
 
