@@ -29,345 +29,381 @@
 #include "profiling.h"
 #include <string.h>
 
-int d3_word_cmp (const d3_word a, const d3_word b) { return a > b ? 1 : (a < b ? -1 : 0); }
-
-size_t binout_directory_binary_search_entry(const binout_entry_t * arr, size_t start_index, size_t end_index, const path_view_t * value)
-{
-BEGIN_PROFILE_FUNC();
-
-if (start_index == end_index) {
-if (path_view_strcmp(value, arr[start_index].name) == 0) {
-END_PROFILE_FUNC();
-return start_index;
+int d3_word_cmp(const d3_word a, const d3_word b) {
+  return a > b ? 1 : (a < b ? -1 : 0);
 }
 
-END_PROFILE_FUNC();
-return ~0;
+size_t binout_directory_binary_search_entry(const binout_entry_t *arr,
+                                            size_t start_index,
+                                            size_t end_index,
+                                            const path_view_t *value) {
+  BEGIN_PROFILE_FUNC();
+
+  if (start_index == end_index) {
+    if (path_view_strcmp(value, arr[start_index].name) == 0) {
+      END_PROFILE_FUNC();
+      return start_index;
+    }
+
+    END_PROFILE_FUNC();
+    return ~0;
+  }
+
+  const size_t half_index = start_index + (end_index - start_index) / 2;
+  const int cmp_val = path_view_strcmp(value, arr[half_index].name);
+
+  if (cmp_val < 0) {
+    const size_t index = binout_directory_binary_search_entry(
+        arr, start_index, half_index, value);
+    END_PROFILE_FUNC();
+    return index;
+  } else if (cmp_val > 0) {
+    if (half_index == end_index - 1) {
+      const size_t index = binout_directory_binary_search_entry(
+          arr, end_index, end_index, value);
+      END_PROFILE_FUNC();
+      return index;
+    }
+    const size_t index =
+        binout_directory_binary_search_entry(arr, half_index, end_index, value);
+    END_PROFILE_FUNC();
+    return index;
+  }
+
+  END_PROFILE_FUNC();
+  return half_index;
 }
 
-const size_t half_index = start_index + (end_index - start_index) / 2;
-const int cmp_val = path_view_strcmp(value, arr[half_index].name);
+size_t binout_directory_binary_search_entry_insert(const binout_entry_t *arr,
+                                                   size_t start_index,
+                                                   size_t end_index,
+                                                   const char *value,
+                                                   int *found) {
+  BEGIN_PROFILE_FUNC();
 
-if (cmp_val < 0) {
-const size_t index = binout_directory_binary_search_entry(arr, start_index, half_index, value);
-END_PROFILE_FUNC();
-return index;
-} else if (cmp_val > 0) {
-if (half_index == end_index - 1) {
-const size_t index = binout_directory_binary_search_entry(arr, end_index, end_index, value);
-END_PROFILE_FUNC();
-return index;
-}
-const size_t index = binout_directory_binary_search_entry(arr, half_index, end_index, value);
-END_PROFILE_FUNC();
-return index;
-}
+  if (start_index == end_index) {
+    const int cmp_value = strcmp(value, arr[start_index].name);
 
-END_PROFILE_FUNC();
-return half_index;
-}
+    if (cmp_value == 0) {
+      *found = 1;
+      END_PROFILE_FUNC();
+      return start_index;
+    }
+    if (cmp_value > 0) {
+      *found = 0;
+      END_PROFILE_FUNC();
+      return start_index + 1;
+    }
 
-size_t binout_directory_binary_search_entry_insert(const binout_entry_t * arr, size_t start_index, size_t end_index, const char * value, int *found)
-{
-BEGIN_PROFILE_FUNC();
+    *found = 0;
+    END_PROFILE_FUNC();
+    return start_index;
+  }
 
-if (start_index == end_index) {
-const int cmp_value = strcmp(value, arr[start_index].name);
+  const size_t half_index = start_index + (end_index - start_index) / 2;
+  const int cmp_val = strcmp(value, arr[half_index].name);
 
-if (cmp_value == 0) {
-*found = 1;
-END_PROFILE_FUNC();
-return start_index;
-}
-if (cmp_value > 0) {
-*found = 0;
-END_PROFILE_FUNC();
-return start_index + 1;
-}
+  if (cmp_val < 0) {
+    const size_t index = binout_directory_binary_search_entry_insert(
+        arr, start_index, half_index, value, found);
+    END_PROFILE_FUNC();
+    return index;
+  } else if (cmp_val > 0) {
+    if (half_index == end_index - 1) {
+      const size_t index = binout_directory_binary_search_entry_insert(
+          arr, end_index, end_index, value, found);
+      END_PROFILE_FUNC();
+      return index;
+    }
+    const size_t index = binout_directory_binary_search_entry_insert(
+        arr, half_index, end_index, value, found);
+    END_PROFILE_FUNC();
+    return index;
+  }
 
-*found = 0;
-END_PROFILE_FUNC();
-return start_index;
-}
-
-const size_t half_index = start_index + (end_index - start_index) / 2;
-const int cmp_val = strcmp(value, arr[half_index].name);
-
-if (cmp_val < 0) {
-const size_t index = binout_directory_binary_search_entry_insert(arr, start_index, half_index, value, found);
-END_PROFILE_FUNC();
-return index;
-} else if (cmp_val > 0) {
-if (half_index == end_index - 1) {
-const size_t index = binout_directory_binary_search_entry_insert(arr, end_index, end_index, value, found);
-END_PROFILE_FUNC();
-return index;
-}
-const size_t index = binout_directory_binary_search_entry_insert(arr, half_index, end_index, value, found);
-END_PROFILE_FUNC();
-return index;
+  *found = 1;
+  END_PROFILE_FUNC();
+  return half_index;
 }
 
-*found = 1;
-END_PROFILE_FUNC();
-return half_index;
+size_t d3_word_binary_search(const d3_word *arr, size_t start_index,
+                             size_t end_index, d3_word value) {
+  BEGIN_PROFILE_FUNC();
+
+  if (start_index == end_index) {
+    if (d3_word_cmp(value, arr[start_index]) == 0) {
+      END_PROFILE_FUNC();
+      return start_index;
+    }
+
+    END_PROFILE_FUNC();
+    return ~0;
+  }
+
+  const size_t half_index = start_index + (end_index - start_index) / 2;
+  const int cmp_val = d3_word_cmp(value, arr[half_index]);
+
+  if (cmp_val < 0) {
+    const size_t index =
+        d3_word_binary_search(arr, start_index, half_index, value);
+    END_PROFILE_FUNC();
+    return index;
+  } else if (cmp_val > 0) {
+    if (half_index == end_index - 1) {
+      const size_t index =
+          d3_word_binary_search(arr, end_index, end_index, value);
+      END_PROFILE_FUNC();
+      return index;
+    }
+    const size_t index =
+        d3_word_binary_search(arr, half_index, end_index, value);
+    END_PROFILE_FUNC();
+    return index;
+  }
+
+  END_PROFILE_FUNC();
+  return half_index;
 }
 
-size_t d3_word_binary_search(const d3_word * arr, size_t start_index, size_t end_index, d3_word value)
-{
-BEGIN_PROFILE_FUNC();
+size_t d3_word_binary_search_insert(const d3_word *arr, size_t start_index,
+                                    size_t end_index, d3_word value,
+                                    int *found) {
+  BEGIN_PROFILE_FUNC();
 
-if (start_index == end_index) {
-if (d3_word_cmp(value, arr[start_index]) == 0) {
-END_PROFILE_FUNC();
-return start_index;
+  if (start_index == end_index) {
+    const int cmp_value = d3_word_cmp(value, arr[start_index]);
+
+    if (cmp_value == 0) {
+      *found = 1;
+      END_PROFILE_FUNC();
+      return start_index;
+    }
+    if (cmp_value > 0) {
+      *found = 0;
+      END_PROFILE_FUNC();
+      return start_index + 1;
+    }
+
+    *found = 0;
+    END_PROFILE_FUNC();
+    return start_index;
+  }
+
+  const size_t half_index = start_index + (end_index - start_index) / 2;
+  const int cmp_val = d3_word_cmp(value, arr[half_index]);
+
+  if (cmp_val < 0) {
+    const size_t index = d3_word_binary_search_insert(arr, start_index,
+                                                      half_index, value, found);
+    END_PROFILE_FUNC();
+    return index;
+  } else if (cmp_val > 0) {
+    if (half_index == end_index - 1) {
+      const size_t index =
+          d3_word_binary_search_insert(arr, end_index, end_index, value, found);
+      END_PROFILE_FUNC();
+      return index;
+    }
+    const size_t index =
+        d3_word_binary_search_insert(arr, half_index, end_index, value, found);
+    END_PROFILE_FUNC();
+    return index;
+  }
+
+  *found = 1;
+  END_PROFILE_FUNC();
+  return half_index;
 }
 
-END_PROFILE_FUNC();
-return ~0;
+size_t key_file_binary_search_insert(const keyword_t *arr, size_t start_index,
+                                     size_t end_index, const char *value,
+                                     int *found) {
+  BEGIN_PROFILE_FUNC();
+
+  if (start_index == end_index) {
+    const int cmp_value = strcmp(value, arr[start_index].name);
+
+    if (cmp_value == 0) {
+      *found = 1;
+      END_PROFILE_FUNC();
+      return start_index;
+    }
+    if (cmp_value > 0) {
+      *found = 0;
+      END_PROFILE_FUNC();
+      return start_index + 1;
+    }
+
+    *found = 0;
+    END_PROFILE_FUNC();
+    return start_index;
+  }
+
+  const size_t half_index = start_index + (end_index - start_index) / 2;
+  const int cmp_val = strcmp(value, arr[half_index].name);
+
+  if (cmp_val < 0) {
+    const size_t index = key_file_binary_search_insert(
+        arr, start_index, half_index, value, found);
+    END_PROFILE_FUNC();
+    return index;
+  } else if (cmp_val > 0) {
+    if (half_index == end_index - 1) {
+      const size_t index = key_file_binary_search_insert(
+          arr, end_index, end_index, value, found);
+      END_PROFILE_FUNC();
+      return index;
+    }
+    const size_t index =
+        key_file_binary_search_insert(arr, half_index, end_index, value, found);
+    END_PROFILE_FUNC();
+    return index;
+  }
+
+  *found = 1;
+  END_PROFILE_FUNC();
+  return half_index;
 }
 
-const size_t half_index = start_index + (end_index - start_index) / 2;
-const int cmp_val = d3_word_cmp(value, arr[half_index]);
+size_t key_file_binary_search(const keyword_t *arr, size_t start_index,
+                              size_t end_index, const char *value) {
+  BEGIN_PROFILE_FUNC();
 
-if (cmp_val < 0) {
-const size_t index = d3_word_binary_search(arr, start_index, half_index, value);
-END_PROFILE_FUNC();
-return index;
-} else if (cmp_val > 0) {
-if (half_index == end_index - 1) {
-const size_t index = d3_word_binary_search(arr, end_index, end_index, value);
-END_PROFILE_FUNC();
-return index;
-}
-const size_t index = d3_word_binary_search(arr, half_index, end_index, value);
-END_PROFILE_FUNC();
-return index;
-}
+  if (start_index == end_index) {
+    if (strcmp(value, arr[start_index].name) == 0) {
+      END_PROFILE_FUNC();
+      return start_index;
+    }
 
-END_PROFILE_FUNC();
-return half_index;
-}
+    END_PROFILE_FUNC();
+    return ~0;
+  }
 
-size_t d3_word_binary_search_insert(const d3_word * arr, size_t start_index, size_t end_index, d3_word value, int *found)
-{
-BEGIN_PROFILE_FUNC();
+  const size_t half_index = start_index + (end_index - start_index) / 2;
+  const int cmp_val = strcmp(value, arr[half_index].name);
 
-if (start_index == end_index) {
-const int cmp_value = d3_word_cmp(value, arr[start_index]);
+  if (cmp_val < 0) {
+    const size_t index =
+        key_file_binary_search(arr, start_index, half_index, value);
+    END_PROFILE_FUNC();
+    return index;
+  } else if (cmp_val > 0) {
+    if (half_index == end_index - 1) {
+      const size_t index =
+          key_file_binary_search(arr, end_index, end_index, value);
+      END_PROFILE_FUNC();
+      return index;
+    }
+    const size_t index =
+        key_file_binary_search(arr, half_index, end_index, value);
+    END_PROFILE_FUNC();
+    return index;
+  }
 
-if (cmp_value == 0) {
-*found = 1;
-END_PROFILE_FUNC();
-return start_index;
-}
-if (cmp_value > 0) {
-*found = 0;
-END_PROFILE_FUNC();
-return start_index + 1;
-}
-
-*found = 0;
-END_PROFILE_FUNC();
-return start_index;
-}
-
-const size_t half_index = start_index + (end_index - start_index) / 2;
-const int cmp_val = d3_word_cmp(value, arr[half_index]);
-
-if (cmp_val < 0) {
-const size_t index = d3_word_binary_search_insert(arr, start_index, half_index, value, found);
-END_PROFILE_FUNC();
-return index;
-} else if (cmp_val > 0) {
-if (half_index == end_index - 1) {
-const size_t index = d3_word_binary_search_insert(arr, end_index, end_index, value, found);
-END_PROFILE_FUNC();
-return index;
-}
-const size_t index = d3_word_binary_search_insert(arr, half_index, end_index, value, found);
-END_PROFILE_FUNC();
-return index;
-}
-
-*found = 1;
-END_PROFILE_FUNC();
-return half_index;
-}
-
-size_t key_file_binary_search_insert(const keyword_t* arr, size_t start_index, size_t end_index, const char* value, int *found)
-{
-BEGIN_PROFILE_FUNC();
-
-if (start_index == end_index) {
-const int cmp_value = strcmp(value, arr[start_index].name);
-
-if (cmp_value == 0) {
-*found = 1;
-END_PROFILE_FUNC();
-return start_index;
-}
-if (cmp_value > 0) {
-*found = 0;
-END_PROFILE_FUNC();
-return start_index + 1;
-}
-
-*found = 0;
-END_PROFILE_FUNC();
-return start_index;
-}
-
-const size_t half_index = start_index + (end_index - start_index) / 2;
-const int cmp_val = strcmp(value, arr[half_index].name);
-
-if (cmp_val < 0) {
-const size_t index = key_file_binary_search_insert(arr, start_index, half_index, value, found);
-END_PROFILE_FUNC();
-return index;
-} else if (cmp_val > 0) {
-if (half_index == end_index - 1) {
-const size_t index = key_file_binary_search_insert(arr, end_index, end_index, value, found);
-END_PROFILE_FUNC();
-return index;
-}
-const size_t index = key_file_binary_search_insert(arr, half_index, end_index, value, found);
-END_PROFILE_FUNC();
-return index;
-}
-
-*found = 1;
-END_PROFILE_FUNC();
-return half_index;
-}
-
-size_t key_file_binary_search(const keyword_t* arr, size_t start_index, size_t end_index, const char* value)
-{
-BEGIN_PROFILE_FUNC();
-
-if (start_index == end_index) {
-if (strcmp(value, arr[start_index].name) == 0) {
-END_PROFILE_FUNC();
-return start_index;
-}
-
-END_PROFILE_FUNC();
-return ~0;
-}
-
-const size_t half_index = start_index + (end_index - start_index) / 2;
-const int cmp_val = strcmp(value, arr[half_index].name);
-
-if (cmp_val < 0) {
-const size_t index = key_file_binary_search(arr, start_index, half_index, value);
-END_PROFILE_FUNC();
-return index;
-} else if (cmp_val > 0) {
-if (half_index == end_index - 1) {
-const size_t index = key_file_binary_search(arr, end_index, end_index, value);
-END_PROFILE_FUNC();
-return index;
-}
-const size_t index = key_file_binary_search(arr, half_index, end_index, value);
-END_PROFILE_FUNC();
-return index;
-}
-
-END_PROFILE_FUNC();
-return half_index;
+  END_PROFILE_FUNC();
+  return half_index;
 }
 
 #ifdef PROFILING
-size_t string_binary_search_insert(char const ** arr, size_t start_index, size_t end_index, const char* value, int *found)
-{
-BEGIN_PROFILE_FUNC();
+size_t string_binary_search_insert(char const **arr, size_t start_index,
+                                   size_t end_index, const char *value,
+                                   int *found) {
+  BEGIN_PROFILE_FUNC();
 
-if (start_index == end_index) {
-const int cmp_value = strcmp(value, arr[start_index]);
+  if (start_index == end_index) {
+    const int cmp_value = strcmp(value, arr[start_index]);
 
-if (cmp_value == 0) {
-*found = 1;
-END_PROFILE_FUNC();
-return start_index;
-}
-if (cmp_value > 0) {
-*found = 0;
-END_PROFILE_FUNC();
-return start_index + 1;
-}
+    if (cmp_value == 0) {
+      *found = 1;
+      END_PROFILE_FUNC();
+      return start_index;
+    }
+    if (cmp_value > 0) {
+      *found = 0;
+      END_PROFILE_FUNC();
+      return start_index + 1;
+    }
 
-*found = 0;
-END_PROFILE_FUNC();
-return start_index;
-}
+    *found = 0;
+    END_PROFILE_FUNC();
+    return start_index;
+  }
 
-const size_t half_index = start_index + (end_index - start_index) / 2;
-const int cmp_val = strcmp(value, arr[half_index]);
+  const size_t half_index = start_index + (end_index - start_index) / 2;
+  const int cmp_val = strcmp(value, arr[half_index]);
 
-if (cmp_val < 0) {
-const size_t index = string_binary_search_insert(arr, start_index, half_index, value, found);
-END_PROFILE_FUNC();
-return index;
-} else if (cmp_val > 0) {
-if (half_index == end_index - 1) {
-const size_t index = string_binary_search_insert(arr, end_index, end_index, value, found);
-END_PROFILE_FUNC();
-return index;
-}
-const size_t index = string_binary_search_insert(arr, half_index, end_index, value, found);
-END_PROFILE_FUNC();
-return index;
-}
+  if (cmp_val < 0) {
+    const size_t index =
+        string_binary_search_insert(arr, start_index, half_index, value, found);
+    END_PROFILE_FUNC();
+    return index;
+  } else if (cmp_val > 0) {
+    if (half_index == end_index - 1) {
+      const size_t index =
+          string_binary_search_insert(arr, end_index, end_index, value, found);
+      END_PROFILE_FUNC();
+      return index;
+    }
+    const size_t index =
+        string_binary_search_insert(arr, half_index, end_index, value, found);
+    END_PROFILE_FUNC();
+    return index;
+  }
 
-*found = 1;
-END_PROFILE_FUNC();
-return half_index;
-}
-
-size_t profiling_stack_binary_search_insert(const profiling_stack_t* arr, size_t start_index, size_t end_index, const char* value, int *found)
-{
-BEGIN_PROFILE_FUNC();
-
-if (start_index == end_index) {
-const int cmp_value = strcmp(value, arr[start_index].execution_name);
-
-if (cmp_value == 0) {
-*found = 1;
-END_PROFILE_FUNC();
-return start_index;
-}
-if (cmp_value > 0) {
-*found = 0;
-END_PROFILE_FUNC();
-return start_index + 1;
+  *found = 1;
+  END_PROFILE_FUNC();
+  return half_index;
 }
 
-*found = 0;
-END_PROFILE_FUNC();
-return start_index;
-}
+size_t profiling_stack_binary_search_insert(const profiling_stack_t *arr,
+                                            size_t start_index,
+                                            size_t end_index, const char *value,
+                                            int *found) {
+  BEGIN_PROFILE_FUNC();
 
-const size_t half_index = start_index + (end_index - start_index) / 2;
-const int cmp_val = strcmp(value, arr[half_index].execution_name);
+  if (start_index == end_index) {
+    const int cmp_value = strcmp(value, arr[start_index].execution_name);
 
-if (cmp_val < 0) {
-const size_t index = profiling_stack_binary_search_insert(arr, start_index, half_index, value, found);
-END_PROFILE_FUNC();
-return index;
-} else if (cmp_val > 0) {
-if (half_index == end_index - 1) {
-const size_t index = profiling_stack_binary_search_insert(arr, end_index, end_index, value, found);
-END_PROFILE_FUNC();
-return index;
-}
-const size_t index = profiling_stack_binary_search_insert(arr, half_index, end_index, value, found);
-END_PROFILE_FUNC();
-return index;
-}
+    if (cmp_value == 0) {
+      *found = 1;
+      END_PROFILE_FUNC();
+      return start_index;
+    }
+    if (cmp_value > 0) {
+      *found = 0;
+      END_PROFILE_FUNC();
+      return start_index + 1;
+    }
 
-*found = 1;
-END_PROFILE_FUNC();
-return half_index;
+    *found = 0;
+    END_PROFILE_FUNC();
+    return start_index;
+  }
+
+  const size_t half_index = start_index + (end_index - start_index) / 2;
+  const int cmp_val = strcmp(value, arr[half_index].execution_name);
+
+  if (cmp_val < 0) {
+    const size_t index = profiling_stack_binary_search_insert(
+        arr, start_index, half_index, value, found);
+    END_PROFILE_FUNC();
+    return index;
+  } else if (cmp_val > 0) {
+    if (half_index == end_index - 1) {
+      const size_t index = profiling_stack_binary_search_insert(
+          arr, end_index, end_index, value, found);
+      END_PROFILE_FUNC();
+      return index;
+    }
+    const size_t index = profiling_stack_binary_search_insert(
+        arr, half_index, end_index, value, found);
+    END_PROFILE_FUNC();
+    return index;
+  }
+
+  *found = 1;
+  END_PROFILE_FUNC();
+  return half_index;
 }
 
 #endif

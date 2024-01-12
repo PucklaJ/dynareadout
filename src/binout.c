@@ -526,7 +526,7 @@ char *binout_simple_path_to_real(const binout_file *bin_file,
     }
 
     string_builder_append(&real_path, folder->name);
-    char* rv = string_builder_move(&real_path);
+    char *rv = string_builder_move(&real_path);
 
     END_PROFILE_FUNC();
     return rv;
@@ -541,7 +541,6 @@ char *binout_simple_path_to_real(const binout_file *bin_file,
       END_PROFILE_FUNC();
       return NULL;
     }
-
 
     search_index = binout_directory_binary_search_entry(
         folder->children, 0, folder->num_children - 1, &simple_path);
@@ -617,7 +616,7 @@ char *binout_simple_path_to_real(const binout_file *bin_file,
         search_index = binout_directory_binary_search_entry(
             d_folder->children, 0, d_folder->num_children - 1, &simple_path);
         if (search_index != (size_t)~0) {
-          binout_entry_t* entry = &d_folder->children[search_index];
+          binout_entry_t *entry = &d_folder->children[search_index];
 
           if (entry->type == BINOUT_FILE) {
             /* We should be done*/
@@ -654,7 +653,7 @@ char *binout_simple_path_to_real(const binout_file *bin_file,
       return NULL;
     }
 
-    binout_entry_t* entry = &folder->children[search_index];
+    binout_entry_t *entry = &folder->children[search_index];
 
     if (entry->type == BINOUT_FILE) {
       /* Make sure that the simple path is also done*/

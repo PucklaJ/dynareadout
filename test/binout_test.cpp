@@ -344,20 +344,22 @@ TEST_CASE("rwforc") {
 
 TEST_CASE("binout_multi") {
   binout_file binout = binout_open("test_data/binout_multi/binout*");
-  char* err = binout_open_error(&binout);
+  char *err = binout_open_error(&binout);
   if (err) {
-      FAIL(err);
+    FAIL(err);
   }
 
   uint8_t type_id;
   int timed;
-  const char* real_path = binout_simple_path_to_real(&binout, "bndout/velocity/rigidbodies/misc/z_moment0", &type_id, &timed);
+  const char *real_path = binout_simple_path_to_real(
+      &binout, "bndout/velocity/rigidbodies/misc/z_moment0", &type_id, &timed);
   REQUIRE(real_path != NULL);
   REQUIRE(timed != 0);
   CHECK(type_id == BINOUT_TYPE_FLOAT32);
 
   size_t num_values, num_timesteps;
-  float* data = binout_read_timed_f32(&binout, real_path, &num_values, &num_timesteps);
+  float *data =
+      binout_read_timed_f32(&binout, real_path, &num_values, &num_timesteps);
   if (binout.error_string) {
     FAIL(binout.error_string);
   }
