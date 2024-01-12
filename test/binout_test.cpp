@@ -349,6 +349,28 @@ TEST_CASE("binout_multi") {
       FAIL(err);
   }
 
+  uint8_t type_id;
+  int timed;
+  const char* real_path = binout_simple_path_to_real(&binout, "bndout/velocity/rigidbodies/misc/z_moment0", &type_id, &timed);
+  REQUIRE(real_path != NULL);
+  REQUIRE(timed != 0);
+  CHECK(type_id == BINOUT_TYPE_FLOAT32);
+
+  size_t num_values, num_timesteps;
+  float* data = binout_read_timed_f32(&binout, real_path, &num_values, &num_timesteps);
+  if (binout.error_string) {
+    FAIL(binout.error_string);
+  }
+  REQUIRE(data != NULL);
+
+  CHECK(num_timesteps == 1000);
+  CHECK(num_values == 1);
+
+  CHECK(data[000] == 31.256439f);
+  CHECK(data[999] == 50.736660f);
+  CHECK(data[499] == 40.736500f);
+  free(data);
+
   binout_close(&binout);
 }
 
