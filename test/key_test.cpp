@@ -353,7 +353,7 @@ TEST_CASE("key_file_parse") {
   card = &keyword->cards[2];
   card_parse_begin(card, DEFAULT_VALUE_WIDTH);
   CHECK(card_parse_float32(card) == -4.16e-5f);
-  CHECK(card_parse_float64(card) == -4.16e-5);
+  CHECK(card_parse_float64(card) - -4.16e-5 < 1e-10); // On windows using gcc these values are not exactly the same
   card = &keyword->cards[3];
   card_parse_begin(card, DEFAULT_VALUE_WIDTH);
   CHECK(card_parse_float32(card) == 0.0f);
