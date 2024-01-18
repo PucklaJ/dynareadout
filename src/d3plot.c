@@ -171,6 +171,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
   if (CDA.ndim == 5 || CDA.ndim == 7) {
     mattyp = 1;
     CDA.ndim = 3;
+    CDA.element_connectivity_packed = 0;
   } else {
     mattyp = 0;
     if (CDA.ndim == 3) {
