@@ -609,6 +609,15 @@ TEST_CASE("ansys-example-data") {
   d3plot_close(&d3plot);
 }
 
+TEST_CASE("ansys-example-beam") {
+  d3plot_file d3plot = d3plot_open("test_data/ansys/beam/d3plot");
+  if (d3plot.error_string) {
+    FAIL(d3plot.error_string);
+  }
+
+  d3plot_close(&d3plot);
+}
+
 #ifdef BUILD_CPP
 TEST_CASE("d3plotC++") {
   try {
