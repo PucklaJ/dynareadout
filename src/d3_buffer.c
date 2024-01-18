@@ -148,9 +148,9 @@ d3_buffer d3_buffer_open(const char *root_file_name) {
   /* Shrink to fit*/
   buffer.files = realloc(buffer.files, buffer.num_files * sizeof(d3_file));
 
-  /* Determine word_size by reading NDIM and ICODE*/
+  /* Determine word_size by reading NDIM, ICODE, INUM, IT, IA*/
   buffer.word_size = 4;
-  uint32_t ndim32, icode32;
+  uint32_t ndim32, icode32, inum32, it32, ia32;
   d3_pointer ptr = d3_buffer_read_words_at(&buffer, &ndim32, 1, 15);
   d3_pointer_close(&buffer, &ptr);
   if (buffer.error_string) {
@@ -165,9 +165,30 @@ d3_buffer d3_buffer_open(const char *root_file_name) {
     free(buffer.error_string);
     buffer.error_string = NULL;
   }
+  ptr = d3_buffer_read_words_at(&buffer, &inum32, 1, 11);
+  d3_pointer_close(&buffer, &ptr);
+  if (buffer.error_string) {
+    inum32 = 0;
+    free(buffer.error_string);
+    buffer.error_string = NULL;
+  }
+  ptr = d3_buffer_read_words_at(&buffer, &it32, 1, 19);
+  d3_pointer_close(&buffer, &ptr);
+  if (buffer.error_string) {
+    it32 = 999;
+    free(buffer.error_string);
+    buffer.error_string = NULL;
+  }
+  ptr = d3_buffer_read_words_at(&buffer, &ia32, 1, 22);
+  d3_pointer_close(&buffer, &ptr);
+  if (buffer.error_string) {
+    ia32 = 999;
+    free(buffer.error_string);
+    buffer.error_string = NULL;
+  }
 
   buffer.word_size = 8;
-  uint64_t ndim64, icode64;
+  uint64_t ndim64, icode64, inum64, it64, ia64;
   ptr = d3_buffer_read_words_at(&buffer, &ndim64, 1, 15);
   d3_pointer_close(&buffer, &ptr);
   if (buffer.error_string) {
@@ -182,12 +203,47 @@ d3_buffer d3_buffer_open(const char *root_file_name) {
     free(buffer.error_string);
     buffer.error_string = NULL;
   }
+  ptr = d3_buffer_read_words_at(&buffer, &inum64, 1, 11);
+  d3_pointer_close(&buffer, &ptr);
+  if (buffer.error_string) {
+    inum64 = 0;
+    free(buffer.error_string);
+    buffer.error_string = NULL;
+  }
+  ptr = d3_buffer_read_words_at(&buffer, &it64, 1, 19);
+  d3_pointer_close(&buffer, &ptr);
+  if (buffer.error_string) {
+    it64 = 999;
+    free(buffer.error_string);
+    buffer.error_string = NULL;
+  }
+  ptr = d3_buffer_read_words_at(&buffer, &ia64, 1, 22);
+  d3_pointer_close(&buffer, &ptr);
+  if (buffer.error_string) {
+    ia64 = 999;
+    free(buffer.error_string);
+    buffer.error_string = NULL;
+  }
 
-  const int makes_sense32 = (ndim32 >= 2 && ndim32 <= 7) && (icode32 == 2 || icode32 == 6);
-  const int makes_sense64 = (ndim64 >= 2 && ndim64 <= 7) && (icode64 == 2 || icode64 == 6);
+  const int makes_sense32 =
+      (ndim32 >= 2 && ndim32 <= 7) && (icode32 == 2 || icode32 == 6) &&
+      ((inum32 >= 1 && inum32 <= 13) || (inum32 >= 21 && inum32 <= 26) ||
+       (inum32 >= 1001 && inum32 <= 1013) ||
+       (inum32 >= 1021 && inum32 <= 1026)) &&
+      ((it32 >= 0 && it32 <= 3) || (it32 >= 10 && it32 <= 13)) &&
+      (ia32 == 0 || ia32 == 1);
+  const int makes_sense64 =
+      (ndim64 >= 2 && ndim64 <= 7) && (icode64 == 2 || icode64 == 6) &&
+      ((inum64 >= 1 && inum64 <= 13) || (inum64 >= 21 && inum64 <= 26) ||
+       (inum64 >= 1001 && inum64 <= 1013) ||
+       (inum64 >= 1021 && inum64 <= 1026)) &&
+      ((it64 >= 0 && it64 <= 3) || (it64 >= 10 && it64 <= 13)) &&
+      (ia64 == 0 || ia64 == 1);
 
   if ((!makes_sense32 && !makes_sense64) || (makes_sense32 && makes_sense64)) {
-    ERROR_AND_RETURN_BUFFER_F("The d3plot files are broken. 32-Bit (Single Precision)=%u 64-Bit (Double Precision)=&lu", makes_sense32, makes_sense64);
+    ERROR_AND_RETURN_BUFFER_F("The d3plot files are broken. 32-Bit (Single "
+                              "Precision)=%u 64-Bit (Double Precision)=&lu",
+                              makes_sense32, makes_sense64);
   }
 
   /* The word size could be determined*/
