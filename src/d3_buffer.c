@@ -148,9 +148,9 @@ d3_buffer d3_buffer_open(const char *root_file_name) {
   /* Shrink to fit*/
   buffer.files = realloc(buffer.files, buffer.num_files * sizeof(d3_file));
 
-  /* Determine word_size by reading NDIM*/
+  /* Determine word_size by reading NDIM and ICODE*/
   buffer.word_size = 4;
-  uint32_t ndim32;
+  uint32_t ndim32, icode32;
   d3_pointer ptr = d3_buffer_read_words_at(&buffer, &ndim32, 1, 15);
   d3_pointer_close(&buffer, &ptr);
   if (buffer.error_string) {
@@ -158,9 +158,16 @@ d3_buffer d3_buffer_open(const char *root_file_name) {
     free(buffer.error_string);
     buffer.error_string = NULL;
   }
+  ptr = d3_buffer_read_words_at(&buffer, &icode32, 1, 17);
+  d3_pointer_close(&buffer, &ptr);
+  if (buffer.error_string) {
+    icode32 = 0;
+    free(buffer.error_string);
+    buffer.error_string = NULL;
+  }
 
   buffer.word_size = 8;
-  uint64_t ndim64;
+  uint64_t ndim64, icode64;
   ptr = d3_buffer_read_words_at(&buffer, &ndim64, 1, 15);
   d3_pointer_close(&buffer, &ptr);
   if (buffer.error_string) {
@@ -168,12 +175,19 @@ d3_buffer d3_buffer_open(const char *root_file_name) {
     free(buffer.error_string);
     buffer.error_string = NULL;
   }
+  ptr = d3_buffer_read_words_at(&buffer, &icode64, 1, 17);
+  d3_pointer_close(&buffer, &ptr);
+  if (buffer.error_string) {
+    icode64 = 0;
+    free(buffer.error_string);
+    buffer.error_string = NULL;
+  }
 
-  const int makes_sense32 = ndim32 >= 2 && ndim32 <= 7;
-  const int makes_sense64 = ndim64 >= 2 && ndim64 <= 7;
+  const int makes_sense32 = (ndim32 >= 2 && ndim32 <= 7) && (icode32 == 2 || icode32 == 6);
+  const int makes_sense64 = (ndim64 >= 2 && ndim64 <= 7) && (icode64 == 2 || icode64 == 6);
 
   if ((!makes_sense32 && !makes_sense64) || (makes_sense32 && makes_sense64)) {
-    ERROR_AND_RETURN_BUFFER("The d3plot files are broken");
+    ERROR_AND_RETURN_BUFFER_F("The d3plot files are broken. 32-Bit (Single Precision)=%u 64-Bit (Double Precision)=&lu", makes_sense32, makes_sense64);
   }
 
   /* The word size could be determined*/
