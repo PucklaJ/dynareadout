@@ -76,19 +76,35 @@ typedef struct {
         nel27,   /* Number of 27 node Solid Hexahedron Elements*/
         neipb, /* Number of requested material history variables per integration
                   point for beam elements*/
-        nel21p, /* Number of 21 node Solid Pentahedron Elements*/
-        nel15t, /* Number of 15 node Solid Tetrahedron Elements*/
-        soleng, /* if SOLENG>0, this is the position where to find internal
-                   energy density for solid elements in solid element
-                   integration point data.*/
-        nel20t, /* Number of 20 node Solid tetrahedron Elements*/
-        nel40p, /* Number of 40 node Solid Pentahedron Elements*/
-        nel64,  /* Number of 64 node Solid Hexahedron Elements*/
-        quadr,  /* Flag for output of state data for Quadratic elements. =1 for
-                   full element connectivity, =2 for full connectivity and state
-                   data at each integration point*/
-        cubic,  /* Flag for output state data for Cubic elements*/
-        npart;  /* Number of higher order element parts*/
+        nel21p,  /* Number of 21 node Solid Pentahedron Elements*/
+        nel15t,  /* Number of 15 node Solid Tetrahedron Elements*/
+        soleng,  /* if SOLENG>0, this is the position where to find internal
+                    energy density for solid elements in solid element
+                    integration point data.*/
+        nel20t,  /* Number of 20 node Solid tetrahedron Elements*/
+        nel40p,  /* Number of 40 node Solid Pentahedron Elements*/
+        nel64,   /* Number of 64 node Solid Hexahedron Elements*/
+        quadr,   /* Flag for output of state data for Quadratic elements. =1 for
+                    full element connectivity, =2 for full connectivity and state
+                    data at each integration point*/
+        cubic,   /* Flag for output state data for Cubic elements*/
+        tsheng,  /* if TSHENG>0, this is the position where to find internal
+                    energy density for thick shell elements*/
+        nbranch, /* Number of post branches*/
+        penout,  /* 0/1/2. Flag for contact penetration output. =1: output max
+                    contact penetration, x, y, z for each node (3*NUMNP values).
+                    =2, in addition to absolute penetrations, also output
+                    relative (to max possible) x, y, z penetrations. (3*NUMNP
+                    values). Data written after residual forces and moments.*/
+        engout,  /* 0/1. Flag for output contact energy density as a node scalar
+                    field. Data written after contact penetrations.*/
+        bemeng,  /* If BEMENG>0, this is the position where to find internal
+                    energy density for beam elements in the beam element data
+                    block*/
+        kineng,  /* 0/1. Flag for output kinetic energy density as node scalar
+                    field. Data written after contact energy density node scalar
+                    field.*/
+        npart;   /* Number of higher order element parts*/
     /* This will be calculated*/
     d3_word numrbs, beamip;
     /* These variables can by negative*/

@@ -168,8 +168,14 @@ d3plot_file d3plot_open(const char *root_file_name) {
     READ_CONTROL_DATA_PLOT_FILE_WORD(nel64);
     READ_CONTROL_DATA_PLOT_FILE_WORD(quadr);
     READ_CONTROL_DATA_PLOT_FILE_WORD(cubic);
+    READ_CONTROL_DATA_PLOT_FILE_WORD(tsheng);
+    READ_CONTROL_DATA_PLOT_FILE_WORD(nbranch);
+    READ_CONTROL_DATA_PLOT_FILE_WORD(penout);
+    READ_CONTROL_DATA_PLOT_FILE_WORD(engout);
+    READ_CONTROL_DATA_PLOT_FILE_WORD(bemeng);
+    READ_CONTROL_DATA_PLOT_FILE_WORD(kineng);
 
-    d3_buffer_skip_words(&plot_file.buffer, &d3_ptr, extra - 12);
+    d3_buffer_skip_words(&plot_file.buffer, &d3_ptr, extra - 18);
 
     if (CDA.quadr > 0 || CDA.cubic > 0) {
       READ_CONTROL_DATA_PLOT_FILE_WORD(npart);
@@ -196,6 +202,12 @@ d3plot_file d3plot_open(const char *root_file_name) {
     CDA.nel64 = 0;
     CDA.quadr = 0;
     CDA.cubic = 0;
+    CDA.tsheng = 0;
+    CDA.nbranch = 0;
+    CDA.penout = 0;
+    CDA.engout = 0;
+    CDA.bemeng = 0;
+    CDA.kineng = 0;
     CDA.npart = 0;
   }
 
