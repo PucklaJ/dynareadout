@@ -43,6 +43,10 @@ typedef struct {
         iv,       /* Flag for velocities*/
         ia,       /* Flag for accelerations*/
         nummat8,  /* Number of materials used by the 8 node solids*/
+        numds,    /* If < 0, Shell element data is output for 4 in-plane Gauss
+                     points. MAXINT will be 4 times number of points through the
+                     plane.*/
+        numst,    /* =0 for d3plot/d3part */
         nv3d,     /* Number of values in database for each solid element*/
         nel2,     /* Number of 2 node one-dimensional elements (beams)*/
         nummat2,  /* Number of materials used by the 2 node 1D elements*/

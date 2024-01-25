@@ -116,8 +116,8 @@ d3plot_file d3plot_open(const char *root_file_name) {
   READ_CONTROL_DATA_PLOT_FILE_WORD(ia);
   READ_CONTROL_DATA_PLOT_FILE_SIGNED_WORD(nel8);
   READ_CONTROL_DATA_PLOT_FILE_WORD(nummat8);
-  d3_buffer_skip_words(&plot_file.buffer, &d3_ptr, 1); /* TODO: NUMDS*/
-  d3_buffer_skip_words(&plot_file.buffer, &d3_ptr, 1); /* TODO: NUMST*/
+  READ_CONTROL_DATA_PLOT_FILE_WORD(numds);
+  READ_CONTROL_DATA_PLOT_FILE_WORD(numst);
   READ_CONTROL_DATA_PLOT_FILE_WORD(nv3d);
   READ_CONTROL_DATA_PLOT_FILE_WORD(nel2);
   READ_CONTROL_DATA_PLOT_FILE_WORD(nummat2);
@@ -341,7 +341,8 @@ d3plot_file d3plot_open(const char *root_file_name) {
     ERROR_AND_RETURN("The given order of the elements is not supported");
   }
 
-  /* We are done with CONTROL DATA now comes the real data*/
+  /* We are done with CONTROL DATA now comes the real data, but first let's say
+   * bye bye if the d3plot contains unsupported data*/
 
   if (mattyp) {
     ERROR_AND_RETURN("MATERIAL TYPE DATA is not supported");
@@ -355,6 +356,15 @@ d3plot_file d3plot_open(const char *root_file_name) {
   }
   if (npefg) {
     ERROR_AND_RETURN("PARTICLE DATA is not implemented");
+  }
+  if (CDA.numds != 0) {
+    /* TODO: NUMDS*/
+    ERROR_AND_RETURN_F(
+        "NUMDS (%lu) with a different value than 0 is not supported",
+        CDA.numds);
+  }
+  if (CDA.numst != 0) {
+    ERROR_AND_RETURN_F("NUMST (%lu) should be 0", CDA.numst);
   }
 
   if (!_d3plot_read_geometry_data(&plot_file, &d3_ptr)) {
