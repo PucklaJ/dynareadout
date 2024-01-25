@@ -105,10 +105,14 @@ TEST_CASE("d3_buffer_seek") {
         return;
       }
       if (i == 0) {
-        char data[64];
-        uint32_t ndim = 3;
-        memcpy(&data[60], &ndim, sizeof(ndim));
-        fwrite(data, 1, 64, file);
+        char data[22 * 4 + 4];
+        uint32_t ndim = 3, icode = 2, inum = 10, it = 1, ia = 0;
+        memcpy(&data[15 * 4], &ndim, sizeof(ndim));
+        memcpy(&data[17 * 4], &icode, sizeof(icode));
+        memcpy(&data[11 * 4], &inum, sizeof(inum));
+        memcpy(&data[19 * 4], &it, sizeof(it));
+        memcpy(&data[22 * 4], &ia, sizeof(ia));
+        fwrite(data, 1, sizeof(data), file);
       } else {
         const uint32_t data = (uint32_t)i;
         fwrite(&data, sizeof(data), 1, file);
@@ -129,7 +133,7 @@ TEST_CASE("d3_buffer_seek") {
   CHECK(buffer.num_files == 1000);
 
   size_t i = 1;
-  d3_buffer_skip_words(&buffer, &d3_ptr, 16);
+  d3_buffer_skip_words(&buffer, &d3_ptr, 23);
   while (i < 1000) {
     uint32_t data;
     d3_buffer_read_words(&buffer, &d3_ptr, &data, 1);
@@ -149,63 +153,63 @@ TEST_CASE("d3_buffer_seek") {
 // -_(°_°)_-
 #ifndef _WIN32
   uint32_t data = 0;
-  d3_buffer_read_words_at(&buffer, &data, 1, 15 + 999);
+  d3_buffer_read_words_at(&buffer, &data, 1, 22 + 999);
   if (buffer.error_string) {
     FAIL(buffer.error_string);
     d3_buffer_close(&buffer);
     return;
   }
   CHECK(data == 999);
-  d3_buffer_read_words_at(&buffer, &data, 1, 15 + 600);
+  d3_buffer_read_words_at(&buffer, &data, 1, 22 + 600);
   if (buffer.error_string) {
     FAIL(buffer.error_string);
     d3_buffer_close(&buffer);
     return;
   }
   CHECK(data == 600);
-  d3_buffer_read_words_at(&buffer, &data, 1, 15 + 400);
+  d3_buffer_read_words_at(&buffer, &data, 1, 22 + 400);
   if (buffer.error_string) {
     FAIL(buffer.error_string);
     d3_buffer_close(&buffer);
     return;
   }
   CHECK(data == 400);
-  d3_buffer_read_words_at(&buffer, &data, 1, 15 + 300);
+  d3_buffer_read_words_at(&buffer, &data, 1, 22 + 300);
   if (buffer.error_string) {
     FAIL(buffer.error_string);
     d3_buffer_close(&buffer);
     return;
   }
   CHECK(data == 300);
-  d3_buffer_read_words_at(&buffer, &data, 1, 15 + 100);
+  d3_buffer_read_words_at(&buffer, &data, 1, 22 + 100);
   if (buffer.error_string) {
     FAIL(buffer.error_string);
     d3_buffer_close(&buffer);
     return;
   }
   CHECK(data == 100);
-  d3_buffer_read_words_at(&buffer, &data, 1, 15 + 1);
+  d3_buffer_read_words_at(&buffer, &data, 1, 22 + 1);
   if (buffer.error_string) {
     FAIL(buffer.error_string);
     d3_buffer_close(&buffer);
     return;
   }
   CHECK(data == 1);
-  d3_buffer_read_words_at(&buffer, &data, 1, 15 + 999);
+  d3_buffer_read_words_at(&buffer, &data, 1, 22 + 999);
   if (buffer.error_string) {
     FAIL(buffer.error_string);
     d3_buffer_close(&buffer);
     return;
   }
   CHECK(data == 999);
-  d3_buffer_read_words_at(&buffer, &data, 1, 15 + 544);
+  d3_buffer_read_words_at(&buffer, &data, 1, 22 + 544);
   if (buffer.error_string) {
     FAIL(buffer.error_string);
     d3_buffer_close(&buffer);
     return;
   }
   CHECK(data == 544);
-  d3_buffer_read_words_at(&buffer, &data, 1, 15 + 2);
+  d3_buffer_read_words_at(&buffer, &data, 1, 22 + 2);
   if (buffer.error_string) {
     FAIL(buffer.error_string);
     d3_buffer_close(&buffer);
