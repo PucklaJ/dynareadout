@@ -72,7 +72,23 @@ typedef struct {
         nmmat,   /* Total number of materials*/
         nel48,   /* Number of 8 node Shells*/
         nel20,   /* Number of 20 Node Solid Elements*/
-        nt3d /* Number of Thermal Element Variables*/;
+        nt3d,    /* Number of Thermal Element Variables*/
+        nel27,   /* Number of 27 node Solid Hexahedron Elements*/
+        neipb, /* Number of requested material history variables per integration
+                  point for beam elements*/
+        nel21p, /* Number of 21 node Solid Pentahedron Elements*/
+        nel15t, /* Number of 15 node Solid Tetrahedron Elements*/
+        soleng, /* if SOLENG>0, this is the position where to find internal
+                   energy density for solid elements in solid element
+                   integration point data.*/
+        nel20t, /* Number of 20 node Solid tetrahedron Elements*/
+        nel40p, /* Number of 40 node Solid Pentahedron Elements*/
+        nel64,  /* Number of 64 node Solid Hexahedron Elements*/
+        quadr,  /* Flag for output of state data for Quadratic elements. =1 for
+                   full element connectivity, =2 for full connectivity and state
+                   data at each integration point*/
+        cubic,  /* Flag for output state data for Cubic elements*/
+        npart;  /* Number of higher order element parts*/
     /* This will be calculated*/
     d3_word numrbs;
     /* These variables can by negative*/

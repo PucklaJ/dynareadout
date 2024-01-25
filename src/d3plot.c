@@ -157,9 +157,45 @@ d3plot_file d3plot_open(const char *root_file_name) {
   if (extra > 0) {
     READ_CONTROL_DATA_PLOT_FILE_WORD(nel20);
     READ_CONTROL_DATA_PLOT_FILE_WORD(nt3d);
+    READ_CONTROL_DATA_PLOT_FILE_WORD(nel27);
+    READ_CONTROL_DATA_PLOT_FILE_WORD(neipb);
+    READ_CONTROL_DATA_PLOT_FILE_WORD(nel21p);
+    READ_CONTROL_DATA_PLOT_FILE_WORD(nel15t);
+    READ_CONTROL_DATA_PLOT_FILE_WORD(soleng);
+    READ_CONTROL_DATA_PLOT_FILE_WORD(nel20t);
+    READ_CONTROL_DATA_PLOT_FILE_WORD(nel40p);
+    READ_CONTROL_DATA_PLOT_FILE_WORD(nel64);
+    READ_CONTROL_DATA_PLOT_FILE_WORD(quadr);
+    READ_CONTROL_DATA_PLOT_FILE_WORD(cubic);
+
+    d3_buffer_skip_words(&plot_file.buffer, &d3_ptr, extra - 12);
+
+    if (CDA.quadr > 0 || CDA.cubic > 0) {
+      READ_CONTROL_DATA_PLOT_FILE_WORD(npart);
+      size_t i = 0;
+      while (i < CDA.npart) {
+        /* TODO: data of higher order element parts*/
+        d3_buffer_skip_words(&plot_file.buffer, &d3_ptr, 9);
+
+        i++;
+      }
+    } else {
+      CDA.npart = 0;
+    }
   } else {
     CDA.nel20 = 0;
     CDA.nt3d = 0;
+    CDA.nel27 = 0;
+    CDA.neipb = 0;
+    CDA.nel21p = 0;
+    CDA.nel15t = 0;
+    CDA.soleng = 0;
+    CDA.nel20t = 0;
+    CDA.nel40p = 0;
+    CDA.nel64 = 0;
+    CDA.quadr = 0;
+    CDA.cubic = 0;
+    CDA.npart = 0;
   }
 
   /* Check if an error ocurred somewhere while reading the control data*/
