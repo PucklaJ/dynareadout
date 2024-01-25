@@ -268,6 +268,39 @@ int _d3plot_read_extra_node_connectivity(d3plot_file *plot_file,
     /* TODO: read function for nel20 data*/
   }
 
+  if (CDP.nel27 > 0 && CDP.quadr > 0) {
+    data_pointer += 28 * CDP.nel27;
+    /* TODO: read function for nel27 data*/
+  }
+
+  if (CDP.nel21p > 0 && CDP.quadr > 0) {
+    data_pointer += 22 * CDP.nel21p;
+    /* TODO: read function for nel21p data*/
+  }
+
+  if (CDP.nel15t > 0 && CDP.quadr > 0) {
+    data_pointer += 16 * CDP.nel15t;
+    /* NOTE: The docs say 8 * CDP.nel15 -_(°_°)_-*/
+    /* TODO: read function for nel15t data*/
+  }
+
+  if (CDP.nel20t > 0 && CDP.cubic > 0) {
+    data_pointer += 21 * CDP.nel20t;
+    /* TODO: read function for nel20t data*/
+  }
+
+  if (CDP.nel40p > 0 && CDP.cubic > 0) {
+    data_pointer += 41 * CDP.nel40p;
+    /* NOTE: the docs say "element internal number and 20 nodes for each
+     * element" -_(°_°)_-*/
+    /* TODO: read function for nel40p data*/
+  }
+
+  if (CDP.nel64 > 0 && CDP.cubic > 0) {
+    data_pointer += 65 * CDP.nel64;
+    /* TODO: read function for nel64 data*/
+  }
+
   /* Skip everything at once*/
   d3_buffer_skip_words(&plot_file->buffer, d3_ptr,
                        data_pointer - data_pointer_start);
