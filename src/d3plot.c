@@ -366,6 +366,17 @@ d3plot_file d3plot_open(const char *root_file_name) {
   if (CDA.numst != 0) {
     ERROR_AND_RETURN_F("NUMST (%lu) should be 0", CDA.numst);
   }
+  if (CDA.it != 0) {
+    /* TODO: IT*/
+    ERROR_AND_RETURN_F(
+        "IT (%lu) with a different value than 0 is not supported", CDA.it);
+  }
+  if (CDA.iu != 1 || CDA.iv != 1 || CDA.ia != 1) {
+    /* TODO: Support IU, IV and IA with 0*/
+    ERROR_AND_RETURN_F("IU (%lu), IV (%lu) and IA (%lu) with a different value "
+                       "than 1 are not supported",
+                       CDA.iu, CDA.iv, CDA.ia);
+  }
 
   if (!_d3plot_read_geometry_data(&plot_file, &d3_ptr)) {
     END_PROFILE_FUNC();
