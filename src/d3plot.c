@@ -161,7 +161,8 @@ d3plot_file d3plot_open(const char *root_file_name) {
     READ_CONTROL_DATA_PLOT_FILE_WORD(neipb);
     READ_CONTROL_DATA_PLOT_FILE_WORD(nel21p);
     READ_CONTROL_DATA_PLOT_FILE_WORD(nel15t);
-    READ_CONTROL_DATA_PLOT_FILE_WORD(soleng);
+    READ_CONTROL_DATA_PLOT_FILE_WORD(
+        soleng); /* NOTE: I don't know what SOLENG > 0 does -_(°_°)_-*/
     READ_CONTROL_DATA_PLOT_FILE_WORD(nel20t);
     READ_CONTROL_DATA_PLOT_FILE_WORD(nel40p);
     READ_CONTROL_DATA_PLOT_FILE_WORD(nel64);
@@ -203,6 +204,9 @@ d3plot_file d3plot_open(const char *root_file_name) {
     ERROR_AND_RETURN_F("Failed to read the CONTROL DATA: %s",
                        plot_file.buffer.error_string);
   }
+
+  /* Calculate BEAMIP*/
+  CDA.beamip = (CDA.nv1d - 6 - CDA.neipb * 3) / (5 + CDA.neipb);
 
   if (CDA.ndim == 5 || CDA.ndim == 7) {
     mattyp = 1;
@@ -1702,7 +1706,7 @@ d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
       beams[i].torsional_resultant = data[o++];
       if (plot_file->control_data.nv1d > 6) {
         /* TODO: If there are values output at beam integration points, then
-         * NV1D = 6 + 5 * BEAMIP*/
+         * NV1D = 6 + 5 * BEAMIP + NEIPB * (3 + BEAMIP)*/
         o += plot_file->control_data.nv1d - 6;
       }
 
@@ -1738,7 +1742,7 @@ d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
       o += sizeof(d3plot_beam) / sizeof(double);
       if (plot_file->control_data.nv1d > 6) {
         /* TODO: If there are values output at beam integration points, then
-         * NV1D = 6 + 5 * BEAMIP*/
+         * NV1D = 6 + 5 * BEAMIP + NEIPB * (3 + BEAMIP)*/
         o += plot_file->control_data.nv1d - 6;
       }
 

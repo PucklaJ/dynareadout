@@ -90,7 +90,7 @@ typedef struct {
         cubic,  /* Flag for output state data for Cubic elements*/
         npart;  /* Number of higher order element parts*/
     /* This will be calculated*/
-    d3_word numrbs;
+    d3_word numrbs, beamip;
     /* These variables can by negative*/
     int64_t nel8, /* Number of 8 node solid elements*/
         maxint    /* Number of integration points dumped for each shell and the
