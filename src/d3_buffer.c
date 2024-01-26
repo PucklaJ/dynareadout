@@ -128,9 +128,11 @@ d3_buffer d3_buffer_open(const char *root_file_name) {
 
     /* Generate the new file name*/
     i++;
-    sprintf(buffer.files[i].index_string, patterns[i < 10], i);
-    memcpy(&file_name_buffer[buffer.root_file_name_length],
-           buffer.files[i].index_string, 3);
+    if (i < 1000) {
+      sprintf(buffer.files[i].index_string, patterns[i < 10], i);
+      memcpy(&file_name_buffer[buffer.root_file_name_length],
+             buffer.files[i].index_string, 3);
+    }
   }
 
   free(file_name_buffer);
