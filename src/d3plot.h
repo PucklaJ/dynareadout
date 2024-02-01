@@ -117,7 +117,7 @@ typedef struct {
                      MDLOPT flag*/
         ;
     /* These values will also be calculated*/
-    uint8_t mdlopt, istrn;
+    uint8_t mdlopt, istrn, iosol[2];
 
     /* These are some values also being calculated, but are not part of the
      * documentation*/

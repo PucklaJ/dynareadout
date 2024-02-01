@@ -241,9 +241,26 @@ d3plot_file d3plot_open(const char *root_file_name) {
     ERROR_AND_RETURN_F("A ndim value of %llu is not supported", CDA.ndim);
   }
 
+  /* Compute IOSHL and IOSOL */
   i = 0;
   while (i < 4) {
-    CDA.ioshl[i] -= 999 * (CDA.ioshl[i] == 1000);
+    switch (CDA.ioshl[i]) {
+    case 1000:
+      CDA.ioshl[i] = 1;
+      if (i < 3)
+        CDA.iosol[i] = 1;
+      break;
+    case 999:
+      CDA.ioshl[i] = 0;
+      if (i < 3)
+        CDA.iosol[i] = 1;
+      break;
+    default:
+      CDA.ioshl[i] = 0;
+      if (i < 2)
+        CDA.iosol[i] = 0;
+      break;
+    }
 
     i++;
   }
@@ -1349,6 +1366,7 @@ d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
     size_t i = 0;
     size_t o = 0;
     while (i < *num_solids) {
+      /* TODO: Correctly handle IOSOL */
       /* Docs: page 33*/
       /* 1. Sigma-x (true stress in the global system)*/
       solids[i].sigma.x = data[o++];
@@ -1493,6 +1511,7 @@ d3plot_read_thick_shells_state(d3plot_file *plot_file, size_t state,
     size_t i = 0;
     size_t o = 0;
     while (i < *num_thick_shells) {
+      /* TODO: Correctly handle IOSHL */
       thick_shells[i].mid.sigma.x = data[o++];
       thick_shells[i].mid.sigma.y = data[o++];
       thick_shells[i].mid.sigma.z = data[o++];
@@ -1811,6 +1830,10 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
   }
 
   const size_t num_integration_points = (size_t)plot_file->control_data.maxint;
+  const uint8_t stress_written = plot_file->control_data.ioshl[0];
+  const uint8_t plastic_strain_written = plot_file->control_data.ioshl[1];
+  const uint8_t force_resultant_written = plot_file->control_data.ioshl[2];
+  const uint8_t thickness_energy_written = plot_file->control_data.ioshl[3];
 
   /* Allocate memory for all history variables of all shells*/
   *num_history_variables = plot_file->control_data.neips;
@@ -1872,14 +1895,22 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
           break;
         }
 
-        /* TODO: Correctly handle IOSHL and IOSOL */
-        ip->sigma.x = data[o++];
-        ip->sigma.y = data[o++];
-        ip->sigma.z = data[o++];
-        ip->sigma.xy = data[o++];
-        ip->sigma.yz = data[o++];
-        ip->sigma.zx = data[o++];
-        ip->effective_plastic_strain = data[o++];
+        if (stress_written) {
+          ip->sigma.x = data[o++];
+          ip->sigma.y = data[o++];
+          ip->sigma.z = data[o++];
+          ip->sigma.xy = data[o++];
+          ip->sigma.yz = data[o++];
+          ip->sigma.zx = data[o++];
+        } else {
+          memset(&ip->sigma, 0, sizeof(d3plot_tensor));
+        }
+
+        if (plastic_strain_written) {
+          ip->effective_plastic_strain = data[o++];
+        } else {
+          ip->effective_plastic_strain = 0.0;
+        }
 
         if (plot_file->control_data.neips != 0) {
           /* Define NEIPS additional history values here*/
@@ -1898,20 +1929,33 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
         j++;
       }
 
-      shells[i].bending_moment.x = data[o++];
-      shells[i].bending_moment.y = data[o++];
-      shells[i].bending_moment.xy = data[o++];
-      shells[i].shear_resultant.x = data[o++];
-      shells[i].shear_resultant.y = data[o++];
-      shells[i].normal_resultant.x = data[o++];
-      shells[i].normal_resultant.y = data[o++];
-      shells[i].normal_resultant.xy = data[o++];
-      shells[i].thickness = data[o++];
-      shells[i].element_dependent_variables[0] = data[o++];
-      shells[i].element_dependent_variables[1] = data[o++];
+      if (force_resultant_written) {
+        shells[i].bending_moment.x = data[o++];
+        shells[i].bending_moment.y = data[o++];
+        shells[i].bending_moment.xy = data[o++];
+        shells[i].shear_resultant.x = data[o++];
+        shells[i].shear_resultant.y = data[o++];
+        shells[i].normal_resultant.x = data[o++];
+        shells[i].normal_resultant.y = data[o++];
+        shells[i].normal_resultant.xy = data[o++];
+      } else {
+        memset(&shells[i].bending_moment, 0, sizeof(double) * 8);
+      }
+
+      if (thickness_energy_written) {
+        shells[i].thickness = data[o++];
+        shells[i].element_dependent_variables[0] = data[o++];
+        shells[i].element_dependent_variables[1] = data[o++];
+        if (plot_file->control_data.istrn == 0) {
+          shells[i].internal_energy = data[o++];
+        } else {
+          shells[i].internal_energy = 0.0;
+        }
+      } else {
+        memset(&shells[i].thickness, 0, sizeof(double) * 4);
+      }
 
       if (plot_file->control_data.istrn == 0) {
-        shells[i].internal_energy = data[o++];
         memset(&shells[i].inner_epsilon, 0, 2 * sizeof(d3plot_tensor));
       } else if (plot_file->control_data.istrn == 1) {
         shells[i].inner_epsilon.x = data[o++];
@@ -1927,18 +1971,26 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
         shells[i].outer_epsilon.xy = data[o++];
         shells[i].outer_epsilon.yz = data[o++];
         shells[i].outer_epsilon.zx = data[o++];
-
-        if (plot_file->control_data.nv2d >= 45) {
-          shells[i].internal_energy = data[o++];
-        } else {
-          shells[i].internal_energy = 0.0;
-        }
       }
 
       i++;
     }
 
     free(data);
+    if (o != plot_file->control_data.nel4 * plot_file->control_data.nv2d) {
+      ERROR_AND_NO_RETURN_F_PTR(
+          "Sanity Check: Did not read all data from shells state. o=%zu NEL4 "
+          "(%llu) * NV2D (%llu) = %llu",
+          o, plot_file->control_data.nel4, plot_file->control_data.nv2d,
+          plot_file->control_data.nel4 * plot_file->control_data.nv2d);
+      *num_shells = 0;
+      free(shells);
+      free(history_variables);
+      free(additional_integration_points);
+
+      END_PROFILE_FUNC();
+      return NULL;
+    }
   } else {
     double *data = malloc(plot_file->control_data.nel4 *
                           plot_file->control_data.nv2d * sizeof(double));
@@ -1955,6 +2007,8 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
       *num_shells = 0;
       free(data);
       free(shells);
+      free(history_variables);
+      free(additional_integration_points);
 
       END_PROFILE_FUNC();
       return NULL;
@@ -1988,9 +2042,18 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
           break;
         }
 
-        /* TODO: Correctly handle IOSHL and IOSOL */
-        memcpy(ip, &data[o], sizeof(d3plot_tensor) + sizeof(double));
-        o += (sizeof(d3plot_tensor) + sizeof(double)) / sizeof(double);
+        if (stress_written) {
+          memcpy(&ip->sigma, &data[o], sizeof(d3plot_tensor));
+          o += sizeof(d3plot_tensor) / sizeof(double);
+        } else {
+          memset(&ip->sigma, 0, sizeof(d3plot_tensor));
+        }
+
+        if (plastic_strain_written) {
+          ip->effective_plastic_strain = data[o++];
+        } else {
+          ip->effective_plastic_strain = 0.0;
+        }
 
         /* Define NEIPS additional history variables here */
         if (plot_file->control_data.neips != 0) {
@@ -2008,34 +2071,50 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
         j++;
       }
 
-      memcpy(&shells[i].bending_moment, &data[o],
-             sizeof(d3plot_x_y_xy) +     /* Bending moment (Mx, My, Mxy)*/
-                 sizeof(d3plot_x_y) +    /* Shear resultant (Qx, Qy)*/
-                 sizeof(d3plot_x_y_xy) + /* Normal resultant (Nx, Ny, Nxy)*/
-                 sizeof(double) +        /* Thickness*/
-                 sizeof(double) * 2      /* 2 Element dependent variables*/
-      );
-      o += (sizeof(d3plot_x_y_xy) + sizeof(d3plot_x_y) + sizeof(d3plot_x_y_xy) +
-            sizeof(double) + sizeof(double) * 2) /
-           sizeof(double);
-      if (plot_file->control_data.istrn == 0) {
-        shells[i].internal_energy = data[o++];
-        memset(&shells[i].inner_epsilon, 0, 2 * sizeof(d3plot_tensor));
-      } else if (plot_file->control_data.istrn == 1) {
-        memcpy(&shells[i].inner_epsilon, &data[o], 2 * sizeof(d3plot_tensor));
-        o += 2 * sizeof(d3plot_tensor) / sizeof(double);
+      if (force_resultant_written) {
+        memcpy(&shells[i].bending_moment, &data[o], sizeof(double) * 8);
+        o += 8;
+      } else {
+        memset(&shells[i].bending_moment, 0, sizeof(double) * 8);
+      }
 
-        if (plot_file->control_data.nv2d >= 45) {
+      if (thickness_energy_written) {
+        memcpy(&shells[i].thickness, &data[o], sizeof(double) * 3);
+        o += 3;
+        if (plot_file->control_data.istrn == 0) {
           shells[i].internal_energy = data[o++];
         } else {
           shells[i].internal_energy = 0.0;
         }
+      } else {
+        memset(&shells[i].thickness, 0, sizeof(double) * 4);
+      }
+
+      if (plot_file->control_data.istrn == 0) {
+        memset(&shells[i].inner_epsilon, 0, 2 * sizeof(d3plot_tensor));
+      } else if (plot_file->control_data.istrn == 1) {
+        memcpy(&shells[i].inner_epsilon, &data[o], 2 * sizeof(d3plot_tensor));
+        o += 2 * sizeof(d3plot_tensor) / sizeof(double);
       }
 
       i++;
     }
 
     free(data);
+    if (o != plot_file->control_data.nel4 * plot_file->control_data.nv2d) {
+      ERROR_AND_NO_RETURN_F_PTR(
+          "Sanity Check: Did not read all data from shells state. o=%zu NEL4 "
+          "(%llu) * NV2D (%llu) = %llu",
+          o, plot_file->control_data.nel4, plot_file->control_data.nv2d,
+          plot_file->control_data.nel4 * plot_file->control_data.nv2d);
+      *num_shells = 0;
+      free(shells);
+      free(history_variables);
+      free(additional_integration_points);
+
+      END_PROFILE_FUNC();
+      return NULL;
+    }
   }
 
   END_PROFILE_FUNC();
