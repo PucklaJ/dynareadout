@@ -597,7 +597,12 @@ TEST_CASE("d3plot") {
     CHECK(shells[i].mid.history_variables == NULL);
     CHECK(shells[i].inner.history_variables == NULL);
     CHECK(shells[i].outer.history_variables == NULL);
+    CHECK(shells[i].add_ips == NULL);
   }
+
+  CHECK(shells[678].mid.sigma.x - -0.0010734831 < 1e-10);
+  CHECK(shells[789].inner.effective_plastic_strain - 0.0002128475 < 1e-10);
+  CHECK(shells[45678].bending_moment.x == 0.0);
 
   d3plot_free_shells_state(shells);
 

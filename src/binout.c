@@ -640,7 +640,7 @@ char *binout_simple_path_to_real(const binout_file *bin_file,
           } else {
             folder = entry;
             *timed = 1;
-            /* TODO: Update read_timed to work with folders inside d folders */
+
             string_builder_append_char(&real_path, PATH_SEP);
             string_builder_append(&real_path, folder->name);
             continue;
