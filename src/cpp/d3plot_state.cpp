@@ -29,7 +29,7 @@
 
 namespace dro {
 
-template <> Array<D3plotShell>::~Array<D3plotShell>() {
+template <> Array<D3plotShell>::~Array<D3plotShell>() noexcept {
   if (m_delete_data && m_data) {
     d3plot_free_shells_state(reinterpret_cast<d3plot_shell *>(m_data));
     m_data = nullptr;
@@ -52,54 +52,12 @@ D3plotShell::get_add_ip_history_variables(size_t add_idx) const {
                        num_history_variables, false);
 }
 
-D3plotThickShellsState::D3plotThickShellsState(
-    D3plotThickShellsState &&rhs) noexcept {
-  *this = std::move(rhs);
-}
-
-D3plotThickShellsState::D3plotThickShellsState(d3plot_thick_shell *data,
-                                               size_t size,
-                                               size_t num_history_variables,
-                                               bool delete_data) noexcept
-    : Array(data, size, delete_data),
-      m_num_history_variables(num_history_variables) {}
-
-D3plotThickShellsState::~D3plotThickShellsState() noexcept {
-  if (m_data && m_delete_data) {
+template <> Array<D3plotThickShell>::~Array<D3plotThickShell>() noexcept {
+  if (m_delete_data && m_data) {
     d3plot_free_thick_shells_state(
         reinterpret_cast<d3plot_thick_shell *>(m_data));
-    m_data = NULL;
+    m_data = nullptr;
   }
-}
-
-D3plotThickShellsState &
-D3plotThickShellsState::operator=(D3plotThickShellsState &&rhs) noexcept {
-  m_data = rhs.m_data;
-  m_size = rhs.m_size;
-  m_delete_data = rhs.m_delete_data;
-
-  rhs.m_data = nullptr;
-  rhs.m_size = 0;
-  rhs.m_delete_data = false;
-  return *this;
-}
-
-const Array<double>
-D3plotThickShellsState::get_mid_history_variables(size_t index) const {
-  return Array<double>(Array::operator[](index).mid.history_variables,
-                       m_num_history_variables, false);
-}
-
-const Array<double>
-D3plotThickShellsState::get_inner_history_variables(size_t index) const {
-  return Array<double>(Array::operator[](index).inner.history_variables,
-                       m_num_history_variables, false);
-}
-
-const Array<double>
-D3plotThickShellsState::get_outer_history_variables(size_t index) const {
-  return Array<double>(Array::operator[](index).outer.history_variables,
-                       m_num_history_variables, false);
 }
 
 } // namespace dro

@@ -935,6 +935,17 @@ TEST_CASE("d3plotC++") {
       CHECK(shells[i].get_add_ips().empty());
     }
   }
+
+  {
+    const auto thick_shells = plot_file.read_thick_shells_state(101);
+    CHECK(thick_shells.size() == 0);
+
+    for (size_t i = 0; i < thick_shells.size(); i++) {
+      CHECK(thick_shells[i].get_mid_history_variables().empty());
+      CHECK(thick_shells[i].get_inner_history_variables().empty());
+      CHECK(thick_shells[i].get_outer_history_variables().empty());
+    }
+  }
 }
 #endif
 

@@ -162,6 +162,8 @@ typedef struct {
     d3plot_tensor outer_epsilon;
     d3plot_tensor outer_strain;
   };
+
+  size_t num_history_variables;
 } d3plot_thick_shell;
 
 typedef struct {

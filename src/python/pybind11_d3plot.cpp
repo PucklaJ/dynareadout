@@ -39,40 +39,9 @@ inline void add_d3plot_arrays_to_module(py::module_ &m) {
   dro::add_array_type_to_module<d3plot_beam>(m);
   dro::add_array_type_to_module<d3plot_surface>(m);
   dro::add_array_type_to_module<dro::D3plotShell>(m);
+  dro::add_array_type_to_module<dro::D3plotThickShell>(m);
   dro::add_array_type_to_module<dro::dVec3>(m).def(
       "__repr__", dro::stream_to_string<dro::dVec3>);
-
-  py::class_<dro::D3plotThickShellsState>(
-      m, dro::get_array_name<d3plot_thick_shell>())
-      .def("__len__", &dro::D3plotThickShellsState::size)
-      .def("__getitem__",
-           [](dro::D3plotThickShellsState &self, size_t index) {
-             try {
-               return self[index];
-             } catch (const std::runtime_error &) {
-               throw py::index_error("Index out of range");
-             }
-           })
-      .def("get_num_history_variables",
-           &dro::D3plotThickShellsState::get_num_history_variables,
-           "Returns the number of history variables per surface")
-      .def("get_mid_history_variables",
-           &dro::D3plotThickShellsState::get_mid_history_variables,
-           "Returns the history variables of the mid surface of the thick "
-           "shell under index",
-           py::arg("index"))
-      .def("get_inner_history_variables",
-           &dro::D3plotThickShellsState::get_inner_history_variables,
-           "Returns the history variables of the inner surface of the thick "
-           "shell under index",
-           py::arg("index"))
-      .def("get_outer_history_variables",
-           &dro::D3plotThickShellsState::get_outer_history_variables,
-           "Returns the history variables of the outer surface of the thick "
-           "shell under index",
-           py::arg("index"))
-
-      ;
 }
 
 void add_d3plot_library_to_module(py::module_ &m) {
@@ -174,15 +143,15 @@ void add_d3plot_library_to_module(py::module_ &m) {
 
       ;
 
-  py::class_<d3plot_thick_shell>(m, "d3plot_thick_shell")
-      .def_readonly("mid", &d3plot_thick_shell::mid)
-      .def_readonly("inner", &d3plot_thick_shell::inner)
-      .def_readonly("outer", &d3plot_thick_shell::outer)
-      .def_readonly("inner_epsilon", &d3plot_thick_shell::inner_epsilon)
-      .def_readonly("inner_strain", &d3plot_thick_shell::inner_strain)
-      .def_readonly("outer_epsilon", &d3plot_thick_shell::outer_epsilon)
-      .def_readonly("outer_strain", &d3plot_thick_shell::outer_strain)
-      .def("__str__", &dro::stream_to_string<d3plot_thick_shell>,
+  py::class_<dro::D3plotThickShell>(m, "D3plotThickShell")
+      .def_readonly("mid", &dro::D3plotThickShell::mid)
+      .def_readonly("inner", &dro::D3plotThickShell::inner)
+      .def_readonly("outer", &dro::D3plotThickShell::outer)
+      .def_readonly("inner_epsilon", &dro::D3plotThickShell::inner_epsilon)
+      .def_readonly("inner_strain", &dro::D3plotThickShell::inner_strain)
+      .def_readonly("outer_epsilon", &dro::D3plotThickShell::outer_epsilon)
+      .def_readonly("outer_strain", &dro::D3plotThickShell::outer_strain)
+      .def("__str__", &dro::stream_to_string<dro::D3plotThickShell>,
            py::return_value_policy::take_ownership)
 
       ;

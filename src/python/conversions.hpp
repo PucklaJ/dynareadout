@@ -198,7 +198,7 @@ template <typename T> inline const char *get_array_name() {
     return "ThickShellConArray";
   } else if constexpr (std::is_same_v<T, d3plot_solid>) {
     return "SolidArray";
-  } else if constexpr (std::is_same_v<T, d3plot_thick_shell>) {
+  } else if constexpr (std::is_same_v<T, D3plotThickShell>) {
     return "ThickShellArray";
   } else if constexpr (std::is_same_v<T, d3plot_beam>) {
     return "BeamArray";
