@@ -932,6 +932,7 @@ TEST_CASE("d3plotC++") {
       CHECK(shells[i].get_mid_history_variables().empty());
       CHECK(shells[i].get_inner_history_variables().empty());
       CHECK(shells[i].get_outer_history_variables().empty());
+      CHECK(shells[i].get_add_ips().empty());
     }
   }
 }

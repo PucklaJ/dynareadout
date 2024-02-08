@@ -32,14 +32,20 @@ namespace dro {
 
 class D3plotShell : public d3plot_shell {
 public:
-  inline const Array<double> get_mid_history_variables() const {
+  inline const Array<double> get_mid_history_variables() const noexcept {
     return Array<double>(mid.history_variables, num_history_variables, false);
   }
-  inline const Array<double> get_inner_history_variables() const {
+  inline const Array<double> get_inner_history_variables() const noexcept {
     return Array<double>(inner.history_variables, num_history_variables, false);
   }
-  inline const Array<double> get_outer_history_variables() const {
+  inline const Array<double> get_outer_history_variables() const noexcept {
     return Array<double>(outer.history_variables, num_history_variables, false);
+  }
+  const Array<double> get_add_ip_history_variables(size_t add_idx) const;
+
+  inline const Array<d3plot_surface> get_add_ips() const noexcept {
+    return Array<d3plot_surface>(add_ips, num_additional_integration_points,
+                                 false);
   }
 };
 
@@ -63,11 +69,11 @@ public:
   // Returns the history variables of the mid surface of the thick shell under
   // index
   const Array<double> get_mid_history_variables(size_t index) const;
-  // Returns the history variables of the inner surface of the thick shell under
-  // index
+  // Returns the history variables of the inner surface of the thick shell
+  // under index
   const Array<double> get_inner_history_variables(size_t index) const;
-  // Returns the history variables of the outer surface of the thick shell under
-  // index
+  // Returns the history variables of the outer surface of the thick shell
+  // under index
   const Array<double> get_outer_history_variables(size_t index) const;
 
 private:

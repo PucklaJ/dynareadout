@@ -37,6 +37,7 @@ inline void add_d3plot_arrays_to_module(py::module_ &m) {
   dro::add_array_type_to_module<d3plot_shell_con>(m);
   dro::add_array_type_to_module<d3plot_solid>(m);
   dro::add_array_type_to_module<d3plot_beam>(m);
+  dro::add_array_type_to_module<d3plot_surface>(m);
   dro::add_array_type_to_module<dro::D3plotShell>(m);
   dro::add_array_type_to_module<dro::dVec3>(m).def(
       "__repr__", dro::stream_to_string<dro::dVec3>);
@@ -219,6 +220,9 @@ void add_d3plot_library_to_module(py::module_ &m) {
            &dro::D3plotShell::get_inner_history_variables)
       .def("get_outer_history_variables",
            &dro::D3plotShell::get_outer_history_variables)
+      .def("get_add_ip_history_variables",
+           &dro::D3plotShell::get_add_ip_history_variables)
+      .def("get_add_ips", &dro::D3plotShell::get_add_ips)
       .def("__str__", &dro::stream_to_string<dro::D3plotShell>,
            py::return_value_policy::take_ownership);
 
