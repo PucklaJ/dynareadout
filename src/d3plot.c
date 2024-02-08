@@ -266,40 +266,30 @@ d3plot_file d3plot_open(const char *root_file_name) {
   }
 
   if (_get_nth_digit(idtdt, 0) == 1) {
-    /* TODO: An array of dT/dt values of
-             length NUMNP. Array is
-             written after node temperature
-             arrays.*/
+    /* TODO*/
+    ERROR_AND_RETURN_F("IDTDT (%llu) value is not supported. Docs p12: An "
+                       "array of dT/dt values of length NUMNP.",
+                       idtdt);
   }
   if (_get_nth_digit(idtdt, 1) == 1) {
-    /* TODO: An array of residual forces of
-             length 3*NUMNP followed by
-             residual moments of length
-             3*NUMNP. This data is written
-             after node temperatures or
-             dT/dt values if there are output.*/
+    /* TODO*/
+    ERROR_AND_RETURN_F(
+        "IDTDT (%llu) value is not supported. Docs p12: An array of residual "
+        "forces length 3*NUMNP followed by residual moments of length 3*NUMNP.",
+        idtdt);
   }
   if (_get_nth_digit(idtdt, 2) == 1) {
-    /* TODO: Plastic strain tensor is written
-             for each solid and shell after
-             standard element data. For
-             solids (6 values) and for shells
-             (6 x 3 = 18 values), at the
-             lower, middle and upper
-             integration location.*/
-    CDA.plastic_strain_tensor_written = 1;
-  } else {
-    CDA.plastic_strain_tensor_written = 0;
+    /* TODO*/
+    ERROR_AND_RETURN_F(
+        "IDTDT (%llu) value is not supported. Docs p12: Plastic strain tensor "
+        "is written for each solid and shell after standard element data.",
+        idtdt)
   }
   if (_get_nth_digit(idtdt, 3) == 1) {
-    /* TODO: Thermal strain tensor is written
-             after standard element data. For
-             solid (6 values) and shell (6
-             values) and after the plastic
-             strain tensor if output.*/
-    CDA.thermal_strain_tensor_written = 1;
-  } else {
-    CDA.thermal_strain_tensor_written = 0;
+    /* TODO*/
+    ERROR_AND_RETURN_F("IDTDT (%llu) value is not supported. Docs p12: Thermal "
+                       "strain tensor is written after standard element data.",
+                       idtdt);
   }
 
   /* Compute MDLOPT*/

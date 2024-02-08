@@ -121,8 +121,7 @@ typedef struct {
 
     /* These are some values also being calculated, but are not part of the
      * documentation*/
-    uint8_t plastic_strain_tensor_written, thermal_strain_tensor_written,
-        element_connectivity_packed;
+    uint8_t element_connectivity_packed;
   } control_data;
 
   /* This array holds the word locations of different data*/
