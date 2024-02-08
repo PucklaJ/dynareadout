@@ -150,33 +150,37 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file,
   /* Sanity checks to make sure that these numbers equal the values in the
    * CONTROL DATA */
   if (nsortd != CDP.numnp) {
-    ERROR_AND_NO_RETURN_F_PTR("Nodes: NSORTD (%lu) is not equal to NUMNP (%lu)",
-                              nsortd, CDP.numnp);
+    ERROR_AND_NO_RETURN_F_PTR(
+        "Sanity Check: Nodes: NSORTD (%lu) is not equal to NUMNP (%lu)", nsortd,
+        CDP.numnp);
     END_PROFILE_FUNC();
     return 0;
   }
   if (nsrhd != CDP.nel8) {
-    ERROR_AND_NO_RETURN_F_PTR("Solids: NSRHD (%lu) is not equal to NEL8 (%lu)",
-                              nsrhd, CDP.nel8);
+    ERROR_AND_NO_RETURN_F_PTR(
+        "Sanity Check: Solids: NSRHD (%lu) is not equal to NEL8 (%lu)", nsrhd,
+        CDP.nel8);
     END_PROFILE_FUNC();
     return 0;
   }
   if (nsrbd != CDP.nel2) {
-    ERROR_AND_NO_RETURN_F_PTR("Beams: NSRBD (%lu) is not equal to NEL2 (%lu)",
-                              nsrbd, CDP.nel2);
+    ERROR_AND_NO_RETURN_F_PTR(
+        "Sanity Check: Beams: NSRBD (%lu) is not equal to NEL2 (%lu)", nsrbd,
+        CDP.nel2);
     END_PROFILE_FUNC();
     return 0;
   }
   if (nsrsd != CDP.nel4) {
-    ERROR_AND_NO_RETURN_F_PTR("Shells: NSRSD (%lu) is not equal to NEL4 (%lu)",
-                              nsrsd, CDP.nel4);
+    ERROR_AND_NO_RETURN_F_PTR(
+        "Sanity Check: Shells: NSRSD (%lu) is not equal to NEL4 (%lu)", nsrsd,
+        CDP.nel4);
     END_PROFILE_FUNC();
     return 0;
   }
   if (nsrtd != CDP.nelt) {
     ERROR_AND_NO_RETURN_F_PTR(
-        "Thick Shells: NSRTD (%lu) is not equal to NELT (%lu)", nsrtd,
-        CDP.nelt);
+        "Sanity Check: Thick Shells: NSRTD (%lu) is not equal to NELT (%lu)",
+        nsrtd, CDP.nelt);
     END_PROFILE_FUNC();
     return 0;
   }
@@ -234,9 +238,9 @@ int _d3plot_read_user_identification_numbers(d3plot_file *plot_file,
   const size_t user_ids_end = d3_ptr->cur_word;
   const size_t user_ids_size = user_ids_end - user_ids_start;
   if (user_ids_size != CDP.narbs) {
-    ERROR_AND_NO_RETURN_F_PTR(
-        "The USER IDENTIFICATION NUMBERS section is false (%zu != %lu)",
-        user_ids_size, CDP.narbs);
+    ERROR_AND_NO_RETURN_F_PTR("Sanity Check: The USER IDENTIFICATION NUMBERS "
+                              "section is false (%zu != %lu)",
+                              user_ids_size, CDP.narbs);
 
     END_PROFILE_FUNC();
     return 0;
