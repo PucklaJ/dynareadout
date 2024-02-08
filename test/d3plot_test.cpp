@@ -929,9 +929,9 @@ TEST_CASE("d3plotC++") {
     REQUIRE(shells.size() == 88456);
 
     for (size_t i = 0; i < shells.size(); i++) {
-      CHECK(shells.get_mid_history_variables(i).empty());
-      CHECK(shells.get_inner_history_variables(i).empty());
-      CHECK(shells.get_outer_history_variables(i).empty());
+      CHECK(shells[i].get_mid_history_variables().empty());
+      CHECK(shells[i].get_inner_history_variables().empty());
+      CHECK(shells[i].get_outer_history_variables().empty());
     }
   }
 }

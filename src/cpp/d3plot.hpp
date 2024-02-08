@@ -131,7 +131,7 @@ public:
   Array<d3plot_beam> read_beams_state(size_t state);
   // Returns stress, strain (if ISTRN == 1) and some other variables (see docs
   // pg. 36) of all shells for a given state
-  D3plotShellsState read_shells_state(size_t state);
+  Array<D3plotShell> read_shells_state(size_t state);
 
   // Returns the node connectivity + material number of all 8 node solid
   // elements

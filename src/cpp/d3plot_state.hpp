@@ -30,33 +30,20 @@
 
 namespace dro {
 
-class D3plotShellsState : public Array<d3plot_shell> {
+class D3plotShell : public d3plot_shell {
 public:
-  D3plotShellsState(D3plotShellsState &&rhs) noexcept;
-  D3plotShellsState(d3plot_shell *data, size_t size,
-                    size_t num_history_variables,
-                    bool delete_data = true) noexcept;
-  ~D3plotShellsState() noexcept override;
-
-  D3plotShellsState &operator=(D3plotShellsState &&rhs) noexcept;
-
-  // Returns the number of history variables per surface
-  inline size_t get_num_history_variables() const noexcept {
-    return m_num_history_variables;
+  inline const Array<double> get_mid_history_variables() const {
+    return Array<double>(mid.history_variables, num_history_variables, false);
   }
-
-  // Returns the history variables for the mid surface of the shell under index
-  const Array<double> get_mid_history_variables(size_t index) const;
-  // Returns the history variables for the inner surface of the shell under
-  // index
-  const Array<double> get_inner_history_variables(size_t index) const;
-  // Returns the history variables for the outer surface of the shell under
-  // index
-  const Array<double> get_outer_history_variables(size_t index) const;
-
-private:
-  size_t m_num_history_variables;
+  inline const Array<double> get_inner_history_variables() const {
+    return Array<double>(inner.history_variables, num_history_variables, false);
+  }
+  inline const Array<double> get_outer_history_variables() const {
+    return Array<double>(outer.history_variables, num_history_variables, false);
+  }
 };
+
+template <> Array<D3plotShell>::~Array<D3plotShell>();
 
 class D3plotThickShellsState : public Array<d3plot_thick_shell> {
 public:

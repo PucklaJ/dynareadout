@@ -197,6 +197,9 @@ typedef struct {
   double element_dependent_variables[2];
 #endif
   double internal_energy;
+
+  size_t num_history_variables;
+  size_t num_additional_integration_points;
 } d3plot_shell;
 
 #define D3_FILE_TYPE_D3PLOT 1

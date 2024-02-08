@@ -26,6 +26,7 @@
 #include <array.hpp>
 #include <cstring>
 #include <d3_defines.h>
+#include <d3plot_state.hpp>
 #include <include_transform.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -201,7 +202,7 @@ template <typename T> inline const char *get_array_name() {
     return "ThickShellArray";
   } else if constexpr (std::is_same_v<T, d3plot_beam>) {
     return "BeamArray";
-  } else if constexpr (std::is_same_v<T, d3plot_shell>) {
+  } else if constexpr (std::is_same_v<T, D3plotShell>) {
     return "ShellArray";
   } else if constexpr (std::is_same_v<T, TransformationOption>) {
     return "TransformationOptionArray";

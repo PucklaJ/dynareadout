@@ -37,39 +37,9 @@ inline void add_d3plot_arrays_to_module(py::module_ &m) {
   dro::add_array_type_to_module<d3plot_shell_con>(m);
   dro::add_array_type_to_module<d3plot_solid>(m);
   dro::add_array_type_to_module<d3plot_beam>(m);
+  dro::add_array_type_to_module<dro::D3plotShell>(m);
   dro::add_array_type_to_module<dro::dVec3>(m).def(
       "__repr__", dro::stream_to_string<dro::dVec3>);
-
-  py::class_<dro::D3plotShellsState>(m, dro::get_array_name<d3plot_shell>())
-      .def("__len__", &dro::D3plotShellsState::size)
-      .def("__getitem__",
-           [](dro::D3plotShellsState &self, size_t index) {
-             try {
-               return self[index];
-             } catch (const std::runtime_error &) {
-               throw py::index_error("Index out of range");
-             }
-           })
-      .def("get_num_history_variables",
-           &dro::D3plotShellsState::get_num_history_variables,
-           "Returns the number of history variables per surface")
-      .def("get_mid_history_variables",
-           &dro::D3plotShellsState::get_mid_history_variables,
-           "Returns the history variables for the mid surface of the shell "
-           "under index",
-           py::arg("index"))
-      .def("get_inner_history_variables",
-           &dro::D3plotShellsState::get_inner_history_variables,
-           "Returns the history variables for the inner surface of the shell "
-           "under index",
-           py::arg("index"))
-      .def("get_outer_history_variables",
-           &dro::D3plotShellsState::get_outer_history_variables,
-           "Returns the history variables for the outer surface of the shell "
-           "under index",
-           py::arg("index"))
-
-      ;
 
   py::class_<dro::D3plotThickShellsState>(
       m, dro::get_array_name<d3plot_thick_shell>())
@@ -228,25 +198,29 @@ void add_d3plot_library_to_module(py::module_ &m) {
 
       ;
 
-  py::class_<d3plot_shell>(m, "d3plot_shell")
-      .def_readonly("mid", &d3plot_shell::mid)
-      .def_readonly("inner", &d3plot_shell::inner)
-      .def_readonly("outer", &d3plot_shell::outer)
-      .def_readonly("inner_epsilon", &d3plot_shell::inner_epsilon)
-      .def_readonly("inner_strain", &d3plot_shell::inner_strain)
-      .def_readonly("outer_epsilon", &d3plot_shell::outer_epsilon)
-      .def_readonly("outer_strain", &d3plot_shell::outer_strain)
-      .def_readonly("bending_moment", &d3plot_shell::bending_moment)
-      .def_readonly("shear_resultant", &d3plot_shell::shear_resultant)
-      .def_readonly("normal_resultant", &d3plot_shell::normal_resultant)
-      .def_readonly("thickness", &d3plot_shell::thickness)
+  py::class_<dro::D3plotShell>(m, "D3plotShell")
+      .def_readonly("mid", &dro::D3plotShell::mid)
+      .def_readonly("inner", &dro::D3plotShell::inner)
+      .def_readonly("outer", &dro::D3plotShell::outer)
+      .def_readonly("inner_epsilon", &dro::D3plotShell::inner_epsilon)
+      .def_readonly("inner_strain", &dro::D3plotShell::inner_strain)
+      .def_readonly("outer_epsilon", &dro::D3plotShell::outer_epsilon)
+      .def_readonly("outer_strain", &dro::D3plotShell::outer_strain)
+      .def_readonly("bending_moment", &dro::D3plotShell::bending_moment)
+      .def_readonly("shear_resultant", &dro::D3plotShell::shear_resultant)
+      .def_readonly("normal_resultant", &dro::D3plotShell::normal_resultant)
+      .def_readonly("thickness", &dro::D3plotShell::thickness)
       .def_readonly("element_dependent_variables",
-                    &d3plot_shell::element_dependent_variables)
-      .def_readonly("internal_energy", &d3plot_shell::internal_energy)
-      .def("__str__", &dro::stream_to_string<d3plot_shell>,
-           py::return_value_policy::take_ownership)
-
-      ;
+                    &dro::D3plotShell::element_dependent_variables)
+      .def_readonly("internal_energy", &dro::D3plotShell::internal_energy)
+      .def("get_mid_history_variables",
+           &dro::D3plotShell::get_mid_history_variables)
+      .def("get_inner_history_variables",
+           &dro::D3plotShell::get_inner_history_variables)
+      .def("get_outer_history_variables",
+           &dro::D3plotShell::get_outer_history_variables)
+      .def("__str__", &dro::stream_to_string<dro::D3plotShell>,
+           py::return_value_policy::take_ownership);
 
   py::class_<dro::D3plot>(m, "D3plot")
       .def(py::init<const std::string &>(),

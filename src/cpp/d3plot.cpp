@@ -379,7 +379,7 @@ Array<d3plot_beam> D3plot::read_beams_state(size_t state) {
   return Array<d3plot_beam>(elements, num_elements);
 }
 
-D3plotShellsState D3plot::read_shells_state(size_t state) {
+Array<D3plotShell> D3plot::read_shells_state(size_t state) {
   size_t num_elements;
   size_t num_history_variables;
   d3plot_shell *elements = d3plot_read_shells_state(
@@ -388,7 +388,8 @@ D3plotShellsState D3plot::read_shells_state(size_t state) {
     throw Exception(Exception::ErrorString(m_handle.error_string, false));
   }
 
-  return D3plotShellsState(elements, num_elements, num_history_variables);
+  return Array<D3plotShell>(reinterpret_cast<D3plotShell *>(elements),
+                            num_elements);
 }
 
 Array<d3plot_solid_con> D3plot::read_solid_elements() {

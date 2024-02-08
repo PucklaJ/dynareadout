@@ -1973,6 +1973,9 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
         shells[i].outer_epsilon.zx = data[o++];
       }
 
+      shells[i].num_history_variables = *num_history_variables;
+      shells[i].num_additional_integration_points = num_integration_points - 3;
+
       i++;
     }
 
