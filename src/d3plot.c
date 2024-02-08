@@ -247,12 +247,12 @@ d3plot_file d3plot_open(const char *root_file_name) {
     switch (CDA.ioshl[i]) {
     case 1000:
       CDA.ioshl[i] = 1;
-      if (i < 3)
+      if (i < 2)
         CDA.iosol[i] = 1;
       break;
     case 999:
       CDA.ioshl[i] = 0;
-      if (i < 3)
+      if (i < 2)
         CDA.iosol[i] = 1;
       break;
     default:
