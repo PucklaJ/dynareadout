@@ -62,6 +62,12 @@ public:
   inline const Array<double> get_outer_history_variables() const noexcept {
     return Array<double>(outer.history_variables, num_history_variables, false);
   }
+  const Array<double> get_add_ip_history_variables(size_t add_idx) const;
+
+  inline const Array<d3plot_surface> get_add_ips() const noexcept {
+    return Array<d3plot_surface>(add_ips, num_additional_integration_points,
+                                 false);
+  }
 };
 
 template <> Array<D3plotThickShell>::~Array<D3plotThickShell>() noexcept;

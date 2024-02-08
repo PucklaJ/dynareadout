@@ -933,6 +933,12 @@ TEST_CASE("d3plotC++") {
       CHECK(shells[i].get_inner_history_variables().empty());
       CHECK(shells[i].get_outer_history_variables().empty());
       CHECK(shells[i].get_add_ips().empty());
+      try {
+        shells[i].get_add_ip_history_variables(0);
+      } catch (const dro::D3plot::Exception &e) {
+        continue;
+      }
+      FAIL("Should have thrown an exception");
     }
   }
 
@@ -944,6 +950,13 @@ TEST_CASE("d3plotC++") {
       CHECK(thick_shells[i].get_mid_history_variables().empty());
       CHECK(thick_shells[i].get_inner_history_variables().empty());
       CHECK(thick_shells[i].get_outer_history_variables().empty());
+      CHECK(thick_shells[i].get_add_ips().empty());
+      try {
+        thick_shells[i].get_add_ip_history_variables(0);
+      } catch (const dro::D3plot::Exception &e) {
+        continue;
+      }
+      FAIL("Should have thrown an exception");
     }
   }
 }

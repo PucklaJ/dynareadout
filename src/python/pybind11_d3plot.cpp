@@ -151,6 +151,15 @@ void add_d3plot_library_to_module(py::module_ &m) {
       .def_readonly("inner_strain", &dro::D3plotThickShell::inner_strain)
       .def_readonly("outer_epsilon", &dro::D3plotThickShell::outer_epsilon)
       .def_readonly("outer_strain", &dro::D3plotThickShell::outer_strain)
+      .def("get_mid_history_variables",
+           &dro::D3plotThickShell::get_mid_history_variables)
+      .def("get_inner_history_variables",
+           &dro::D3plotThickShell::get_inner_history_variables)
+      .def("get_outer_history_variables",
+           &dro::D3plotThickShell::get_outer_history_variables)
+      .def("get_add_ip_history_variables",
+           &dro::D3plotThickShell::get_add_ip_history_variables)
+      .def("get_add_ips", &dro::D3plotThickShell::get_add_ips)
       .def("__str__", &dro::stream_to_string<dro::D3plotThickShell>,
            py::return_value_policy::take_ownership)
 
