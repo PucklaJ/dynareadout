@@ -138,15 +138,15 @@ int _d3plot_read_state_data(d3plot_file *plot_file, d3_pointer *d3_ptr) {
   /* TODO: read function for RBS MASS*/
 
   d3_buffer_skip_words(&plot_file->buffer, d3_ptr, CDP.nummat8);
-  /* TODO: read function for MAT8 FORCE*/
+  /* TODO: read function for MAT8 HOURGLASS ENERGY*/
   d3_buffer_skip_words(&plot_file->buffer, d3_ptr, CDP.nummat2);
-  /* TODO: read function for MAT2 FORCE*/
+  /* TODO: read function for MAT2 HOURGLASS ENERGY*/
   d3_buffer_skip_words(&plot_file->buffer, d3_ptr, CDP.nummat4);
-  /* TODO: read function for MAT4 FORCE*/
+  /* TODO: read function for MAT4 HOURGLASS ENERGY*/
   d3_buffer_skip_words(&plot_file->buffer, d3_ptr, CDP.nummatt);
-  /* TODO: read function for MATT FORCE*/
+  /* TODO: read function for MATT HOURGLASS ENERGY*/
   d3_buffer_skip_words(&plot_file->buffer, d3_ptr, CDP.numrbs);
-  /* TODO: read function for RBS FORCE*/
+  /* TODO: read function for RBS HOURGLASS ENERGY*/
 
   if (plot_file->buffer.error_string) {
     ERROR_AND_NO_RETURN_F_PTR("Failed to skip words: %s",

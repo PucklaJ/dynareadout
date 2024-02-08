@@ -1480,10 +1480,19 @@ d3plot_read_thick_shells_state(d3plot_file *plot_file, size_t state,
     return NULL;
   }
 
+  const size_t num_integration_points = (size_t)plot_file->control_data.maxint;
+  const uint8_t stress_written = plot_file->control_data.ioshl[0];
+  const uint8_t plastic_strain_written = plot_file->control_data.ioshl[1];
+  const uint8_t inner_outer_strain_written = plot_file->control_data.istrn == 1;
+
   /* Allocate memory for all history variables of all thick shells*/
   *num_history_variables = plot_file->control_data.neips;
   double *history_variables =
       malloc(*num_thick_shells * 3 * *num_history_variables * sizeof(double));
+
+  d3plot_surface *additional_integration_points =
+      malloc(sizeof(d3plot_surface) * (num_integration_points - 3) *
+             *num_thick_shells);
 
   d3plot_thick_shell *thick_shells =
       malloc(*num_thick_shells * sizeof(d3plot_thick_shell));
@@ -1503,6 +1512,8 @@ d3plot_read_thick_shells_state(d3plot_file *plot_file, size_t state,
       *num_thick_shells = 0;
       free(data);
       free(thick_shells);
+      free(history_variables);
+      free(additional_integration_points);
 
       END_PROFILE_FUNC();
       return NULL;
@@ -1511,103 +1522,109 @@ d3plot_read_thick_shells_state(d3plot_file *plot_file, size_t state,
     size_t i = 0;
     size_t o = 0;
     while (i < *num_thick_shells) {
-      /* TODO: Correctly handle IOSHL */
-      thick_shells[i].mid.sigma.x = data[o++];
-      thick_shells[i].mid.sigma.y = data[o++];
-      thick_shells[i].mid.sigma.z = data[o++];
-      thick_shells[i].mid.sigma.xy = data[o++];
-      thick_shells[i].mid.sigma.yz = data[o++];
-      thick_shells[i].mid.sigma.zx = data[o++];
-      thick_shells[i].mid.effective_plastic_strain = data[o++];
+      thick_shells[i].add_ips = NULL;
 
-      /* Define NEIPS additional history values here for mid surface*/
-      if (plot_file->control_data.neips != 0) {
-        thick_shells[i].mid.history_variables =
-            &history_variables[i * 3 * *num_history_variables +
-                               0 * *num_history_variables];
-        size_t j = 0;
-        while (j < *num_history_variables) {
-          thick_shells[i].mid.history_variables[j++] = data[o++];
+      /* Loop over all integration points */
+      size_t j = 0;
+      while (j < num_integration_points) {
+        d3plot_surface *ip;
+        switch (j) {
+        case 0:
+          ip = &thick_shells[i].mid;
+          break;
+        case 1:
+          ip = &thick_shells[i].inner;
+          break;
+        case 2:
+          ip = &thick_shells[i].outer;
+          break;
+        default: /* If MAXINT > 3 there are more integration points */
+          if (!thick_shells[i].add_ips) {
+            thick_shells[i].add_ips =
+                &additional_integration_points[i *
+                                               (num_integration_points - 3)];
+          }
+          ip = &thick_shells[i].add_ips[j - 3];
         }
-      } else {
-        thick_shells[i].mid.history_variables = NULL;
-      }
 
-      thick_shells[i].inner.sigma.x = data[o++];
-      thick_shells[i].inner.sigma.y = data[o++];
-      thick_shells[i].inner.sigma.z = data[o++];
-      thick_shells[i].inner.sigma.xy = data[o++];
-      thick_shells[i].inner.sigma.yz = data[o++];
-      thick_shells[i].inner.sigma.zx = data[o++];
-      thick_shells[i].inner.effective_plastic_strain = data[o++];
-
-      /* Define NEIPS additional history values here for inner surface*/
-      if (plot_file->control_data.neips != 0) {
-        thick_shells[i].inner.history_variables =
-            &history_variables[i * 3 * *num_history_variables +
-                               1 * *num_history_variables];
-        size_t j = 0;
-        while (j < *num_history_variables) {
-          thick_shells[i].inner.history_variables[j++] = data[o++];
+        if (stress_written) {
+          ip->sigma.x = data[o++];
+          ip->sigma.y = data[o++];
+          ip->sigma.z = data[o++];
+          ip->sigma.xy = data[o++];
+          ip->sigma.yz = data[o++];
+          ip->sigma.zx = data[o++];
+        } else {
+          memset(&ip->sigma, 0, sizeof(d3plot_tensor));
         }
-      } else {
-        thick_shells[i].inner.history_variables = NULL;
-      }
 
-      thick_shells[i].outer.sigma.x = data[o++];
-      thick_shells[i].outer.sigma.y = data[o++];
-      thick_shells[i].outer.sigma.z = data[o++];
-      thick_shells[i].outer.sigma.xy = data[o++];
-      thick_shells[i].outer.sigma.yz = data[o++];
-      thick_shells[i].outer.sigma.zx = data[o++];
-      thick_shells[i].outer.effective_plastic_strain = data[o++];
-
-      /* Define NEIPS additional history values here for outer surface*/
-      if (plot_file->control_data.neips != 0) {
-        thick_shells[i].outer.history_variables =
-            &history_variables[i * 3 * *num_history_variables +
-                               2 * *num_history_variables];
-        size_t j = 0;
-        while (j < *num_history_variables) {
-          thick_shells[i].outer.history_variables[j++] = data[o++];
+        if (plastic_strain_written) {
+          ip->effective_plastic_strain = data[o++];
+        } else {
+          ip->effective_plastic_strain = 0.0;
         }
-      } else {
-        thick_shells[i].outer.history_variables = NULL;
-      }
 
-      if (plot_file->control_data.istrn == 1) {
-        thick_shells[i].inner_epsilon.x = data[o++];
-        thick_shells[i].inner_epsilon.y = data[o++];
-        thick_shells[i].inner_epsilon.z = data[o++];
-        thick_shells[i].inner_epsilon.xy = data[o++];
-        thick_shells[i].inner_epsilon.yz = data[o++];
-        thick_shells[i].inner_epsilon.zx = data[o++];
+        /* Define NEIPS additional history values here for surface*/
+        if (plot_file->control_data.neips != 0) {
+          ip->history_variables =
+              &history_variables[i * num_integration_points *
+                                     *num_history_variables +
+                                 j * *num_history_variables];
+          size_t k = 0;
+          while (k < *num_history_variables) {
+            ip->history_variables[k++] = data[o++];
+          }
+        } else {
+          ip->history_variables = NULL;
+        }
 
-        thick_shells[i].outer_epsilon.x = data[o++];
-        thick_shells[i].outer_epsilon.y = data[o++];
-        thick_shells[i].outer_epsilon.z = data[o++];
-        thick_shells[i].outer_epsilon.xy = data[o++];
-        thick_shells[i].outer_epsilon.yz = data[o++];
-        thick_shells[i].outer_epsilon.zx = data[o++];
-      } else {
-        memset(&thick_shells[i].inner_epsilon, 0, 12 * sizeof(double));
-      }
+        if (j == 2) {
+          /* If ISTRN=1, define inner and outer strain after outer surface */
+          if (inner_outer_strain_written) {
+            thick_shells[i].inner_epsilon.x = data[o++];
+            thick_shells[i].inner_epsilon.y = data[o++];
+            thick_shells[i].inner_epsilon.z = data[o++];
+            thick_shells[i].inner_epsilon.xy = data[o++];
+            thick_shells[i].inner_epsilon.yz = data[o++];
+            thick_shells[i].inner_epsilon.zx = data[o++];
 
-      if (plot_file->control_data.maxint > 3) {
-        /* TODO: If MAXINT > 3 then define an additional (MAXINT-3 )* (6 *
-         * IOSHL(1) +1*IOSHL(2)+NEIPS) quantities here.*/
-        o += (plot_file->control_data.maxint - 3) *
-             (6 * plot_file->control_data.ioshl[0] +
-              1 * plot_file->control_data.ioshl[1] +
-              plot_file->control_data.neips);
+            thick_shells[i].outer_epsilon.x = data[o++];
+            thick_shells[i].outer_epsilon.y = data[o++];
+            thick_shells[i].outer_epsilon.z = data[o++];
+            thick_shells[i].outer_epsilon.xy = data[o++];
+            thick_shells[i].outer_epsilon.yz = data[o++];
+            thick_shells[i].outer_epsilon.zx = data[o++];
+          } else {
+            memset(&thick_shells[i].inner_epsilon, 0,
+                   2 * sizeof(d3plot_tensor));
+          }
+        }
+
+        j++;
       }
 
       thick_shells[i].num_history_variables = *num_history_variables;
+      thick_shells[i].num_additional_integration_points =
+          num_integration_points - 3;
 
       i++;
     }
 
     free(data);
+    if (o != plot_file->control_data.nelt * plot_file->control_data.nv3dt) {
+      ERROR_AND_NO_RETURN_F_PTR(
+          "Sanity Check: Did not read all data from thick shells state. o=%zu "
+          "NELT (%llu) * NV3DT (%llu) = %llu",
+          o, plot_file->control_data.nelt, plot_file->control_data.nv3dt,
+          plot_file->control_data.nelt * plot_file->control_data.nv3dt);
+      *num_thick_shells = 0;
+      free(thick_shells);
+      free(history_variables);
+      free(additional_integration_points);
+
+      END_PROFILE_FUNC();
+      return NULL;
+    }
   } else {
     double *data = malloc(plot_file->control_data.nelt *
                           plot_file->control_data.nv3dt * sizeof(double));
@@ -1624,6 +1641,8 @@ d3plot_read_thick_shells_state(d3plot_file *plot_file, size_t state,
       *num_thick_shells = 0;
       free(data);
       free(thick_shells);
+      free(history_variables);
+      free(additional_integration_points);
 
       END_PROFILE_FUNC();
       return NULL;
@@ -1632,78 +1651,94 @@ d3plot_read_thick_shells_state(d3plot_file *plot_file, size_t state,
     size_t i = 0;
     size_t o = 0;
     while (i < *num_thick_shells) {
-      memcpy(&thick_shells[i].mid, &data[o],
-             sizeof(d3plot_tensor) + sizeof(double));
-      o += (sizeof(d3plot_tensor) + sizeof(double)) / sizeof(double);
+      thick_shells[i].add_ips = NULL;
 
-      /* Define NEIPS additional history values here for mid surface*/
-      if (plot_file->control_data.neips != 0) {
-        thick_shells[i].mid.history_variables =
-            &history_variables[i * 3 * *num_history_variables +
-                               0 * *num_history_variables];
-        memcpy(thick_shells[i].mid.history_variables, &data[o],
-               *num_history_variables * sizeof(double));
-      } else {
-        thick_shells[i].mid.history_variables = NULL;
-      }
-      o += plot_file->control_data.neips;
+      size_t j = 0;
+      while (j < num_integration_points) {
+        d3plot_surface *ip;
+        switch (j) {
+        case 0:
+          ip = &thick_shells[i].mid;
+          break;
+        case 1:
+          ip = &thick_shells[i].inner;
+          break;
+        case 2:
+          ip = &thick_shells[i].outer;
+          break;
+        default:
+          if (!thick_shells[i].add_ips) {
+            thick_shells[i].add_ips =
+                &additional_integration_points[i *
+                                               (num_integration_points - 3)];
+          }
+          ip = &thick_shells[i].add_ips[j - 3];
+          break;
+        }
 
-      memcpy(&thick_shells[i].inner, &data[o],
-             sizeof(d3plot_tensor) + sizeof(double));
-      o += (sizeof(d3plot_tensor) + sizeof(double)) / sizeof(double);
+        if (stress_written) {
+          memcpy(&ip->sigma, &data[o], sizeof(d3plot_tensor));
+          o += sizeof(d3plot_tensor) / sizeof(double);
+        } else {
+          memset(&ip->sigma, 0, sizeof(d3plot_tensor));
+        }
 
-      /* Define NEIPS additional history values here for inner surface*/
-      if (plot_file->control_data.neips != 0) {
-        thick_shells[i].inner.history_variables =
-            &history_variables[i * 3 * *num_history_variables +
-                               1 * *num_history_variables];
-        memcpy(thick_shells[i].inner.history_variables, &data[o],
-               *num_history_variables * sizeof(double));
-      } else {
-        thick_shells[i].inner.history_variables = NULL;
-      }
-      o += plot_file->control_data.neips;
+        if (plastic_strain_written) {
+          ip->effective_plastic_strain = data[o++];
+        } else {
+          ip->effective_plastic_strain = 0.0;
+        }
 
-      memcpy(&thick_shells[i].outer, &data[o],
-             sizeof(d3plot_tensor) + sizeof(double));
-      o += (sizeof(d3plot_tensor) + sizeof(double)) / sizeof(double);
+        /* Define NEIPS additional history variables here */
+        if (plot_file->control_data.neips != 0) {
+          ip->history_variables =
+              &history_variables[i * num_integration_points *
+                                     *num_history_variables +
+                                 j * *num_history_variables];
+          memcpy(ip->history_variables, &data[o],
+                 *num_history_variables * sizeof(double));
+          o += plot_file->control_data.neips;
+        } else {
+          ip->history_variables = NULL;
+        }
 
-      /* Define NEIPS additional history values here for outer surface*/
-      if (plot_file->control_data.neips != 0) {
-        thick_shells[i].outer.history_variables =
-            &history_variables[i * 3 * *num_history_variables +
-                               2 * *num_history_variables];
-        memcpy(thick_shells[i].outer.history_variables, &data[o],
-               *num_history_variables * sizeof(double));
-      } else {
-        thick_shells[i].outer.history_variables = NULL;
-      }
-      o += plot_file->control_data.neips;
+        if (j == 2) {
+          /* If ISTRN=1, define inner and outer strain after outer surface */
+          if (inner_outer_strain_written) {
+            memcpy(&thick_shells[i].inner_epsilon, &data[o],
+                   2 * sizeof(d3plot_tensor));
+            o += 2 * sizeof(d3plot_tensor) / sizeof(double);
+          } else {
+            memset(&thick_shells[i].inner_epsilon, 0,
+                   2 * sizeof(d3plot_tensor));
+          }
+        }
 
-      if (plot_file->control_data.istrn == 1) {
-        memcpy(&thick_shells[i].inner_epsilon, &data[o], 6 * sizeof(double));
-        o += 6;
-        memcpy(&thick_shells[i].outer_epsilon, &data[o], 6 * sizeof(double));
-        o += 6;
-      } else {
-        memset(&thick_shells[i].inner_epsilon, 0, 12 * sizeof(double));
-      }
-
-      if (plot_file->control_data.maxint > 3) {
-        /* TODO: If MAXINT > 3 then define an additional (MAXINT-3 )* (6 *
-         * IOSHL(1) +1*IOSHL(2)+NEIPS) quantities here.*/
-        o += (plot_file->control_data.maxint - 3) *
-             (6 * plot_file->control_data.ioshl[0] +
-              1 * plot_file->control_data.ioshl[1] +
-              plot_file->control_data.neips);
+        j++;
       }
 
       thick_shells[i].num_history_variables = *num_history_variables;
+      thick_shells[i].num_additional_integration_points =
+          num_integration_points - 3;
 
       i++;
     }
 
     free(data);
+    if (o != plot_file->control_data.nelt * plot_file->control_data.nv3dt) {
+      ERROR_AND_NO_RETURN_F_PTR(
+          "Sanity Check: Did not read all data from thick shells state. o=%zu "
+          "NELT (%llu) * NV3DT (%llu) = %llu",
+          o, plot_file->control_data.nelt, plot_file->control_data.nv3dt,
+          plot_file->control_data.nelt * plot_file->control_data.nv3dt);
+      *num_thick_shells = 0;
+      free(thick_shells);
+      free(history_variables);
+      free(additional_integration_points);
+
+      END_PROFILE_FUNC();
+      return NULL;
+    }
   }
 
   END_PROFILE_FUNC();
@@ -2944,6 +2979,7 @@ void d3plot_free_thick_shells_state(d3plot_thick_shell *thick_shells) {
   BEGIN_PROFILE_FUNC();
 
   free(thick_shells->mid.history_variables);
+  free(thick_shells->add_ips);
   free(thick_shells);
 
   END_PROFILE_FUNC();

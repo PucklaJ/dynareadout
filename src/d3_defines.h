@@ -154,6 +154,7 @@ typedef struct {
   d3plot_surface mid;
   d3plot_surface inner;
   d3plot_surface outer;
+  d3plot_surface *add_ips;
   union {
     d3plot_tensor inner_epsilon;
     d3plot_tensor inner_strain;
@@ -164,6 +165,7 @@ typedef struct {
   };
 
   size_t num_history_variables;
+  size_t num_additional_integration_points;
 } d3plot_thick_shell;
 
 typedef struct {
