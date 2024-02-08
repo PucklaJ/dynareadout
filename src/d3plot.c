@@ -334,11 +334,6 @@ d3plot_file d3plot_open(const char *root_file_name) {
         CDA.istrn = 0;
       }
     }
-
-    if (CDA.istrn == 1 && CDA.neiph >= 6) {
-      /* TODO: last the 6 additional values are the six strain*/
-    }
-
   } else {
     CDA.istrn = _get_nth_digit(idtdt, 4);
   }
@@ -1372,7 +1367,10 @@ d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
       solids[i].sigma.zx = data[o++];
       /* 7. Effective plastic strain or material dependent variable*/
       solids[i].effective_plastic_strain = data[o++];
-      if (plot_file->control_data.neiph >= 6) {
+      /* Docs p12: If ISTRN=1, and NEIPH>=6, last the 6 additional values are
+       * the six strain components. */
+      if (plot_file->control_data.istrn == 1 &&
+          plot_file->control_data.neiph >= 6) {
         /* We need -1 since we start by 0 and in the docs they start with
          * 1*/
         /* 7+NEIPH-5. Epsilon-x*/
@@ -1388,7 +1386,7 @@ d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
         /* 7+NEIPH. Epsilon-zx*/
         solids[i].epsilon.zx = data[o + plot_file->control_data.neiph - 0 - 1];
       } else {
-        memset(&solids[i].epsilon, 0, 6 * sizeof(double));
+        memset(&solids[i].epsilon, 0, sizeof(d3plot_tensor));
       }
 
       o += plot_file->control_data.neiph;
@@ -1426,14 +1424,17 @@ d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
       /* We can just copy the first 7 values*/
       memcpy(&solids[i], &data[o], 7 * sizeof(double));
       o += 7;
-      if (plot_file->control_data.neiph >= 6) {
+      /* Docs p12: If ISTRN=1, and NEIPH>=6, last the 6 additional values are
+       * the six strain components. */
+      if (plot_file->control_data.istrn == 1 &&
+          plot_file->control_data.neiph >= 6) {
         /* We need -1 since we start by 0 and in the docs they start with
          * 1*/
         memcpy(&solids[i].epsilon,
                &data[o + plot_file->control_data.neiph - 5 - 1],
-               6 * sizeof(double));
+               sizeof(d3plot_tensor));
       } else {
-        memset(&solids[i].epsilon, 0, 6 * sizeof(double));
+        memset(&solids[i].epsilon, 0, sizeof(d3plot_tensor));
       }
 
       o += plot_file->control_data.neiph;
