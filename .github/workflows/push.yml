@@ -4,7 +4,15 @@ on: [push]
 
 env:
   TEST_CASES: d3_buffer_seek,_get_nth_digit,_insert_sorted,d3_word_binary_search,Array,glob,string_builder,Array::New,binout_directory,path_move_up,path_join,path_is_abs,path_view,extra_string,card_parse_get_type,empty_card,profiling,sync,multi_file
-  PYTHON_TEST_CODE: 'import dynareadout as dro\ntry:\n\tb = dro.Binout("test")\nexcept RuntimeError as e:\n\tif str(e) != "test: No files have been found":\n\t\texit(1)\n\telse:\n\t\tprint("Success")\n'
+  PYTHON_TEST_CODE: |
+    import dynareadout as dro
+    try:
+      b = dro.Binout('test')
+    except RuntimeError as e:
+      if str(e) != 'test: No files have been found':
+        exit(1)
+      else:
+        print('Success')
 
 jobs:
   linux-x86_64-static:
@@ -60,8 +68,8 @@ jobs:
       - run: xmake f -yvD -p linux -a x86_64 -k static -m release --build_python=y
       - run: xmake -wvD
       - run: ls -la --color=always build/linux/x86_64/release
-      - run: printf $PYTHON_TEST_CODE
-      - run: cd build/linux/x86_64/release && printf $PYTHON_TEST_CODE | python
+      - run: echo $PYTHON_TEST_CODE
+      - run: cd build/linux/x86_64/release && echo $PYTHON_TEST_CODE | python
 
 
   windows-x64-static:
