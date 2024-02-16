@@ -1,6 +1,7 @@
 # Default
 .*
 !.gitignore
+!.github/
 
 # Xmake cache
 .xmake/
