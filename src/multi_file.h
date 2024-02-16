@@ -52,7 +52,7 @@ typedef struct {
 } multi_file_t;
 
 #else
-typedef size_t multi_file_index_t;
+typedef long multi_file_index_t;
 typedef FILE *multi_file_t;
 
 #endif

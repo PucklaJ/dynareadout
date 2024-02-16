@@ -71,9 +71,10 @@ TEST_CASE("multi_file") {
   CHECK(is[1].index != is[2].index);
   CHECK(is[0].index != is[2].index);
 #else
-  CHECK(is[0] != is[1]);
-  CHECK(is[1] != is[2]);
-  CHECK(is[0] != is[2]);
+  CHECK(is[0] == 0);
+  CHECK(is[0] == is[1]);
+  CHECK(is[1] == is[2]);
+  CHECK(is[0] == is[2]);
 #endif
 
   char data[13];

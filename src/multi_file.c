@@ -205,7 +205,7 @@ void multi_file_close(multi_file_t *f) {
   END_PROFILE_FUNC();
 }
 
-size_t multi_file_access(multi_file_t *f) {
+multi_file_index_t multi_file_access(multi_file_t *f) {
   BEGIN_PROFILE_FUNC();
   END_PROFILE_FUNC();
   return 0;
@@ -220,7 +220,20 @@ int multi_file_seek(multi_file_t *f, multi_file_index_t *index, long offset,
                     int whence) {
   BEGIN_PROFILE_FUNC();
 
-  const int rv = fseek(*((FILE **)f), offset, whence);
+  switch (whence) {
+  case SEEK_SET:
+    *index = offset;
+    break;
+  case SEEK_CUR:
+    *index += offset;
+    break;
+  case SEEK_END:
+    fseek(*((FILE **)f), 0, SEEK_END);
+    *index = ftell(*((FILE **)f)) - offset;
+    break;
+  }
+
+  const int rv = fseek(*((FILE **)f), *index, SEEK_SET);
 
   END_PROFILE_FUNC();
   return rv;
@@ -228,18 +241,20 @@ int multi_file_seek(multi_file_t *f, multi_file_index_t *index, long offset,
 
 long multi_file_tell(multi_file_t *f, multi_file_index_t *index) {
   BEGIN_PROFILE_FUNC();
-
-  const long rv = ftell(*((FILE **)f));
-
   END_PROFILE_FUNC();
-  return rv;
+  return *index;
 }
 
 size_t multi_file_read(multi_file_t *f, multi_file_index_t *index, void *ptr,
                        size_t size, size_t nmemb) {
   BEGIN_PROFILE_FUNC();
 
+  if (fseek(*((FILE **)f), *index, SEEK_SET) == -1) {
+    END_PROFILE_FUNC();
+    return 0;
+  }
   const size_t rv = fread(ptr, size, nmemb, *((FILE **)f));
+  *index = ftell(*((FILE **)f));
 
   END_PROFILE_FUNC();
   return rv;
