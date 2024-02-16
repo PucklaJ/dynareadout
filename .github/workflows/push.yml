@@ -13,9 +13,9 @@ jobs:
       - uses: xmake-io/github-action-setup-xmake@v1
         with:
           xmake-version: 2.8.6
-      - run: xmake f -y -p linux -a x86_64 -k static -m release --build_test=y
+      - run: xmake f -yvD -p linux -a x86_64 -k static -m release --build_test=y
       - run: xmake -wvD
-      - run: xmake run -w . dynareadout_test --test_case=$TEST_CASES
+      - run: xmake run -w . dynareadout_test --test-case=$TEST_CASES
   linux-x86_64-static-profiling:
     runs-on: ubuntu-latest
     steps:
@@ -23,9 +23,9 @@ jobs:
       - uses: xmake-io/github-action-setup-xmake@v1
         with:
           xmake-version: 2.8.6
-      - run: xmake f -y -p linux -a x86_64 -k static -m release --build_test=y --profiling=y
+      - run: xmake f -yvD -p linux -a x86_64 -k static -m release --build_test=y --profiling=y
       - run: xmake -wvD
-      - run: xmake run -w . dynareadout_test --test_case=$TEST_CASES
+      - run: xmake run -w . dynareadout_test --test-case=$TEST_CASES
   linux-x86_64-static-non-thread-safe:
     runs-on: ubuntu-latest
     steps:
@@ -33,9 +33,9 @@ jobs:
       - uses: xmake-io/github-action-setup-xmake@v1
         with:
           xmake-version: 2.8.6
-      - run: xmake f -y -p linux -a x86_64 -k static -m release --build_test=y --thread_safe=n
+      - run: xmake f -yvD -p linux -a x86_64 -k static -m release --build_test=y --thread_safe=n
       - run: xmake -wvD
-      - run: xmake run -w . dynareadout_test --test_case=$TEST_CASES
+      - run: xmake run -w . dynareadout_test --test-case=$TEST_CASES
   linux-x86_64-static-profiling-non-thread-safe:
     runs-on: ubuntu-latest
     steps:
@@ -43,9 +43,9 @@ jobs:
       - uses: xmake-io/github-action-setup-xmake@v1
         with:
           xmake-version: 2.8.6
-      - run: xmake f -y -p linux -a x86_64 -k static -m release --build_test=y --profiling=y --thread_safe=n
+      - run: xmake f -yvD -p linux -a x86_64 -k static -m release --build_test=y --profiling=y --thread_safe=n
       - run: xmake -wvD
-      - run: xmake run -w . dynareadout_test --test_case=$TEST_CASES
+      - run: xmake run -w . dynareadout_test --test-case=$TEST_CASES
   linux-x86_64-python:
     runs-on: ubuntu-latest
     steps:
@@ -53,5 +53,5 @@ jobs:
       - uses: xmake-io/github-action-setup-xmake@v1
         with:
           xmake-version: 2.8.6
-      - run: xmake f -y -p linux -a x86_64 -k static -m release --build_python=y
+      - run: xmake f -yvD -p linux -a x86_64 -k static -m release --build_python=y
       - run: xmake -wvD
