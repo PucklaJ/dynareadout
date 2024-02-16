@@ -97,7 +97,7 @@ jobs:
       - run: xmake f -yvD -p windows -a x64 -k static -m release --build_test=y --profiling=y --thread_safe=n
       - run: xmake -wvD
       - run: xmake run -w . dynareadout_test --test-case=$TEST_CASES
-  windows-x64-static:
+  windows-x64-python:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
