@@ -125,7 +125,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: rlalik/setup-cpp-compiler@v1
+      - uses: rlalik/setup-cpp-compiler@master
         with:
           compiler: g++13
       - uses: xmake-io/github-action-setup-xmake@v1
