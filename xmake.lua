@@ -140,18 +140,7 @@ if get_config("build_python") then
                 ext_name = io.readfile(ext_file)
                 ext_name = ext_name:gsub("%s+", "")
             else
-                local version = "310"
-                local platform = target:plat()
-                if platform == "linux" then
-                    platform = platform .. "-gnu"
-                elseif platform == "windows" then
-                    platform = "win_amd64"
-                end
-                local suffix = ".so"
-                if target:is_plat("windows", "mingw") then
-                    suffix = ".dll"
-                end
-                ext_name = ".cpython-" .. version .. "-" .. target:arch() .. "-" .. platform .. suffix
+                ext_name = ".python-null." .. (is_plat("windows", "mingw") and "dll" or "so")
             end
             target:set("filename", "dynareadout" .. (is_mode("debug") and "_d" or "") .. ext_name)
         end)

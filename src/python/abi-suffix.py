@@ -1,6 +1,6 @@
 import sysconfig
 import platform
-abi_tag = sysconfig.get_config_var('SOABI').replace('.', '') if sysconfig.get_config_var('SOABI') else None
+abi_tag = sysconfig.get_config_var('EXT_SUFFIX').replace('.', '') if sysconfig.get_config_var('EXT_SUFFIX') else None
 if platform.system() == 'Windows':
     abi_tag += '.dll'
 else:
