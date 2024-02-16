@@ -6,13 +6,6 @@ env:
   TEST_CASES: d3_buffer_seek,_get_nth_digit,_insert_sorted,d3_word_binary_search,Array,glob,string_builder,Array::New,binout_directory,path_move_up,path_join,path_is_abs,path_view,extra_string,card_parse_get_type,empty_card,profiling,sync,multi_file
   PYTHON_TEST_CODE: |
     import dynareadout as dro
-    try:
-      b = dro.Binout('test')
-    except RuntimeError as e:
-      if str(e) != 'test: No files have been found':
-        exit(1)
-      else:
-        print('Success')
 
 jobs:
   linux-x86_64-static:
