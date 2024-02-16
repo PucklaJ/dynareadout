@@ -239,6 +239,7 @@ void END_PROFILING(const char *out_file_name) {
   }
 
   if (out_file_name && profiling_context.num_execution_stacks != 0) {
+    /* TODO: Create directory if it does not exist */
     FILE *out_file = fopen(out_file_name, "w");
     if (!out_file) {
       fprintf(stderr, "Failed to open profiling file: %s\n", strerror(errno));

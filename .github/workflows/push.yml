@@ -66,7 +66,7 @@ jobs:
           xmake-version: 2.8.6
       - run: xmake f -yvD -p windows -a x64 -k static -m release --build_test=y
       - run: xmake -wvD
-      - run: xmake run -w . dynareadout_test --test-case=%TEST_CASES%
+      - run: xmake run -w . dynareadout_test --test-case=$env:TEST_CASES
   windows-x64-static-profiling:
     runs-on: windows-latest
     steps:
@@ -76,7 +76,7 @@ jobs:
           xmake-version: 2.8.6
       - run: xmake f -yvD -p windows -a x64 -k static -m release --build_test=y --profiling=y
       - run: xmake -wvD
-      - run: xmake run -w . dynareadout_test --test-case=%TEST_CASES%
+      - run: xmake run -w . dynareadout_test --test-case=$env:TEST_CASES
   windows-x64-static-non-thread-safe:
     runs-on: windows-latest
     steps:
@@ -86,7 +86,7 @@ jobs:
           xmake-version: 2.8.6
       - run: xmake f -yvD -p windows -a x64 -k static -m release --build_test=y --thread_safe=n
       - run: xmake -wvD
-      - run: xmake run -w . dynareadout_test --test-case=%TEST_CASES%
+      - run: xmake run -w . dynareadout_test --test-case=$env:TEST_CASES
   windows-x64-static-profiling-non-thread-safe:
     runs-on: windows-latest
     steps:
@@ -96,7 +96,7 @@ jobs:
           xmake-version: 2.8.6
       - run: xmake f -yvD -p windows -a x64 -k static -m release --build_test=y --profiling=y --thread_safe=n
       - run: xmake -wvD
-      - run: xmake run -w . dynareadout_test --test-case=%TEST_CASES%
+      - run: xmake run -w . dynareadout_test --test-case=$env:TEST_CASES
   windows-x64-python:
     runs-on: windows-latest
     steps:
@@ -105,4 +105,55 @@ jobs:
         with:
           xmake-version: 2.8.6
       - run: xmake f -yvD -p windows -a x64 -k static -m release --build_python=y
+      - run: xmake -wvD
+
+
+  macos-x86_64-static:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: 2.8.6
+      - run: xmake f -yvD -p macos -a x86_64 -k static -m release --build_test=y
+      - run: xmake -wvD
+      - run: xmake run -w . dynareadout_test --test-case=$TEST_CASES
+  macos-x86_64-static-profiling:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: 2.8.6
+      - run: xmake f -yvD -p macos -a x86_64 -k static -m release --build_test=y --profiling=y
+      - run: xmake -wvD
+      - run: xmake run -w . dynareadout_test --test-case=$TEST_CASES
+  macos-x86_64-static-non-thread-safe:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: 2.8.6
+      - run: xmake f -yvD -p macos -a x86_64 -k static -m release --build_test=y --thread_safe=n
+      - run: xmake -wvD
+      - run: xmake run -w . dynareadout_test --test-case=$TEST_CASES
+  macos-x86_64-static-profiling-non-thread-safe:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: 2.8.6
+      - run: xmake f -yvD -p macos -a x86_64 -k static -m release --build_test=y --profiling=y --thread_safe=n
+      - run: xmake -wvD
+      - run: xmake run -w . dynareadout_test --test-case=$TEST_CASES
+  macos-x86_64-python:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: xmake-io/github-action-setup-xmake@v1
+        with:
+          xmake-version: 2.8.6
+      - run: xmake f -yvD -p macos -a x86_64 -k static -m release --build_python=y
       - run: xmake -wvD
