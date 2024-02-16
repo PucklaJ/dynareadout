@@ -4,7 +4,7 @@ on: [push]
 
 env:
   TEST_CASES: d3_buffer_seek,_get_nth_digit,_insert_sorted,d3_word_binary_search,Array,glob,string_builder,Array::New,binout_directory,path_move_up,path_join,path_is_abs,path_view,extra_string,card_parse_get_type,empty_card,profiling,sync,multi_file
-  CREATE_PYTHON_SYMLINK_LINUX: ln -s build/linux/x86_64/release/dynareadout.cpython-311-x86_64-linux-gnu.so ~/.local/lib/python3.11/site-packages/dynareadout.cpython-311-x86_64-linux-gnu.so
+  CREATE_PYTHON_SYMLINK_LINUX: ln -s build/linux/x86_64/release/dynareadout.cpython-311-x86_64-linux-gnu.so $HOME/.local/lib/python3.11/site-packages/dynareadout.cpython-311-x86_64-linux-gnu.so
 
 jobs:
   linux-x86_64-static:
@@ -59,7 +59,8 @@ jobs:
           python-version: '3.11'
       - run: xmake f -yvD -p linux -a x86_64 -k static -m release --build_python=y
       - run: xmake -wvD
-      - run: $CREATE_PYTHON_SYMLINK_LINUX
+      - run: ls -la build/linux/x86_64/release
+      - run: ${{ env.CREATE_PYTHON_SYMLINK_LINUX }}
       - run: printf 'import dynareadout as dro\ntry:\n\tb = dro.Binout("hello")\nexcept RuntimeError as e:\n\tprint(e)\n' | python
 
 
