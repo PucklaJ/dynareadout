@@ -59,9 +59,8 @@ jobs:
           python-version: '3.11'
       - run: xmake f -yvD -p linux -a x86_64 -k static -m release --build_python=y
       - run: xmake -wvD
-      - run: ls -la build/linux/x86_64/release
-      - run: ${{ env.CREATE_PYTHON_SYMLINK_LINUX }}
-      - run: printf 'import dynareadout as dro\ntry:\n\tb = dro.Binout("hello")\nexcept RuntimeError as e:\n\tprint(e)\n' | python
+      - run: ls -la --color=always build/linux/x86_64/release
+      - run: cd build/linux/x86_64/release && printf 'import dynareadout as dro\ntry:\n\tb = dro.Binout("hello")\nexcept RuntimeError as e:\n\tprint(e)\n' | python
 
 
   windows-x64-static:
