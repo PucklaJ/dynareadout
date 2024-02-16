@@ -133,25 +133,19 @@ if get_config("build_python") then
         on_load(function (target)
             import("lib.detect.find_program")
             local ext_name
-            local python_config = find_program("python3-config", { check = "--extension-suffix"})
-            if python_config then
+            local python = find_program("python")
+            if python then
                 local ext_file = os.tmpfile()
-                os.execv(python_config, {"--extension-suffix"}, {stdout=ext_file})
+                os.execv(python, {"src/python/abi-suffix.py"}, {stdout=ext_file})
                 ext_name = io.readfile(ext_file)
                 ext_name = ext_name:gsub("%s+", "")
             else
-                import("lib.detect.find_programver")
-                local version
-                local python_version = find_programver("python")
-                if python_version then
-                    local majorminor = python_version:split(".", {plain = true})
-                    version = majorminor[1] .. majorminor[2]
-                else
-                    version = "310"
-                end
+                local version = "310"
                 local platform = target:plat()
                 if platform == "linux" then
                     platform = platform .. "-gnu"
+                elseif platform == "windows" then
+                    platform = "win_amd64"
                 end
                 local suffix = ".so"
                 if target:is_plat("windows", "mingw") then
