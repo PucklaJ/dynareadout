@@ -9,7 +9,7 @@ jobs:
       - uses: xmake-io/github-action-setup-xmake@v1
         with:
           xmake-version: 2.8.6
-      - run: xmake f -p linux -a x86_64 -m release --build_test=y
+      - run: xmake f -y -p linux -a x86_64 -m release --build_test=y
       - run: xmake -wvD
   linux-x86_64-static-profiling:
     runs-on: ubuntu-latest
@@ -18,7 +18,7 @@ jobs:
       - uses: xmake-io/github-action-setup-xmake@v1
         with:
           xmake-version: 2.8.6
-      - run: xmake f -p linux -a x86_64 -m release --build_test=y --profiling=y
+      - run: xmake f -y -p linux -a x86_64 -m release --build_test=y --profiling=y
       - run: xmake -wvD
   linux-x86_64-static-non-thread-safe:
     runs-on: ubuntu-latest
@@ -27,7 +27,7 @@ jobs:
       - uses: xmake-io/github-action-setup-xmake@v1
         with:
           xmake-version: 2.8.6
-      - run: xmake f -p linux -a x86_64 -m release --build_test=y --thread_safe=n
+      - run: xmake f -y -p linux -a x86_64 -m release --build_test=y --thread_safe=n
       - run: xmake -wvD
   linux-x86_64-static-profiling-non-thread-safe:
     runs-on: ubuntu-latest
@@ -36,5 +36,5 @@ jobs:
       - uses: xmake-io/github-action-setup-xmake@v1
         with:
           xmake-version: 2.8.6
-      - run: xmake f -p linux -a x86_64 -m release --build_test=y --profiling=y --thread_safe=n
+      - run: xmake f -y -p linux -a x86_64 -m release --build_test=y --profiling=y --thread_safe=n
       - run: xmake -wvD
