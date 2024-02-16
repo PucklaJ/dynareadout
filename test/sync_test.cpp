@@ -28,6 +28,7 @@
 #include <cstdio>
 #include <cstring>
 #include <doctest/doctest.h>
+#include <filesystem>
 #include <multi_file.h>
 #include <path.h>
 
@@ -48,7 +49,7 @@ TEST_CASE("sync") {
 
 TEST_CASE("multi_file") {
   if (!path_is_file("test_data/multi_file_test")) {
-    REQUIRE(system("mkdir -p \"test_data\"") == 0);
+    std::filesystem::create_directories("test_data");
     FILE *file = fopen("test_data/multi_file_test", "wb");
     if (!file) {
       FAIL(strerror(errno));

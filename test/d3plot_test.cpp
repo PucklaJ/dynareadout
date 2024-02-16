@@ -34,6 +34,7 @@
 #include <ctime>
 #include <d3plot.h>
 #include <doctest/doctest.h>
+#include <filesystem>
 #ifdef BUILD_CPP
 #include "main_test.hpp"
 #include <d3plot.hpp>
@@ -87,7 +88,7 @@ TEST_CASE("d3_buffer") {
 TEST_CASE("d3_buffer_seek") {
   // Create test data
   if (!path_is_directory("test_data/d3_buffer_seek")) {
-    REQUIRE(system("mkdir -p \"test_data/d3_buffer_seek\"") == 0);
+    std::filesystem::create_directories("test_data/d3_buffer_seek");
   }
 
   if (!path_is_file("test_data/d3_buffer_seek/seek_file")) {
