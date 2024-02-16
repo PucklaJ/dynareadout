@@ -118,9 +118,7 @@ jobs:
       - run: xmake f -yvD -p windows -a x64 -k static -m release --build_python=y
       - run: xmake -wvD
       - run: echo $env:PYTHON_TEST_CODE
-      - run: cd build/windows/x64/release
-      - run: dir
-      - run: echo 'import dynareadout' | python
+      - run: cd build/windows/x64/release && dir && echo $env:PYTHON_TEST_CODE | python
 
 
   macos-x86_64-static:
