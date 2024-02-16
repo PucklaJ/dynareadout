@@ -48,6 +48,7 @@ TEST_CASE("sync") {
 
 TEST_CASE("multi_file") {
   if (!path_is_file("test_data/multi_file_test")) {
+    REQUIRE(system("mkdir -p \"test_data\"") == 0);
     FILE *file = fopen("test_data/multi_file_test", "wb");
     if (!file) {
       FAIL(strerror(errno));

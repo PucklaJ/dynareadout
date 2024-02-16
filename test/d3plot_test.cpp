@@ -87,7 +87,7 @@ TEST_CASE("d3_buffer") {
 TEST_CASE("d3_buffer_seek") {
   // Create test data
   if (!path_is_directory("test_data/d3_buffer_seek")) {
-    REQUIRE(system("mkdir \"test_data/d3_buffer_seek\"") == 0);
+    REQUIRE(system("mkdir -p \"test_data/d3_buffer_seek\"") == 0);
   }
 
   if (!path_is_file("test_data/d3_buffer_seek/seek_file")) {
