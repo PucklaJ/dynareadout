@@ -17,9 +17,9 @@ jobs:
         thread_safe: [y, n]
         profiling: [y, n]
         python: [y, n]
-    name: ${{ matrix.plat }}-${{ env.arch }}-${{ matrix.kind }}${{ matrix.thread_safe == 'y' && '' || '-non-thread-safe' }}${{ matrix.profiling == 'y' && '-profiling' || '' }}${{ matrix.python == 'y' && '-python' || '' }}
     env:
       arch: ${{ matrix.plat == 'windows' && (matrix.arch == 'x86_64' && 'x64' || matrix.arch) || matrix.arch }}
+    name: ${{ matrix.plat }}-${{ env.arch }}-${{ matrix.kind }}${{ matrix.thread_safe == 'y' && '' || '-non-thread-safe' }}${{ matrix.profiling == 'y' && '-profiling' || '' }}${{ matrix.python == 'y' && '-python' || '' }}
 
     steps:
       - uses: actions/checkout@v4
