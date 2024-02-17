@@ -18,7 +18,7 @@ jobs:
         profiling: [y, n]
         python: [y, n]
     env:
-      arch: ${{ if (matrix.plat == 'windows' && matrix.arch == 'x86_64') }}x64${{ else }}${{ matrix.arch }}${{ endif }}
+      arch: ${{ matrix.plat == 'windows' && 'x64' || matrix.arch }}
     name: ${{ matrix.plat }}-${{ env.arch }}-${{ matrix.kind }}${{ matrix.thread_safe == 'y' && '' || '-non-thread-safe' }}${{ matrix.profiling == 'y' && '-profiling' || '' }}${{ matrix.python == 'y' && '-python' || '' }}
 
     steps:
