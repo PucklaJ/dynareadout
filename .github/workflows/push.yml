@@ -3,8 +3,6 @@ on: [push]
 
 env:
   TEST_CASES: d3_buffer_seek,_get_nth_digit,_insert_sorted,d3_word_binary_search,Array,glob,string_builder,Array::New,binout_directory,path_move_up,path_join,path_is_abs,path_view,extra_string,card_parse_get_type,empty_card,profiling,sync,multi_file
-  PYTHON_TEST_CODE: |
-    import dynareadout as dro
 
 jobs:
   build-and-test:
@@ -39,7 +37,9 @@ jobs:
         if: matrix.python == 'y' && matrix.plat != 'windows'
       - run: dir build/${{ matrix.plat }}/${{ env.arch }}/release
         if: matrix.python == 'y' && matrix.plat == 'windows'
-      - run: echo ${{ env.PYTHON_TEST_CODE }}
-        if: matrix.python == 'y'
-      - run: cd build/${{ matrix.plat }}/${{ env.arch }}/release && python ${{ github.workspace }}/src/python/test.py
+      - run: cp src/python/test.py build/${{ matrix.plat }}/${{ env.arch }}/release
+        if: matrix.python == 'y' && matrix.plat != 'windows'
+      - run: Copy-Item -Path src/python/test.py -Destination build/${{ matrix.plat }}/${{ env.arch }}/release
+        if: matrix.python == 'y' && matrix.plat == 'windows'
+      - run: cd build/${{ matrix.plat }}/${{ env.arch }}/release && python test.py
         if: matrix.python == 'y'
