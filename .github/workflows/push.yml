@@ -41,5 +41,5 @@ jobs:
         if: matrix.python == 'y' && matrix.plat == 'windows'
       - run: echo ${{ env.PYTHON_TEST_CODE }}
         if: matrix.python == 'y'
-      - run: cd build/${{ matrix.plat }}/${{ env.arch }}/release && echo ${{ env.PYTHON_TEST_CODE }} | python
+      - run: cd build/${{ matrix.plat }}/${{ env.arch }}/release && python src/python/test.py
         if: matrix.python == 'y'
