@@ -18,7 +18,7 @@ jobs:
         python: [y, n]
     env:
       arch: ${{ matrix.plat == 'windows' && 'x64' || matrix.arch }}
-    name: ${{ matrix.plat }}-${{ matrix.plat == 'windows' && 'x64' || matrix.arch }}-${{ matrix.kind }}${{ matrix.thread_safe == 'y' && '-thread-safe' || '-non-thread-safe' }}${{ matrix.profiling == 'y' && '-profiling' || '-not-profiling' }}${{ matrix.python == 'y' && '-python' || '-c' }}
+    name: ${{ matrix.plat }}-${{ matrix.arch }}-${{ matrix.kind }}${{ matrix.thread_safe == 'y' && '-' || '-non-thread-safe' }}${{ matrix.profiling == 'y' && '-profiling' || '-' }}${{ matrix.python == 'y' && '-python' || '-' }}
 
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +29,7 @@ jobs:
         if: matrix.python == 'y'
         with:
           python-version: '3.11'
-      - run: xmake f -yvD -p ${{ matrix.plat }} -a ${{ env.arch }} -k ${{ matrix.kind }} -m release --build_test=y --thread_safe=${{ matrix.thread_safe }} --profiling=${{ matrix.profiling }} --build_python=${{ matrix.python }}
+      - run: xmake f -yvD -p ${{ matrix.plat }} -a ${{ env.arch }} -k ${{ matrix.kind }} -m release --build_test=${{ matrix.python == 'y' && 'n' || 'y' }} --thread_safe=${{ matrix.thread_safe }} --profiling=${{ matrix.profiling }} --build_python=${{ matrix.python }}
       - run: xmake -wvD
       - run: xmake run -w . dynareadout_test --test-case=${{ env.TEST_CASES }}
         if: matrix.python == 'n'
