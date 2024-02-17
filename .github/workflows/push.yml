@@ -12,12 +12,12 @@ jobs:
     strategy:
       matrix:
         plat: [linux, windows]
-        _arch: [x86_64]
+        arch: [x86_64]
         kind: [static]
         thread_safe: [y, n]
         profiling: [y, n]
         python: [y, n]
-    name: ${{ matrix.plat }}-${{ matrix.arch }}-${{ matrix.kind }}${{ matrix.thread_safe == 'y' && '' || '-non-thread-safe' }}${{ matrix.profiling == 'y' && '-profiling' || '' }}${{ matrix.python == 'y' && '-python' || '' }}
+    name: ${{ matrix.plat }}-${{ env.arch }}-${{ matrix.kind }}${{ matrix.thread_safe == 'y' && '' || '-non-thread-safe' }}${{ matrix.profiling == 'y' && '-profiling' || '' }}${{ matrix.python == 'y' && '-python' || '' }}
     env:
       arch: ${{ matrix.plat == 'windows' && (matrix.arch == 'x86_64' && 'x64' || matrix.arch) || matrix.arch }}
 
