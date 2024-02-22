@@ -27,8 +27,11 @@
 #include <include_transform.hpp>
 #include <key.hpp>
 #include <pybind11/pybind11.h>
-#include <pybind11/stl/filesystem.h>
 #include <sstream>
+
+#ifndef __APPLE__
+#include <pybind11/stl/filesystem.h>
+#endif
 
 namespace py = pybind11;
 
