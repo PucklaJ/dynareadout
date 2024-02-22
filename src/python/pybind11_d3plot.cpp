@@ -129,6 +129,18 @@ void add_d3plot_library_to_module(py::module_ &m) {
 
       ;
 
+  py::class_<dro::D3plotSurface>(m, "D3plotSurface")
+      .def_readonly("sigma", &dro::D3plotSurface::sigma)
+      .def_readonly("stress", &dro::D3plotSurface::stress)
+      .def_readonly("effective_plastic_strain",
+                    &dro::D3plotSurface::effective_plastic_strain)
+      .def_readonly("material_dependent_value",
+                    &dro::D3plotSurface::material_dependent_value)
+      .def("__str__", &dro::stream_to_string<dro::D3plotSurface>,
+           py::return_value_policy::take_ownership)
+
+      ;
+
   py::class_<d3plot_solid>(m, "d3plot_solid")
       .def_readonly("sigma", &d3plot_solid::sigma)
       .def_readonly("stress", &d3plot_solid::stress)
@@ -157,9 +169,12 @@ void add_d3plot_library_to_module(py::module_ &m) {
            &dro::D3plotThickShell::get_inner_history_variables)
       .def("get_outer_history_variables",
            &dro::D3plotThickShell::get_outer_history_variables)
+      .def("get_mean_history_variables",
+           &dro::D3plotThickShell::get_mean_history_variables)
       .def("get_add_ip_history_variables",
            &dro::D3plotThickShell::get_add_ip_history_variables)
       .def("get_add_ips", &dro::D3plotThickShell::get_add_ips)
+      .def("get_mean", &dro::D3plotThickShell::get_mean)
       .def("__str__", &dro::stream_to_string<dro::D3plotThickShell>,
            py::return_value_policy::take_ownership)
 
@@ -198,9 +213,12 @@ void add_d3plot_library_to_module(py::module_ &m) {
            &dro::D3plotShell::get_inner_history_variables)
       .def("get_outer_history_variables",
            &dro::D3plotShell::get_outer_history_variables)
+      .def("get_mean_history_variables",
+           &dro::D3plotShell::get_mean_history_variables)
       .def("get_add_ip_history_variables",
            &dro::D3plotShell::get_add_ip_history_variables)
       .def("get_add_ips", &dro::D3plotShell::get_add_ips)
+      .def("get_mean", &dro::D3plotShell::get_mean)
       .def("__str__", &dro::stream_to_string<dro::D3plotShell>,
            py::return_value_policy::take_ownership);
 
