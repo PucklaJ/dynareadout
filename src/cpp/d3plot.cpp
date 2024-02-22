@@ -41,7 +41,7 @@ size_t D3plot::index_for_id(const Array<d3_word> &ids, d3_word id) {
 
 D3plot::D3plot(D3plot &&rhs) noexcept { *this = std::move(rhs); }
 
-D3plot::D3plot(const std::filesystem::path &root_file_name) {
+D3plot::D3plot(const fs::path &root_file_name) {
   m_handle = d3plot_open(root_file_name.string().c_str());
   if (m_handle.error_string) {
     // Copy the error string and call d3plot_close since the destructor is not

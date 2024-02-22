@@ -27,11 +27,11 @@
 #include "array.hpp"
 #include "d3plot_part.hpp"
 #include "d3plot_state.hpp"
+#include "filesystem_bridge.hpp"
 #include "vec.hpp"
 #include <chrono>
 #include <d3plot.h>
 #include <exception>
-#include <filesystem>
 #include <vector>
 
 namespace dro {
@@ -69,7 +69,7 @@ public:
   D3plot(D3plot &&rhs) noexcept;
   // Open a d3plot file family by giving the root file name
   // Example: d3plot of d3plot01, d3plot02, d3plot03, etc.
-  D3plot(const std::filesystem::path &root_file_name);
+  D3plot(const fs::path &root_file_name);
   ~D3plot() noexcept;
 
   D3plot &operator=(D3plot &&rhs) noexcept;

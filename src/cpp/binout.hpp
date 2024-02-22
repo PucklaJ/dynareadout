@@ -25,10 +25,10 @@
 
 #pragma once
 #include "array.hpp"
+#include "filesystem_bridge.hpp"
 #include <binout.h>
 #include <binout_defines.h>
 #include <exception>
-#include <filesystem>
 #include <vector>
 
 namespace dro {
@@ -78,7 +78,7 @@ public:
   Binout(Binout &&rhs) noexcept;
   // Open a binout file (or multiple files by globbing) and parse its records to
   // be ready to read data
-  Binout(const std::filesystem::path &file_name);
+  Binout(const fs::path &file_name);
   ~Binout() noexcept;
 
   Binout &operator=(Binout &&rhs) noexcept;

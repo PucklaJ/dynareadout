@@ -38,7 +38,7 @@ const char *Binout::Exception::what() const noexcept {
 
 Binout::Binout(Binout &&rhs) noexcept { *this = std::move(rhs); }
 
-Binout::Binout(const std::filesystem::path &file_name) {
+Binout::Binout(const fs::path &file_name) {
   m_handle = binout_open(file_name.string().c_str());
   char *open_error = binout_open_error(&m_handle);
   if (open_error) {

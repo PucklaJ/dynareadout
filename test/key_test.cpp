@@ -1361,12 +1361,12 @@ TEST_CASE("INCLUDE_PATH") {
           }
 
           if (keyword_name == "LAYER_41") {
-            CHECK(info.root_folder() == (std::filesystem::current_path() /
-                                         "test_data/include_paths/"));
+            CHECK(info.root_folder() ==
+                  (fs::current_path() / "test_data/include_paths/"));
 
             const auto ip = info.include_paths();
             REQUIRE(ip.size() == 2);
-            CHECK(ip[0] == std::filesystem::current_path());
+            CHECK(ip[0] == fs::current_path());
             CHECK(ip[1] == "test_data/include_paths");
           }
         });

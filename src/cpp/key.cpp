@@ -213,7 +213,7 @@ const char *KeyFile::Exception::what() const noexcept {
 
 KeyFile::ParseConfig::ParseConfig(
     bool parse_includes, bool ignore_not_found_includes,
-    std::vector<std::filesystem::path> extra_include_paths) noexcept {
+    std::vector<fs::path> extra_include_paths) noexcept {
   m_handle.parse_includes = parse_includes;
   m_handle.ignore_not_found_includes = ignore_not_found_includes;
   if (!extra_include_paths.empty()) {
@@ -254,15 +254,15 @@ KeyFile::ParseConfig::~ParseConfig() noexcept {
 KeyFile::ParseInfo::ParseInfo(key_parse_info_t *handle) noexcept
     : m_handle(handle) {}
 
-std::vector<std::filesystem::path> KeyFile::ParseInfo::include_paths() {
-  std::vector<std::filesystem::path> p(m_handle->num_include_paths);
+std::vector<fs::path> KeyFile::ParseInfo::include_paths() {
+  std::vector<fs::path> p(m_handle->num_include_paths);
   for (size_t i = 0; i < m_handle->num_include_paths; i++) {
     p[i] = m_handle->include_paths[i];
   }
   return p;
 }
 
-Keywords KeyFile::parse(const std::filesystem::path &file_name,
+Keywords KeyFile::parse(const fs::path &file_name,
                         KeyFile::ParseConfig parse_config,
                         std::optional<dro::String> *warnings) {
   size_t num_keywords;
@@ -285,7 +285,7 @@ Keywords KeyFile::parse(const std::filesystem::path &file_name,
   return Keywords(keywords, num_keywords);
 }
 
-void KeyFile::parse_with_callback(const std::filesystem::path &file_name,
+void KeyFile::parse_with_callback(const fs::path &file_name,
                                   KeyFile::Callback callback,
                                   KeyFile::ParseConfig parse_config,
                                   std::optional<dro::String> *warnings) {

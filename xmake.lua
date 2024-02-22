@@ -65,6 +65,10 @@ target("dynareadout")
     end
 target_end()
 
+if is_plat("macosx") and (get_config("build_cpp") or get_config("build_python") or get_config("build_test")) then
+    add_requires("boost", {configs = {filesystem = true}})
+end
+
 if get_config("build_cpp") or get_config("build_python") then
     target("dynareadout_cpp")
         set_kind("$(kind)")
@@ -72,6 +76,8 @@ if get_config("build_cpp") or get_config("build_python") then
         if is_plat("linux") then
             add_cxxflags("-fPIC")
             add_syslinks("stdc++fs")
+        elseif is_plat("macosx") then
+            add_packages("boost")
         end
         add_options("thread_safe")
         if not get_config("thread_safe") then
@@ -95,6 +101,8 @@ if get_config("build_test") then
         add_deps("dynareadout")
         if is_plat("linux") then
             add_cxxflags("-fPIC")
+        elseif is_plat("macosx") then
+            add_packages("boost")
         end
         if get_config("build_cpp") then
             add_deps("dynareadout_cpp")
@@ -118,6 +126,8 @@ if get_config("build_python") then
         set_languages("cxx17")
         if is_plat("linux") then
             add_cxxflags("-fPIC")
+        elseif is_plat("macosx") then
+            add_packages("boost")
         end
         add_deps("dynareadout_cpp")
         add_packages("pybind11")

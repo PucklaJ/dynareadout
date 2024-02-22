@@ -171,9 +171,9 @@ void add_key_library_to_module(py::module_ &m) {
 
   m.def(
       "key_file_parse",
-      [](const std::filesystem::path &file_name, bool output_warnings,
-         bool parse_includes, bool ignore_not_found_includes,
-         std::vector<std::filesystem::path> extra_include_paths) {
+      [](const fs::path &file_name, bool output_warnings, bool parse_includes,
+         bool ignore_not_found_includes,
+         std::vector<fs::path> extra_include_paths) {
         std::optional<dro::String> warnings;
         auto keywords = dro::KeyFile::parse(
             file_name,
@@ -193,7 +193,7 @@ void add_key_library_to_module(py::module_ &m) {
       py::arg("file_name"), py::arg("output_warnings") = true,
       py::arg("parse_includes") = true,
       py::arg("ignore_not_found_includes") = false,
-      py::arg("extra_include_paths") = std::vector<std::filesystem::path>(),
+      py::arg("extra_include_paths") = std::vector<fs::path>(),
       py::return_value_policy::take_ownership);
 
   dro::add_array_type_to_module<dro::TransformationOption>(m);

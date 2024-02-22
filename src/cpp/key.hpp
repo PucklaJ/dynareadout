@@ -26,11 +26,11 @@
 #pragma once
 
 #include "array.hpp"
+#include "filesystem_bridge.hpp"
 #include <array>
 #include <cstdio>
 #include <cstdlib>
 #include <exception>
-#include <filesystem>
 #include <functional>
 #include <key.h>
 #include <limits>
@@ -301,9 +301,9 @@ public:
     // when not finding an include file.
     // extra_include_paths ... Define some additional include paths which are
     // used to look for files under the INCLUDE keyword and such.
-    ParseConfig(
-        bool parse_includes = true, bool ignore_not_found_includes = false,
-        std::vector<std::filesystem::path> extra_include_paths = {}) noexcept;
+    ParseConfig(bool parse_includes = true,
+                bool ignore_not_found_includes = false,
+                std::vector<fs::path> extra_include_paths = {}) noexcept;
     ParseConfig(ParseConfig &&rhs) noexcept;
     ParseConfig(const ParseConfig &rhs) noexcept;
     ~ParseConfig() noexcept;
@@ -322,14 +322,14 @@ public:
     ParseInfo(key_parse_info_t *handle) noexcept;
 
     // Name of the current file
-    inline std::filesystem::path file_name() { return m_handle->file_name; }
+    inline fs::path file_name() { return m_handle->file_name; }
     // Current line
     inline size_t line_number() const noexcept { return m_handle->line_number; }
     // Array containing the include paths where it looks for include files
     // (including working directory)
-    std::vector<std::filesystem::path> include_paths();
+    std::vector<fs::path> include_paths();
     // The folder which contains the initial file of the parse call
-    inline std::filesystem::path root_folder() { return m_handle->root_folder; }
+    inline fs::path root_folder() { return m_handle->root_folder; }
 
   private:
     key_parse_info_t *m_handle;
@@ -343,13 +343,13 @@ public:
   // an array of keywords
   // parse_config: Configure how the key file should be parsed.
   // Throws a dro::KeyFile::Exception if an error occurs.
-  static Keywords parse(const std::filesystem::path &file_name,
+  static Keywords parse(const fs::path &file_name,
                         ParseConfig parse_config = ParseConfig(),
                         std::optional<dro::String> *warnings = nullptr);
   // Same as parse, but instead of returning an array it calls a callback every
   // time a card (or empty keyword) is encountered.
   static void
-  parse_with_callback(const std::filesystem::path &file_name, Callback callback,
+  parse_with_callback(const fs::path &file_name, Callback callback,
                       ParseConfig parse_config = ParseConfig(),
                       std::optional<dro::String> *warnings = nullptr);
 };
