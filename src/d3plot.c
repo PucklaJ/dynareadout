@@ -1976,11 +1976,7 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
         shells[i].thickness = data[o++];
         shells[i].element_dependent_variables[0] = data[o++];
         shells[i].element_dependent_variables[1] = data[o++];
-        if (plot_file->control_data.istrn == 0) {
-          shells[i].internal_energy = data[o++];
-        } else {
-          shells[i].internal_energy = 0.0;
-        }
+        shells[i].internal_energy = data[o++];
       } else {
         memset(&shells[i].thickness, 0, sizeof(double) * 4);
       }
@@ -2112,13 +2108,24 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
       }
 
       if (thickness_energy_written) {
-        memcpy(&shells[i].thickness, &data[o], sizeof(double) * 3);
-        o += 3;
-        if (plot_file->control_data.istrn == 0) {
-          shells[i].internal_energy = data[o++];
-        } else {
-          shells[i].internal_energy = 0.0;
-        }
+        memcpy(&shells[i].thickness, &data[o], sizeof(double) * 4);
+        o += 4;
+        /* On page 49 the docs say:
+           "33. Internal energy (if and only if ISTRN=0)"
+         * which suggests that Internal energy is only written if ISTRN is 0,
+         * but the docs also say on page 48:
+           "NV2D=MAXINT* (6*IOSHL(1) + 1*IOSHL(2) + NEIPS) +8*IOSHL(3) +
+         4*IOSHL(4)" The 4*IOSHL(4) part suggests that the following values
+         always appear together in the database:
+
+           30. Thickness
+           31. Element dependent variable
+           32. Element dependent variable
+           33. Internal energy
+
+           Which means that the docs are contradicting themselves -_(°_°)_-
+           The basic01 example also suggests that the latter is correct.
+           */
       } else {
         memset(&shells[i].thickness, 0, sizeof(double) * 4);
       }
