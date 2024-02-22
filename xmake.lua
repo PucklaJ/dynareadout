@@ -26,6 +26,8 @@ option("thread_safe")
     set_showmenu(true)
 option_end()
 
+local use_boost_fs = is_plat("macosx") and (get_config("build_cpp") or get_config("build_python") or get_config("build_test"))
+
 add_rules("mode.debug", "mode.release")
 if get_config("build_gen") then
     target("generator")
@@ -65,7 +67,7 @@ target("dynareadout")
     end
 target_end()
 
-if is_plat("macosx") and (get_config("build_cpp") or get_config("build_python") or get_config("build_test")) then
+if use_boost_fs then
     add_requires("boost", {configs = {filesystem = true}})
 end
 
@@ -76,7 +78,8 @@ if get_config("build_cpp") or get_config("build_python") then
         if is_plat("linux") then
             add_cxxflags("-fPIC")
             add_syslinks("stdc++fs")
-        elseif is_plat("macosx") then
+        end
+        if use_boost_fs then
             add_packages("boost")
         end
         add_options("thread_safe")
@@ -101,7 +104,8 @@ if get_config("build_test") then
         add_deps("dynareadout")
         if is_plat("linux") then
             add_cxxflags("-fPIC")
-        elseif is_plat("macosx") then
+        end
+        if use_boost_fs then
             add_packages("boost")
         end
         if get_config("build_cpp") then
@@ -126,7 +130,8 @@ if get_config("build_python") then
         set_languages("cxx17")
         if is_plat("linux") then
             add_cxxflags("-fPIC")
-        elseif is_plat("macosx") then
+        end
+        if use_boost_fs then
             add_packages("boost")
         end
         add_deps("dynareadout_cpp")

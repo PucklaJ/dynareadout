@@ -37,6 +37,39 @@
 
 namespace py = pybind11;
 
+#ifdef __APPLE__
+namespace PYBIND11_NAMESPACE {
+namespace detail {
+// Create type caster for fs::path
+template <> struct type_caster<fs::path> {
+public:
+  PYBIND11_TYPE_CASTER(fs::path, const_name("fs::path"));
+
+  bool load(handle src, bool) {
+    PyObject *source = src.ptr();
+    if (!PyUnicode_Check(source)) {
+      return false;
+    }
+
+    const char *utf8_str = PyUnicode_AsUTF8(source);
+    if (!utf8_str) {
+      return false;
+    }
+
+    value = fs::path(utf8_str);
+
+    return !PyErr_Occurred();
+  }
+
+  static handle cast(fs::path src, return_value_policy, handle) {
+    return str(src.string());
+  }
+};
+
+} // namespace detail
+} // namespace PYBIND11_NAMESPACE
+#endif
+
 namespace dro {
 
 template <typename T> Array<T> array_constructor(size_t size) {
