@@ -2966,9 +2966,11 @@ void d3plot_free_part(d3plot_part *part) {
 void d3plot_free_shells_state(d3plot_shell *shells) {
   BEGIN_PROFILE_FUNC();
 
-  free(shells->mid.history_variables);
-  free(shells->add_ips);
-  free(shells);
+  if (shells) {
+    free(shells->mid.history_variables);
+    free(shells->add_ips);
+    free(shells);
+  }
 
   END_PROFILE_FUNC();
 }
@@ -2976,9 +2978,11 @@ void d3plot_free_shells_state(d3plot_shell *shells) {
 void d3plot_free_thick_shells_state(d3plot_thick_shell *thick_shells) {
   BEGIN_PROFILE_FUNC();
 
-  free(thick_shells->mid.history_variables);
-  free(thick_shells->add_ips);
-  free(thick_shells);
+  if (thick_shells) {
+    free(thick_shells->mid.history_variables);
+    free(thick_shells->add_ips);
+    free(thick_shells);
+  }
 
   END_PROFILE_FUNC();
 }

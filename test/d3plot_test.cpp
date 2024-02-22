@@ -1034,6 +1034,21 @@ TEST_CASE("basic01") {
 
   d3plot_free_shells_state(shells);
 
+  d3plot_thick_shell *thick_shells = d3plot_read_thick_shells_state(
+      &plot_file, 1, &num_shells, &num_history_variables);
+  if (plot_file.error_string) {
+    FAIL(plot_file.error_string);
+  }
+
+  for (size_t i = 0; i < num_shells; i++) {
+    d3plot_surface ip = d3plot_get_thick_shell_mean(&thick_shells[i]);
+    CHECK(ip.stress.x != 0);
+
+    d3plot_free_surface(ip);
+  }
+
+  d3plot_free_thick_shells_state(thick_shells);
+
   d3plot_close(&plot_file);
 }
 

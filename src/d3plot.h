@@ -299,8 +299,13 @@ d3plot_part d3plot_read_part_by_id(d3plot_file *plot_file, d3_word part_id,
  * deallocated by d3plot_free_surface */
 d3plot_surface d3plot_get_shell_mean(const d3plot_shell *shell);
 
-/* Deallocates memory allocated by d3plot_get_shell_mean. Should not be used on
- * surfaces of d3plot_shell! */
+/* Returns the average of all integration points of the thick shell. Needs to be
+ * deallocated by d3plot_free_surface */
+d3plot_surface
+d3plot_get_thick_shell_mean(const d3plot_thick_shell *thick_shell);
+
+/* Deallocates memory allocated by d3plot_get_shell_mean and similar functions.
+ * Should not be used on surfaces of d3plot_shell! */
 void d3plot_free_surface(d3plot_surface ip);
 
 /***** Data sections *******/

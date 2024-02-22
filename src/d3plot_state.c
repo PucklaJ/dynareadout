@@ -402,6 +402,73 @@ d3plot_surface d3plot_get_shell_mean(const d3plot_shell *shell) {
   return mean_ip;
 }
 
+d3plot_surface
+d3plot_get_thick_shell_mean(const d3plot_thick_shell *thick_shell) {
+  BEGIN_PROFILE_FUNC();
+  const size_t num_integration_points =
+      3 + thick_shell->num_additional_integration_points;
+
+  d3plot_surface mean_ip = {0};
+  if (thick_shell->num_history_variables != 0) {
+    mean_ip.history_variables =
+        malloc(sizeof(double) * thick_shell->num_history_variables);
+    memset(mean_ip.history_variables, 0,
+           sizeof(double) * thick_shell->num_history_variables);
+  }
+
+  size_t i = 0;
+  while (i < num_integration_points) {
+    const d3plot_surface *ip;
+    switch (i) {
+    case 0:
+      ip = &thick_shell->mid;
+      break;
+    case 1:
+      ip = &thick_shell->inner;
+      break;
+    case 2:
+      ip = &thick_shell->outer;
+      break;
+    default:
+      ip = &thick_shell->add_ips[i - 3];
+      break;
+    }
+
+    mean_ip.stress.x += ip->stress.x;
+    mean_ip.stress.y += ip->stress.y;
+    mean_ip.stress.z += ip->stress.z;
+    mean_ip.stress.xy += ip->stress.xy;
+    mean_ip.stress.yz += ip->stress.yz;
+    mean_ip.stress.xz += ip->stress.xz;
+    mean_ip.effective_plastic_strain += ip->effective_plastic_strain;
+
+    size_t j = 0;
+    while (j < thick_shell->num_history_variables) {
+      mean_ip.history_variables[j] += ip->history_variables[j];
+      j++;
+    }
+
+    i++;
+  }
+
+  mean_ip.stress.x /= (double)num_integration_points;
+  mean_ip.stress.y /= (double)num_integration_points;
+  mean_ip.stress.z /= (double)num_integration_points;
+  mean_ip.stress.xy /= (double)num_integration_points;
+  mean_ip.stress.yz /= (double)num_integration_points;
+  mean_ip.stress.xz /= (double)num_integration_points;
+  mean_ip.effective_plastic_strain /= (double)num_integration_points;
+
+  size_t j = 0;
+  while (j < thick_shell->num_history_variables) {
+    mean_ip.history_variables[j] /= (double)num_integration_points;
+    j++;
+  }
+
+  END_PROFILE_FUNC();
+  return mean_ip;
+}
+
 void d3plot_free_surface(d3plot_surface ip) {
   BEGIN_PROFILE_FUNC();
 
