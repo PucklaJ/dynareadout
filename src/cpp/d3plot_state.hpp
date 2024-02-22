@@ -30,6 +30,11 @@
 
 namespace dro {
 
+class D3plotSurface : public d3plot_surface {
+public:
+  virtual ~D3plotSurface();
+};
+
 class D3plotShell : public d3plot_shell {
 public:
   inline const Array<double> get_mid_history_variables() const noexcept {
@@ -41,12 +46,15 @@ public:
   inline const Array<double> get_outer_history_variables() const noexcept {
     return Array<double>(outer.history_variables, num_history_variables, false);
   }
+  const Array<double> get_mean_history_variables() const noexcept;
   const Array<double> get_add_ip_history_variables(size_t add_idx) const;
 
   inline const Array<d3plot_surface> get_add_ips() const noexcept {
     return Array<d3plot_surface>(add_ips, num_additional_integration_points,
                                  false);
   }
+
+  D3plotSurface get_mean() const noexcept;
 };
 
 template <> Array<D3plotShell>::~Array<D3plotShell>() noexcept;
@@ -62,12 +70,15 @@ public:
   inline const Array<double> get_outer_history_variables() const noexcept {
     return Array<double>(outer.history_variables, num_history_variables, false);
   }
+  const Array<double> get_mean_history_variables() const noexcept;
   const Array<double> get_add_ip_history_variables(size_t add_idx) const;
 
   inline const Array<d3plot_surface> get_add_ips() const noexcept {
     return Array<d3plot_surface>(add_ips, num_additional_integration_points,
                                  false);
   }
+
+  D3plotSurface get_mean() const noexcept;
 };
 
 template <> Array<D3plotThickShell>::~Array<D3plotThickShell>() noexcept;

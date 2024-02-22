@@ -29,11 +29,27 @@
 
 namespace dro {
 
+D3plotSurface::~D3plotSurface() noexcept {
+  d3plot_free_surface(*reinterpret_cast<d3plot_surface *>(this));
+}
+
+D3plotSurface D3plotShell::get_mean() const noexcept {
+  d3plot_surface ip =
+      d3plot_get_shell_mean(reinterpret_cast<const d3plot_shell *>(this));
+  return *reinterpret_cast<D3plotSurface *>(&ip);
+}
+
 template <> Array<D3plotShell>::~Array<D3plotShell>() noexcept {
   if (m_delete_data && m_data) {
     d3plot_free_shells_state(reinterpret_cast<d3plot_shell *>(m_data));
     m_data = nullptr;
   }
+}
+
+const Array<double> D3plotShell::get_mean_history_variables() const noexcept {
+  d3plot_surface ip =
+      d3plot_get_shell_mean(reinterpret_cast<const d3plot_shell *>(this));
+  return Array<double>(ip.history_variables, num_history_variables);
 }
 
 const Array<double>
@@ -52,12 +68,25 @@ D3plotShell::get_add_ip_history_variables(size_t add_idx) const {
                        num_history_variables, false);
 }
 
+D3plotSurface D3plotThickShell::get_mean() const noexcept {
+  d3plot_surface ip = d3plot_get_thick_shell_mean(
+      reinterpret_cast<const d3plot_thick_shell *>(this));
+  return *reinterpret_cast<D3plotSurface *>(&ip);
+}
+
 template <> Array<D3plotThickShell>::~Array<D3plotThickShell>() noexcept {
   if (m_delete_data && m_data) {
     d3plot_free_thick_shells_state(
         reinterpret_cast<d3plot_thick_shell *>(m_data));
     m_data = nullptr;
   }
+}
+
+const Array<double>
+D3plotThickShell::get_mean_history_variables() const noexcept {
+  d3plot_surface ip = d3plot_get_thick_shell_mean(
+      reinterpret_cast<const d3plot_thick_shell *>(this));
+  return Array<double>(ip.history_variables, num_history_variables);
 }
 
 const Array<double>
