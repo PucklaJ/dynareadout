@@ -6,11 +6,11 @@ env:
 
 jobs:
   build-and-test:
-    runs-on: ${{ matrix.plat == 'linux' && 'ubuntu' || matrix.plat }}-latest
+    runs-on: ${{ matrix.plat == 'linux' && 'ubuntu' || (matrix.plat == 'macosx' && 'macos' || matrix.plat) }}-latest
     strategy:
       fail-fast: false
       matrix:
-        plat: [linux, windows]
+        plat: [linux, windows, macosx]
         arch: [x86_64]
         kind: [static]
         thread_safe: [y, n]
