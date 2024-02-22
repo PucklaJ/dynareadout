@@ -33,6 +33,15 @@
 
 namespace py = pybind11;
 
+#ifdef __APPLE__
+template <typename T> inline py::object read_return(T arr) noexcept {
+  return py::cast(std::move(arr));
+}
+
+py::object
+#else
+template <typename T> inline T read_return(T arr) noexcept { return arr; }
+
 std::variant<dro::Array<int8_t>, dro::Array<int16_t>, dro::Array<int32_t>,
              dro::Array<int64_t>, dro::Array<uint8_t>, dro::Array<uint16_t>,
              dro::Array<uint32_t>, dro::Array<uint64_t>, dro::Array<float>,
@@ -43,6 +52,7 @@ std::variant<dro::Array<int8_t>, dro::Array<int16_t>, dro::Array<int32_t>,
              std::vector<dro::Array<uint32_t>>,
              std::vector<dro::Array<uint64_t>>, std::vector<dro::Array<float>>,
              std::vector<dro::Array<double>>, std::vector<dro::String>>
+#endif
 Binout_read(dro::Binout &self, std::string path) {
   dro::BinoutType type_id;
   bool timed;
@@ -53,25 +63,25 @@ Binout_read(dro::Binout &self, std::string path) {
 
     switch (type_id) {
     case dro::BinoutType::Int8:
-      return self.read_timed<int8_t>(real_path);
+      return read_return(std::move(self.read_timed<int8_t>(real_path)));
     case dro::BinoutType::Int16:
-      return self.read_timed<int16_t>(real_path);
+      return read_return(std::move(self.read_timed<int16_t>(real_path)));
     case dro::BinoutType::Int32:
-      return self.read_timed<int32_t>(real_path);
+      return read_return(std::move(self.read_timed<int32_t>(real_path)));
     case dro::BinoutType::Int64:
-      return self.read_timed<int64_t>(real_path);
+      return read_return(std::move(self.read_timed<int64_t>(real_path)));
     case dro::BinoutType::Uint8:
-      return self.read_timed<uint8_t>(real_path);
+      return read_return(std::move(self.read_timed<uint8_t>(real_path)));
     case dro::BinoutType::Uint16:
-      return self.read_timed<uint16_t>(real_path);
+      return read_return(std::move(self.read_timed<uint16_t>(real_path)));
     case dro::BinoutType::Uint32:
-      return self.read_timed<uint32_t>(real_path);
+      return read_return(std::move(self.read_timed<uint32_t>(real_path)));
     case dro::BinoutType::Uint64:
-      return self.read_timed<uint64_t>(real_path);
+      return read_return(std::move(self.read_timed<uint64_t>(real_path)));
     case dro::BinoutType::Float32:
-      return self.read_timed<float>(real_path);
+      return read_return(std::move(self.read_timed<float>(real_path)));
     case dro::BinoutType::Float64:
-      return self.read_timed<double>(real_path);
+      return read_return(std::move(self.read_timed<double>(real_path)));
     default:
       error_buffer = (char *)malloc(1024);
       sprintf(error_buffer,
@@ -83,25 +93,25 @@ Binout_read(dro::Binout &self, std::string path) {
   } else {
     switch (type_id) {
     case dro::BinoutType::Int8:
-      return self.read<int8_t>(real_path);
+      return read_return(std::move(self.read<int8_t>(real_path)));
     case dro::BinoutType::Int16:
-      return self.read<int16_t>(real_path);
+      return read_return(std::move(self.read<int16_t>(real_path)));
     case dro::BinoutType::Int32:
-      return self.read<int32_t>(real_path);
+      return read_return(std::move(self.read<int32_t>(real_path)));
     case dro::BinoutType::Int64:
-      return self.read<int64_t>(real_path);
+      return read_return(std::move(self.read<int64_t>(real_path)));
     case dro::BinoutType::Uint8:
-      return self.read<uint8_t>(real_path);
+      return read_return(std::move(self.read<uint8_t>(real_path)));
     case dro::BinoutType::Uint16:
-      return self.read<uint16_t>(real_path);
+      return read_return(std::move(self.read<uint16_t>(real_path)));
     case dro::BinoutType::Uint32:
-      return self.read<uint32_t>(real_path);
+      return read_return(std::move(self.read<uint32_t>(real_path)));
     case dro::BinoutType::Uint64:
-      return self.read<uint64_t>(real_path);
+      return read_return(std::move(self.read<uint64_t>(real_path)));
     case dro::BinoutType::Float32:
-      return self.read<float>(real_path);
+      return read_return(std::move(self.read<float>(real_path)));
     case dro::BinoutType::Float64:
-      return self.read<double>(real_path);
+      return read_return(std::move(self.read<double>(real_path)));
     default:
       // If the type is invalid it's likely to be a folder and then the children
       // should be returned
@@ -123,9 +133,9 @@ Binout_read(dro::Binout &self, std::string path) {
                     return strcmp(lhs.data(), rhs.data()) < 0;
                   });
 
-        return metadata_children;
+        return read_return(std::move(metadata_children));
       }
-      return children;
+      return read_return(std::move(children));
     }
   }
 }
