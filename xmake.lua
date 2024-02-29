@@ -48,7 +48,7 @@ target("dynareadout")
     set_kind("$(kind)")
     set_languages("ansi")
     if is_plat("linux", "macosx") then
-        add_cflags("-Wno-format")
+        add_cflags("-Wno-format", "-Wno-deprecated-declarations")
     end
     if is_plat("linux") then
         add_cflags("-fPIC")
@@ -79,7 +79,7 @@ if get_config("build_cpp") or get_config("build_python") then
         set_kind("$(kind)")
         set_languages("cxx17")
         if is_plat("linux", "macosx") then
-            add_cxxflags("-Wno-format")
+            add_cxxflags("-Wno-format", "-Wno-deprecated-declarations")
         end
         if is_plat("linux") then
             add_cxxflags("-fPIC")
@@ -109,7 +109,7 @@ if get_config("build_test") then
         set_languages("cxx17")
         add_deps("dynareadout")
         if is_plat("linux", "macosx") then
-            add_cxxflags("-Wno-format")
+            add_cxxflags("-Wno-format", "-Wno-deprecated-declarations")
         end
         if is_plat("linux") then
             add_cxxflags("-fPIC")
@@ -138,7 +138,7 @@ if get_config("build_python") then
         set_kind("shared")
         set_languages("cxx17")
         if is_plat("linux", "macosx") then
-            add_cxxflags("-Wno-format")
+            add_cxxflags("-Wno-format", "-Wno-deprecated-declarations")
         end
         if is_plat("linux") then
             add_cxxflags("-fPIC")

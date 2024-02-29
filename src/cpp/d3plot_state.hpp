@@ -32,7 +32,7 @@ namespace dro {
 
 class D3plotSurface : public d3plot_surface {
 public:
-  virtual ~D3plotSurface();
+  virtual ~D3plotSurface() noexcept;
 };
 
 class D3plotShell : public d3plot_shell {
