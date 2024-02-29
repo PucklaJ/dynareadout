@@ -164,8 +164,8 @@ typedef struct {
     d3plot_tensor outer_strain;
   };
 
-  size_t num_history_variables;
-  size_t num_additional_integration_points;
+  uint8_t num_history_variables;
+  uint8_t num_additional_integration_points;
 } d3plot_thick_shell;
 
 typedef struct {
@@ -202,8 +202,8 @@ typedef struct {
 #endif
   double internal_energy;
 
-  size_t num_history_variables;
-  size_t num_additional_integration_points;
+  uint8_t num_history_variables;
+  uint8_t num_additional_integration_points;
 } d3plot_shell;
 
 #define D3_FILE_TYPE_D3PLOT 1

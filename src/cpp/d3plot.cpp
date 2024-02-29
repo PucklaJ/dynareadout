@@ -358,9 +358,8 @@ Array<d3plot_solid> D3plot::read_solids_state(size_t state) {
 
 Array<D3plotThickShell> D3plot::read_thick_shells_state(size_t state) {
   size_t num_elements;
-  size_t num_history_variables;
-  d3plot_thick_shell *elements = d3plot_read_thick_shells_state(
-      &m_handle, state, &num_elements, &num_history_variables);
+  d3plot_thick_shell *elements =
+      d3plot_read_thick_shells_state(&m_handle, state, &num_elements);
   if (m_handle.error_string) {
     throw Exception(Exception::ErrorString(m_handle.error_string, false));
   }
@@ -382,9 +381,8 @@ Array<d3plot_beam> D3plot::read_beams_state(size_t state) {
 
 Array<D3plotShell> D3plot::read_shells_state(size_t state) {
   size_t num_elements;
-  size_t num_history_variables;
-  d3plot_shell *elements = d3plot_read_shells_state(
-      &m_handle, state, &num_elements, &num_history_variables);
+  d3plot_shell *elements =
+      d3plot_read_shells_state(&m_handle, state, &num_elements);
   if (m_handle.error_string) {
     throw Exception(Exception::ErrorString(m_handle.error_string, false));
   }

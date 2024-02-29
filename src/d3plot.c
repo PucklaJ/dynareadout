@@ -26,6 +26,7 @@
 #include "d3plot.h"
 #include "binary_search.h"
 #include "profiling.h"
+#include <limits.h>
 #include <stdlib.h>
 #include <string.h>
 #ifndef inline
@@ -341,6 +342,18 @@ d3plot_file d3plot_open(const char *root_file_name) {
   if (icode != D3_CODE_OLD_DYNA3D &&
       icode != D3_CODE_NIKE3D_LS_DYNA3D_LS_NIKE3D) {
     ERROR_AND_RETURN("The given order of the elements is not supported");
+  }
+
+  if (CDA.neips > UCHAR_MAX) {
+    ERROR_AND_RETURN_F("A value of NEIPS (history variables) greater than %u "
+                       "is not supported (%lu > %u)",
+                       UCHAR_MAX, CDA.neips, UCHAR_MAX);
+  }
+
+  if (CDA.maxint > UCHAR_MAX) {
+    ERROR_AND_RETURN_F("A value of MAXINT (number of integration points) "
+                       "greater than %u is not supported (%l > %u)",
+                       UCHAR_MAX, CDA.maxint, UCHAR_MAX);
   }
 
   /* We are done with CONTROL DATA now comes the real data, but first let's say
@@ -1449,16 +1462,14 @@ d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
   return solids;
 }
 
-d3plot_thick_shell *
-d3plot_read_thick_shells_state(d3plot_file *plot_file, size_t state,
-                               size_t *num_thick_shells,
-                               size_t *num_history_variables) {
+d3plot_thick_shell *d3plot_read_thick_shells_state(d3plot_file *plot_file,
+                                                   size_t state,
+                                                   size_t *num_thick_shells) {
   BEGIN_PROFILE_FUNC();
   D3PLOT_CLEAR_ERROR_STRING();
 
   *num_thick_shells = plot_file->control_data.nelt;
   if (*num_thick_shells == 0) {
-    *num_history_variables = 0;
     END_PROFILE_FUNC();
     return NULL;
   }
@@ -1471,15 +1482,16 @@ d3plot_read_thick_shells_state(d3plot_file *plot_file, size_t state,
     return NULL;
   }
 
-  const size_t num_integration_points = (size_t)plot_file->control_data.maxint;
+  const uint8_t num_integration_points =
+      (uint8_t)plot_file->control_data.maxint;
+  const uint8_t num_history_variables = (uint8_t)plot_file->control_data.neips;
   const uint8_t stress_written = plot_file->control_data.ioshl[0];
   const uint8_t plastic_strain_written = plot_file->control_data.ioshl[1];
   const uint8_t inner_outer_strain_written = plot_file->control_data.istrn == 1;
 
   /* Allocate memory for all history variables of all thick shells*/
-  *num_history_variables = plot_file->control_data.neips;
   double *history_variables =
-      malloc(*num_thick_shells * 3 * *num_history_variables * sizeof(double));
+      malloc(*num_thick_shells * 3 * num_history_variables * sizeof(double));
 
   d3plot_surface *additional_integration_points =
       malloc(sizeof(d3plot_surface) * (num_integration_points - 3) *
@@ -1559,10 +1571,10 @@ d3plot_read_thick_shells_state(d3plot_file *plot_file, size_t state,
         if (plot_file->control_data.neips != 0) {
           ip->history_variables =
               &history_variables[i * num_integration_points *
-                                     *num_history_variables +
-                                 j * *num_history_variables];
+                                     num_history_variables +
+                                 j * num_history_variables];
           size_t k = 0;
-          while (k < *num_history_variables) {
+          while (k < num_history_variables) {
             ip->history_variables[k++] = data[o++];
           }
         } else {
@@ -1594,7 +1606,7 @@ d3plot_read_thick_shells_state(d3plot_file *plot_file, size_t state,
         j++;
       }
 
-      thick_shells[i].num_history_variables = *num_history_variables;
+      thick_shells[i].num_history_variables = num_history_variables;
       thick_shells[i].num_additional_integration_points =
           num_integration_points - 3;
 
@@ -1684,10 +1696,10 @@ d3plot_read_thick_shells_state(d3plot_file *plot_file, size_t state,
         if (plot_file->control_data.neips != 0) {
           ip->history_variables =
               &history_variables[i * num_integration_points *
-                                     *num_history_variables +
-                                 j * *num_history_variables];
+                                     num_history_variables +
+                                 j * num_history_variables];
           memcpy(ip->history_variables, &data[o],
-                 *num_history_variables * sizeof(double));
+                 num_history_variables * sizeof(double));
           o += plot_file->control_data.neips;
         } else {
           ip->history_variables = NULL;
@@ -1708,7 +1720,7 @@ d3plot_read_thick_shells_state(d3plot_file *plot_file, size_t state,
         j++;
       }
 
-      thick_shells[i].num_history_variables = *num_history_variables;
+      thick_shells[i].num_history_variables = num_history_variables;
       thick_shells[i].num_additional_integration_points =
           num_integration_points - 3;
 
@@ -1839,14 +1851,12 @@ d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
 }
 
 d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
-                                       size_t *num_shells,
-                                       size_t *num_history_variables) {
+                                       size_t *num_shells) {
   BEGIN_PROFILE_FUNC();
   D3PLOT_CLEAR_ERROR_STRING();
 
   *num_shells = plot_file->control_data.nel4;
   if (*num_shells == 0) {
-    *num_history_variables = 0;
     END_PROFILE_FUNC();
     return NULL;
   }
@@ -1859,16 +1869,17 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
     return NULL;
   }
 
-  const size_t num_integration_points = (size_t)plot_file->control_data.maxint;
+  const uint8_t num_integration_points =
+      (uint8_t)plot_file->control_data.maxint;
+  const uint8_t num_history_variables = (uint8_t)plot_file->control_data.neips;
   const uint8_t stress_written = plot_file->control_data.ioshl[0];
   const uint8_t plastic_strain_written = plot_file->control_data.ioshl[1];
   const uint8_t force_resultant_written = plot_file->control_data.ioshl[2];
   const uint8_t thickness_energy_written = plot_file->control_data.ioshl[3];
 
   /* Allocate memory for all history variables of all shells*/
-  *num_history_variables = plot_file->control_data.neips;
   double *history_variables =
-      malloc(*num_history_variables * num_integration_points * *num_shells *
+      malloc(num_history_variables * num_integration_points * *num_shells *
              sizeof(double));
 
   d3plot_surface *additional_integration_points = malloc(
@@ -1946,10 +1957,10 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
           /* Define NEIPS additional history values here*/
           ip->history_variables =
               &history_variables[i * num_integration_points *
-                                     *num_history_variables +
-                                 j * *num_history_variables];
+                                     num_history_variables +
+                                 j * num_history_variables];
           size_t k = 0;
-          while (k < *num_history_variables) {
+          while (k < num_history_variables) {
             ip->history_variables[k++] = data[o++];
           }
         } else {
@@ -1999,7 +2010,7 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
         shells[i].outer_epsilon.zx = data[o++];
       }
 
-      shells[i].num_history_variables = *num_history_variables;
+      shells[i].num_history_variables = num_history_variables;
       shells[i].num_additional_integration_points = num_integration_points - 3;
 
       i++;
@@ -2088,10 +2099,10 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
         if (plot_file->control_data.neips != 0) {
           ip->history_variables =
               &history_variables[i * num_integration_points *
-                                     *num_history_variables +
-                                 j * *num_history_variables];
+                                     num_history_variables +
+                                 j * num_history_variables];
           memcpy(ip->history_variables, &data[o],
-                 *num_history_variables * sizeof(double));
+                 num_history_variables * sizeof(double));
           o += plot_file->control_data.neips;
         } else {
           ip->history_variables = NULL;
@@ -2137,7 +2148,7 @@ d3plot_shell *d3plot_read_shells_state(d3plot_file *plot_file, size_t state,
         o += 2 * sizeof(d3plot_tensor) / sizeof(double);
       }
 
-      shells[i].num_history_variables = *num_history_variables;
+      shells[i].num_history_variables = num_history_variables;
       shells[i].num_additional_integration_points = num_integration_points - 3;
 
       i++;
