@@ -346,7 +346,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
 
   if (CDA.neips > UCHAR_MAX) {
     ERROR_AND_RETURN_F("A value of NEIPS (history variables) greater than %u "
-                       "is not supported (%lu > %u)",
+                       "is not supported (%llu > %u)",
                        UCHAR_MAX, CDA.neips, UCHAR_MAX);
   }
 
