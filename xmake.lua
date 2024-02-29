@@ -47,6 +47,9 @@ end
 target("dynareadout")
     set_kind("$(kind)")
     set_languages("ansi")
+    if is_plat("linux", "macosx") then
+        add_cflags("-Wno-format")
+    end
     if is_plat("linux") then
         add_cflags("-fPIC")
     end
@@ -75,6 +78,9 @@ if get_config("build_cpp") or get_config("build_python") then
     target("dynareadout_cpp")
         set_kind("$(kind)")
         set_languages("cxx17")
+        if is_plat("linux", "macosx") then
+            add_cxxflags("-Wno-format")
+        end
         if is_plat("linux") then
             add_cxxflags("-fPIC")
             add_syslinks("stdc++fs")
@@ -102,6 +108,9 @@ if get_config("build_test") then
         set_kind("binary")
         set_languages("cxx17")
         add_deps("dynareadout")
+        if is_plat("linux", "macosx") then
+            add_cxxflags("-Wno-format")
+        end
         if is_plat("linux") then
             add_cxxflags("-fPIC")
         end
@@ -128,6 +137,9 @@ if get_config("build_python") then
     target("pybind11_module")
         set_kind("shared")
         set_languages("cxx17")
+        if is_plat("linux", "macosx") then
+            add_cxxflags("-Wno-format")
+        end
         if is_plat("linux") then
             add_cxxflags("-fPIC")
         end
