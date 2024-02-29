@@ -145,10 +145,6 @@ public:
   size_t size() const noexcept { return m_size; }
   bool empty() const noexcept { return m_size == 0; }
 
-  inline std::pair<T **, size_t *> access() noexcept {
-    return std::make_pair(&m_data, &m_size);
-  }
-
   // Convert the array to a std::string. Only works for uint8_t, int8_t and
   // char
   std::string str() const noexcept;
