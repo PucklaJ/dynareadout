@@ -579,19 +579,17 @@ TEST_CASE("d3plot") {
   REQUIRE(num_elements == 45000);
   free(solids);
 
-  size_t num_history_variables;
-  d3plot_thick_shell *thick_shells = d3plot_read_thick_shells_state(
-      &plot_file, 101, &num_elements, &num_history_variables);
+  d3plot_thick_shell *thick_shells =
+      d3plot_read_thick_shells_state(&plot_file, 101, &num_elements);
   REQUIRE(num_elements == 0);
-  CHECK(num_history_variables == 0);
   free(thick_shells);
 
   d3plot_beam *beams = d3plot_read_beams_state(&plot_file, 101, &num_elements);
   REQUIRE(num_elements == 0);
   free(beams);
 
-  d3plot_shell *shells = d3plot_read_shells_state(
-      &plot_file, 101, &num_elements, &num_history_variables);
+  d3plot_shell *shells =
+      d3plot_read_shells_state(&plot_file, 101, &num_elements);
   REQUIRE(num_elements == 88456);
 
   for (size_t i = 0; i < num_elements; i++) {
@@ -1022,9 +1020,8 @@ TEST_CASE("basic01") {
 
   free(node_coords);
 
-  size_t num_shells, num_history_variables;
-  d3plot_shell *shells = d3plot_read_shells_state(&plot_file, 1, &num_shells,
-                                                  &num_history_variables);
+  size_t num_shells;
+  d3plot_shell *shells = d3plot_read_shells_state(&plot_file, 1, &num_shells);
   if (plot_file.error_string) {
     FAIL(plot_file.error_string);
   }
@@ -1038,8 +1035,8 @@ TEST_CASE("basic01") {
 
   d3plot_free_shells_state(shells);
 
-  d3plot_thick_shell *thick_shells = d3plot_read_thick_shells_state(
-      &plot_file, 1, &num_shells, &num_history_variables);
+  d3plot_thick_shell *thick_shells =
+      d3plot_read_thick_shells_state(&plot_file, 1, &num_shells);
   if (plot_file.error_string) {
     FAIL(plot_file.error_string);
   }
