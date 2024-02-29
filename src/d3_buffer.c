@@ -244,7 +244,7 @@ d3_buffer d3_buffer_open(const char *root_file_name) {
 
   if ((!makes_sense32 && !makes_sense64) || (makes_sense32 && makes_sense64)) {
     ERROR_AND_RETURN_BUFFER_F("The d3plot files are broken. 32-Bit (Single "
-                              "Precision)=%u 64-Bit (Double Precision)=&lu",
+                              "Precision)=%u 64-Bit (Double Precision)=%lu",
                               makes_sense32, makes_sense64);
   }
 
