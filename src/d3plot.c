@@ -73,12 +73,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
 
   /* Allocate the first data pointers*/
   plot_file.data_pointers = malloc(D3PLT_PTR_COUNT * sizeof(size_t));
-  size_t i = 0;
-  while (i < D3PLT_PTR_COUNT) {
-    plot_file.data_pointers[i] = 0;
-
-    i++;
-  }
+  memset(plot_file.data_pointers, 0, D3PLT_PTR_COUNT * sizeof(size_t));
 
   d3_pointer d3_ptr = d3_buffer_seek(&plot_file.buffer, 0);
 
@@ -386,12 +381,11 @@ d3plot_file d3plot_open(const char *root_file_name) {
     ERROR_AND_RETURN_F(
         "IT (%llu) with a different value than 0 is not supported", CDA.it);
   }
-  if (CDA.iu != 1 || CDA.iv != 1 || CDA.ia != 1) {
-    /* TODO: Support IU, IV and IA with 0*/
-    ERROR_AND_RETURN_F(
-        "IU (%llu), IV (%llu) and IA (%llu) with a different value "
-        "than 1 are not supported",
-        CDA.iu, CDA.iv, CDA.ia);
+
+  if (CDA.iu == 2) {
+    /* TODO: Support IU with value 2 */
+    ERROR_AND_RETURN("IU (2): displacement output instead of coordinate output "
+                     "is not supported");
   }
 
   if (!_d3plot_read_geometry_data(&plot_file, &d3_ptr)) {
@@ -2797,6 +2791,15 @@ double *_d3plot_read_node_data(d3plot_file *plot_file, size_t state,
                                size_t *num_nodes, size_t data_type) {
   D3PLOT_CLEAR_ERROR_STRING();
 
+  if (plot_file->data_pointers[data_type] == 0) {
+    ERROR_AND_NO_RETURN_F_PTR(
+        "This node data is not present IU=%llu IV=%llu IA=%llu",
+        plot_file->control_data.iu, plot_file->control_data.iv,
+        plot_file->control_data.ia);
+
+    return NULL;
+  }
+
   if (plot_file->buffer.word_size == 4) {
     float *coords32 =
         _d3plot_read_node_data_32(plot_file, state, num_nodes, data_type);
@@ -2846,6 +2849,15 @@ double *_d3plot_read_node_data(d3plot_file *plot_file, size_t state,
 float *_d3plot_read_node_data_32(d3plot_file *plot_file, size_t state,
                                  size_t *num_nodes, size_t data_type) {
   D3PLOT_CLEAR_ERROR_STRING();
+
+  if (plot_file->data_pointers[data_type] == 0) {
+    ERROR_AND_NO_RETURN_F_PTR(
+        "This node data is not present IU=%llu IV=%llu IA=%llu",
+        plot_file->control_data.iu, plot_file->control_data.iv,
+        plot_file->control_data.ia);
+
+    return NULL;
+  }
 
   if (plot_file->buffer.word_size == 8) {
     double *coords64 =
