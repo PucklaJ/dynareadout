@@ -131,6 +131,9 @@ typedef struct {
   d3_buffer buffer;
   /* This holds an error after calling some functions*/
   char *error_string;
+
+  double *initial_node_coords;
+  float *initial_node_coords_32;
 } d3plot_file;
 
 #ifdef __cplusplus

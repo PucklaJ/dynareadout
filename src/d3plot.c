@@ -60,6 +60,8 @@ d3plot_file d3plot_open(const char *root_file_name) {
   plot_file.error_string = NULL;
   plot_file.data_pointers = NULL;
   plot_file.num_states = 0;
+  plot_file.initial_node_coords = NULL;
+  plot_file.initial_node_coords_32 = NULL;
 
   plot_file.buffer = d3_buffer_open(root_file_name);
   if (plot_file.buffer.error_string) {
@@ -238,7 +240,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
   }
 
   /* Compute IOSHL and IOSOL */
-  i = 0;
+  size_t i = 0;
   while (i < 4) {
     switch (CDA.ioshl[i]) {
     case 1000:
@@ -382,12 +384,6 @@ d3plot_file d3plot_open(const char *root_file_name) {
         "IT (%llu) with a different value than 0 is not supported", CDA.it);
   }
 
-  if (CDA.iu == 2) {
-    /* TODO: Support IU with value 2 */
-    ERROR_AND_RETURN("IU (2): displacement output instead of coordinate output "
-                     "is not supported");
-  }
-
   if (!_d3plot_read_geometry_data(&plot_file, &d3_ptr)) {
     END_PROFILE_FUNC();
     return plot_file;
@@ -475,6 +471,8 @@ void d3plot_close(d3plot_file *plot_file) {
 
   free(plot_file->data_pointers);
   free(plot_file->error_string);
+  free(plot_file->initial_node_coords);
+  free(plot_file->initial_node_coords_32);
 
   plot_file->num_states = 0;
   plot_file->error_string = NULL;
@@ -681,6 +679,79 @@ double *d3plot_read_node_coordinates(d3plot_file *plot_file, size_t state,
 
   double *data = _d3plot_read_node_data(plot_file, state, num_nodes,
                                         D3PLT_PTR_STATE_NODE_COORDS);
+  if (plot_file->error_string) {
+    END_PROFILE_FUNC();
+    return data;
+  }
+
+  if (plot_file->control_data.iu == 2) {
+    if (!plot_file->initial_node_coords) {
+      *num_nodes = plot_file->control_data.numnp;
+      plot_file->initial_node_coords = malloc(*num_nodes * 3 * sizeof(double));
+
+      if (plot_file->buffer.word_size == 8) {
+        d3_pointer d3_ptr = d3_buffer_read_words_at(
+            &plot_file->buffer, plot_file->initial_node_coords, *num_nodes * 3,
+            plot_file->data_pointers[D3PLT_PTR_NODE_COORDS]);
+        d3_pointer_close(&plot_file->buffer, &d3_ptr);
+
+        if (plot_file->buffer.error_string) {
+          free(data);
+          free(plot_file->initial_node_coords);
+          plot_file->initial_node_coords = NULL;
+
+          ERROR_AND_NO_RETURN_F_PTR("failed to read initial node coords: %s",
+                                    plot_file->buffer.error_string);
+          END_PROFILE_FUNC();
+          return NULL;
+        }
+      } else {
+        if (!plot_file->initial_node_coords_32) {
+          plot_file->initial_node_coords_32 =
+              malloc(*num_nodes * 3 * sizeof(float));
+
+          d3_pointer d3_ptr = d3_buffer_read_words_at(
+              &plot_file->buffer, plot_file->initial_node_coords_32,
+              *num_nodes * 3, plot_file->data_pointers[D3PLT_PTR_NODE_COORDS]);
+          d3_pointer_close(&plot_file->buffer, &d3_ptr);
+
+          if (plot_file->buffer.error_string) {
+            free(data);
+            free(plot_file->initial_node_coords);
+            free(plot_file->initial_node_coords_32);
+            plot_file->initial_node_coords = NULL;
+            plot_file->initial_node_coords_32 = NULL;
+
+            ERROR_AND_NO_RETURN_F_PTR("failed to read initial node coords: %s",
+                                      plot_file->buffer.error_string);
+            END_PROFILE_FUNC();
+            return NULL;
+          }
+        }
+
+        size_t i = 0;
+        while (i < *num_nodes * 3) {
+          plot_file->initial_node_coords[i + 0] =
+              plot_file->initial_node_coords_32[i + 0];
+          plot_file->initial_node_coords[i + 1] =
+              plot_file->initial_node_coords_32[i + 1];
+          plot_file->initial_node_coords[i + 2] =
+              plot_file->initial_node_coords_32[i + 2];
+
+          i += 3;
+        }
+      }
+
+      size_t i = 0;
+      while (i < *num_nodes) {
+        data[i + 0] += plot_file->initial_node_coords[i + 0];
+        data[i + 1] += plot_file->initial_node_coords[i + 1];
+        data[i + 2] += plot_file->initial_node_coords[i + 2];
+
+        i += 3;
+      }
+    }
+  }
 
   END_PROFILE_FUNC();
   return data;
@@ -905,6 +976,80 @@ float *d3plot_read_node_coordinates_32(d3plot_file *plot_file, size_t state,
 
   float *data = _d3plot_read_node_data_32(plot_file, state, num_nodes,
                                           D3PLT_PTR_STATE_NODE_COORDS);
+  if (plot_file->error_string) {
+    END_PROFILE_FUNC();
+    return data;
+  }
+
+  if (plot_file->control_data.iu == 2) {
+    if (!plot_file->initial_node_coords_32) {
+      *num_nodes = plot_file->control_data.numnp;
+      plot_file->initial_node_coords_32 =
+          malloc(*num_nodes * 3 * sizeof(float));
+
+      if (plot_file->buffer.word_size == 4) {
+        d3_pointer d3_ptr = d3_buffer_read_words_at(
+            &plot_file->buffer, plot_file->initial_node_coords_32,
+            *num_nodes * 3, plot_file->data_pointers[D3PLT_PTR_NODE_COORDS]);
+        d3_pointer_close(&plot_file->buffer, &d3_ptr);
+
+        if (plot_file->buffer.error_string) {
+          free(data);
+          free(plot_file->initial_node_coords_32);
+          plot_file->initial_node_coords_32 = NULL;
+
+          ERROR_AND_NO_RETURN_F_PTR("failed to read initial node coords: %s",
+                                    plot_file->buffer.error_string);
+          END_PROFILE_FUNC();
+          return NULL;
+        }
+      } else {
+        if (!plot_file->initial_node_coords) {
+          plot_file->initial_node_coords =
+              malloc(*num_nodes * 3 * sizeof(double));
+
+          d3_pointer d3_ptr = d3_buffer_read_words_at(
+              &plot_file->buffer, plot_file->initial_node_coords,
+              *num_nodes * 3, plot_file->data_pointers[D3PLT_PTR_NODE_COORDS]);
+          d3_pointer_close(&plot_file->buffer, &d3_ptr);
+
+          if (plot_file->buffer.error_string) {
+            free(data);
+            free(plot_file->initial_node_coords_32);
+            free(plot_file->initial_node_coords);
+            plot_file->initial_node_coords_32 = NULL;
+            plot_file->initial_node_coords = NULL;
+
+            ERROR_AND_NO_RETURN_F_PTR("failed to read initial node coords: %s",
+                                      plot_file->buffer.error_string);
+            END_PROFILE_FUNC();
+            return NULL;
+          }
+        }
+
+        size_t i = 0;
+        while (i < *num_nodes * 3) {
+          plot_file->initial_node_coords_32[i + 0] =
+              plot_file->initial_node_coords[i + 0];
+          plot_file->initial_node_coords_32[i + 1] =
+              plot_file->initial_node_coords[i + 1];
+          plot_file->initial_node_coords_32[i + 2] =
+              plot_file->initial_node_coords[i + 2];
+
+          i += 3;
+        }
+      }
+
+      size_t i = 0;
+      while (i < *num_nodes) {
+        data[i + 0] += plot_file->initial_node_coords_32[i + 0];
+        data[i + 1] += plot_file->initial_node_coords_32[i + 1];
+        data[i + 2] += plot_file->initial_node_coords_32[i + 2];
+
+        i += 3;
+      }
+    }
+  }
 
   END_PROFILE_FUNC();
   return data;
