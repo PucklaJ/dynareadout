@@ -216,6 +216,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
   }
 
   /* Calculate BEAMIP*/
+  /* NV1D = 6 + 5*BEAMIP + NEIPB*(3+BEAMIP) */
   CDA.beamip = (CDA.nv1d - 6 - CDA.neipb * 3) / (5 + CDA.neipb);
 
   if (CDA.ndim == 5 || CDA.ndim == 7) {
@@ -1982,16 +1983,78 @@ d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
       beams[i].s_bending_moment = data[o++];
       beams[i].t_bending_moment = data[o++];
       beams[i].torsional_resultant = data[o++];
-      if (plot_file->control_data.nv1d > 6) {
-        /* TODO: If there are values output at beam integration points, then
-         * NV1D = 6 + 5 * BEAMIP + NEIPB * (3 + BEAMIP)*/
-        o += plot_file->control_data.nv1d - 6;
+
+      size_t j = 0;
+      while (j < plot_file->control_data.beamip) {
+        /* RS shear stress */
+        o++;
+        /* TR shear stress */
+        o++;
+        /* Axial stress */
+        o++;
+        /* Plastic strain */
+        o++;
+        /* Axial strain */
+        o++;
+
+        j++;
+      }
+
+      j = 0;
+      while (j < plot_file->control_data.neipb) {
+        /* Average per integration point */
+        o++;
+
+        j++;
+      }
+
+      j = 0;
+      while (j < plot_file->control_data.neipb) {
+        /* Minimum per integration point */
+        o++;
+
+        j++;
+      }
+
+      j = 0;
+      while (j < plot_file->control_data.neipb) {
+        /* Maximum per integration point */
+        o++;
+
+        j++;
+      }
+
+      j = 0;
+      while (j < plot_file->control_data.beamip) {
+        size_t k = 0;
+        while (k < plot_file->control_data.neipb) {
+          /* History variable of integration point */
+          o++;
+
+          k++;
+        }
+
+        j++;
       }
 
       i++;
     }
 
     free(data);
+    if (o != plot_file->control_data.nv1d * plot_file->control_data.nel2) {
+      ERROR_AND_NO_RETURN_F_PTR(
+          "Sanity Check: Did not read all data from beams state. o=%zu "
+          "BEAMIP=%llu NEIPB=%llu NEL2 "
+          "(%llu) * NV1D (%llu) = %llu",
+          o, plot_file->control_data.beamip, plot_file->control_data.neipb,
+          plot_file->control_data.nel2, plot_file->control_data.nv1d,
+          plot_file->control_data.nel2 * plot_file->control_data.nv1d);
+      *num_beams = 0;
+      free(beams);
+
+      END_PROFILE_FUNC();
+      return NULL;
+    }
   } else {
     double *data = malloc(plot_file->control_data.nel2 *
                           plot_file->control_data.nv1d * sizeof(double));
@@ -2018,16 +2081,78 @@ d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
     while (i < *num_beams) {
       memcpy(&beams[i], &data[o], sizeof(d3plot_beam));
       o += sizeof(d3plot_beam) / sizeof(double);
-      if (plot_file->control_data.nv1d > 6) {
-        /* TODO: If there are values output at beam integration points, then
-         * NV1D = 6 + 5 * BEAMIP + NEIPB * (3 + BEAMIP)*/
-        o += plot_file->control_data.nv1d - 6;
+
+      size_t j = 0;
+      while (j < plot_file->control_data.beamip) {
+        /* RS shear stress */
+        o++;
+        /* TR shear stress */
+        o++;
+        /* Axial stress */
+        o++;
+        /* Plastic strain */
+        o++;
+        /* Axial strain */
+        o++;
+
+        j++;
+      }
+
+      j = 0;
+      while (j < plot_file->control_data.neipb) {
+        /* Average per integration point */
+        o++;
+
+        j++;
+      }
+
+      j = 0;
+      while (j < plot_file->control_data.neipb) {
+        /* Minimum per integration point */
+        o++;
+
+        j++;
+      }
+
+      j = 0;
+      while (j < plot_file->control_data.neipb) {
+        /* Maximum per integration point */
+        o++;
+
+        j++;
+      }
+
+      j = 0;
+      while (j < plot_file->control_data.beamip) {
+        size_t k = 0;
+        while (k < plot_file->control_data.neipb) {
+          /* History variable of integration point */
+          o++;
+
+          k++;
+        }
+
+        j++;
       }
 
       i++;
     }
 
     free(data);
+    if (o != plot_file->control_data.nv1d * plot_file->control_data.nel2) {
+      ERROR_AND_NO_RETURN_F_PTR(
+          "Sanity Check: Did not read all data from beams state. o=%zu "
+          "BEAMIP=%llu NEIPB=%llu NEL2 "
+          "(%llu) * NV1D (%llu) = %llu",
+          o, plot_file->control_data.beamip, plot_file->control_data.neipb,
+          plot_file->control_data.nel2, plot_file->control_data.nv1d,
+          plot_file->control_data.nel2 * plot_file->control_data.nv1d);
+      *num_beams = 0;
+      free(beams);
+
+      END_PROFILE_FUNC();
+      return NULL;
+    }
   }
 
   END_PROFILE_FUNC();
