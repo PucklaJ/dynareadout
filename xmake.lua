@@ -120,8 +120,8 @@ if get_config("build_test") then
         if get_config("build_cpp") then
             add_deps("dynareadout_cpp")
             add_defines("BUILD_CPP")
-            add_includedirs("src/cpp")
         end
+        add_includedirs("src/cpp")
         add_packages("doctest")
         add_includedirs("src")
         add_options("profiling", "thread_safe")

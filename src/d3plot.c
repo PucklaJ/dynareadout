@@ -1365,22 +1365,31 @@ d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
     size_t i = 0;
     size_t o = 0;
     while (i < *num_solids) {
-      /* TODO: Correctly handle IOSOL */
       /* Docs: page 33*/
-      /* 1. Sigma-x (true stress in the global system)*/
-      solids[i].sigma.x = data[o++];
-      /* 2. Sigma-y*/
-      solids[i].sigma.y = data[o++];
-      /* 3. Sigma-z*/
-      solids[i].sigma.z = data[o++];
-      /* 4. Sigma-xy*/
-      solids[i].sigma.xy = data[o++];
-      /* 5. Sigma-yz*/
-      solids[i].sigma.yz = data[o++];
-      /* 6. Sigma-zx*/
-      solids[i].sigma.zx = data[o++];
-      /* 7. Effective plastic strain or material dependent variable*/
-      solids[i].effective_plastic_strain = data[o++];
+      if (plot_file->control_data.iosol[0]) {
+        /* 1. Sigma-x (true stress in the global system)*/
+        solids[i].sigma.x = data[o++];
+        /* 2. Sigma-y*/
+        solids[i].sigma.y = data[o++];
+        /* 3. Sigma-z*/
+        solids[i].sigma.z = data[o++];
+        /* 4. Sigma-xy*/
+        solids[i].sigma.xy = data[o++];
+        /* 5. Sigma-yz*/
+        solids[i].sigma.yz = data[o++];
+        /* 6. Sigma-zx*/
+        solids[i].sigma.zx = data[o++];
+      } else {
+        memset(&solids[i].sigma, 0, sizeof(d3plot_tensor));
+      }
+
+      if (plot_file->control_data.iosol[1]) {
+        /* 7. Effective plastic strain or material dependent variable*/
+        solids[i].effective_plastic_strain = data[o++];
+      } else {
+        solids[i].effective_plastic_strain = 0.0;
+      }
+
       /* Docs p12: If ISTRN=1, and NEIPH>=6, last the 6 additional values are
        * the six strain components. */
       if (plot_file->control_data.istrn == 1 &&
@@ -1409,6 +1418,18 @@ d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
     }
 
     free(data);
+    if (o != plot_file->control_data.nel8 * plot_file->control_data.nv3d) {
+      ERROR_AND_NO_RETURN_F_PTR(
+          "Sanity Check: Did not read all data from solids state. o=%zu NEL8 "
+          "(%llu) * NV3D (%llu) = %llu",
+          o, plot_file->control_data.nel8, plot_file->control_data.nv3d,
+          plot_file->control_data.nel8 * plot_file->control_data.nv3d);
+      *num_solids = 0;
+      free(solids);
+
+      END_PROFILE_FUNC();
+      return NULL;
+    }
   } else {
     double *data =
         malloc((plot_file->control_data.nel8 * plot_file->control_data.nv3d) *
@@ -1435,9 +1456,20 @@ d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
     size_t o = 0;
     while (i < *num_solids) {
       /* Docs: page 33*/
-      /* We can just copy the first 7 values*/
-      memcpy(&solids[i], &data[o], 7 * sizeof(double));
-      o += 7;
+      if (plot_file->control_data.iosol[0]) {
+        /* Read the six stresses*/
+        memcpy(&solids[i].sigma, &data[o], sizeof(d3plot_tensor));
+        o += 6;
+      } else {
+        memset(&solids[i].sigma, 0, sizeof(d3plot_tensor));
+      }
+
+      if (plot_file->control_data.iosol[1]) {
+        solids[i].effective_plastic_strain = data[o++];
+      } else {
+        solids[i].effective_plastic_strain = 0.0;
+      }
+
       /* Docs p12: If ISTRN=1, and NEIPH>=6, last the 6 additional values are
        * the six strain components. */
       if (plot_file->control_data.istrn == 1 &&
@@ -1457,6 +1489,18 @@ d3plot_solid *d3plot_read_solids_state(d3plot_file *plot_file, size_t state,
     }
 
     free(data);
+    if (o != plot_file->control_data.nel8 * plot_file->control_data.nv3d) {
+      ERROR_AND_NO_RETURN_F_PTR(
+          "Sanity Check: Did not read all data from solids state. o=%zu NEL8 "
+          "(%llu) * NV3D (%llu) = %llu",
+          o, plot_file->control_data.nel8, plot_file->control_data.nv3d,
+          plot_file->control_data.nel8 * plot_file->control_data.nv3d);
+      *num_solids = 0;
+      free(solids);
+
+      END_PROFILE_FUNC();
+      return NULL;
+    }
   }
 
   END_PROFILE_FUNC();
