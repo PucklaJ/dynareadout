@@ -90,12 +90,13 @@ D3plotThickShell::get_mean_history_variables() const noexcept {
 }
 
 const Array<double>
-D3plotThickShell::get_add_ip_history_variables(size_t add_idx) const {
+D3plotThickShell::get_add_ip_history_variables(uint8_t add_idx) const {
   if (add_idx >= num_additional_integration_points) {
     std::stringstream stream;
-    stream << add_idx
+    stream << (int)add_idx
            << " is an invalid index for additional integration points ("
-           << add_idx << " >= " << num_additional_integration_points << ")";
+           << (int)add_idx << " >= " << (int)num_additional_integration_points
+           << ")";
     const auto str(stream.str());
     throw D3plot::Exception(
         D3plot::Exception::ErrorString(strdup(str.c_str())));
@@ -103,6 +104,27 @@ D3plotThickShell::get_add_ip_history_variables(size_t add_idx) const {
 
   return Array<double>(add_ips[add_idx].history_variables,
                        num_history_variables, false);
+}
+
+const Array<double> D3plotBeam::get_history_variables(uint8_t ip_idx) const {
+  if (ip_idx >= num_integration_points) {
+    std::stringstream stream;
+    stream << (int)ip_idx << " is an invalid index for integration points ("
+           << (int)ip_idx << " >= " << (int)num_integration_points << ")";
+    const auto str(stream.str());
+    throw D3plot::Exception(
+        D3plot::Exception::ErrorString(strdup(str.c_str())));
+  }
+
+  return Array<double>(ips[ip_idx].history_variables, num_history_variables,
+                       false);
+}
+
+template <> Array<D3plotBeam>::~Array<D3plotBeam>() noexcept {
+  if (m_delete_data && m_data) {
+    d3plot_free_beams_state(static_cast<d3plot_beam *>(m_data));
+    m_data = nullptr;
+  }
 }
 
 } // namespace dro

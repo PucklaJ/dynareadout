@@ -71,7 +71,7 @@ public:
     return Array<double>(outer.history_variables, num_history_variables, false);
   }
   const Array<double> get_mean_history_variables() const noexcept;
-  const Array<double> get_add_ip_history_variables(size_t add_idx) const;
+  const Array<double> get_add_ip_history_variables(uint8_t add_idx) const;
 
   inline const Array<d3plot_surface> get_add_ips() const noexcept {
     return Array<d3plot_surface>(add_ips, num_additional_integration_points,
@@ -82,5 +82,24 @@ public:
 };
 
 template <> Array<D3plotThickShell>::~Array<D3plotThickShell>() noexcept;
+
+class D3plotBeam : public d3plot_beam {
+public:
+  inline const Array<double> get_history_average() const noexcept {
+    return Array<double>(history_average, num_history_variables, false);
+  }
+  inline const Array<double> get_history_min() const noexcept {
+    return Array<double>(history_min, num_history_variables, false);
+  }
+  inline const Array<double> get_history_max() const noexcept {
+    return Array<double>(history_max, num_history_variables, false);
+  }
+  inline const Array<d3plot_beam_ip> get_integration_points() const noexcept {
+    return Array<d3plot_beam_ip>(ips, num_integration_points, false);
+  }
+  const Array<double> get_history_variables(uint8_t ip_idx) const;
+};
+
+template <> Array<D3plotBeam>::~Array<D3plotBeam>() noexcept;
 
 } // namespace dro
