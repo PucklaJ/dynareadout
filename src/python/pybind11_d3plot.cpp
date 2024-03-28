@@ -36,10 +36,11 @@ inline void add_d3plot_arrays_to_module(py::module_ &m) {
   dro::add_array_type_to_module<d3plot_beam_con>(m);
   dro::add_array_type_to_module<d3plot_shell_con>(m);
   dro::add_array_type_to_module<d3plot_solid>(m);
-  dro::add_array_type_to_module<d3plot_beam>(m);
   dro::add_array_type_to_module<d3plot_surface>(m);
+  dro::add_array_type_to_module<d3plot_beam_ip>(m);
   dro::add_array_type_to_module<dro::D3plotShell>(m);
   dro::add_array_type_to_module<dro::D3plotThickShell>(m);
+  dro::add_array_type_to_module<dro::D3plotBeam>(m);
   dro::add_array_type_to_module<dro::dVec3>(m).def(
       "__repr__", dro::stream_to_string<dro::dVec3>);
 }
@@ -180,14 +181,20 @@ void add_d3plot_library_to_module(py::module_ &m) {
 
       ;
 
-  py::class_<d3plot_beam>(m, "d3plot_beam")
-      .def_readonly("axial_force", &d3plot_beam::axial_force)
-      .def_readonly("s_shear_resultant", &d3plot_beam::s_shear_resultant)
-      .def_readonly("t_shear_resultant", &d3plot_beam::t_shear_resultant)
-      .def_readonly("s_bending_moment", &d3plot_beam::s_bending_moment)
-      .def_readonly("t_bending_moment", &d3plot_beam::t_bending_moment)
-      .def_readonly("torsional_resultant", &d3plot_beam::torsional_resultant)
-      .def("__str__", &dro::stream_to_string<d3plot_beam>,
+  py::class_<dro::D3plotBeam>(m, "D3plotBeam")
+      .def_readonly("axial_force", &dro::D3plotBeam::axial_force)
+      .def_readonly("s_shear_resultant", &dro::D3plotBeam::s_shear_resultant)
+      .def_readonly("t_shear_resultant", &dro::D3plotBeam::t_shear_resultant)
+      .def_readonly("s_bending_moment", &dro::D3plotBeam::s_bending_moment)
+      .def_readonly("t_bending_moment", &dro::D3plotBeam::t_bending_moment)
+      .def_readonly("torsional_resultant",
+                    &dro::D3plotBeam::torsional_resultant)
+      .def("get_history_average", &dro::D3plotBeam::get_history_average)
+      .def("get_history_min", &dro::D3plotBeam::get_history_min)
+      .def("get_history_max", &dro::D3plotBeam::get_history_max)
+      .def("get_integration_points", &dro::D3plotBeam::get_integration_points)
+      .def("get_history_variables", &dro::D3plotBeam::get_history_variables)
+      .def("__str__", &dro::stream_to_string<dro::D3plotBeam>,
            py::return_value_policy::take_ownership)
 
       ;

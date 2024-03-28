@@ -233,8 +233,10 @@ template <typename T> inline const char *get_array_name() {
     return "SolidArray";
   } else if constexpr (std::is_same_v<T, D3plotThickShell>) {
     return "ThickShellArray";
-  } else if constexpr (std::is_same_v<T, d3plot_beam>) {
+  } else if constexpr (std::is_same_v<T, D3plotBeam>) {
     return "BeamArray";
+  } else if constexpr (std::is_same_v<T, d3plot_beam_ip>) {
+    return "BeamIntegrationPointArray";
   } else if constexpr (std::is_same_v<T, d3plot_surface>) {
     return "SurfaceArray";
   } else if constexpr (std::is_same_v<T, D3plotShell>) {
