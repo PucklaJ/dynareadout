@@ -1952,6 +1952,31 @@ d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
     return NULL;
   }
 
+  if (plot_file->control_data.neipb > 255 ||
+      plot_file->control_data.beamip > 255) {
+    ERROR_AND_NO_RETURN_F_PTR(
+        "Only up to 255 history variables and beam integration points are "
+        "supported NEIPB=%llu BEAMIP=%llu",
+        plot_file->control_data.neipb, plot_file->control_data.beamip);
+    *num_beams = 0;
+
+    END_PROFILE_FUNC();
+    return NULL;
+  }
+
+  const uint8_t num_integration_points =
+      (uint8_t)plot_file->control_data.beamip;
+  const uint8_t num_history_variables = (uint8_t)plot_file->control_data.neipb;
+  const size_t his_avg_min_max_offset = *num_beams *
+                                        (size_t)num_integration_points *
+                                        (size_t)num_history_variables;
+
+  d3plot_beam_ip *integration_points =
+      malloc(*num_beams * num_integration_points * sizeof(d3plot_beam_ip));
+  double *history_variables =
+      malloc(*num_beams * num_history_variables * (3 + num_integration_points) *
+             sizeof(double));
+
   d3plot_beam *beams = malloc(*num_beams * sizeof(d3plot_beam));
   if (plot_file->buffer.word_size == 4) {
     float *data = malloc(plot_file->control_data.nel2 *
@@ -1977,64 +2002,97 @@ d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
     size_t i = 0;
     size_t o = 0;
     while (i < *num_beams) {
-      beams[i].axial_force = data[o++];
-      beams[i].s_shear_resultant = data[o++];
-      beams[i].t_shear_resultant = data[o++];
-      beams[i].s_bending_moment = data[o++];
-      beams[i].t_bending_moment = data[o++];
-      beams[i].torsional_resultant = data[o++];
+      d3plot_beam *beam = &beams[i];
+      beam->num_history_variables = num_history_variables;
+      beam->num_integration_points = num_integration_points;
+      beam->ips = &integration_points[i * (size_t)num_integration_points];
+      if (history_variables) {
+        beam->history_average =
+            &history_variables[his_avg_min_max_offset +
+                               i * 3 * (size_t)num_history_variables +
+                               0 * (size_t)num_history_variables];
+        beam->history_min =
+            &history_variables[his_avg_min_max_offset +
+                               i * 3 * (size_t)num_history_variables +
+                               1 * (size_t)num_history_variables];
+        beam->history_max =
+            &history_variables[his_avg_min_max_offset +
+                               i * 3 * (size_t)num_history_variables +
+                               2 * (size_t)num_history_variables];
+      } else {
+        memset(&beam->history_average, 0, sizeof(double *) * 3);
+      }
 
-      size_t j = 0;
-      while (j < plot_file->control_data.beamip) {
-        /* RS shear stress */
-        o++;
-        /* TR shear stress */
-        o++;
-        /* Axial stress */
-        o++;
-        /* Plastic strain */
-        o++;
-        /* Axial strain */
-        o++;
+      beam->axial_force = data[o++];
+      beam->s_shear_resultant = data[o++];
+      beam->t_shear_resultant = data[o++];
+      beam->s_bending_moment = data[o++];
+      beam->t_bending_moment = data[o++];
+      beam->torsional_resultant = data[o++];
+
+      uint8_t j = 0;
+      while (j < num_integration_points) {
+        d3plot_beam_ip *ip = &beam->ips[j];
+
+        ip->rs_shear_stress = data[o++];
+        ip->tr_shear_stress = data[o++];
+        ip->axial_stress = data[o++];
+        ip->plastic_strain = data[o++];
+        ip->axial_strain = data[o++];
 
         j++;
       }
 
-      j = 0;
-      while (j < plot_file->control_data.neipb) {
-        /* Average per integration point */
-        o++;
+      if (history_variables) {
+        j = 0;
+        while (j < num_history_variables) {
+          /* Average per integration point */
+          beam->history_average[j] = data[o++];
 
-        j++;
-      }
-
-      j = 0;
-      while (j < plot_file->control_data.neipb) {
-        /* Minimum per integration point */
-        o++;
-
-        j++;
-      }
-
-      j = 0;
-      while (j < plot_file->control_data.neipb) {
-        /* Maximum per integration point */
-        o++;
-
-        j++;
-      }
-
-      j = 0;
-      while (j < plot_file->control_data.beamip) {
-        size_t k = 0;
-        while (k < plot_file->control_data.neipb) {
-          /* History variable of integration point */
-          o++;
-
-          k++;
+          j++;
         }
 
-        j++;
+        j = 0;
+        while (j < num_history_variables) {
+          /* Minimum per integration point */
+          beam->history_min[j] = data[o++];
+
+          j++;
+        }
+
+        j = 0;
+        while (j < num_history_variables) {
+          /* Maximum per integration point */
+          beam->history_max[j] = data[o++];
+
+          j++;
+        }
+
+        j = 0;
+        while (j < num_integration_points) {
+          d3plot_beam_ip *ip = &beam->ips[j];
+          ip->history_variables =
+              &history_variables[i * (size_t)num_integration_points *
+                                     (size_t)num_history_variables +
+                                 (size_t)j * (size_t)num_history_variables];
+
+          uint8_t k = 0;
+          while (k < num_history_variables) {
+            /* History variable of integration point */
+            ip->history_variables[k] = data[o++];
+
+            k++;
+          }
+
+          j++;
+        }
+      } else {
+        j = 0;
+        while (j < num_integration_points) {
+          beam->ips[j].history_variables = NULL;
+
+          j++;
+        }
       }
 
       i++;
@@ -2044,9 +2102,9 @@ d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
     if (o != plot_file->control_data.nv1d * plot_file->control_data.nel2) {
       ERROR_AND_NO_RETURN_F_PTR(
           "Sanity Check: Did not read all data from beams state. o=%zu "
-          "BEAMIP=%llu NEIPB=%llu NEL2 "
+          "BEAMIP=%u NEIPB=%u NEL2 "
           "(%llu) * NV1D (%llu) = %llu",
-          o, plot_file->control_data.beamip, plot_file->control_data.neipb,
+          o, num_integration_points, num_history_variables,
           plot_file->control_data.nel2, plot_file->control_data.nv1d,
           plot_file->control_data.nel2 * plot_file->control_data.nv1d);
       *num_beams = 0;
@@ -2079,60 +2137,83 @@ d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
     size_t i = 0;
     size_t o = 0;
     while (i < *num_beams) {
-      memcpy(&beams[i], &data[o], sizeof(d3plot_beam));
-      o += sizeof(d3plot_beam) / sizeof(double);
+      d3plot_beam *beam = &beams[i];
+      beam->num_history_variables = num_history_variables;
+      beam->num_integration_points = num_integration_points;
+      beam->ips = &integration_points[i * (size_t)num_integration_points];
+      if (history_variables) {
+        beam->history_average =
+            &history_variables[his_avg_min_max_offset +
+                               i * 3 * (size_t)num_history_variables +
+                               0 * (size_t)num_history_variables];
+        beam->history_min =
+            &history_variables[his_avg_min_max_offset +
+                               i * 3 * (size_t)num_history_variables +
+                               1 * (size_t)num_history_variables];
+        beam->history_max =
+            &history_variables[his_avg_min_max_offset +
+                               i * 3 * (size_t)num_history_variables +
+                               2 * (size_t)num_history_variables];
+      } else {
+        memset(&beam->history_average, 0, sizeof(double *) * 3);
+      }
 
-      size_t j = 0;
-      while (j < plot_file->control_data.beamip) {
+      memcpy(&beam->axial_force, &data[o], sizeof(double) * 6);
+      o += 6;
+
+      uint8_t j = 0;
+      while (j < num_integration_points) {
+        d3plot_beam_ip *ip = &beam->ips[j];
+
         /* RS shear stress */
-        o++;
         /* TR shear stress */
-        o++;
         /* Axial stress */
-        o++;
         /* Plastic strain */
-        o++;
         /* Axial strain */
-        o++;
+        memcpy(&ip->rs_shear_stress, &data[o], sizeof(double) * 5);
+        o += 5;
 
         j++;
       }
 
-      j = 0;
-      while (j < plot_file->control_data.neipb) {
+      if (history_variables) {
         /* Average per integration point */
-        o++;
+        memcpy(beam->history_average, &data[o],
+               sizeof(double) * (size_t)num_history_variables);
+        o += (size_t)num_history_variables;
 
-        j++;
-      }
-
-      j = 0;
-      while (j < plot_file->control_data.neipb) {
         /* Minimum per integration point */
-        o++;
+        memcpy(beam->history_min, &data[o],
+               sizeof(double) * (size_t)num_history_variables);
+        o += (size_t)num_history_variables;
 
-        j++;
-      }
-
-      j = 0;
-      while (j < plot_file->control_data.neipb) {
         /* Maximum per integration point */
-        o++;
+        memcpy(beam->history_max, &data[o],
+               sizeof(double) * (size_t)num_history_variables);
+        o += (size_t)num_history_variables;
 
-        j++;
-      }
+        j = 0;
+        while (j < num_integration_points) {
+          d3plot_beam_ip *ip = &beam->ips[j];
+          ip->history_variables =
+              &history_variables[i * (size_t)num_integration_points *
+                                     (size_t)num_history_variables +
+                                 (size_t)j * (size_t)num_history_variables];
 
-      j = 0;
-      while (j < plot_file->control_data.beamip) {
-        size_t k = 0;
-        while (k < plot_file->control_data.neipb) {
-          /* History variable of integration point */
-          o++;
+          /* History variables of integration point */
+          memcpy(ip->history_variables, &data[o],
+                 sizeof(double) * (size_t)num_history_variables);
+          o += (size_t)num_history_variables;
 
-          k++;
+          j++;
         }
+      } else {
+        j = 0;
+        while (j < num_integration_points) {
+          beam->ips[j].history_variables = NULL;
 
-        j++;
+          j++;
+        }
       }
 
       i++;
@@ -3320,6 +3401,20 @@ void d3plot_free_thick_shells_state(d3plot_thick_shell *thick_shells) {
     free(thick_shells->mid.history_variables);
     free(thick_shells->add_ips);
     free(thick_shells);
+  }
+
+  END_PROFILE_FUNC();
+}
+
+void d3plot_free_beams_state(d3plot_beam *beams) {
+  BEGIN_PROFILE_FUNC();
+
+  if (beams) {
+    if (beams->ips) {
+      free(beams->ips->history_variables);
+      free(beams->ips);
+    }
+    free(beams);
   }
 
   END_PROFILE_FUNC();

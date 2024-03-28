@@ -250,7 +250,7 @@ d3plot_thick_shell *d3plot_read_thick_shells_state(d3plot_file *plot_file,
                                                    size_t *num_thick_shells);
 /* Returns Axial Force, S shear resultant, T shear resultant, S bending moment,
  * T bending moment and Torsional resultant of all beams for a given state. The
- * return value needs to be deallocated by free.*/
+ * return value needs to be deallocated by d3plot_free_beams_state.*/
 d3plot_beam *d3plot_read_beams_state(d3plot_file *plot_file, size_t state,
                                      size_t *num_beams);
 /* Returns stress, strain (if ISTRN == 1) and some other variables (see docs pg.
@@ -355,6 +355,8 @@ void d3plot_free_part(d3plot_part *part);
 void d3plot_free_shells_state(d3plot_shell *shells);
 /* Deallocate all memory returned by d3plot_read_thick_shells_state*/
 void d3plot_free_thick_shells_state(d3plot_thick_shell *thick_shells);
+/* Deallocate all memory returned by d3plot_read_beams_state */
+void d3plot_free_beams_state(d3plot_beam *beams);
 /********************************/
 
 /*********** Utility Functions ***************/

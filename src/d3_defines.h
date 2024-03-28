@@ -151,6 +151,16 @@ typedef struct {
 } d3plot_surface;
 
 typedef struct {
+  double rs_shear_stress;
+  double tr_shear_stress;
+  double axial_stress;
+  double plastic_strain;
+  double axial_strain;
+
+  double *history_variables;
+} d3plot_beam_ip;
+
+typedef struct {
   d3plot_surface mid;
   d3plot_surface inner;
   d3plot_surface outer;
@@ -175,6 +185,13 @@ typedef struct {
   double s_bending_moment;
   double t_bending_moment;
   double torsional_resultant;
+
+  d3plot_beam_ip *ips;
+  double *history_average; /* Average over all integration points */
+  double *history_min;     /* Minimum of all integration points */
+  double *history_max;     /* Maximum of all integration points */
+  uint8_t num_history_variables;
+  uint8_t num_integration_points;
 } d3plot_beam;
 
 typedef struct {

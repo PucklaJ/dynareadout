@@ -582,11 +582,11 @@ TEST_CASE("d3plot") {
   d3plot_thick_shell *thick_shells =
       d3plot_read_thick_shells_state(&plot_file, 101, &num_elements);
   REQUIRE(num_elements == 0);
-  free(thick_shells);
+  d3plot_free_thick_shells_state(thick_shells);
 
   d3plot_beam *beams = d3plot_read_beams_state(&plot_file, 101, &num_elements);
   REQUIRE(num_elements == 0);
-  free(beams);
+  d3plot_free_beams_state(beams);
 
   d3plot_shell *shells =
       d3plot_read_shells_state(&plot_file, 101, &num_elements);
