@@ -815,8 +815,7 @@ void card_parse_begin(card_t *card, uint8_t value_width) {
 void card_parse_next(card_t *card) {
   BEGIN_PROFILE_FUNC();
 
-  /* TODO: handle overflow*/
-  card->current_index += card->value_width;
+  card_parse_next_width(card, card->value_width);
 
   END_PROFILE_FUNC();
 }
@@ -824,7 +823,15 @@ void card_parse_next(card_t *card) {
 void card_parse_next_width(card_t *card, uint8_t value_width) {
   BEGIN_PROFILE_FUNC();
 
-  card->current_index += value_width;
+  if (card->string[card->current_index] != '\0') {
+    if (card->current_index <= 255 - value_width) {
+      card->current_index += value_width;
+    } else {
+      while (card->string[card->current_index] != '\0') {
+        card->current_index++;
+      }
+    }
+  }
 
   END_PROFILE_FUNC();
 }
