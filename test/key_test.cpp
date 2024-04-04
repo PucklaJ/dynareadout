@@ -966,9 +966,18 @@ TEST_CASE("none") {
   }
 
   {
-    auto [mid, ro, e, pr, sigy, etan, eppf, tdel] =
+    auto [_mid, _ro, _e, _pr, _sigy, _etan, _eppf, _tdel] =
         card.parse_whole<int, float, float, float, float, float, float,
                          float>();
+
+    const auto mid = _mid;
+    const auto ro = _ro;
+    const auto e = _e;
+    const auto pr = _pr;
+    const auto sigy = _sigy;
+    const auto etan = _etan;
+    const auto eppf = _eppf;
+    const auto tdel = _tdel;
 
     CHECK(mid == 1);
     CHECK(ro == 9.879e-6f);
@@ -983,7 +992,13 @@ TEST_CASE("none") {
   card = ks["MAT_PIECEWISE_LINEAR_PLASTICITY"][0][1];
 
   {
-    auto [C, P, lcss, lcsr] = card.parse_whole<int, int, std::string, char *>();
+    auto [_C, _P, _lcss, _lcsr] =
+        card.parse_whole<int, int, std::string, char *>();
+
+    const auto C = _C;
+    const auto P = _P;
+    const auto lcss = _lcss;
+    const auto lcsr = _lcsr;
 
     CHECK(C == 50);
     CHECK(P == 6);
@@ -1012,8 +1027,13 @@ TEST_CASE("none") {
   }
 
   {
-    auto [C, P, lcss, lcsr] =
+    auto [_C, _P, _lcss, _lcsr] =
         card.parse_whole<int, int, dro::String, dro::SizedString>();
+
+    const auto C = _C;
+    const auto P = _P;
+    const auto lcss = _lcss;
+    const auto lcsr = _lcsr;
 
     CHECK(C == 50);
     CHECK(P == 6);
