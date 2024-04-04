@@ -79,6 +79,14 @@ void Card::next(uint8_t value_width) noexcept {
 
 bool Card::done() const noexcept { return card_parse_done(m_handle) != 0; }
 
+bool Card::is_empty() const noexcept {
+  return card_parse_is_empty(m_handle) != 0;
+}
+
+bool Card::is_empty(uint8_t value_width) const noexcept {
+  return card_parse_is_empty_width(m_handle, value_width) != 0;
+}
+
 card_parse_type Card::parse_get_type() const noexcept {
   return card_parse_get_type(m_handle);
 }

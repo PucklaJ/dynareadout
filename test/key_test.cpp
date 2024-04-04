@@ -945,6 +945,85 @@ TEST_CASE("key_file_include_transform") {
 #ifdef BUILD_CPP
 #define FABS(x) ((x) > 0 ? (x) : -(x))
 
+TEST_CASE("none") {
+  auto ks = dro::KeyFile::parse("test_data/none.k");
+  auto card = ks["MAT_PIECEWISE_LINEAR_PLASTICITY"][0][0];
+
+  {
+    int mid;
+    float ro, e, pr, sigy, etan, eppf, tdel;
+
+    card.parse_whole(mid, ro, e, pr, sigy, etan, eppf, tdel);
+
+    CHECK(mid == 1);
+    CHECK(ro == 9.879e-6f);
+    CHECK(e == 316.0f);
+    CHECK(pr == 0.5f);
+    CHECK(sigy == 0.845f);
+    CHECK(etan == 0.0f);
+    CHECK(eppf == 0.167f);
+    CHECK(tdel == 0.0f);
+  }
+
+  {
+    auto [mid, ro, e, pr, sigy, etan, eppf, tdel] =
+        card.parse_whole<int, float, float, float, float, float, float,
+                         float>();
+
+    CHECK(mid == 1);
+    CHECK(ro == 9.879e-6f);
+    CHECK(e == 316.0f);
+    CHECK(pr == 0.5f);
+    CHECK(sigy == 0.845f);
+    CHECK(etan == 0.0f);
+    CHECK(eppf == 0.167f);
+    CHECK(tdel == 0.0f);
+  }
+
+  card = ks["MAT_PIECEWISE_LINEAR_PLASTICITY"][0][1];
+
+  {
+    auto [C, P, lcss, lcsr] = card.parse_whole<int, int, std::string, char *>();
+
+    CHECK(C == 50);
+    CHECK(P == 6);
+    CHECK(lcss == "");
+    CHECK(lcss.empty());
+    CHECK(lcsr == "");
+    CHECK(strlen(lcsr) == 0);
+
+    free(lcsr);
+  }
+
+  {
+    int C, P;
+    std::string lcss;
+    char *lcsr;
+    card.parse_whole(C, P, lcss, lcsr);
+
+    CHECK(C == 50);
+    CHECK(P == 6);
+    CHECK(lcss == "");
+    CHECK(lcss.empty());
+    CHECK(lcsr == "");
+    CHECK(strlen(lcsr) == 0);
+
+    free(lcsr);
+  }
+
+  {
+    auto [C, P, lcss, lcsr] =
+        card.parse_whole<int, int, dro::String, dro::SizedString>();
+
+    CHECK(C == 50);
+    CHECK(P == 6);
+    CHECK(lcss == "");
+    CHECK(lcss.empty());
+    CHECK(lcsr == "");
+    CHECK(lcsr.size() == 0);
+  }
+}
+
 TEST_CASE("key_file_parseC++") {
   auto keywords = dro::KeyFile::parse("test_data/key_file.k");
 
@@ -1104,31 +1183,6 @@ TEST_CASE("key_file_parseC++") {
     CHECK(solver == "MECH");
   }
 
-  {
-    try {
-      card.parse_whole<int, float, float, float, float, std::string,
-                       std::string>();
-      FAIL("parse_whole should throw an exception because it tries to read too "
-           "much values");
-    } catch (const dro::KeyFile::Exception &e) {
-      CHECK(e.what() != NULL);
-    }
-  }
-
-  {
-    try {
-      int sid;
-      float da1, da2, da3, da4;
-      std::string solver, crash_causer;
-
-      card.parse_whole(sid, da1, da2, da3, da4, solver, crash_causer);
-      FAIL("parse_whole should throw an exception because it tries to read too "
-           "much values");
-    } catch (const dro::KeyFile::Exception &e) {
-      CHECK(e.what() != NULL);
-    }
-  }
-
   card = keywords["NODE"][0][2];
 
   {
@@ -1163,32 +1217,6 @@ TEST_CASE("key_file_parseC++") {
     CHECK(z == 0.0f);
     CHECK(tc == 0);
     CHECK(rc == 0);
-  }
-
-  {
-    try {
-      card.parse_whole<int, float, float, float, int, int, std::string>(
-          {8, 16, 16, 16, 8, 8, 12});
-      FAIL("parse_whole should throw an exception because it tries to read too "
-           "much values");
-    } catch (const dro::KeyFile::Exception &e) {
-      CHECK(e.what() != NULL);
-    }
-  }
-
-  {
-    try {
-      int nid, tc, rc;
-      float x, y, z;
-      std::string crash_causer;
-
-      card.parse_whole_width({8, 16, 16, 16, 8, 8, 12}, nid, x, y, z, tc, rc,
-                             crash_causer);
-      FAIL("parse_whole should throw an exception because it tries to read too "
-           "much values");
-    } catch (const dro::KeyFile::Exception &e) {
-      CHECK(e.what() != NULL);
-    }
   }
 }
 

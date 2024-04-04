@@ -815,6 +815,7 @@ void card_parse_begin(card_t *card, uint8_t value_width) {
 void card_parse_next(card_t *card) {
   BEGIN_PROFILE_FUNC();
 
+  /* TODO: handle overflow*/
   card->current_index += card->value_width;
 
   END_PROFILE_FUNC();
@@ -1519,6 +1520,37 @@ card_parse_type card_parse_get_type_width(const card_t *card,
 
   END_PROFILE_FUNC();
   return CARD_PARSE_STRING;
+}
+
+int card_parse_is_empty(const card_t *card) {
+  BEGIN_PROFILE_FUNC();
+
+  const int rv = card_parse_is_empty_width(card, card->value_width);
+
+  END_PROFILE_FUNC();
+  return rv;
+}
+
+int card_parse_is_empty_width(const card_t *card, uint8_t value_width) {
+  BEGIN_PROFILE_FUNC();
+
+  uint8_t i = card->current_index;
+  while (i - card->current_index < value_width) {
+    if (card->string[i] == '\0') {
+      break;
+    }
+
+    /* TODO: Handle other whitespace characters*/
+    if (card->string[i] != ' ') {
+      END_PROFILE_FUNC();
+      return 0;
+    }
+
+    i++;
+  }
+
+  END_PROFILE_FUNC();
+  return 1;
 }
 
 void _card_cpy(const card_t *card, char *dst, size_t len) {

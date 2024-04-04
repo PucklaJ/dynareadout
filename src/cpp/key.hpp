@@ -72,6 +72,14 @@ public:
   // Returns wether the card has been completely parsed. Breaks if incorrect
   // value widths have been supplied
   bool done() const noexcept;
+  // Returns wether the currently value the shall be parsed is empty (i.e.
+  // consists only of whitespace). Uses the value_width provided at begin. If
+  // the card is done this also returns true*/
+  bool is_empty() const noexcept;
+  // Returns wether the currently value the shall be parsed is empty (i.e.
+  // consists only of whitespace). Uses the value_width provided here. If
+  // the card is done this also returns true*/
+  bool is_empty(uint8_t value_width) const noexcept;
   // Returns the type of the current value. Uses the value width from
   // begin. If CARD_PARSE_INT is returned the value can be parsed with an
   // integer type. If CARD_PARSE_FLOAT is returned the value can be parsed with
@@ -359,6 +367,25 @@ template <typename T>
 static constexpr bool is_number_v =
     std::is_integral_v<T> || std::is_floating_point_v<T>;
 
+template <typename T> inline T empty_value_v = {0};
+template <> inline std::string empty_value_v<std::string> = "";
+template <>
+inline auto empty_value_v<dro::String> = dro::String(const_cast<char *>(""),
+                                                     false);
+template <>
+inline auto empty_value_v<dro::SizedString> =
+    dro::SizedString(const_cast<char *>(""), 0, false);
+
+template <typename T> inline T empty_value() noexcept {
+  if constexpr (std::is_same_v<char *, T>) {
+    char *v = static_cast<char *>(malloc(1));
+    *v = '\0';
+    return v;
+  } else {
+    return empty_value_v<T>;
+  }
+}
+
 template <typename T> T Card::parse() const {
   return parse<T>(m_handle->value_width);
 }
@@ -428,24 +455,19 @@ template <typename T> T Card::parse_string_no_trim() const noexcept {
 
 template <typename... T> void Card::parse_whole(T &...rv) {
 
-  int i = 0;
-
   begin();
 
   (
       [&] {
         using parse_type = std::remove_reference_t<decltype(rv)>;
 
-        if (done()) {
-          THROW_KEY_FILE_EXCEPTION(
-              "Trying to parse %d values out of card \"%s\" with width %d",
-              i + 1, m_handle->string, DEFAULT_VALUE_WIDTH);
+        if (is_empty()) {
+          rv = empty_value<parse_type>();
+        } else {
+          rv = parse<parse_type>();
         }
 
-        rv = parse<parse_type>();
-
         next();
-        i++;
       }(),
       ...);
 }
@@ -461,17 +483,15 @@ void Card::parse_whole_width(std::array<uint8_t, sizeof...(T)> value_widths,
       [&] {
         using parse_type = std::remove_reference_t<decltype(rv)>;
 
-        if (done()) {
-          THROW_KEY_FILE_EXCEPTION("Trying to parse %d values out of card "
-                                   "\"%s\"",
-                                   i + 1, m_handle->string);
-        }
-
         if (value_widths[i] == 0) {
           value_widths[i] = DEFAULT_VALUE_WIDTH;
         }
 
-        rv = parse<parse_type>(value_widths[i]);
+        if (is_empty(value_widths[i])) {
+          rv = empty_value<parse_type>();
+        } else {
+          rv = parse<parse_type>(value_widths[i]);
+        }
 
         next(value_widths[i]);
         i++;
@@ -480,22 +500,18 @@ void Card::parse_whole_width(std::array<uint8_t, sizeof...(T)> value_widths,
 }
 
 template <typename... T> std::tuple<T...> Card::parse_whole() {
-  int i = 0;
   begin();
 
   std::tuple<T...> t = {([&] {
-    if (done()) {
-      THROW_KEY_FILE_EXCEPTION(
-          "Trying to parse %d values out of card \"%s\" with width %d", i + 1,
-          m_handle->string, DEFAULT_VALUE_WIDTH);
+    if (is_empty()) {
+      auto value = empty_value<T>();
+      next();
+      return value;
+    } else {
+      auto value = parse<T>();
+      next();
+      return value;
     }
-
-    T value = parse<T>();
-
-    next();
-    i++;
-
-    return value;
   }())...};
 
   return t;
@@ -508,21 +524,19 @@ Card::parse_whole(std::array<uint8_t, sizeof...(T)> value_widths) {
   begin();
 
   std::tuple<T...> t = {([&] {
-    if (done()) {
-      THROW_KEY_FILE_EXCEPTION(
-          "Trying to parse %d values out of card \"%s\" with width %d", i + 1,
-          m_handle->string, DEFAULT_VALUE_WIDTH);
-    }
-
     if (value_widths[i] == 0) {
       value_widths[i] = DEFAULT_VALUE_WIDTH;
     }
 
-    T value = parse<T>(value_widths[i]);
-
-    next(value_widths[i++]);
-
-    return value;
+    if (is_empty(value_widths[i])) {
+      auto value = empty_value<T>();
+      next(value_widths[i++]);
+      return value;
+    } else {
+      auto value = parse<T>(value_widths[i]);
+      next(value_widths[i++]);
+      return value;
+    }
   }())...};
 
   return t;

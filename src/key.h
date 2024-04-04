@@ -230,6 +230,14 @@ card_parse_type card_parse_get_type(const card_t *card);
  * the value width provided here.*/
 card_parse_type card_parse_get_type_width(const card_t *card,
                                           uint8_t value_width);
+/* Returns wether the currently value the shall be parsed is empty (i.e.
+ * consists only of whitespace). Uses the value_width provided at begin. If the
+ * card is done this also returns non zero (i.e. true)*/
+int card_parse_is_empty(const card_t *card);
+/* Returns wether the currently value the shall be parsed is empty (i.e.
+ * consists only of whitespace). Uses the value_width provided here. If the card
+ * is done this also returns zero (i.e. true)*/
+int card_parse_is_empty_width(const card_t *card, uint8_t value_width);
 
 /* ----- Private Functions -----*/
 /* Copy the contents of the card as a string directly into dst.*/
