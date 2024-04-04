@@ -103,10 +103,24 @@ void add_key_library_to_module(py::module_ &m) {
       .def(
           "next_width",
           [](dro::Card &self, uint8_t value_width) { self.next(value_width); },
-          "Advance to the next value. Uses the value width provided here")
+          "Advance to the next value. Uses the value width provided here",
+          py::arg("value_width"))
       .def("done", &dro::Card::done,
            "Returns wether the card has been completely parsed. Breaks if "
            "incorrect value widths have been supplied")
+      .def(
+          "is_empty",
+          [](dro::Card &self, py::object value_width) {
+            if (value_width.is_none()) {
+              return self.is_empty();
+            }
+
+            self.is_empty(value_width.cast<uint8_t>());
+          },
+          "Returns wether the currently value that shall be parsed is empty "
+          "(i.e. consists only of whitespace). Uses the value_width "
+          "provided here. If the card is done this also returns True",
+          py::arg("value_width") = py::none())
       .def(
           "parse_i64",
           [](const dro::Card &self) { return self.parse<int64_t>(); },
