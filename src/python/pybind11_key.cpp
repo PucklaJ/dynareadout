@@ -41,38 +41,32 @@ py::list python_card_parse_whole(dro::Card &self, py::list value_widths) {
   py::list rv;
   int i = 0;
 
-  while ((value_widths.empty() && !self.done()) ||
-         (!value_widths.empty() && i < value_widths.size())) {
+  for (int i = 0;
+       (value_widths.empty() && !self.done()) || i < value_widths.size(); i++) {
     uint8_t value_width;
     if (value_widths.empty()) {
       value_width = DEFAULT_VALUE_WIDTH;
     } else {
-      if (self.done()) {
-        dro::String card_string =
-            self.parse_string_whole_no_trim<dro::String>();
-
-        THROW_KEY_FILE_EXCEPTION(
-            "Trying to parse %d values out of card \"%s\" with", i + 1,
-            card_string.data());
-      }
-
       value_width = value_widths[i].cast<uint8_t>();
     }
 
-    switch (self.parse_get_type(value_width)) {
-    case CARD_PARSE_INT:
-      rv.append(self.parse<int64_t>(value_width));
-      break;
-    case CARD_PARSE_FLOAT:
-      rv.append(self.parse<double>(value_width));
-      break;
-    case CARD_PARSE_STRING:
-      rv.append(self.parse<dro::String>(value_width));
-      break;
+    if (self.is_empty(value_width)) {
+      rv.append(py::none());
+    } else {
+      switch (self.parse_get_type(value_width)) {
+      case CARD_PARSE_INT:
+        rv.append(self.parse<int64_t>(value_width));
+        break;
+      case CARD_PARSE_FLOAT:
+        rv.append(self.parse<double>(value_width));
+        break;
+      case CARD_PARSE_STRING:
+        rv.append(self.parse<dro::String>(value_width));
+        break;
+      }
     }
 
     self.next(value_width);
-    i++;
   }
 
   return rv;
