@@ -72,6 +72,63 @@ py::list python_card_parse_whole(dro::Card &self, py::list value_widths) {
   return rv;
 }
 
+#ifdef __APPLE__
+#define RDRT(val) read_return(std::move(val))
+template <typename T> inline py::object read_return(T arr) noexcept {
+  return py::cast(std::move(arr));
+}
+
+py::object
+#else
+#define RDRT(val) (val)
+
+std::variant<int64_t, double, dro::String, py::none>
+#endif
+python_card_parse(dro::Card &self, bool trim_string, py::object value_width) {
+  if (value_width.is_none()) {
+    if (self.is_empty()) {
+      return py::none();
+    }
+
+    const auto ty = self.parse_get_type();
+
+    switch (ty) {
+    case CARD_PARSE_INT:
+      return RDRT(self.parse<int64_t>());
+    case CARD_PARSE_FLOAT:
+      return RDRT(self.parse<double>());
+    case CARD_PARSE_STRING:
+      if (trim_string) {
+        return RDRT(self.parse<dro::String>());
+      } else {
+        return RDRT(self.parse_string_no_trim<dro::String>());
+      }
+    }
+  } else {
+    const auto vw = value_width.cast<uint8_t>();
+    if (self.is_empty(vw)) {
+      return py::none();
+    }
+
+    const auto ty = self.parse_get_type(vw);
+
+    switch (ty) {
+    case CARD_PARSE_INT:
+      return RDRT(self.parse<int64_t>(vw));
+    case CARD_PARSE_FLOAT:
+      return RDRT(self.parse<double>(vw));
+    case CARD_PARSE_STRING:
+      if (trim_string) {
+        return RDRT(self.parse<dro::String>(vw));
+      } else {
+        return RDRT(self.parse_string_no_trim<dro::String>(vw));
+      }
+    }
+  }
+
+  return py::none();
+}
+
 void add_key_library_to_module(py::module_ &m) {
   py::class_<dro::Keywords>(m, "Keywords")
       .def("__len__", [](dro::Keywords &self) { return self.size(); })
@@ -98,12 +155,21 @@ void add_key_library_to_module(py::module_ &m) {
       .def("begin", &dro::Card::begin, "Initialises the parsing of the card",
            py::arg("value_width") = DEFAULT_VALUE_WIDTH)
       .def(
-          "next", [](dro::Card &self) { self.next(); },
-          "Advance to the next value. Uses the value width from begin")
+          "next",
+          [](dro::Card &self, py::object value_width) {
+            if (value_width.is_none()) {
+              self.next();
+            } else {
+              self.next(value_width.cast<uint8_t>());
+            }
+          },
+          "Advance to the next value. Uses the value width from begin",
+          py::arg("value_width") = py::none())
       .def(
           "next_width",
           [](dro::Card &self, uint8_t value_width) { self.next(value_width); },
-          "Advance to the next value. Uses the value width provided here",
+          "DEPRECATED(use Card.next) Advance to the next value. Uses the value "
+          "width provided here",
           py::arg("value_width"))
       .def("done", &dro::Card::done,
            "Returns wether the card has been completely parsed. Breaks if "
@@ -123,39 +189,64 @@ void add_key_library_to_module(py::module_ &m) {
           py::arg("value_width") = py::none())
       .def(
           "parse_i64",
-          [](const dro::Card &self) { return self.parse<int64_t>(); },
-          "Parses the current value as an integer. Uses the value "
-          "width from begin")
+          [](const dro::Card &self, py::object value_width) {
+            if (value_width.is_none()) {
+              return self.parse<int64_t>();
+            } else {
+              return self.parse<int64_t>(value_width.cast<uint8_t>());
+            }
+          },
+          "Parses the current value as an integer",
+          py::arg("value_width") = py::none())
       .def(
           "parse_f64",
-          [](const dro::Card &self) { return self.parse<double>(); },
-          "Parses the current value as a float. Uses the value "
-          "width from begin")
+          [](const dro::Card &self, py::object value_width) {
+            if (value_width.is_none()) {
+              return self.parse<double>();
+            } else {
+              return self.parse<double>(value_width.cast<uint8_t>());
+            }
+          },
+          "Parses the current value as a float",
+          py::arg("value_width") = py::none())
       .def(
           "parse_str",
-          [](const dro::Card &self, bool trim) {
-            if (trim)
-              return self.parse<dro::String>();
-            else
-              return self.parse_string_no_trim<dro::String>();
+          [](const dro::Card &self, bool trim, py::object value_width) {
+            if (value_width.is_none()) {
+              if (trim) {
+                return self.parse<dro::String>();
+              } else {
+                return self.parse_string_no_trim<dro::String>();
+              }
+            } else {
+              if (trim) {
+                return self.parse<dro::String>(value_width.cast<uint8_t>());
+              } else {
+                return self.parse_string_no_trim<dro::String>(
+                    value_width.cast<uint8_t>());
+              }
+            }
           },
-          "Parses the current value as a string. Uses the value "
-          "width from begin. If trim is set to True then it trims leading and "
+          "Parses the current value as a string. If trim is set to True then "
+          "it trims leading and "
           "trailing whitespace",
-          py::arg("trim") = true, py::return_value_policy::take_ownership)
+          py::arg("trim") = true, py::arg("value_width") = py::none(),
+          py::return_value_policy::take_ownership)
       .def(
           "parse_width_i64",
           [](const dro::Card &self, uint8_t value_width) {
             return self.parse<int64_t>(value_width);
           },
-          "Parses the current value as an integer. Uses the value "
+          "DEPRECATED(use Card.parse_i64) Parses the current value as an "
+          "integer. Uses the value "
           "width provided here")
       .def(
           "parse_width_f64",
           [](const dro::Card &self, uint8_t value_width) {
             return self.parse<double>(value_width);
           },
-          "Parses the current value as a float. Uses the value "
+          "DEPRECATED(use Card.parse_f64) Parses the current value as a float. "
+          "Uses the value "
           "width provided here")
       .def(
           "parse_width_str",
@@ -165,12 +256,18 @@ void add_key_library_to_module(py::module_ &m) {
             else
               return self.parse_string_no_trim<dro::String>(value_width);
           },
-          "Parses the current value as a string. Uses the value "
+          "DEPRECATED(use Card.parse_str) Parses the current value as a "
+          "string. Uses the value "
           "width provided here. If trim is set to True then it trims leading "
           "and "
           "trailing whitespace",
           py::arg("value_width"), py::arg("trim") = true,
           py::return_value_policy::take_ownership)
+      .def("parse", &python_card_parse,
+           "Parses the current value as the recognized type (if it looks like "
+           "an int its an int and so on). If the value is empty then None is "
+           "returned",
+           py::arg("trim_string") = true, py::arg("value_width") = py::none())
       .def("parse_whole", &python_card_parse_whole,
            "Parses all values of the card as the correct types. The width of "
            "each value needs to be provided as a list through value_widths",
