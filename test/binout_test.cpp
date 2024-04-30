@@ -25,7 +25,6 @@
 
 #include <stdio.h>
 #define DOCTEST_CONFIG_TREAT_CHAR_STAR_AS_STRING
-#include <algorithm>
 #include <binout.h>
 #include <binout_defines.h>
 #include <binout_directory.h>
@@ -42,6 +41,7 @@
 #include <string_builder.h>
 #ifdef BUILD_CPP
 #include "main_test.hpp"
+#include <algorithm>
 #include <binout.hpp>
 #endif
 
@@ -371,6 +371,30 @@ TEST_CASE("binout_multi") {
   CHECK(data[000] == 31.256439f);
   CHECK(data[999] == 50.736660f);
   CHECK(data[499] == 40.736500f);
+  free(data);
+
+  binout_close(&binout);
+}
+
+TEST_CASE("binout_MATSUM") {
+  binout_file binout = binout_open("test_data/matsum/binout");
+  if (binout.error_string != NULL) {
+    FAIL(binout.error_string);
+    return;
+  }
+
+  size_t num_values, num_timesteps;
+  float *data = binout_read_timed_f32(&binout, "/matsum/kinetic_energy",
+                                      &num_values, &num_timesteps);
+  if (binout.error_string != NULL) {
+    FAIL(binout.error_string);
+    return;
+  }
+
+  REQUIRE(data != NULL);
+  CHECK(num_values == 754);
+  CHECK(num_timesteps == 151);
+
   free(data);
 
   binout_close(&binout);

@@ -229,27 +229,39 @@ binout_entry_t *_binout_open_timed_path(binout_entry_t *d_folder,
       return NULL;
     }
 
-    current_folder = &current_folder->children[current_timed_path->index];
-    if (current_folder->type == BINOUT_FILE) {
+    binout_entry_t *child =
+        &current_folder->children[current_timed_path->index];
+    if (child->type == BINOUT_FILE) {
       if (current_timed_path->child != NULL) {
         END_PROFILE_FUNC();
         return NULL;
       }
 
       /* A fail safe to check if the file name stays the same */
-      if (variable_name && strcmp(current_folder->name, variable_name) != 0) {
-        END_PROFILE_FUNC();
-        return NULL;
+      if (variable_name && strcmp(child->name, variable_name) != 0) {
+        /* Search for the variable (Something changed the structure -_(°_°)_-)*/
+
+        path_view_t path = path_view_new(variable_name);
+        const size_t search_index = binout_directory_binary_search_entry(
+            current_folder->children, 0, current_folder->num_children - 1,
+            &path);
+        if (search_index == (size_t)~0) {
+          END_PROFILE_FUNC();
+          return NULL;
+        }
+
+        child = &current_folder->children[search_index];
       }
 
       END_PROFILE_FUNC();
-      return current_folder;
+      return child;
     } else {
       if (current_timed_path->child == NULL) {
         END_PROFILE_FUNC();
         return NULL;
       }
 
+      current_folder = child;
       current_timed_path = current_timed_path->child;
     }
   }
