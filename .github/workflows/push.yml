@@ -6,7 +6,7 @@ env:
 
 jobs:
   build-and-test:
-    runs-on: ${{ matrix.plat == 'linux' && 'ubuntu' || (matrix.plat == 'macosx' && 'macos' || matrix.plat) }}-latest
+    runs-on: ${{ matrix.plat == 'linux' && 'ubuntu' || (matrix.plat == 'macosx' && 'macos' || matrix.plat) }}-${{ matrix.plat == 'macosx' && '13' || 'latest' }}
     strategy:
       fail-fast: false
       matrix:
