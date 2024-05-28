@@ -6,16 +6,17 @@ env:
 
 jobs:
   build-and-test:
-    runs-on: ${{ matrix.plat == 'linux' && 'ubuntu' || (matrix.plat == 'macosx' && 'macos' || matrix.plat) }}-${{ matrix.plat == 'macosx' && '13' || 'latest' }}
+    runs-on: ${{ matrix.plat == 'linux' && 'ubuntu' || (matrix.plat == 'macosx' && 'macos' || matrix.plat == 'macosx-arm64' && 'macos' || matrix.plat) }}-${{ matrix.plat == 'macosx' && '13' || matrix.plat == 'macosx-arm64' && '14' || 'latest' }}
     strategy:
       fail-fast: false
       matrix:
-        plat: [linux, windows, macosx]
+        plat: [linux, windows, macosx, macosx-arm64]
         arch: [x86_64]
         kind: [static]
     env:
-      arch: ${{ matrix.plat == 'windows' && 'x64' || matrix.arch }}
-    name: ${{ matrix.plat }}-${{ matrix.arch }}-${{ matrix.kind }}
+      plat: ${{ matrix.plat == 'macosx-arm64' && 'macosx' || matrix.plat }}
+      arch: ${{ matrix.plat == 'windows' && 'x64' || matrix.plat == 'macosx-arm64' && 'arm64' || matrix.arch}}
+    name: ${{ matrix.plat == 'macosx-arm64' && 'macosx' || matrix.plat }}-${{ matrix.plat == 'macosx-arm64' && 'arm64' || matrix.arch }}-${{ matrix.kind }}
 
     steps:
       - uses: actions/checkout@v4
@@ -27,11 +28,11 @@ jobs:
           python-version: '3.11'
       - name: Install boost
         run: brew install boost
-        if: matrix.plat == 'macosx'
+        if: env.plat == 'macosx'
 
 
       - name: Configure static
-        run: xmake f -yvD -p ${{ matrix.plat }} -a ${{ env.arch }} -k ${{ matrix.kind }} -m release --build_test=y --thread_safe=y --profiling=n --build_python=n
+        run: xmake f -yvD -p ${{ env.plat }} -a ${{ env.arch }} -k ${{ matrix.kind }} -m release --build_test=y --thread_safe=y --profiling=n --build_python=n
       - name: Build static
         run: xmake -wvD
       - name: Test static
@@ -39,7 +40,7 @@ jobs:
 
 
       - name: Configure static-non-thread-safe
-        run: xmake f -yvD -p ${{ matrix.plat }} -a ${{ env.arch }} -k ${{ matrix.kind }} -m release --build_test=y --thread_safe=n --profiling=n --build_python=n
+        run: xmake f -yvD -p ${{ env.plat }} -a ${{ env.arch }} -k ${{ matrix.kind }} -m release --build_test=y --thread_safe=n --profiling=n --build_python=n
       - name: Build static-non-thread-safe
         run: xmake -wvD
       - name: Test static-non-thread-safe
@@ -47,7 +48,7 @@ jobs:
 
 
       - name: Configure static-profiling
-        run: xmake f -yvD -p ${{ matrix.plat }} -a ${{ env.arch }} -k ${{ matrix.kind }} -m release --build_test=y --thread_safe=y --profiling=y --build_python=n
+        run: xmake f -yvD -p ${{ env.plat }} -a ${{ env.arch }} -k ${{ matrix.kind }} -m release --build_test=y --thread_safe=y --profiling=y --build_python=n
       - name: Build static-profiling
         run: xmake -wvD
       - name: Test static-profiling
@@ -55,7 +56,7 @@ jobs:
 
 
       - name: Configure static-non-thread-safe-profiling
-        run: xmake f -yvD -p ${{ matrix.plat }} -a ${{ env.arch }} -k ${{ matrix.kind }} -m release --build_test=y --thread_safe=n --profiling=y --build_python=n
+        run: xmake f -yvD -p ${{ env.plat }} -a ${{ env.arch }} -k ${{ matrix.kind }} -m release --build_test=y --thread_safe=n --profiling=y --build_python=n
       - name: Build static-non-thread-safe-profiling
         run: xmake -wvD
       - name: Test static-non-thread-safe-profiling
@@ -63,19 +64,19 @@ jobs:
 
 
       - name: Configure python
-        run: xmake f -yvD -p ${{ matrix.plat }} -a ${{ env.arch }} -k ${{ matrix.kind }} -m release --build_test=n --thread_safe=y --profiling=n --build_python=y
+        run: xmake f -yvD -p ${{ env.plat }} -a ${{ env.arch }} -k ${{ matrix.kind }} -m release --build_test=n --thread_safe=y --profiling=n --build_python=y
       - name: Build python
         run: xmake -wvD
-      - run: ls -la --color=always build/${{ matrix.plat }}/${{ env.arch }}/release
-        if: matrix.plat != 'windows'
-      - run: dir build/${{ matrix.plat }}/${{ env.arch }}/release
-        if: matrix.plat == 'windows'
-      - run: cp src/python/test.py build/${{ matrix.plat }}/${{ env.arch }}/release
-        if: matrix.plat != 'windows'
-      - run: Copy-Item -Path src/python/test.py -Destination build/${{ matrix.plat }}/${{ env.arch }}/release
-        if: matrix.plat == 'windows'
+      - run: ls -la --color=always build/${{ env.plat }}/${{ env.arch }}/release
+        if: env.plat != 'windows'
+      - run: dir build/${{ env.plat }}/${{ env.arch }}/release
+        if: env.plat == 'windows'
+      - run: cp src/python/test.py build/${{ env.plat }}/${{ env.arch }}/release
+        if: env.plat != 'windows'
+      - run: Copy-Item -Path src/python/test.py -Destination build/${{ env.plat }}/${{ env.arch }}/release
+        if: env.plat == 'windows'
       - name: Test python
-        run: cd build/${{ matrix.plat }}/${{ env.arch }}/release && python test.py
+        run: cd build/${{ env.plat }}/${{ env.arch }}/release && python test.py
 
   create-release:
     if: startsWith(github.event.ref, 'refs/tags/')
