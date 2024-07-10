@@ -34,7 +34,7 @@
 #undef DT_PTR_SET
 #endif
 #define DT_PTR_SET(value)                                                      \
-  if (plot_file->num_states == 1)                                              \
+  if (plot_file->num_states == 0)                                              \
   plot_file->data_pointers[value] = d3_ptr->cur_word - state_start
 
 #include "d3plot_error_macros.h"
@@ -57,13 +57,6 @@ int _d3plot_read_state_data(d3plot_file *plot_file, d3_pointer *d3_ptr) {
     END_PROFILE_FUNC();
     return 2;
   }
-
-  plot_file->num_states++;
-  plot_file->data_pointers =
-      realloc(plot_file->data_pointers,
-              (D3PLT_PTR_COUNT + plot_file->num_states) * sizeof(size_t));
-  plot_file->data_pointers[D3PLT_PTR_STATES + plot_file->num_states - 1] =
-      state_start;
 
   /* GLOBAL*/
   const size_t global_start = d3_ptr->cur_word;
@@ -149,8 +142,8 @@ int _d3plot_read_state_data(d3plot_file *plot_file, d3_pointer *d3_ptr) {
   /* TODO: read function for RBS HOURGLASS ENERGY*/
 
   if (plot_file->buffer.error_string) {
-    ERROR_AND_NO_RETURN_F_PTR("Failed to skip words: %s",
-                              plot_file->buffer.error_string);
+    free(plot_file->buffer.error_string);
+    plot_file->buffer.error_string = NULL;
     END_PROFILE_FUNC();
     return 0;
   }
@@ -174,8 +167,8 @@ int _d3plot_read_state_data(d3plot_file *plot_file, d3_pointer *d3_ptr) {
   }
 
   if (plot_file->buffer.error_string) {
-    ERROR_AND_NO_RETURN_F_PTR("Failed to skip RW: %s",
-                              plot_file->buffer.error_string);
+    free(plot_file->buffer.error_string);
+    plot_file->buffer.error_string = NULL;
     END_PROFILE_FUNC();
     return 0;
   }
@@ -239,8 +232,8 @@ int _d3plot_read_state_data(d3plot_file *plot_file, d3_pointer *d3_ptr) {
   }
 
   if (plot_file->buffer.error_string) {
-    ERROR_AND_NO_RETURN_F_PTR("Failed to skip words: %s",
-                              plot_file->buffer.error_string);
+    free(plot_file->buffer.error_string);
+    plot_file->buffer.error_string = NULL;
     END_PROFILE_FUNC();
     return 0;
   }
@@ -259,8 +252,8 @@ int _d3plot_read_state_data(d3plot_file *plot_file, d3_pointer *d3_ptr) {
   /* TODO: read function for nt3d data*/
 
   if (plot_file->buffer.error_string) {
-    ERROR_AND_NO_RETURN_F_PTR("Failed to skip THERMDATA: %s",
-                              plot_file->buffer.error_string);
+    free(plot_file->buffer.error_string);
+    plot_file->buffer.error_string = NULL;
     END_PROFILE_FUNC();
     return 0;
   }
@@ -289,8 +282,8 @@ int _d3plot_read_state_data(d3plot_file *plot_file, d3_pointer *d3_ptr) {
   d3_buffer_skip_words(&plot_file->buffer, d3_ptr, CDP.nv3dt * CDP.nelt);
 
   if (plot_file->buffer.error_string) {
-    ERROR_AND_NO_RETURN_F_PTR("Failed to skip ELEMDATA: %s",
-                              plot_file->buffer.error_string);
+    free(plot_file->buffer.error_string);
+    plot_file->buffer.error_string = NULL;
     END_PROFILE_FUNC();
     return 0;
   }
@@ -321,16 +314,19 @@ int _d3plot_read_state_data(d3plot_file *plot_file, d3_pointer *d3_ptr) {
   if (skip_words > 0) {
     d3_buffer_skip_words(&plot_file->buffer, d3_ptr, skip_words);
     if (plot_file->buffer.error_string) {
-      ERROR_AND_NO_RETURN_F_PTR("Failed to skip Element Deletion Option: %s",
-                                plot_file->buffer.error_string);
+      free(plot_file->buffer.error_string);
+      plot_file->buffer.error_string = NULL;
       END_PROFILE_FUNC();
       return 0;
     }
   }
 
-  const size_t state_end = d3_ptr->cur_word;
-  const size_t state_size =
-      (state_end - state_start) * plot_file->buffer.word_size;
+  plot_file->num_states++;
+  plot_file->data_pointers =
+      realloc(plot_file->data_pointers,
+              (D3PLT_PTR_COUNT + plot_file->num_states) * sizeof(size_t));
+  plot_file->data_pointers[D3PLT_PTR_STATES + plot_file->num_states - 1] =
+      state_start;
 
   END_PROFILE_FUNC();
   return 1;
