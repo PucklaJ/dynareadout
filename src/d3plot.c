@@ -350,7 +350,7 @@ d3plot_file d3plot_open(const char *root_file_name) {
 
   if (CDA.maxint > UCHAR_MAX) {
     ERROR_AND_RETURN_F("A value of MAXINT (number of integration points) "
-                       "greater than %u is not supported (%l > %u)",
+                       "greater than %u is not supported (%ld > %u)",
                        UCHAR_MAX, CDA.maxint, UCHAR_MAX);
   }
 

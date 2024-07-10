@@ -181,7 +181,7 @@ void add_key_library_to_module(py::module_ &m) {
               return self.is_empty();
             }
 
-            self.is_empty(value_width.cast<uint8_t>());
+            return self.is_empty(value_width.cast<uint8_t>());
           },
           "Returns wether the currently value that shall be parsed is empty "
           "(i.e. consists only of whitespace). Uses the value_width "
