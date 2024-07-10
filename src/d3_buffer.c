@@ -409,9 +409,21 @@ void d3_buffer_read_vec3(d3_buffer *buffer, d3_pointer *ptr, double *words) {
 void d3_buffer_skip_words(d3_buffer *buffer, d3_pointer *ptr,
                           size_t num_words) {
   BEGIN_PROFILE_FUNC();
+
+  if (ULONG_MAX - num_words <= ptr->cur_word) {
+    ERROR_AND_NO_RETURN_BUFFER_PTR("Out of Bounds");
+    if (ptr->cur_file != ULONG_MAX) {
+      d3_pointer_close(buffer, ptr);
+    }
+
+    END_PROFILE_FUNC();
+    return;
+  }
+
   const size_t new_cur_word = ptr->cur_word + num_words;
   d3_pointer_close(buffer, ptr);
   *ptr = d3_buffer_seek(buffer, new_cur_word);
+
   END_PROFILE_FUNC();
 }
 
