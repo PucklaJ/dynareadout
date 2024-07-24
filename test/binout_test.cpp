@@ -261,6 +261,7 @@ TEST_CASE("ncforc.binout") {
   binout_file b = binout_open("test_data/ncforc.binout");
   if (b.error_string) {
     FAIL(b.error_string);
+    binout_close(&b);
     return;
   }
 
@@ -302,10 +303,9 @@ TEST_CASE("ncforc.binout") {
 
 TEST_CASE("rwforc") {
   binout_file b = binout_open("test_data/rwforc_sim/binout");
-  char *error_string = binout_open_error(&b);
-  if (error_string) {
-    FAIL(error_string);
-    free(error_string);
+  if (b.error_string) {
+    FAIL(b.error_string);
+    binout_close(&b);
     return;
   }
 
@@ -323,8 +323,6 @@ TEST_CASE("rwforc") {
   free(real);
   if (b.error_string) {
     FAIL(b.error_string);
-    free(b.error_string);
-    b.error_string = NULL;
   }
   CHECK(v != NULL);
   CHECK(nv != 0);
@@ -344,9 +342,10 @@ TEST_CASE("rwforc") {
 
 TEST_CASE("binout_multi") {
   binout_file binout = binout_open("test_data/binout_multi/binout*");
-  char *err = binout_open_error(&binout);
-  if (err) {
-    FAIL(err);
+  if (binout.error_string) {
+    FAIL(binout.error_string);
+    binout_close(&binout);
+    return;
   }
 
   uint8_t type_id;
@@ -378,8 +377,9 @@ TEST_CASE("binout_multi") {
 
 TEST_CASE("binout_MATSUM") {
   binout_file binout = binout_open("test_data/matsum/binout");
-  if (binout.error_string != NULL) {
+  if (binout.error_string) {
     FAIL(binout.error_string);
+    binout_close(&binout);
     return;
   }
 
@@ -388,7 +388,6 @@ TEST_CASE("binout_MATSUM") {
                                       &num_values, &num_timesteps);
   if (binout.error_string != NULL) {
     FAIL(binout.error_string);
-    return;
   }
 
   REQUIRE(data != NULL);

@@ -86,7 +86,8 @@ void binout_free_children(char **children);
 /* Returns all file errors as one string. This gives information about files
  * that failed in binout_open. These errors are not fatal. If the return value
  * is NULL, no error occurred. The return value needs to be deallocated by
- * free. The given path needs to be absolute.*/
+ * free. The given path needs to be absolute. DEPRECATED: Use
+ * binout_file.error_string directly without deallocating it*/
 char *binout_open_error(binout_file *bin_file);
 
 /* A utility function that returns the number of dxxxxxx entries under a certain
@@ -127,6 +128,8 @@ int _binout_is_metadata_string(const char *folder_name);
 /* This is the same as _binout_is_d_string, but it uses the current element of a
  * path view instead of a string*/
 int _binout_path_view_is_d_string(const path_view_t *pv);
+/* Builds all file errors into one string and writes it to error_string*/
+void _binout_open_error(binout_file* bin_file);
 /* ----------------------------- */
 #ifdef __cplusplus
 }

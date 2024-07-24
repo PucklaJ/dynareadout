@@ -73,6 +73,7 @@ binout_file binout_open(const char *file_name) {
   char **file_names = binout_glob(file_name, &bin_file.num_files);
   if (bin_file.num_files == 0) {
     _binout_add_file_error(&bin_file, file_name, "No files have been found");
+    _binout_open_error(&bin_file);
     END_PROFILE_FUNC();
     return bin_file;
   }
@@ -312,6 +313,7 @@ binout_file binout_open(const char *file_name) {
     cur_file_index++;
   }
 
+  _binout_open_error(&bin_file);
   END_PROFILE_FUNC();
 
   return bin_file;
@@ -328,25 +330,17 @@ void binout_close(binout_file *bin_file) {
     cur_file_index++;
   }
 
-  /* Free all file errors*/
-  size_t i = 0;
-  while (i < bin_file->num_file_errors) {
-    free(bin_file->file_errors[i]);
-
-    i++;
-  }
-
   binout_directory_free(&bin_file->directory);
+
+  free(bin_file->error_string);
 
   /* Set everything to 0 so that no error happens if function get called after
    * binout_close*/
   bin_file->directory.children = NULL;
   bin_file->directory.num_children = 0;
   bin_file->files = NULL;
-  bin_file->file_errors = NULL;
   bin_file->error_string = NULL;
   bin_file->num_files = 0;
-  bin_file->num_file_errors = 0;
 
   END_PROFILE_FUNC();
 }
@@ -417,20 +411,12 @@ void binout_free_children(char **children) {
 char *binout_open_error(binout_file *bin_file) {
   BEGIN_PROFILE_FUNC();
 
-  string_builder_t file_error = string_builder_new();
-
-  size_t i = 0;
-  while (i < bin_file->num_file_errors) {
-    string_builder_append(&file_error, bin_file->file_errors[i]);
-    if (i != bin_file->num_file_errors - 1) {
-      string_builder_append_char(&file_error, '\n');
-    }
-
-    i++;
-  }
+  char* rv = bin_file->error_string;
+  if (rv)
+    rv = string_clone(rv);
 
   END_PROFILE_FUNC();
-  return string_builder_move(&file_error);
+  return rv;
 }
 
 size_t binout_get_num_timesteps(const binout_file *bin_file, const char *path) {
@@ -835,4 +821,29 @@ int _binout_path_view_is_d_string(const path_view_t *pv) {
 
   /* So that the string can not just be "d"*/
   return i != 1;
+}
+
+void _binout_open_error(binout_file* bin_file) {
+  BEGIN_PROFILE_FUNC();
+
+  string_builder_t file_error = string_builder_new();
+
+  size_t i = 0;
+  while (i < bin_file->num_file_errors) {
+    string_builder_append(&file_error, bin_file->file_errors[i]);
+    free(bin_file->file_errors[i]);
+
+    if (i != bin_file->num_file_errors - 1) {
+      string_builder_append_char(&file_error, '\n');
+    }
+
+    i++;
+  }
+
+  free(bin_file->file_errors);
+  bin_file->file_errors = NULL;
+  bin_file->num_file_errors = 0;
+
+  bin_file->error_string = string_builder_move(&file_error);
+  END_PROFILE_FUNC();
 }

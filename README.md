@@ -69,10 +69,8 @@ Examples for the python version can be found on the [repository](https://github.
 int main(int args, char* argv[]) {
   /* This library also supports opening multiple binout files at once by globing them*/
   binout_file bin_file = binout_open("simulation/binout*");
-  char* open_error = binout_open_error(&bin_file);
-  if (open_error) {
-    fprintf(stderr, "Failed to open binout: %s\n", open_error);
-    free(open_error);
+  if (bin_file.error_string) {
+    fprintf(stderr, "Failed to open binout: %s\n", bin_file.error_string);
     binout_close(&bin_file);
     /* You could continue after an open error, since it just means that one file failed to open, but in this example we quit*/
     return 1;
